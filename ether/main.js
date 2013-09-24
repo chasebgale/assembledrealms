@@ -1,5 +1,5 @@
 var renderer = new PIXI.WebGLRenderer(800, 600); 
-var stage, textures, sprites, i, row, col, count, zombie;
+var stage, textures, sprites, i, row, col, count, zombie, landscape;
 
 var CONST_DIRECTION_W = 0;
 var CONST_DIRECTION_NW = 1;
@@ -14,14 +14,25 @@ var direction = CONST_DIRECTION_S;
 var moving = false;
 var prefix = "zombie_row";
 var zombieSprite;
+var lastKeyCode = -1;
+var stats;
 
 function init() {
 	document.body.appendChild(renderer.view);
 	stage = new PIXI.Stage;
+	
+	stats = new Stats();
+	document.body.appendChild( stats.domElement );
+	stats.domElement.style.position = "absolute";
+	stats.domElement.style.top = "0px";
 
+	/*
 	document.onkeydown = function(evt) {
 		evt = evt || window.event;
-		//alert("keydown: " + evt.keyCode);
+		
+		if (evt.keyCode === lastKeyCode) {
+			return;
+		}
 
 		// TODO: Only stop walk if non walk key was pressed
 		zombieSprite.children[direction].visible = false;
@@ -40,7 +51,6 @@ function init() {
 			case 40:
 				direction = CONST_DIRECTION_S;
 				break;
-			/*
 			case 38:
 				direction = CONST_DIRECTION_N;
 				break;
@@ -53,17 +63,22 @@ function init() {
 			case 38:
 				direction = CONST_DIRECTION_N;
 				break;
-			*/
+			
 		}
 		
 		zombieSprite.children[direction].visible = true;
 		zombieSprite.children[direction].gotoAndPlay(1);
+		
+		lastKeyCode = evt.keyCode;
 	};
 
 	document.onkeyup = function(evt) {
 		evt = evt || window.event;
+		
+		lastKeyCode = -1;
 		//alert("keyup: " + evt.keyCode);
 	};
+	*/
 	
 	textures = [];
 	sprites = [];
@@ -78,9 +93,11 @@ function init() {
 	
 	count = 0;
 	
+	landscape = new PIXI.DisplayObjectContainer();
+	
 	for (row = 0; row < roughRows; row++) {
 		for (col = 0; col < roughCols; col++) {
-			sprites[count] = new PIXI.Sprite(textures[getRandomInt(0, 3)]); // 
+			sprites[count] = new PIXI.TilingSprite(textures[getRandomInt(0, 3)], 64, 64); // 
 			
 			if ((row % 2) === 0) {
 				rowOffset = 32;
@@ -91,11 +108,13 @@ function init() {
 			sprites[count].position.x = (col * 64) + rowOffset - 32;
 			sprites[count].position.y = (row * 16) - 32;
 			
-			stage.addChild(sprites[count]);
+			landscape.addChild(sprites[count]);
 			
 			count++;
 		}
 	}
+	
+	stage.addChild(landscape);
 	
 	// LOAD THE ZOMBIE!
 	////////////////////////////////////////////////////
@@ -160,16 +179,86 @@ function onAssetsLoaded()
 	zombieSprite.children[CONST_DIRECTION_S].gotoAndPlay(1);
 
 	stage.addChild(zombieSprite);
+	
+	// game loop optimized keyboard handling
+	kd.UP.down(moveUp);
+	kd.DOWN.down(moveDown);
+	kd.LEFT.down(moveLeft);
+	kd.RIGHT.down(moveRight);
 
 }	
+
+var moveX = 0;
+var moveY = 0;
+
+function moveAvatar(x, y) {
+	landscape.position.x -= x;
+	landscape.position.y += y;
+	
+	if (x !== 0) {
+		moveX = x;
+	}
+	
+	if (y !== 0) {
+		moveY = y;
+	}
+}
+
+function updateAvatar() {
+	
+}
+
+function moveUp(e) {
+	moveAvatar(0, 1);
+}
+
+function moveDown(e) {
+	moveAvatar(0, -1)
+}
+
+function moveLeft(e) {
+	moveAvatar(-1, 0);
+}
+
+function moveRight(e) {
+	moveAvatar(1, 0);
+}
 
 
 function animate() {
 	
-	renderer.render(stage);
+	stats.begin();
+	
+	kd.tick();
 
+	/*
+	if (lastKeyCode > 0) {
+		switch (direction) {
+			case CONST_DIRECTION_W:
+				landscape.position.x += 1;
+				break;
+			case CONST_DIRECTION_NW:
+			case CONST_DIRECTION_N:
+				landscape.position.y += 1;
+				break;
+			case CONST_DIRECTION_NE:
+			case CONST_DIRECTION_E:
+				landscape.position.x -= 1;
+				break;
+			case CONST_DIRECTION_SE:
+			case CONST_DIRECTION_S:
+				landscape.position.y -= 1;
+				break;
+			case CONST_DIRECTION_SW:
+				break;
+		}
+	}
+	*/
+	
+	renderer.render(stage);
 	requestAnimationFrame(animate);
 	
+	stats.end();
 }
 
 function zombieSpriteJSON() {
