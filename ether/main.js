@@ -1,5 +1,5 @@
 var renderer = new PIXI.WebGLRenderer(800, 600); 
-var stage, textures, sprites, i, row, col, count, zombie, landscape;
+var stage, textures, sprites, i, row, col, count, zombie, landscape, landscapeBuffer;
 
 var CONST_DIRECTION_W = 0;
 var CONST_DIRECTION_NW = 1;
@@ -16,11 +16,28 @@ var prefix = "zombie_row";
 var zombieSprite;
 var lastKeyCode = -1;
 var stats;
+var mouseDown = false;
+var mouseCoordPoint = {x: 0, y: 0};
 
 function init() {
+
+    var assetsToLoader;
+
 	document.body.appendChild(renderer.view);
-	stage = new PIXI.Stage;
+	stage = new PIXI.Stage(0x000000, true);
 	
+	stage.mousedown = function (data) {
+
+	    mouseDown = true;
+
+	}
+
+	stage.mouseup = function (data) {
+
+	    mouseDown = false;
+
+	}
+
 	stats = new Stats();
 	document.body.appendChild( stats.domElement );
 	stats.domElement.style.position = "absolute";
@@ -83,38 +100,25 @@ function init() {
 	textures = [];
 	sprites = [];
 	
+    /*
 	for (i = 0; i < 24; i++) {
 		textures[i] = PIXI.Texture.fromImage("tiles/grass_and_water_" + i + ".png");
 	}
-	
-	var roughRows = Math.round((600 / 16)) + 1;
-	var roughCols = Math.round((800 / 64));
-	var rowOffset = 0;
-	
-	count = 0;
-	
-	landscape = new PIXI.DisplayObjectContainer();
-	
-	for (row = 0; row < roughRows; row++) {
-		for (col = 0; col < roughCols; col++) {
-			sprites[count] = new PIXI.TilingSprite(textures[getRandomInt(0, 3)], 64, 64); // 
-			
-			if ((row % 2) === 0) {
-				rowOffset = 32;
-			} else {
-				rowOffset = 0;
-			}
-			
-			sprites[count].position.x = (col * 64) + rowOffset - 32;
-			sprites[count].position.y = (row * 16) - 32;
-			
-			landscape.addChild(sprites[count]);
-			
-			count++;
-		}
-	}
-	
-	stage.addChild(landscape);
+	*/
+
+    // LOAD THE LANDSCAPE!
+    ////////////////////////////////////////////////////
+	assetsToLoader = ["landscape.json"];
+
+    // create a new loader
+	var landscapeLoader = new PIXI.AssetLoader(assetsToLoader);
+
+    // use callback
+	landscapeLoader.onComplete = onLandscapeLoaded;
+
+    //begin load
+	landscapeLoader.load();
+
 	
 	// LOAD THE ZOMBIE!
 	////////////////////////////////////////////////////
@@ -122,10 +126,10 @@ function init() {
 	//var temp = zombieSpriteJSON();
 	//console.log(temp);
 	
-	var assetsToLoader = [ "zombie.json" ];
+	assetsToLoader = [ "zombie.json" ];
 
 	// create a new loader
-	loader = new PIXI.AssetLoader(assetsToLoader);
+	var loader = new PIXI.AssetLoader(assetsToLoader);
 
 	// use callback
 	loader.onComplete = onAssetsLoaded;
@@ -136,8 +140,54 @@ function init() {
 	requestAnimationFrame(animate);
 }
 
-function onAssetsLoaded()
-{
+function onLandscapeLoaded() {
+
+    var roughRows = Math.round((600 / 16)) + 1;
+    var roughCols = Math.round((800 / 64));
+
+
+    // Testing fps hit with larger area
+    roughRows = roughRows * 2;
+    roughCols = roughCols * 2;
+
+    var rowOffset = 0;
+
+    var count = 0;
+
+    var texture_name;
+
+    landscapeBuffer = new PIXI.DisplayObjectContainer();
+
+    for (row = 0; row < roughRows; row++) {
+        for (col = 0; col < roughCols; col++) {
+            texture_name = "grass_and_water_" + getRandomInt(0, 3) + ".png";
+            sprites[count] = new PIXI.Sprite(PIXI.Texture.fromFrame(texture_name));//textures[getRandomInt(0, 3)]);
+
+            if ((row % 2) === 0) {
+                rowOffset = 32;
+            } else {
+                rowOffset = 0;
+            }
+
+            sprites[count].position.x = (col * 64) + rowOffset - 32;
+            sprites[count].position.y = (row * 16) - 32;
+
+            landscapeBuffer.addChild(sprites[count]);
+
+            count++;
+        }
+    }
+
+    var renderTexture = new PIXI.RenderTexture(1600, 1200);
+    landscape = new PIXI.Sprite(renderTexture);
+
+    renderTexture.render(landscapeBuffer);
+
+    stage.addChild(landscape);
+}
+
+function onAssetsLoaded() {
+
 	// create an array to store the textures
 	var zombieTextures = [];
 	var zombieMovieClip;
@@ -160,7 +210,7 @@ function onAssetsLoaded()
 	zombieSprite = new PIXI.DisplayObjectContainer();
 	
 	for (i = 0; i < directions; i++) {
-		zombieMovieClip = new PIXI.MovieClip(zombieTextures[i].splice(4, 6));
+		zombieMovieClip = new PIXI.MovieClip(zombieTextures[i].splice(4, 8));
 
 		zombieMovieClip.position.x = 0;
 		zombieMovieClip.position.y = 0;
@@ -179,12 +229,6 @@ function onAssetsLoaded()
 	zombieSprite.children[CONST_DIRECTION_S].gotoAndPlay(1);
 
 	stage.addChild(zombieSprite);
-	
-	// game loop optimized keyboard handling
-	kd.UP.down(moveUp);
-	kd.DOWN.down(moveDown);
-	kd.LEFT.down(moveLeft);
-	kd.RIGHT.down(moveRight);
 
 }	
 
@@ -204,8 +248,14 @@ function moveAvatar(x, y) {
 	}
 }
 
-function updateAvatar() {
-	
+function updateAvatar(newDirection) {
+
+    zombieSprite.children[direction].visible = false;
+    zombieSprite.children[direction].stop();
+
+    zombieSprite.children[newDirection].visible = true;
+    zombieSprite.children[newDirection].play();
+
 }
 
 function moveUp(e) {
@@ -227,38 +277,105 @@ function moveRight(e) {
 
 function animate() {
 	
-	stats.begin();
-	
-	kd.tick();
+    requestAnimationFrame(animate);
 
-	/*
-	if (lastKeyCode > 0) {
-		switch (direction) {
-			case CONST_DIRECTION_W:
-				landscape.position.x += 1;
-				break;
-			case CONST_DIRECTION_NW:
-			case CONST_DIRECTION_N:
-				landscape.position.y += 1;
-				break;
-			case CONST_DIRECTION_NE:
-			case CONST_DIRECTION_E:
-				landscape.position.x -= 1;
-				break;
-			case CONST_DIRECTION_SE:
-			case CONST_DIRECTION_S:
-				landscape.position.y -= 1;
-				break;
-			case CONST_DIRECTION_SW:
-				break;
-		}
+	stats.begin();
+
+	var angle;
+	var point;
+	var calcDirection;
+
+	if (mouseDown) {
+	    point = stage.getMousePosition();
+
+        // Update Avatar based on angle of mouse from center:
+	    if (lineDistanceSqrt(mouseCoordPoint, point) > 12) {
+	        mouseCoordPoint.x = point.x;
+	        mouseCoordPoint.y = point.y;
+
+            angle = (Math.atan2(300 - mouseCoordPoint.y, mouseCoordPoint.x - 400) * 180 / Math.PI + 360) % 360;
+	        console.log(mouseCoordPoint.x + ":" + mouseCoordPoint.y + "  -- Angle: " + angle);
+
+	        calcDirection = directionFromAngle(angle);
+
+	        if (calcDirection !== direction) {
+
+	            updateAvatar(calcDirection);
+	            direction = calcDirection;
+
+	        }
+	    }
+
+	    // Update stage position in direction avatar is moving:
+	    switch (direction) {
+	        case CONST_DIRECTION_W:
+	            landscape.position.x += 1;
+	            break;
+	        case CONST_DIRECTION_NW:
+	            landscape.position.x += 1;
+	            landscape.position.y += 1;
+	            break;
+	        case CONST_DIRECTION_N:
+	            landscape.position.y += 1;
+	            break;
+	        case CONST_DIRECTION_NE:
+	            landscape.position.x -= 1;
+	            landscape.position.y += 1;
+	            break;
+	        case CONST_DIRECTION_E:
+	            landscape.position.x -= 1;
+	            break;
+	        case CONST_DIRECTION_SE:
+	            landscape.position.x -= 1;
+	            landscape.position.y -= 1;
+	            break;
+	        case CONST_DIRECTION_S:
+	            landscape.position.y -= 1;
+	            break;
+	        case CONST_DIRECTION_SW:
+	            landscape.position.x += 1;
+	            landscape.position.y -= 1;
+	            break;
+	    }
 	}
-	*/
 	
 	renderer.render(stage);
-	requestAnimationFrame(animate);
 	
 	stats.end();
+}
+
+function directionFromAngle(angle) {
+    if ((angle > 337.5) || (angle < 22.5)) {
+        return CONST_DIRECTION_E;
+    }
+
+    if ((angle > 22.5) && (angle < 67.5)) {
+        return CONST_DIRECTION_NE;
+    }
+
+    if ((angle > 67.5) && (angle < 112.5)) {
+        return CONST_DIRECTION_N;
+    }
+
+    if ((angle > 112.5) && (angle < 157.5)) {
+        return CONST_DIRECTION_NW;
+    }
+
+    if ((angle > 157.5) && (angle < 202.5)) {
+        return CONST_DIRECTION_W;
+    }
+
+    if ((angle > 202.5) && (angle < 247.5)) {
+        return CONST_DIRECTION_SW;
+    }
+
+    if ((angle > 247.5) && (angle < 292.5)) {
+        return CONST_DIRECTION_S;
+    }
+
+    if ((angle > 292.5) && (angle < 337.5)) {
+        return CONST_DIRECTION_SE;
+    }
 }
 
 function zombieSpriteJSON() {
@@ -295,6 +412,23 @@ function zombieSpriteJSON() {
 
 function getRandomInt (min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function lineDistanceSqrt(point1, point2) {
+    var xs = 0;
+    var ys = 0;
+
+    xs = point2.x - point1.x;
+    xs = xs * xs;
+
+    ys = point2.y - point1.y;
+    ys = ys * ys;
+
+    return Math.sqrt(xs + ys);
+}
+
+function lineDistanceManhattan(p1, p2) {
+    return Math.abs(p1.x-p2.x)+Math.abs(p1.y-p2.y);
 }
 
 if(window.attachEvent) {
