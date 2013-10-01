@@ -1,5 +1,5 @@
 var renderer = new PIXI.WebGLRenderer(800, 600); 
-var stage, textures, sprites, i, row, col, count, zombie, landscape, landscapeBuffer;
+var stage, textures, sprites, i, row, col, count, zombie, landscape, landscapeBuffer, activeAvatarIndex;
 
 var CONST_DIRECTION_W = 0;
 var CONST_DIRECTION_NW = 1;
@@ -22,6 +22,8 @@ var mouseCoordPoint = {x: 0, y: 0};
 function init() {
 
     var assetsToLoader;
+	
+	activeAvatarIndex = CONST_DIRECTION_S;
 
 	document.body.appendChild(renderer.view);
 	stage = new PIXI.Stage(0x000000, true);
@@ -119,25 +121,7 @@ function init() {
     //begin load
 	landscapeLoader.load();
 
-	
-	// LOAD THE ZOMBIE!
-	////////////////////////////////////////////////////
-	// create an array of assets to load
-	//var temp = zombieSpriteJSON();
-	//console.log(temp);
-	
-	assetsToLoader = [ "zombie.json" ];
-
-	// create a new loader
-	var loader = new PIXI.AssetLoader(assetsToLoader);
-
-	// use callback
-	loader.onComplete = onAssetsLoaded;
-
-	//begin load
-	loader.load();
-
-	requestAnimationFrame(animate);
+	//requestAnimationFrame(animate);
 }
 
 function onLandscapeLoaded() {
@@ -184,6 +168,20 @@ function onLandscapeLoaded() {
     renderTexture.render(landscapeBuffer);
 
     stage.addChild(landscape);
+	
+	// LOAD THE ZOMBIE!
+	////////////////////////////////////////////////////
+	
+	assetsToLoader = [ "zombie.json" ];
+
+	// create a new loader
+	var loader = new PIXI.AssetLoader(assetsToLoader);
+
+	// use callback
+	loader.onComplete = onAssetsLoaded;
+
+	//begin load
+	loader.load();
 }
 
 function onAssetsLoaded() {
@@ -209,6 +207,7 @@ function onAssetsLoaded() {
 	
 	zombieSprite = new PIXI.DisplayObjectContainer();
 	
+	// Walking clips:
 	for (i = 0; i < directions; i++) {
 		zombieMovieClip = new PIXI.MovieClip(zombieTextures[i].splice(4, 8));
 
@@ -219,16 +218,47 @@ function onAssetsLoaded() {
 		
 		zombieSprite.addChild(zombieMovieClip);
 	}
+	
+	// Standing clips:
+	var workerClipArray = [];
+	
+	for (i = 0; i < directions; i++) {
+		
+		texture = PIXI.Texture.fromFrame(texture_name);
+	
+		workerClipArray = zombieTextures[i].splice(0, 4);
+		
+		texture_name = prefix + i + "_" + "col2.png";
+		workerClipArray.push(PIXI.Texture.fromFrame(texture_name));
+		
+		texture_name = prefix + i + "_" + "col1.png";
+		workerClipArray.push(PIXI.Texture.fromFrame(texture_name));
+		
+		texture_name = prefix + i + "_" + "col0.png";
+		workerClipArray.push(PIXI.Texture.fromFrame(texture_name));
+		
+		zombieMovieClip = new PIXI.MovieClip(workerClipArray);
+
+		zombieMovieClip.position.x = 0;
+		zombieMovieClip.position.y = 0;
+		zombieMovieClip.animationSpeed = .05;
+		zombieMovieClip.visible = false;
+		
+		zombieSprite.addChild(zombieMovieClip);
+	}
+	
 
 	zombieSprite.position.x = 400 - 64;
 	zombieSprite.position.y = 300 - 64;
 	//zombieSprite.anchor.x = 0.5;
 	//zombieSprite.anchor.y = 0.5;
 
-	zombieSprite.children[CONST_DIRECTION_S].visible = true;
-	zombieSprite.children[CONST_DIRECTION_S].gotoAndPlay(1);
+	//zombieSprite.children[CONST_DIRECTION_S].visible = true;
+	//zombieSprite.children[CONST_DIRECTION_S].gotoAndPlay(1);
 
 	stage.addChild(zombieSprite);
+	
+	requestAnimationFrame(animate);
 
 }	
 
@@ -250,8 +280,8 @@ function moveAvatar(x, y) {
 
 function updateAvatar(newDirection) {
 
-    zombieSprite.children[direction].visible = false;
-    zombieSprite.children[direction].stop();
+    zombieSprite.children[activeAvatarIndex].visible = false;
+    zombieSprite.children[activeAvatarIndex].stop();
 
     zombieSprite.children[newDirection].visible = true;
     zombieSprite.children[newDirection].play();
@@ -299,9 +329,10 @@ function animate() {
 	        calcDirection = directionFromAngle(angle);
 
 	        if (calcDirection !== direction) {
-
+			
 	            updateAvatar(calcDirection);
 	            direction = calcDirection;
+				activeAvatarIndex = direction;
 
 	        }
 	    }
@@ -337,6 +368,12 @@ function animate() {
 	            landscape.position.y -= 1;
 	            break;
 	    }
+	} else {
+		var newAvatarIndex = 8 + direction;
+		if (zombieSprite.children[newAvatarIndex].visible === false) {
+			updateAvatar(newAvatarIndex);
+			activeAvatarIndex = newAvatarIndex;
+		}
 	}
 	
 	renderer.render(stage);
