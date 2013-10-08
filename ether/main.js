@@ -17,7 +17,11 @@ var zombieSprite;
 var lastKeyCode = -1;
 var stats;
 var mouseDown = false;
+var newMouseEvent = false;
 var mouseCoordPoint = {x: 0, y: 0};
+
+// sin(45degrees) ≈ .707 and cos(45degrees) ≈ .707
+var angledMovementAmount = .707;
 
 function init() {
 
@@ -31,12 +35,18 @@ function init() {
 	stage.mousedown = function (data) {
 
 	    mouseDown = true;
+		newMouseEvent = true;
+		
+		// In the future we need to hitTest first to see if we are clicking an object and not moving...
+		zombieSprite.children[activeAvatarIndex].visible = false;
 
 	}
 
 	stage.mouseup = function (data) {
 
 	    mouseDown = false;
+		newMouseEvent = true;
+		zombieSprite.children[activeAvatarIndex].visible = false;
 
 	}
 
@@ -319,7 +329,7 @@ function animate() {
 	    point = stage.getMousePosition();
 
         // Update Avatar based on angle of mouse from center:
-	    if (lineDistanceSqrt(mouseCoordPoint, point) > 12) {
+	    if ((lineDistanceSqrt(mouseCoordPoint, point) > 12) || (newMouseEvent)) {
 	        mouseCoordPoint.x = point.x;
 	        mouseCoordPoint.y = point.y;
 
@@ -328,12 +338,12 @@ function animate() {
 
 	        calcDirection = directionFromAngle(angle);
 
-	        if (calcDirection !== direction) {
+	        if ((calcDirection !== direction) || (newMouseEvent)) {
 			
 	            updateAvatar(calcDirection);
 	            direction = calcDirection;
 				activeAvatarIndex = direction;
-
+				newMouseEvent = false;
 	        }
 	    }
 
@@ -343,36 +353,41 @@ function animate() {
 	            landscape.position.x += 1;
 	            break;
 	        case CONST_DIRECTION_NW:
-	            landscape.position.x += 1;
-	            landscape.position.y += 1;
+	            landscape.position.x += angledMovementAmount;
+	            landscape.position.y += angledMovementAmount;
 	            break;
 	        case CONST_DIRECTION_N:
 	            landscape.position.y += 1;
 	            break;
 	        case CONST_DIRECTION_NE:
-	            landscape.position.x -= 1;
-	            landscape.position.y += 1;
+	            landscape.position.x -= angledMovementAmount;
+	            landscape.position.y += angledMovementAmount;
 	            break;
 	        case CONST_DIRECTION_E:
 	            landscape.position.x -= 1;
 	            break;
 	        case CONST_DIRECTION_SE:
-	            landscape.position.x -= 1;
-	            landscape.position.y -= 1;
+	            landscape.position.x -= angledMovementAmount;
+	            landscape.position.y -= angledMovementAmount;
 	            break;
 	        case CONST_DIRECTION_S:
 	            landscape.position.y -= 1;
 	            break;
 	        case CONST_DIRECTION_SW:
-	            landscape.position.x += 1;
-	            landscape.position.y -= 1;
+	            landscape.position.x += angledMovementAmount;
+	            landscape.position.y -= angledMovementAmount;
 	            break;
 	    }
 	} else {
 		var newAvatarIndex = 8 + direction;
-		if (zombieSprite.children[newAvatarIndex].visible === false) {
+		if ((zombieSprite.children[newAvatarIndex].visible === false) || (newMouseEvent)) {
+		
+			landscape.position.x = Math.round(landscape.position.x);
+            landscape.position.y = Math.round(landscape.position.y);
+		
 			updateAvatar(newAvatarIndex);
 			activeAvatarIndex = newAvatarIndex;
+			newMouseEvent = false;
 		}
 	}
 	
