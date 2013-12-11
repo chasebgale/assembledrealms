@@ -1,14 +1,24 @@
 var renderer = new PIXI.WebGLRenderer(800, 600); 
-var stage, textures, sprites, i, row, col, count, zombie, landscape, landscapeBuffer, activeAvatarIndex;
+var stage, 
+textures, 
+sprites, 
+i, 
+row, 
+col, 
+count, 
+zombie, 
+landscape, 
+landscapeBuffer, 
+activeAvatarIndex;
 
-var CONST_DIRECTION_W = 0;
-var CONST_DIRECTION_NW = 1;
-var CONST_DIRECTION_N = 2;
-var CONST_DIRECTION_NE = 3;
-var CONST_DIRECTION_E = 4;
-var CONST_DIRECTION_SE = 5;
-var CONST_DIRECTION_S = 6;
-var CONST_DIRECTION_SW = 7;
+var CONST_DIRECTION_W 	= 0;
+var CONST_DIRECTION_NW 	= 1;
+var CONST_DIRECTION_N 	= 2;
+var CONST_DIRECTION_NE 	= 3;
+var CONST_DIRECTION_E 	= 4;
+var CONST_DIRECTION_SE 	= 5;
+var CONST_DIRECTION_S 	= 6;
+var CONST_DIRECTION_SW 	= 7;
 
 var direction = CONST_DIRECTION_S;
 var moving = false;
@@ -25,7 +35,7 @@ var angledMovementAmount = .707;
 
 function init() {
 
-    var assetsToLoader;
+    //var assetsToLoader;
 	
 	activeAvatarIndex = CONST_DIRECTION_S;
 
@@ -112,6 +122,13 @@ function init() {
 	textures = [];
 	sprites = [];
 	
+	landscape = new Landscape();
+	
+	$.getJSON("map.json", function(payload) {
+		console.log(payload);
+		stage.addChild(landscape.init());
+	});
+	
     /*
 	for (i = 0; i < 24; i++) {
 		textures[i] = PIXI.Texture.fromImage("tiles/grass_and_water_" + i + ".png");
@@ -120,64 +137,21 @@ function init() {
 
     // LOAD THE LANDSCAPE!
     ////////////////////////////////////////////////////
-	assetsToLoader = ["landscape.json"];
+	//assetsToLoader = ["landscape.json"];
 
     // create a new loader
-	var landscapeLoader = new PIXI.AssetLoader(assetsToLoader);
+	//var landscapeLoader = new PIXI.AssetLoader(assetsToLoader);
 
     // use callback
-	landscapeLoader.onComplete = onLandscapeLoaded;
+	//landscapeLoader.onComplete = onLandscapeLoaded;
 
     //begin load
-	landscapeLoader.load();
+	//landscapeLoader.load();
 
 	//requestAnimationFrame(animate);
 }
 
 function onLandscapeLoaded() {
-
-    var roughRows = Math.round((600 / 16)) + 1;
-    var roughCols = Math.round((800 / 64));
-
-
-    // Testing fps hit with larger area
-    roughRows = roughRows * 2;
-    roughCols = roughCols * 2;
-
-    var rowOffset = 0;
-
-    var count = 0;
-
-    var texture_name;
-
-    landscapeBuffer = new PIXI.DisplayObjectContainer();
-
-    for (row = 0; row < roughRows; row++) {
-        for (col = 0; col < roughCols; col++) {
-            texture_name = "grass_and_water_" + getRandomInt(0, 3) + ".png";
-            sprites[count] = new PIXI.Sprite(PIXI.Texture.fromFrame(texture_name));//textures[getRandomInt(0, 3)]);
-
-            if ((row % 2) === 0) {
-                rowOffset = 32;
-            } else {
-                rowOffset = 0;
-            }
-
-            sprites[count].position.x = (col * 64) + rowOffset - 32;
-            sprites[count].position.y = (row * 16) - 32;
-
-            landscapeBuffer.addChild(sprites[count]);
-
-            count++;
-        }
-    }
-
-    var renderTexture = new PIXI.RenderTexture(1600, 1200);
-    landscape = new PIXI.Sprite(renderTexture);
-
-    renderTexture.render(landscapeBuffer);
-
-    stage.addChild(landscape);
 	
 	// LOAD THE ZOMBIE!
 	////////////////////////////////////////////////////
@@ -276,8 +250,10 @@ var moveX = 0;
 var moveY = 0;
 
 function moveAvatar(x, y) {
-	landscape.position.x -= x;
-	landscape.position.y += y;
+	//landscape.position.x -= x;
+	//landscape.position.y += y;
+	
+	landscape.move({"x": x, "y": y});
 	
 	if (x !== 0) {
 		moveX = x;
@@ -433,7 +409,7 @@ function directionFromAngle(angle) {
 function zombieSpriteJSON() {
 	var container = {};
 	var prefix_worker = "";
-	var rows, cols;
+	var rows, cols;7
 	
 	container.frames = {};
 	
