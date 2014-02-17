@@ -7,7 +7,6 @@ row,
 col, 
 count, 
 zombie, 
-landscape, 
 landscapeBuffer, 
 activeAvatarIndex;
 
@@ -127,7 +126,12 @@ function init() {
 	textures = [];
 	sprites = [];
 	
-	landscape = new Landscape(landscapeLoaded);
+
+	$.getJSON("map.json", function (payload) {
+	    console.log(payload);
+	    Landscape.init(payload);
+	});
+	
 	
 	/*
 	$.getJSON("map.json", function(payload) {
