@@ -39,8 +39,13 @@ function init() {
 	
 	activeAvatarIndex = CONST_DIRECTION_S;
 
-	document.body.appendChild(renderer.view);
 	stage = new PIXI.Stage(0x000000, true);
+
+	renderer.view.style.width = window.innerWidth + "px";
+	renderer.view.style.height = window.innerHeight + "px";
+	renderer.view.style.display = "block";
+
+	document.body.appendChild(renderer.view);
 	
 	stage.mousedown = function (data) {
 
@@ -122,14 +127,14 @@ function init() {
 	textures = [];
 	sprites = [];
 	
-	landscape = new Landscape();
+	landscape = new Landscape(landscapeLoaded);
 	
+	/*
 	$.getJSON("map.json", function(payload) {
 		console.log(payload);
 		stage.addChild(landscape.init());
 	});
 	
-    /*
 	for (i = 0; i < 24; i++) {
 		textures[i] = PIXI.Texture.fromImage("tiles/grass_and_water_" + i + ".png");
 	}
@@ -149,6 +154,15 @@ function init() {
 	//landscapeLoader.load();
 
 	//requestAnimationFrame(animate);
+}
+
+var landscapeView;
+
+function landscapeLoaded(view) {
+    console.log("worked....");
+    landscapeView = view;
+    stage.addChild(view);
+    requestAnimationFrame(animate);
 }
 
 function onLandscapeLoaded() {
@@ -300,6 +314,7 @@ function animate() {
 	var angle;
 	var point;
 	var calcDirection;
+    /*
 
 	if (mouseDown) {
 	    point = stage.getMousePosition();
@@ -366,7 +381,7 @@ function animate() {
 			newMouseEvent = false;
 		}
 	}
-	
+	*/
 	renderer.render(stage);
 	
 	stats.end();
