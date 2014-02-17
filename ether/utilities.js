@@ -56,11 +56,12 @@ function lineDistanceManhattan(p1, p2) {
 
 
 
-/*
 function zombieSpriteJSON() {
     var container = {};
     var prefix_worker = "";
-    var rows, cols; 7
+    var rows, cols;
+
+    var prefix = "skeleton_row";
 
     container.frames = {};
 
@@ -79,7 +80,7 @@ function zombieSpriteJSON() {
     container.meta = {
         "app": "http://www.texturepacker.com",
         "version": "1.0",
-        "image": "zombie_0.png",
+        "image": "skeleton_0.png",
         "format": "RGBA8888",
         "size": { "w": 1345, "h": 299 },
         "scale": "1",
@@ -88,4 +89,3 @@ function zombieSpriteJSON() {
 
     return JSON.stringify(container);
 }
-*/

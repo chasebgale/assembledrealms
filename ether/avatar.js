@@ -2,6 +2,11 @@
 
     init: function (assets) {
 
+        // TODO: Do this elsewhere... actually, the idea should be that each actor will have a required list of effects
+        // and at start we'll compile a list after loading actors and then in a single place load all required effects.
+        assets.push("effects.json");
+
+
         var assetsLoader = new PIXI.AssetLoader(assets);
 
         // use callback
@@ -52,8 +57,6 @@
 
         for (i = 0; i < directions; i++) {
 
-            texture = PIXI.Texture.fromFrame(texture_name);
-
             workerClipArray = zombieTextures[i].splice(0, 4);
 
             texture_name = prefix + i + "_" + "col2.png";
@@ -75,12 +78,38 @@
             Avatar.sprite.addChild(zombieMovieClip);
         }
 
+        // Effects clips:
+        workerClipArray = [];
+
+        for (i = 0; i < 4; i++) {
+
+            texture_name = "blood0_frame" + i + ".png";
+            workerClipArray.push(PIXI.Texture.fromFrame(texture_name));
+
+        }
+        zombieMovieClip = new PIXI.MovieClip(workerClipArray);
+
+        zombieMovieClip.position.x = 32;
+        zombieMovieClip.position.y = 32;
+        zombieMovieClip.animationSpeed = .25;
+        zombieMovieClip.visible = false;
+        zombieMovieClip.loop = false;
+        zombieMovieClip.onComplete = Avatar.onEffectFinished;
+
+        Avatar.sprite.addChild(zombieMovieClip);
+
+
         Avatar.onComplete(Avatar.sprite);
     },
 
     move: function (offset) {
         this.x += offset.x;
         this.y += offset.y;
+    },
+
+    onEffectFinished: function () {
+        Avatar.sprite.children[16].visible = false;
+        Avatar.sprite.children[16].gotoAndStop(0);
     }
 
 };

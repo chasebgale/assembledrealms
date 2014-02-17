@@ -52,6 +52,9 @@ function init() {
 		if (evt.keyCode === lastKeyCode) {
 			return;
 		}
+
+		Avatar.sprite.children[16].visible = true;
+		Avatar.sprite.children[16].play();
 		
 		lastKeyCode = evt.keyCode;
 	};
