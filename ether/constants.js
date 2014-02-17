@@ -1,0 +1,14 @@
+﻿var DIRECTION_W = 0;
+var DIRECTION_NW = 1;
+var DIRECTION_N = 2;
+var DIRECTION_NE = 3;
+var DIRECTION_E = 4;
+var DIRECTION_SE = 5;
+var DIRECTION_S = 6;
+var DIRECTION_SW = 7;
+
+var RENDER_STACK_LANDSCAPE = 0;
+var RENDER_STACK_AVATAR = 1;
+
+// sin(45degrees) ≈ .707 and cos(45degrees) ≈ .707
+var MOVEMENT_ANGLE = .707;

@@ -1,4 +1,4 @@
-﻿var Avatar = {
+﻿var Actors = {
 
     init: function (assets) {
 
@@ -76,11 +76,6 @@
         }
 
         Avatar.onComplete(Avatar.sprite);
-    },
-
-    move: function (offset) {
-        this.x += offset.x;
-        this.y += offset.y;
     }
 
 };

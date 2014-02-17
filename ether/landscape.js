@@ -6,13 +6,13 @@ var Landscape = {
         Landscape.width = pxWidth;
         Landscape.height = pxHeight;
 
-        var landscapeLoader = new PIXI.AssetLoader(map.tileSource);
+        var assetsLoader = new PIXI.AssetLoader(map.tileSource);
 
         // use callback
-        landscapeLoader.onComplete = Landscape.assetsLoaded;
+        assetsLoader.onComplete = Landscape.assetsLoaded;
 
         //begin load
-        landscapeLoader.load();
+        assetsLoader.load();
 
 
     },
@@ -30,6 +30,8 @@ var Landscape = {
         var count = 0;
 
         var texture_name;
+
+        var sprites = [];
 
         Landscape.buffer = new PIXI.DisplayObjectContainer();
 
@@ -54,16 +56,16 @@ var Landscape = {
             }
         }
 
-        var renderTexture = new PIXI.RenderTexture(1600, 1200);
+        Landscape.texture = new PIXI.RenderTexture(1600, 1200);
 
-        Landscape.view = new PIXI.Sprite(renderTexture);
+        Landscape.view = new PIXI.Sprite(Landscape.texture);
 
         Landscape.view.position.x = 0;
         Landscape.view.position.y = 0;
 
-        renderTexture.render(Landscape.buffer);
+        Landscape.texture.render(Landscape.buffer, new PIXI.Point(0,0), true);
 
-        landscapeLoaded(Landscape.view);
+        Landscape.onComplete(Landscape.view);
     },
 
     move: function (offset) {
