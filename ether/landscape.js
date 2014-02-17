@@ -1,11 +1,25 @@
-function Landscape() {
-	var buffer, view, textures;
+function Landscape(e) {
+	var buffer, view, textures, self, callback;
+	
+	self = this;
+	self.callback = e;
 	
 	var jqxhr = $.getJSON( "map.json", function() {
 	  console.log( "success" );
 	})
-	.done(function() {
-		console.log( "second success" );
+	.done(function(payload) {
+		console.log( "--done loading map.json" );
+		
+		source = payload;
+		
+		// create a new loader
+		var landscapeLoader = new PIXI.AssetLoader(payload.tileSource);
+
+		// use callback
+		landscapeLoader.onComplete = self.init;
+
+		//begin load
+		landscapeLoader.load();
 	})
 	.fail(function() {
 		console.log( "error" );
@@ -53,13 +67,22 @@ Landscape.prototype.init = function () {
     }
 
     var renderTexture = new PIXI.RenderTexture(1600, 1200);
-    view = new PIXI.Sprite(renderTexture);
+
+    self.view = new PIXI.Sprite(renderTexture);
+
+    view.position.x = 0;
+    view.position.y = 0;
 
     renderTexture.render(buffer);
 
-    //stage.addChild(view);
-	
-	return view;
+    
+    stage.addChild(self.view);
+
+    landscapeLoaded(self.view);
+}
+
+Landscape.prototype.assetsLoaded = function () {
+
 }
 
 Landscape.prototype.move = function (offset) {
