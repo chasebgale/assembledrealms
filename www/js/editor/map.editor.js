@@ -5,6 +5,10 @@ http://gamedev.stackexchange.com/questions/25896/how-do-i-find-which-isometric-t
 http://jsfiddle.net/kAFVB/3/
 http://stackoverflow.com/questions/7016981/efficiently-getting-isometric-grid-positions-within-a-bounding-box
 
+EG:
+
+http://www.openspace-engine.com/support/tutorials/mapStructure
+
 */
 
 var Map = {
@@ -12,10 +16,10 @@ var Map = {
     stage: null,
     renderer: null,
     rendererMini: null,
-    map: null,
+    source: [],
     emptyTexture: null,
 
-    init: function (div, map) {
+    init: function (div) {
 
         // Append elements:
         var target = document.getElementById(div);
@@ -50,29 +54,31 @@ var Map = {
 
     create: function (tileWidth, tileHeight) {
 
+        /*
+               *     width
+             *   * 
+           *   *   *
+         *   *   *   *
+           *   *   *
+             *   *   height
+               *
+        */
+
         var sprites = [];
         var count = 0;
         var rowOffset = 0;
 
         Map.buffer = new PIXI.DisplayObjectContainer();
+        Map.source = [];
 
-        // TODO: In the future this will be a map parsed
         for (var row = 0; row < tileHeight; row++) {
+
+            Map.source[row] = [];
+
             for (var col = 0; col < tileWidth; col++) {
-                sprites[count] = new PIXI.Sprite(Map.emptyTexture);
 
-                if ((row % 2) === 0) {
-                    rowOffset = 32;
-                } else {
-                    rowOffset = 0;
-                }
+                Map.source[row][col] = 0;
 
-                sprites[count].position.x = (col * 64) + rowOffset - 32;
-                sprites[count].position.y = (row * 16) - 32;
-
-                Map.buffer.addChild(sprites[count]);
-
-                count++;
             }
         }
 
@@ -86,6 +92,10 @@ var Map = {
 
         Map.stage.addChild(Map.view);
         Map.renderer.render(Map.stage);
+    },
+
+    load: function (map) {
+
     },
 
     assetsLoaded: function () {
