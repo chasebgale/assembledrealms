@@ -64,8 +64,9 @@
                 success: function (data, textStatus) {
                     $("#editor").text(data);
                     var editor = ace.edit("editor");
-                    Map.init("map", JSON.parse(data));
-                    Map.create(30, 30);
+                    Map.init("map");//, JSON.parse(data));
+                    Map.create(50, 50);
+                    requestAnimationFrame(animate);
                 },
                 error: function (data) {
                     alert("error");
@@ -73,6 +74,14 @@
             });
 
         });
+
+        function animate() {
+
+            requestAnimationFrame(animate);
+
+            Map.render();
+
+        }
 
         
 

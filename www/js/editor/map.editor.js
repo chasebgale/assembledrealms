@@ -64,10 +64,6 @@ var Map = {
                *
         */
 
-        var sprites = [];
-        var count = 0;
-        var rowOffset = 0;
-
         Map.buffer = new PIXI.DisplayObjectContainer();
         Map.source = [];
 
@@ -82,6 +78,49 @@ var Map = {
             }
         }
 
+        Map.load();
+
+    },
+
+    load: function (map) {
+
+        if (map) {
+            Map.source = map;
+        }
+
+        var tileWidth = Math.ceil( Map.renderer.width / 64 );
+        var tileHeight = Math.ceil( Map.renderer.height / 16 );
+
+        var sprite;
+        var rowOffset = 0;
+        var count = 0;
+
+        var startRow = 50 - Math.round(tileWidth / 2);
+        var offset = (-1 * startRow * 32);
+        
+        for (var row = startRow; row < 50 + Math.round(tileWidth / 2) ; row++) {
+
+            for (var col = 0 - Math.round(tileHeight / 2) ; col < Math.round(tileHeight / 2); col++) {
+
+                sprite = new PIXI.Sprite(Map.emptyTexture);
+
+                if ((col & 1) != (row & 1)) continue;
+                x = (row + col) / 2;
+                y = (row - col) / 2;
+
+                sprite.position.x = (row * 32) + offset;
+                sprite.position.y = col * 16;
+
+                console.log(sprite.position);
+
+                Map.buffer.addChild(sprite);
+
+                count++;
+
+            }
+        }
+
+        // TODO: Figure width and height of finished Rhombus
         Map.texture = new PIXI.RenderTexture(tileWidth * 64, tileHeight * 32);
         Map.view = new PIXI.Sprite(Map.texture);
 
@@ -92,10 +131,11 @@ var Map = {
 
         Map.stage.addChild(Map.view);
         Map.renderer.render(Map.stage);
+
     },
 
-    load: function (map) {
-
+    render: function () {
+        Map.renderer.render(Map.stage);
     },
 
     assetsLoaded: function () {
