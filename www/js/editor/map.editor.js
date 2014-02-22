@@ -45,11 +45,6 @@ var Map = {
 
         Map.emptyTexture = PIXI.Texture.fromImage("js/editor/placeholder.png");
 
-        // Load the map:
-        var assetsLoader = new PIXI.AssetLoader(map.tileSource);
-        assetsLoader.onComplete = Map.assetsLoaded;
-        //assetsLoader.load();
-
     },
 
     create: function (tileWidth, tileHeight) {
@@ -78,7 +73,10 @@ var Map = {
             }
         }
 
-        Map.load();
+        // Load the map:
+        var assetsLoader = new PIXI.AssetLoader(["js/editor/placeholder.png"]);
+        assetsLoader.onComplete = Map.load;
+        assetsLoader.load();
 
     },
 
@@ -96,20 +94,21 @@ var Map = {
         var count = 0;
 
         var startRow = 50 - Math.round(tileWidth / 2);
-        var offset = (-1 * startRow * 32);
-        
+        var xOffset = (-1 * startRow * 32);
+        var yOffset = 300;
+
         for (var row = startRow; row < 50 + Math.round(tileWidth / 2) ; row++) {
 
             for (var col = 0 - Math.round(tileHeight / 2) ; col < Math.round(tileHeight / 2); col++) {
 
-                sprite = new PIXI.Sprite(Map.emptyTexture);
+                sprite = new PIXI.Sprite(PIXI.Texture.fromFrame("js/editor/placeholder.png"));
 
                 if ((col & 1) != (row & 1)) continue;
                 x = (row + col) / 2;
                 y = (row - col) / 2;
 
-                sprite.position.x = (row * 32) + offset;
-                sprite.position.y = col * 16;
+                sprite.position.x = (row * 32) + xOffset;
+                sprite.position.y = (col * 16) + yOffset;
 
                 console.log(sprite.position);
 
