@@ -87,9 +87,9 @@ var Map = {
         }
 
         var tileWidth = Math.ceil( Map.renderer.width / 64 );
-        var tileHeight = Math.ceil( Map.renderer.height / 16 );
+        var tileHeight = Math.ceil( Map.renderer.height / 32 );
 
-        var sprite;
+        var sprite, textSprite;
         var rowOffset = 0;
         var count = 0;
 
@@ -102,10 +102,16 @@ var Map = {
             for (var col = 0 - Math.round(tileHeight / 2) ; col < Math.round(tileHeight / 2); col++) {
 
                 sprite = new PIXI.Sprite(PIXI.Texture.fromFrame("js/editor/placeholder.png"));
-
+                
                 if ((col & 1) != (row & 1)) continue;
                 x = (row + col) / 2;
                 y = (row - col) / 2;
+
+                textSample = new PIXI.Text(x + "," + y, { font: "12px Consolas", fill: "white", align: "left" });
+                textSample.position.x = 16;
+                textSample.position.y = 32;
+
+                sprite.addChild(textSample);
 
                 sprite.position.x = (row * 32) + xOffset;
                 sprite.position.y = (col * 16) + yOffset;
