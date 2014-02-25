@@ -86,24 +86,31 @@ var Map = {
             Map.source = map;
         }
 
-        var tileWidth = Math.ceil( Map.renderer.width / 64 );
-        var tileHeight = Math.ceil( Map.renderer.height / 32 );
+        var tileWidth = Math.ceil( Map.renderer.width / 32 );
+        var tileHeight = Math.ceil(Map.renderer.height / 16) + 1;
+
+        var htileWidth = Math.ceil(tileWidth / 2);
+        var htileHeight = Math.ceil(tileHeight / 2);
 
         var sprite, textSprite;
         var rowOffset = 0;
         var count = 0;
 
         var startRow = 50 - Math.round(tileWidth / 2);
-        var xOffset = (-1 * startRow * 32);
-        var yOffset = 300;
+        var startCol = 0 - Math.round(tileHeight / 2);
+        var xOffset = (-1 * startRow * 32) - 32;
+        var yOffset = 270;
 
-        for (var row = startRow; row < 50 + Math.round(tileWidth / 2) ; row++) {
+        for (var row = startRow; row < 50 + htileWidth; row++) {
 
-            for (var col = 0 - Math.round(tileHeight / 2) ; col < Math.round(tileHeight / 2); col++) {
+            for (var col = startCol; col < htileHeight; col++) {
 
                 sprite = new PIXI.Sprite(PIXI.Texture.fromFrame("js/editor/placeholder.png"));
                 
-                if ((col & 1) != (row & 1)) continue;
+                if ((col & 1) != (row & 1)) {
+                    console.log("Skipping col: " + col + ", row: " + row);
+                    continue;
+                }
                 x = (row + col) / 2;
                 y = (row - col) / 2;
 
@@ -116,8 +123,6 @@ var Map = {
                 sprite.position.x = (row * 32) + xOffset;
                 sprite.position.y = (col * 16) + yOffset;
 
-                console.log(sprite.position);
-
                 Map.buffer.addChild(sprite);
 
                 count++;
@@ -126,7 +131,7 @@ var Map = {
         }
 
         // TODO: Figure width and height of finished Rhombus
-        Map.texture = new PIXI.RenderTexture(tileWidth * 64, tileHeight * 32);
+        Map.texture = new PIXI.RenderTexture(Map.renderer.width, Map.renderer.height);
         Map.view = new PIXI.Sprite(Map.texture);
 
         Map.view.position.x = 0;
