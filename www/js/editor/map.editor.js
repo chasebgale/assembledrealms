@@ -96,19 +96,20 @@ var Map = {
         var rowOffset = 0;
         var count = 0;
 
-        var startRow = 50 - Math.round(tileWidth / 2);
-        var startCol = 0 - Math.round(tileHeight / 2);
-        var xOffset = (-1 * startRow * 32) - 32;
-        var yOffset = 270;
+        var startPoint = { "x": 25, "y": 25 };
 
-        for (var row = startRow; row < 50 + htileWidth; row++) {
+        var startRow = 50 - htileHeight;
+        var startCol = 0 - htileWidth;
+        var xOffset = -1184; // (-1 * startRow * 32) - 32;
+        var yOffset = 624; // 270;
 
-            for (var col = startCol; col < htileHeight; col++) {
+        for (var row = startRow; row < 50 + htileHeight; row++) {
+
+            for (var col = startCol; col < htileWidth; col++) {
 
                 sprite = new PIXI.Sprite(PIXI.Texture.fromFrame("js/editor/placeholder.png"));
                 
                 if ((col & 1) != (row & 1)) {
-                    console.log("Skipping col: " + col + ", row: " + row);
                     continue;
                 }
                 x = (row + col) / 2;
@@ -118,10 +119,12 @@ var Map = {
                 textSample.position.x = 16;
                 textSample.position.y = 32;
 
+                console.log(x + ", " + y);
+
                 sprite.addChild(textSample);
 
-                sprite.position.x = (row * 32) + xOffset;
-                sprite.position.y = (col * 16) + yOffset;
+                sprite.position.x = (row * 32); // + xOffset;
+                sprite.position.y = (col * 16); // + yOffset;
 
                 Map.buffer.addChild(sprite);
 
@@ -134,10 +137,10 @@ var Map = {
         Map.texture = new PIXI.RenderTexture(Map.renderer.width, Map.renderer.height);
         Map.view = new PIXI.Sprite(Map.texture);
 
-        Map.view.position.x = 0;
-        Map.view.position.y = 0;
+        //Map.view.position.x = -960;
+        //Map.view.position.y = 192;
 
-        Map.texture.render(Map.buffer, new PIXI.Point(0, 0), true);
+        Map.texture.render(Map.buffer, new PIXI.Point(-960, 192), true);
 
         Map.stage.addChild(Map.view);
         Map.renderer.render(Map.stage);
@@ -145,6 +148,7 @@ var Map = {
     },
 
     render: function () {
+        //Map.texture.render(Map.buffer, new PIXI.Point(0, 0), true);
         Map.renderer.render(Map.stage);
     },
 
@@ -200,3 +204,24 @@ var Map = {
     }
 
 }
+
+document.onkeydown = function (evt) {
+    evt = evt || window.event;
+
+    console.log(evt.keyCode);
+
+    switch (evt.keyCode) {
+        case 87:
+            Map.view.position.y--;
+            break;
+        case 83:
+            Map.view.position.y++;
+            break;
+        case 65:
+            Map.view.position.x--;
+            break;
+        case 68:
+            Map.view.position.x++;
+            break;
+    }
+};
