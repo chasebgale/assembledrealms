@@ -1,6 +1,6 @@
 html, body {
 	margin: 0px;
-	background: #fff;
+	background: #FFF;
 	font-family:Verdana, Arial, Helvetica, sans-serif;
 	font-size:0.95em;
 	color:#4d4948;
@@ -32,7 +32,7 @@ a {
 
 #top-nav {
 	background-color: #000;
-	color: #858585;
+	color: #FFF;
 	font-size: 1.2em;
 }
 
@@ -58,32 +58,50 @@ a {
 }
 
 #top {
-	margin: 0 auto 0 auto;
-	/*background:url('images/grey.png') repeat-x;*/
-	background:url('images/wild_oliva.png') repeat;
+	background-color: #9E9E9E;
 	width:100%;
-	height:60px;
+	height:50px;
+    margin: 0;
+    padding: 0;
 }
 
-a.header-button {
-	margin-left: 30px;
-	margin-bottom: 36px;
+#top_content {
+    margin: 0 auto;
+    width: 1000px;
 }
 
 #logo {
-	padding-left: 56px;
-	padding-top: 6px;
+	padding-top: 1px;
+}
+
+#logo div {
+    display: inline-block;
+    padding-left: 20px;
+}
+
+a.header-link {
+    text-decoration: none;
+}
+
+a.header-link:hover {
+    color: #FFF;
+}
+
+a.header-link:active {
+    color: #FFF;
 }
 
 #content {
-	margin: 0 auto 0 auto;
-	width: 95%;
+    margin: 0 auto;
+    width: 1000px;
+}
+
+#footer {
+    margin: 0 auto;
+    width: 970px;
 }
 
 #content #main {
-	float:left;
-	width:85%;
-	font-size:90%;
 }
 
 #content #main #regbox {

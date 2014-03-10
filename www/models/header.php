@@ -22,7 +22,6 @@ echo "
 <script>
   $(function() {
     $( document ).tooltip();
-	$( '.header-button' ).button();
     $( '.ui-button' ).button();
   });
 </script>
@@ -31,19 +30,21 @@ echo "
 
 <body>
 <div id='wrapper'>
-<div id='top-nav'>
+<!--<div id='top-nav'>-->
 ";
 
-include("top-nav.php");
+//include("top-nav.php");
 
 echo "
-</div>
+<!--</div>-->
 <div id='top'>
+<div id='top_content'>
 <div id='logo'>
-	<img src='models/site-templates/images/logo.png' />
-	<a href='builder.php' class='header-button'><img src='models/site-templates/images/builder.png' /></a>
-	<a href='#' class='header-button'><img src='models/site-templates/images/explorer.png' /></a>
+	<a href='http://www.assembledrealms.com/'><img src='models/site-templates/images/logo.png' /></a>
+	<div><a href='builder.php' class='header-link'><i class='fa fa-cogs fa-2x' style='display: block;'></i>Build</a></div>
+	<div><a href='#' class='header-link'><i class='fa fa-rocket fa-2x' style='display: block;'></i>Play</a></div>
 </div></div>
+</div>
 ";
 
 ?>
