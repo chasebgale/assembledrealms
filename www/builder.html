@@ -3,6 +3,8 @@
 <head>
     <title></title>
 
+    <link href="models/site-templates/default.css" rel="stylesheet" type="text/css">
+
     <link rel="stylesheet" type="text/css" href="css/jquery.treeview.css" />
     <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
 
@@ -12,6 +14,7 @@
     <script src="js/editor/map.editor.js"></script>
     <script src="js/jquery.treeview.min.js"></script>
     <script src="js/pixi.js"></script>
+    <script src="js/lodash.min.js"></script>
     <script src="js/ace/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
 
 
@@ -53,6 +56,31 @@
                 animated: "fast"
             });
 
+            // VIEWS
+            var templateFn = _.template($('#files_template').html());
+
+            // For now we fake data, in future this is in the result of an AJAX request:
+            var responseJSON = {
+                'name': 'source',
+                'children': [
+                    {
+                        'name': 'server',
+                        'children': ['app.js', 'util.js']
+                    },
+                    {
+                        'name': 'client',
+                        'children': [
+                            {
+                                'name': 'engine',
+                                'children': ['landscape.js', 'actors.js', 'engine.js']
+                            },
+                            'main.js', 'map.json']
+                    }
+                ]
+            };
+
+            $("#explorer").html(templateFn({ 'model': responseJSON, 'templateFn': templateFn }));
+
             //var editor = ace.edit("editor");
             //editor.getSession().setMode("ace/mode/javascript");
             
@@ -91,25 +119,22 @@
 </head>
 <body>
 
+    <div id="top">
+        <div id="top_content">
+            <div id="logo">
+                <a href="http://www.assembledrealms.com/"><img src="models/site-templates/images/logo.png"></a>
+                    <div><a href="builder.php" class="header-link"><i class="fa fa-cogs fa-2x" style="display: block;"></i>Build</a></div>
+                    <div><a href="#" class="header-link"><i class="fa fa-rocket fa-2x" style="display: block;"></i>Play</a></div>
+            </div>
+        </div>
+    </div>
+
     <section id="mapEdit">
-        <div id="tree">
+        <div id="tree" class="sectionbase">
+            <div class="sectionbar">
+                <span>Realm Title</span>
+            </div>
             <ul id="explorer" class="filetree">
-                <li>
-                    <span class='folder'>Server</span>
-                    <ul>
-                        <li><span class='file'>File 1</span></li>
-                        <li><span class='file'>File 2</span></li>
-                        <li><span class='file'>File 3</span></li>
-                    </ul>
-                </li>
-                <li>
-                    <span class='folder'>Client</span>
-                    <ul>
-                        <li><span class='file'>map.json</span></li>
-                        <li><span class='file'>index.html</span></li>
-                        <li><span class='file'>engine.js</span></li>
-                    </ul>
-                </li>
             </ul>
         </div>
 
@@ -121,8 +146,22 @@
             <div id="editor"></div>
             <div id="map"></div>
         </div>
-</section>
+    </section>
     
+    <script id="files_template" type="text/template">
+        <% if (model.children) { %>
+            <li>
+                <span class='folder'><%= model.name %></span>
+                <ul>
+                    <% _.each(model.children, function(child) { %>
+                        <%= templateFn({'model': child, 'templateFn': templateFn}) %>
+                    <% }); %>
+                </ul>
+            </li>
+        <% } else { %>
+            <li><span class="file"><%- model %></span></li>
+        <% } %>
+    </script>
 
 </body>
 </html>
