@@ -16,8 +16,8 @@ echo "
 <script src='//code.jquery.com/ui/1.10.3/jquery-ui.js'></script>
 
 <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel='stylesheet' />
-<script src='models/funcs.js' type='text/javascript'>
-</script>
+<script src='models/funcs.js' type='text/javascript'></script>
+<script src='js/lodash.min.js'></script>
 
 <script>
   $(function() {

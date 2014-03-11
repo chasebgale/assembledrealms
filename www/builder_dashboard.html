@@ -1,0 +1,135 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+
+    <link href="models/site-templates/default.css" rel="stylesheet" type="text/css">
+    <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel='stylesheet' />
+
+    <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>    
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
+
+    <script src="js/lodash.min.js"></script>
+
+
+    <style>
+        #existingRealmsList {
+            list-style: none;
+            margin: 0 auto;
+            width: 1000px;
+        }
+
+            #existingRealmsList div {
+                display: inline-block;
+            }
+
+        .existingRealmsListItem {
+            margin-top: 24px;
+            padding: 6px;
+            border: solid 2px #E0E0E0;
+            border-top-width: 8px;
+        }
+
+        .existingRealmsStatsLabel {
+            display: inline-block;
+            width: 100px;
+        }
+
+        .light {
+            color: #E0E0E0;
+        }
+
+        .online {
+            color: #B9FAC2;
+        }
+    </style>
+
+    <script>
+        $(document).ready(function () {
+
+            // VIEWS
+            var templateFn = _.template($('#realms_template').html());
+
+            // For now we fake data, in future this is in the result of an AJAX request:
+            var responseJSON = [
+                {
+                    'name': 'Ultima Re-Imagined',
+                    'status': 0, 
+                    'playersOnline': '0',
+                    'playersMax': '48',
+                    'funds': '$8.45',
+                    'likes': '22',
+                    'buildDate': '03/11/2014 01:22PM ET' 
+                },
+                {
+                    'name': 'Zombie Terrorizes Humans',
+                    'status': 1,
+                    'playersOnline': '22',
+                    'playersMax': '24',
+                    'funds': '$17.22',
+                    'likes': '08',
+                    'buildDate': '02/05/2014 09:49PM ET'
+                }
+            ];
+
+            $("#existingRealmsList").html(templateFn({ 'realms': responseJSON }));
+
+        });
+        
+    </script>
+
+</head>
+<body>
+    
+    <div id="top">
+        <div id="top_content">
+            <div id="logo">
+                <a href="http://www.assembledrealms.com/"><img src="models/site-templates/images/logo.png"></a>
+                <div><a href="builder.php" class="header-link"><i class="fa fa-cogs fa-2x" style="display: block;"></i>Build</a></div>
+                <div><a href="#" class="header-link"><i class="fa fa-rocket fa-2x" style="display: block;"></i>Play</a></div>
+            </div>
+        </div>
+    </div>
+
+    <section id="newRealm">
+
+    </section>
+
+    <section id="existingRealms">
+        <ul id="existingRealmsList">
+            
+        </ul>
+    </section>
+
+    <script id="realms_template" type="text/template">
+        <% _.each( realms, function( realm ){ %>
+        <li class="existingRealmsListItem">
+            <div>
+                <h1><%- realm.name %></h1>
+                <br />
+                <span>Built: <%- realm.buildDate %></span>
+            </div>
+
+            <div style="float: right;">
+                <% if (realm.status == 0) { %>
+                <i class="fa fa-power-off fa-4x light"></i>
+                <% } else { %>
+                <i class="fa fa-power-off fa-4x online"></i>
+                <% } %>
+            </div>
+
+            <div style="float: right; width: 300px;">
+                <ul>
+                    <li><span class="existingRealmsStatsLabel">Funds:</span><%- realm.funds %></li>
+                    <li><span class="existingRealmsStatsLabel">Online/Max:</span><%- realm.playersOnline %>/<%- realm.playersMax %></li>
+                    <li><span class="existingRealmsStatsLabel">Likes:</span><%- realm.likes %></li>
+                </ul>
+            </div>
+            
+        </li>
+        <% }); %>
+    </script>
+
+</body>
+</html>

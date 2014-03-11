@@ -7,12 +7,13 @@
 
     <link rel="stylesheet" type="text/css" href="css/jquery.treeview.css" />
     <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
+    <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel='stylesheet' />
 
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>    
     <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
 
     <script src="js/editor/map.editor.js"></script>
-    <script src="js/jquery.treeview.min.js"></script>
+    <script src="js/jquery.treeview.js"></script>
     <script src="js/pixi.js"></script>
     <script src="js/lodash.min.js"></script>
     <script src="js/ace/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
@@ -52,16 +53,12 @@
             // UI
             $("#tabs").tabs();
 
-            $("#explorer").treeview({
-                animated: "fast"
-            });
-
             // VIEWS
             var templateFn = _.template($('#files_template').html());
 
             // For now we fake data, in future this is in the result of an AJAX request:
             var responseJSON = {
-                'name': 'source',
+                'name': 'Realm Title',
                 'children': [
                     {
                         'name': 'server',
@@ -80,6 +77,16 @@
             };
 
             $("#explorer").html(templateFn({ 'model': responseJSON, 'templateFn': templateFn }));
+
+            $("#explorer").treeview({
+                animated: "fast"
+            });
+
+            $("#explorer .file").on("click", function () {
+                console.log(this);
+                $("#explorer .file").removeClass('activefile');
+                $(this).addClass('activefile');
+            });
 
             //var editor = ace.edit("editor");
             //editor.getSession().setMode("ace/mode/javascript");
@@ -132,9 +139,9 @@
     <section id="mapEdit">
         <div id="tree" class="sectionbase">
             <div class="sectionbar">
-                <span>Realm Title</span>
+                <span>Source files</span>
             </div>
-            <ul id="explorer" class="filetree">
+            <ul id="explorer" class="filetree treeview">
             </ul>
         </div>
 
@@ -150,16 +157,16 @@
     
     <script id="files_template" type="text/template">
         <% if (model.children) { %>
-            <li>
-                <span class='folder'><%= model.name %></span>
-                <ul>
-                    <% _.each(model.children, function(child) { %>
-                        <%= templateFn({'model': child, 'templateFn': templateFn}) %>
-                    <% }); %>
-                </ul>
-            </li>
+        <li class='collapsable'>
+            <span class='folder'><%= model.name %></span>
+            <ul>
+                <% _.each(model.children, function(child) { %>
+                <%= templateFn({'model': child, 'templateFn': templateFn}) %>
+                <% }); %>
+            </ul>
+        </li>
         <% } else { %>
-            <li><span class="file"><%- model %></span></li>
+        <li><span class="file"><%- model %></span></li>
         <% } %>
     </script>
 

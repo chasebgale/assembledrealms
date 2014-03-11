@@ -4,65 +4,67 @@ require_once("models/config.php");
 if (!securePage($_SERVER['PHP_SELF'])){die();}
 require_once("models/header.php");
 
-/*
-echo "
-<div id='main'>
-Hey, $loggedInUser->displayname. This is an example secure page designed to demonstrate some of the basic features of UserCake. Just so you know, your title at the moment is $loggedInUser->title, and that can be changed in the admin panel. You registered this account on " . date("M d, Y", $loggedInUser->signupTimeStamp()) . ".
-</div>
-<div id='bottom'></div>
-
- 
-</div>
-*/
+if(!isUserLoggedIn()) { 
+  echo "<h1>You must be logged in to access our build tools!</h1>";
+  die(); 
+}
 
 ?>
 
-<div id="editor-top-panel">
-    <a href="#" class="ui-button" id="new-realm"><i class="fa fa-cloud-upload"></i> Create New Realm</a>
-</div>
 
-<div id="editor-panel">
-    <div id="editor-files"></div>
-</div>
+<section id="newRealm">
 
-<div id="editor">function foo(items) {
-    var x = "All this is syntax highlighted";
-    return x;
-}</div>
+</section>
 
-<script src="/js/jqTree/tree.jquery.js" type="text/javascript" charset="utf-8"></script>
-<script src="/js/ace/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
-<script>
+<section id="existingRealms">
+  <ul id="existingRealmsList">
 
-    $(function(){
+  </ul>
+</section>
 
-        var editor = ace.edit("editor");
-        //editor.setTheme("ace/theme/monokai");
-        editor.getSession().setMode("ace/mode/javascript");
+<script id="realms_template" type="text/template">
+  <% _.each( realms, function( realm ) { %>
+  <li class="existingRealmsListItem">
+    <div>
+      <h1>
+        <%- realm.name %>
+      </h1>
+      <br />
+      <span>
+        Built: <%- realm.buildDate %>
+      </span>
+    </div>
 
-        var data = [
-            {
-                label: 'node1',
-                children: [
-                    { label: 'child1' },
-                    { label: 'child2' }
-                ]
-            },
-            {
-                label: 'node2',
-                children: [
-                    { label: 'child3' }
-                ]
-            }
-        ];
+    <div style="float: right;">
+      <% if (realm.status == 0) { %>
+      <i class="fa fa-power-off fa-4x light"></i>
+      <% } else { %>
+      <i class="fa fa-power-off fa-4x online"></i>
+      <% } %>
+    </div>
 
-        $('#editor-files').tree({
-            data: data
-        });
+    <div style="float: right; width: 300px;">
+      <ul>
+        <li>
+          <span class="existingRealmsStatsLabel">Funds:</span>
+          <%- realm.funds %>
+        </li>
+        <li>
+          <span class="existingRealmsStatsLabel">Online/Max:</span>
+          <%- realm.playersOnline %>/<%- realm.playersMax %>
+        </li>
+        <li>
+          <span class="existingRealmsStatsLabel">Likes:</span>
+          <%- realm.likes %>
+        </li>
+      </ul>
+    </div>
 
-
-    });
+  </li>
+  <% }); %>
 </script>
+
+<script src="/js/build.dashboard.js" type="text/javascript" charset="utf-8"></script>
 
 </body>
 </html>
