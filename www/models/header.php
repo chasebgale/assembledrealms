@@ -9,13 +9,12 @@ echo "
 <head>
 <meta http-equiv='Content-Type' content='text/html; charset=utf-8' />
 <title>".$websiteName."</title>
-<link href='".$template."' rel='stylesheet' type='text/css' />
 
-<link href='//code.jquery.com/ui/1.10.3/themes/dark-hive/jquery-ui.css' rel='stylesheet' />
-<script src='//code.jquery.com/jquery-1.9.1.js'></script>
-<script src='//code.jquery.com/ui/1.10.3/jquery-ui.js'></script>
+<!--<link href='".$template."' rel='stylesheet' type='text/css' />-->
 
-<link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel='stylesheet' />
+<link rel='stylesheet' href='//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css' />
+<link rel='stylesheet' href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' />
+
 <script src='models/funcs.js' type='text/javascript'></script>
 <script src='js/lodash.min.js'></script>
 
@@ -35,16 +34,26 @@ echo "
 
 //include("top-nav.php");
 
-echo "
-<!--</div>-->
-<div id='top'>
-<div id='top_content'>
-<div id='logo'>
-	<a href='http://www.assembledrealms.com/'><img src='models/site-templates/images/logo.png' /></a>
-	<div><a href='builder.php' class='header-link'><i class='fa fa-cogs fa-2x' style='display: block;'></i>Build</a></div>
-	<div><a href='#' class='header-link'><i class='fa fa-rocket fa-2x' style='display: block;'></i>Play</a></div>
-</div></div>
-</div>
-";
-
 ?>
+
+<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="http://www.assembledrealms.com/"><img src='models/site-templates/images/logo.png' /></a>
+    </div>
+    <div class="collapse navbar-collapse">
+      <ul class="nav navbar-nav">
+        <li><a href='builder.php' class='header-link'><i class='fa fa-cogs fa-2x' style='display: block;'></i>Build</a></li>
+        <li><a href='#' class='header-link'><i class='fa fa-rocket fa-2x' style='display: block;'></i>Play</a></li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div>
+</div>
+
+

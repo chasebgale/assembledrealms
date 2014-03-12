@@ -11,16 +11,37 @@ if(!isUserLoggedIn()) {
 
 ?>
 
+<div id="content">
 
-<section id="newRealm">
+  <section id="newRealm">
+    <div id="newRealmRoot">
+      <div>
+        <h1>New Realm!</h1>
+        <br />
+        <input type="text" placeholder="Realm Name"></input>
+      </div>
+      <div>
+        <i class="fa fa-caret-left fa-2x"></i>
+      </div>
+      <div id="newRealmEngineDisplay">
+        <span>ISOMETRIC</span>
+      </div>
+      <div>
+        <i class="fa fa-caret-right fa-2x"></i>
+      </div>
+      <div style="float: right;">
+        <i class="fa fa-play-circle-o fa-5x"></i>
+      </div>
+    </div>
+  </section>
 
-</section>
+  <section id="existingRealms">
+    <ul id="existingRealmsList">
 
-<section id="existingRealms">
-  <ul id="existingRealmsList">
+    </ul>
+  </section>
 
-  </ul>
-</section>
+</div>
 
 <script id="realms_template" type="text/template">
   <% _.each( realms, function( realm ) { %>
