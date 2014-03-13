@@ -12,7 +12,7 @@ echo "
 
 <!--<link href='".$template."' rel='stylesheet' type='text/css' />-->
 
-<link rel='stylesheet' href='//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css' />
+<link rel='stylesheet' href='css/bootstrap.min.css' />
 <link rel='stylesheet' href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' />
 
 <script src='models/funcs.js' type='text/javascript'></script>
@@ -36,7 +36,7 @@ echo "
 
 ?>
 
-<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+<div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
     <div class="navbar-header">
       <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
