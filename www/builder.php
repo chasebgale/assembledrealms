@@ -9,6 +9,20 @@ if(!isUserLoggedIn()) {
   die(); 
 }
 
+if(!empty($_POST))
+{
+	//$username = sanitize(trim($_POST["username"]));
+	//$password = trim($_POST["password"]);
+  
+  // Step 1: Does this user need a gitlab acct?
+  
+  // Step 2: Create project in their gitlab
+  
+  // Step 3: Create SQL 
+  
+  // Step 4: Redirect to Realm's Dashboard
+}
+
 ?>
 
 <div id="content">
@@ -30,7 +44,7 @@ if(!isUserLoggedIn()) {
         <i class="fa fa-caret-right fa-2x"></i>
       </div>
       <div style="float: right;">
-        <i class="fa fa-play-circle-o fa-5x"></i>
+        <a class="btn btn-default btn-lg" href="#" role="button">Create »</a>
       </div>
     </div>
   </section>

@@ -1,0 +1,69 @@
+﻿body {
+    padding-top: 80px;
+}
+
+#content {
+    margin: 0 auto;
+    width: 1000px;
+}
+
+#newRealmRoot {
+    margin-top: 24px;
+    padding: 6px;
+    border: solid 8px #E0E0E0;
+}
+
+#newRealmRoot div {
+    display: inline-block;
+}
+
+#newRealmEngineDisplay {
+    width: 400px;
+    height: 150px;
+    background-image: url('/img/isometric.png');
+    vertical-align: middle;
+    color: #FFF;
+    font-weight: bold;
+    font-size: 2em;
+}
+
+#existingRealmsList {
+    list-style: none;
+    padding: 0;
+}
+        
+#existingRealmsList div {
+    display: inline-block;
+}
+
+.existingRealmsListItem {
+    margin-top: 24px;
+    padding: 6px;
+    border: solid 2px #E0E0E0;
+    border-top-width: 8px;
+}
+
+.existingRealmsStatsLabel {
+    display: inline-block;
+    width: 100px;
+}
+        
+.light {
+    color: #E0E0E0;
+}
+
+.online {
+    color: #B9FAC2;
+}
+
+.sectionbase {
+    border: solid 2px #E0E0E0;
+    margin: 0px 10px;
+}
+
+.sectionbar {
+    background-color: #E0E0E0;
+    color: #858585;
+    width: 100%;
+    height: 20px;
+}

@@ -12,6 +12,7 @@ echo "
 
 <!--<link href='".$template."' rel='stylesheet' type='text/css' />-->
 
+<link rel='stylesheet' href='css/root.css' />
 <link rel='stylesheet' href='css/bootstrap.min.css' />
 <link rel='stylesheet' href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' />
 
