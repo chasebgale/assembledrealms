@@ -18,6 +18,9 @@ var Map = {
     rendererMini: null,
     source: [],
     emptyTexture: null,
+    width: 896,
+    height: 504,
+    touch: new Vector3(),
 
     init: function (div) {
 
@@ -35,7 +38,7 @@ var Map = {
         target.appendChild(miniCanvas);
 
         // Initialize PIXI:
-        Map.renderer = new PIXI.WebGLRenderer(800, 600);
+        Map.renderer = new PIXI.WebGLRenderer(Map.width, Map.height);
         Map.rendererMini = new PIXI.WebGLRenderer(400, 300);
 
         Map.stage = new PIXI.Stage(0x000000, true);
@@ -86,45 +89,49 @@ var Map = {
             Map.source = map;
         }
 
-        var tileWidth = Math.ceil( Map.renderer.width / 32 );
+        var tileWidth = Math.ceil( Map.renderer.width / 32 ) + 1;
         var tileHeight = Math.ceil(Map.renderer.height / 16) + 1;
 
         var htileWidth = Math.ceil(tileWidth / 2);
         var htileHeight = Math.ceil(tileHeight / 2);
 
         var sprite, textSprite;
-        var rowOffset = 0;
         var count = 0;
 
-        var startPoint = { "x": 25, "y": 25 };
+        var startPoint = { "x": 250, "y": 250 };
 
-        var startRow = 50 - htileHeight;
-        var startCol = 0 - htileWidth;
-        var xOffset = -1184; // (-1 * startRow * 32) - 32;
-        var yOffset = 624; // 270;
+        var aStart = (startPoint.x + startPoint.y) - htileWidth;
+        var aEnd = aStart + tileWidth;
 
-        for (var row = startRow; row < 50 + htileHeight; row++) {
+        var bStart = (startPoint.x - startPoint.y) - htileHeight;
+        var bEnd = bStart + tileHeight;
 
-            for (var col = startCol; col < htileWidth; col++) {
+        var xOffset = -1 * aStart * 32;
+        var yOffset = -1 * bStart * 16;
+
+        for (var a = aStart; a < aEnd; a++) {
+
+            for (var b = bStart; b < bEnd; b++) {
 
                 sprite = new PIXI.Sprite(PIXI.Texture.fromFrame("js/editor/placeholder.png"));
                 
-                if ((col & 1) != (row & 1)) {
+                if ((b & 1) != (a & 1)) {
                     continue;
                 }
-                x = (row + col) / 2;
-                y = (row - col) / 2;
 
-                textSample = new PIXI.Text(x + "," + y, { font: "12px Consolas", fill: "white", align: "left" });
-                textSample.position.x = 16;
-                textSample.position.y = 32;
+                x = (a + b) / 2;
+                y = (a - b) / 2;
 
-                console.log(x + ", " + y);
+                textSprite = new PIXI.Text(x + "," + y, { font: "11px serif", fill: "white", align: "left" });
+                textSprite.position.x = 16;
+                textSprite.position.y = 32;
 
-                sprite.addChild(textSample);
+                sprite.addChild(textSprite);
 
-                sprite.position.x = (row * 32); // + xOffset;
-                sprite.position.y = (col * 16); // + yOffset;
+                sprite.position.x = (a * 32); // + xOffset;
+                sprite.position.y = (b * 16); // + yOffset;
+
+                console.log(sprite.position);
 
                 Map.buffer.addChild(sprite);
 
@@ -137,18 +144,49 @@ var Map = {
         Map.texture = new PIXI.RenderTexture(Map.renderer.width, Map.renderer.height);
         Map.view = new PIXI.Sprite(Map.texture);
 
-        //Map.view.position.x = -960;
-        //Map.view.position.y = 192;
-
-        Map.texture.render(Map.buffer, new PIXI.Point(-960, 192), true);
+        Map.texture.render(Map.buffer, new PIXI.Point(xOffset, yOffset), true);
 
         Map.stage.addChild(Map.view);
         Map.renderer.render(Map.stage);
 
+        Map.xOffset = xOffset;
+        Map.yOffset = yOffset;
+
+        console.log(count + " tiles...");
+
+        Map.transformMatrix = new Matrix4();
+        Map.transformMatrix.identity();
+        Map.transformMatrix.makeTranslation(0.0, 0.25, 0.0);
+        Map.transformMatrix.makeScale((Math.sqrt(2.0) / 2.0), (Math.sqrt(2.0) / 4.0), 1.0);
+        Map.transformMatrix.makeRotationAxis({ x: 0, y: 0, z: 1.0 }, -45.0);
+
+        Map.transformMatrix.getInverse(Map.transformMatrix);
+
+        Map.stage.mousedown = function (data) {
+            console.log(data.global);
+
+            // Transform way:
+            Map.touch.set(data.global.x, data.global.y, 0);
+            Map.touch.applyMatrix4(Map.transformMatrix);
+
+            // Manual way:
+            var worldPositionX = (2 * data.global.y + data.global.x) / 2;
+            var worldPositionY = (2 * data.global.y - data.global.x) / 2;
+
+            var worldX = Math.floor(worldPositionX / 64);
+            var worldY = Math.floor(worldPositionY / 32);
+
+            //pickedTile = tiles[worldX][worldY];
+            console.log("clicked: " + worldX + ", " + worldY);
+
+            //console.log(Map.touch);
+            
+        };
+
     },
 
     render: function () {
-        //Map.texture.render(Map.buffer, new PIXI.Point(0, 0), true);
+        Map.texture.render(Map.buffer, new PIXI.Point(Map.xOffset, Map.yOffset), true);
         Map.renderer.render(Map.stage);
     },
 
@@ -212,16 +250,20 @@ document.onkeydown = function (evt) {
 
     switch (evt.keyCode) {
         case 87:
-            Map.view.position.y--;
+            //Map.view.position.y--;
+            Map.yOffset--;
             break;
         case 83:
-            Map.view.position.y++;
+            //Map.view.position.y++;
+            Map.yOffset++;
             break;
         case 65:
-            Map.view.position.x--;
+            //Map.view.position.x--;
+            Map.xOffset--;
             break;
         case 68:
-            Map.view.position.x++;
+            //Map.view.position.x++;
+            Map.xOffset++;
             break;
     }
 };

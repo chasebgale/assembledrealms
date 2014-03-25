@@ -12,7 +12,10 @@
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>    
     <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
 
+    <script src="js/editor/utilities.js"></script>
+
     <script src="js/editor/map.editor.js"></script>
+    
     <script src="js/jquery.treeview.js"></script>
     <script src="js/pixi.js"></script>
     <script src="js/lodash.min.js"></script>
@@ -100,7 +103,7 @@
                     $("#editor").text(data);
                     var editor = ace.edit("editor");
                     Map.init("map");//, JSON.parse(data));
-                    Map.create(50, 50);
+                    Map.create(500, 500);
                     requestAnimationFrame(animate);
                 },
                 error: function (data) {
