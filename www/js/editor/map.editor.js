@@ -98,7 +98,7 @@ var Map = {
         var sprite, textSprite;
         var count = 0;
 
-        var startPoint = { "x": 250, "y": 250 };
+        var startPoint = { "x": 50, "y": 50 };
 
         var aStart = (startPoint.x + startPoint.y) - htileWidth;
         var aEnd = aStart + tileWidth;
@@ -106,8 +106,8 @@ var Map = {
         var bStart = (startPoint.x - startPoint.y) - htileHeight;
         var bEnd = bStart + tileHeight;
 
-        var xOffset = -1 * aStart * 32;
-        var yOffset = -1 * bStart * 16;
+        var xOffset = (-1 * aStart * 32) - 32;
+        var yOffset = (-1 * bStart * 16) - 40;
 
         for (var a = aStart; a < aEnd; a++) {
 
@@ -157,37 +157,28 @@ var Map = {
         Map.transformMatrix = new Matrix4();
         Map.transformMatrix.identity();
         Map.transformMatrix.makeTranslation(0.0, 0.25, 0.0);
-        Map.transformMatrix.makeScale((Math.sqrt(2.0) / 2.0), (Math.sqrt(2.0) / 4.0), 1.0);
         Map.transformMatrix.makeRotationAxis({ x: 0, y: 0, z: 1.0 }, -45.0);
-
+        Map.transformMatrix.makeScale((Math.sqrt(2.0) / 2.0), (Math.sqrt(2.0) / 4.0), 1.0);
         Map.transformMatrix.getInverse(Map.transformMatrix);
 
         Map.stage.mousedown = function (data) {
             console.log(data.global);
 
             // Transform way:
-            Map.touch.set(data.global.x, data.global.y, 0);
+            Map.touch.set(data.global.x, data.global.y, 1);
             Map.touch.applyMatrix4(Map.transformMatrix);
 
-            // Manual way:
-            var worldPositionX = (2 * data.global.y + data.global.x) / 2;
-            var worldPositionY = (2 * data.global.y - data.global.x) / 2;
-
-            var worldX = Math.floor(worldPositionX / 64);
-            var worldY = Math.floor(worldPositionY / 32);
-
-            //pickedTile = tiles[worldX][worldY];
-            console.log("clicked: " + worldX + ", " + worldY);
-
-            //console.log(Map.touch);
+            console.log(Map.touch);
             
         };
 
     },
 
     render: function () {
-        Map.texture.render(Map.buffer, new PIXI.Point(Map.xOffset, Map.yOffset), true);
-        Map.renderer.render(Map.stage);
+        if (Map.texture) {
+            //Map.texture.render(Map.buffer, new PIXI.Point(Map.xOffset, Map.yOffset), true);
+            Map.renderer.render(Map.stage);
+        }
     },
 
     assetsLoaded: function () {
@@ -266,4 +257,6 @@ document.onkeydown = function (evt) {
             Map.xOffset++;
             break;
     }
+
+    Map.texture.render(Map.buffer, new PIXI.Point(Map.xOffset, Map.yOffset), true);
 };
