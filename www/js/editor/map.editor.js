@@ -24,8 +24,10 @@ var Map = {
     TILE_WIDTH_HALF: 32,
     TILE_HEIGHT: 32,
     TILE_HEIGHT_HALF: 16,
-    TILE_Y_OFFSET: 20,
+    TILE_Y_OFFSET: 14,
     playerPos: { x: 9500, y: 0 },
+    offsetTracker: { x: 0, y: 0 },
+    stats: null,
 
     init: function (div) {
 
@@ -53,6 +55,16 @@ var Map = {
 
         Map.emptyTexture = PIXI.Texture.fromImage("js/editor/placeholder.png");
 
+        Map.VIEWPORT_WIDTH_TILES = Math.ceil(Map.width / 32) + 1;
+        Map.VIEWPORT_HEIGHT_TILES = Math.ceil(Map.height / 16) + 1;
+
+        Map.VIEWPORT_WIDTH_TILES_HALF = Math.ceil(Map.VIEWPORT_WIDTH_TILES / 2);
+        Map.VIEWPORT_HEIGHT_TILES_HALF = Math.ceil(Map.VIEWPORT_HEIGHT_TILES / 2);
+
+        Map.stats = new Stats();
+        document.body.appendChild(Map.stats.domElement);
+        Map.stats.domElement.style.position = "absolute";
+        Map.stats.domElement.style.top = "0px";
     },
 
     create: function (tileWidth, tileHeight) {
@@ -67,7 +79,7 @@ var Map = {
                *
         */
 
-        Map.buffer = new PIXI.DisplayObjectContainer();
+        Map.buffer = new PIXI.SpriteBatch(); //PIXI.DisplayObjectContainer();
         Map.source = [];
 
         for (var row = 0; row < tileHeight; row++) {
@@ -97,12 +109,6 @@ var Map = {
             Map.source = map;
         }
 
-        var tileWidth = Math.ceil( Map.renderer.width / 32 ) + 1;
-        var tileHeight = Math.ceil(Map.renderer.height / 16) + 1;
-
-        var htileWidth = Math.ceil(tileWidth / 2);
-        var htileHeight = Math.ceil(tileHeight / 2);
-
         var sprite, textSprite;
         var count = 0;
 
@@ -113,16 +119,14 @@ var Map = {
         startPoint.row = Math.floor(startPoint.row);
         startPoint.col = Math.floor(startPoint.col);
 
-        var aStart = (startPoint.row + startPoint.col) - htileWidth;
-        var aEnd = aStart + tileWidth;
+        var aStart = (startPoint.row + startPoint.col) - Map.VIEWPORT_WIDTH_TILES_HALF;
+        var aEnd = aStart + Map.VIEWPORT_WIDTH_TILES;
 
-        var bStart = (startPoint.row - startPoint.col) - htileHeight;
-        var bEnd = bStart + tileHeight;
+        var bStart = (startPoint.row - startPoint.col) - Map.VIEWPORT_HEIGHT_TILES_HALF;
+        var bEnd = bStart + Map.VIEWPORT_HEIGHT_TILES;
 
         var xOffset = (-1 * aStart * 32) - Map.TILE_WIDTH_HALF;
         var yOffset = (-1 * bStart * 16) - Map.TILE_Y_OFFSET;
-
-        var tileYOffset = Map.TILE_Y_OFFSET + Map.TILE_HEIGHT_HALF;
 
         for (var b = bStart; b < bEnd + 1; b++) {
 
@@ -138,7 +142,7 @@ var Map = {
                 if (Map.source[row] === undefined) continue;
                 if (Map.source[row][col] === undefined) continue;
 
-                sprite = new PIXI.Sprite(PIXI.Texture.fromImage("js/editor/placeholder.png"));
+                sprite = new PIXI.Sprite(Map.emptyTexture);
 
                 textSprite = new PIXI.Text(row + "," + col, { font: "11px serif", fill: "white", align: "left" });
                 textSprite.position.x = 16;
@@ -146,7 +150,7 @@ var Map = {
 
                 sprite.addChild(textSprite);
 
-                sprite.anchor.y = 0.58;
+                sprite.anchor.y = 0.5;
                 sprite.position.x = (a * Map.TILE_WIDTH_HALF);
                 sprite.position.y = (b * Map.TILE_HEIGHT_HALF); // - tileYOffset;
 
@@ -170,33 +174,99 @@ var Map = {
         Map.stage.addChild(Map.view);
         Map.renderer.render(Map.stage);
 
-        Map.xOffset = xOffset;
-        Map.yOffset = yOffset;
+        Map.offset = { x: xOffset, y: yOffset };
 
         console.log(count + " tiles... offset: " + xOffset + ',' + yOffset);
 
         Map.stage.mousedown = function (data) {
+
             console.log(data.global);
 
             var result = Map.indexFromScreen(data.global);
 
             console.log(result.row + ', ' + result.col);
 
-            texture_name = "grass_and_water_" + getRandomInt(0, 3) + ".png";
-            sprites[count] = new PIXI.Sprite(PIXI.Texture.fromFrame(texture_name));
+            Map.source[result.row][result.col] = getRandomInt(1, 3);
+            Map.update();
+            Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
 
         };
 
+        Map.stage.mousemove = function (data) {
+            
+            if (data.target.__isDown) {
+                var result = Map.indexFromScreen(data.global);
+
+                if (Map.source[result.row][result.col] === 0) {
+                    Map.source[result.row][result.col] = getRandomInt(1, 3);
+                    Map.update();
+                    Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
+                }
+            }
+
+        };
     },
 
     update: function () {
+
+        var sprite;
+        var count = 0;
+
+        Map.buffer = new PIXI.SpriteBatch();
+
+        var startPoint = {};
+
+        startPoint.row = (Map.playerPos.x / Map.TILE_WIDTH_HALF + Map.playerPos.y / Map.TILE_HEIGHT_HALF) / 2;
+        startPoint.col = (Map.playerPos.y / Map.TILE_HEIGHT_HALF - Map.playerPos.x / Map.TILE_WIDTH_HALF) / -2;
+        startPoint.row = Math.floor(startPoint.row);
+        startPoint.col = Math.floor(startPoint.col);
+
+        var aStart = (startPoint.row + startPoint.col) - Map.VIEWPORT_WIDTH_TILES_HALF;
+        var aEnd = aStart + Map.VIEWPORT_WIDTH_TILES;
+
+        var bStart = (startPoint.row - startPoint.col) - Map.VIEWPORT_HEIGHT_TILES_HALF;
+        var bEnd = bStart + Map.VIEWPORT_HEIGHT_TILES;
+
+        for (var b = bStart; b < bEnd + 1; b++) {
+
+            for (var a = aStart; a < aEnd; a++) {
+
+                if ((b & 1) != (a & 1)) {
+                    continue;
+                }
+
+                row = (a + b) / 2;
+                col = (a - b) / 2;
+
+                if (Map.source[row] === undefined) continue;
+                if (Map.source[row][col] === undefined) continue;
+
+                if (Map.source[row][col] > 0) {
+                    sprite = new PIXI.Sprite(PIXI.Texture.fromFrame("grass_and_water_" + Map.source[row][col] + ".png"));
+                } else {
+                    sprite = new PIXI.Sprite(Map.emptyTexture);
+                }
+
+                sprite.anchor.y = 0.5;
+                sprite.position.x = (a * Map.TILE_WIDTH_HALF);
+                sprite.position.y = (b * Map.TILE_HEIGHT_HALF);
+
+                Map.buffer.addChild(sprite);
+
+                count++;
+
+            }
+        }
 
     },
 
     render: function () {
         if (Map.texture) {
             //Map.texture.render(Map.buffer, new PIXI.Point(Map.xOffset, Map.yOffset), true);
+            Map.stats.begin();
+            //Map.update();
             Map.renderer.render(Map.stage);
+            Map.stats.end();
         }
     },
 
@@ -204,8 +274,8 @@ var Map = {
     
         var map = {};
 
-        screen.y -= Map.yOffset;
-        screen.x -= Map.xOffset;
+        screen.y -= Map.offset.y;
+        screen.x -= Map.offset.x;
     
         map.row = (screen.x / Map.TILE_WIDTH_HALF + screen.y / Map.TILE_HEIGHT_HALF) / 2;
         map.col = (screen.y / Map.TILE_HEIGHT_HALF - screen.x / Map.TILE_WIDTH_HALF) / -2;
@@ -229,23 +299,43 @@ document.onkeydown = function (evt) {
     switch (evt.keyCode) {
         case 87:
             //Map.view.position.y--;
-            Map.yOffset--;
+            Map.offset.y--;
+            Map.offsetTracker.y--;
+            Map.playerPos.y++;
             break;
         case 83:
             //Map.view.position.y++;
-            Map.yOffset++;
+            Map.offset.y++;
+            Map.offsetTracker.y++;
+            Map.playerPos.y--;
             break;
         case 65:
             //Map.view.position.x--;
-            Map.xOffset--;
+            Map.offset.x--;
+            Map.offsetTracker.x--;
+            Map.playerPos.x++;
             break;
         case 68:
             //Map.view.position.x++;
-            Map.xOffset++;
+            Map.offset.x++;
+            Map.offsetTracker.x++;
+            Map.playerPos.x--;
             break;
     }
 
     console.log(evt.keyCode + ' - ' + Map.xOffset + ',' + Map.yOffset);
 
-    Map.texture.render(Map.buffer, new PIXI.Point(Map.xOffset, Map.yOffset), true);
+    /*
+    if ( Map.offsetTracker.x  >= 32 ) {
+        Map.offsetTracker.x = 0;
+        Map.update();
+    }
+
+    if (Map.offsetTracker.x <= -32) {
+        Map.offsetTracker.x = 0;
+        Map.update();
+    }
+    */
+    
+    Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
 };
