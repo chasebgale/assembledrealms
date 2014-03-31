@@ -20,7 +20,12 @@ var Map = {
     emptyTexture: null,
     width: 896,
     height: 504,
-    touch: new Vector3(),
+    TILE_WIDTH: 64,
+    TILE_WIDTH_HALF: 32,
+    TILE_HEIGHT: 32,
+    TILE_HEIGHT_HALF: 16,
+    TILE_Y_OFFSET: 20,
+    playerPos: { x: 9500, y: 0 },
 
     init: function (div) {
 
@@ -53,12 +58,12 @@ var Map = {
     create: function (tileWidth, tileHeight) {
 
         /*
-               *     width
-             *   * 
+               *     
+             *   *     
            *   *   *
          *   *   *   *
-           *   *   *
-             *   *   height
+ height    *   *   *
+             *   *   width
                *
         */
 
@@ -77,10 +82,13 @@ var Map = {
         }
 
         // Load the map:
-        var assetsLoader = new PIXI.AssetLoader(["js/editor/placeholder.png"]);
+        var assetsLoader = new PIXI.AssetLoader(["js/editor/landscape.json"]);
         assetsLoader.onComplete = Map.load;
+        assetsLoader.onProgress = function (e) {
+            console.log(e);
+        };
         assetsLoader.load();
-
+        
     },
 
     load: function (map) {
@@ -98,40 +106,53 @@ var Map = {
         var sprite, textSprite;
         var count = 0;
 
-        var startPoint = { "x": 50, "y": 50 };
+        var startPoint = {};
 
-        var aStart = (startPoint.x + startPoint.y) - htileWidth;
+        startPoint.row = (Map.playerPos.x / Map.TILE_WIDTH_HALF + Map.playerPos.y / Map.TILE_HEIGHT_HALF) / 2;
+        startPoint.col = (Map.playerPos.y / Map.TILE_HEIGHT_HALF - Map.playerPos.x / Map.TILE_WIDTH_HALF) / -2;
+        startPoint.row = Math.floor(startPoint.row);
+        startPoint.col = Math.floor(startPoint.col);
+
+        var aStart = (startPoint.row + startPoint.col) - htileWidth;
         var aEnd = aStart + tileWidth;
 
-        var bStart = (startPoint.x - startPoint.y) - htileHeight;
+        var bStart = (startPoint.row - startPoint.col) - htileHeight;
         var bEnd = bStart + tileHeight;
 
-        var xOffset = (-1 * aStart * 32) - 32;
-        var yOffset = (-1 * bStart * 16) - 40;
+        var xOffset = (-1 * aStart * 32) - Map.TILE_WIDTH_HALF;
+        var yOffset = (-1 * bStart * 16) - Map.TILE_Y_OFFSET;
 
-        for (var a = aStart; a < aEnd; a++) {
+        var tileYOffset = Map.TILE_Y_OFFSET + Map.TILE_HEIGHT_HALF;
 
-            for (var b = bStart; b < bEnd; b++) {
+        for (var b = bStart; b < bEnd + 1; b++) {
 
-                sprite = new PIXI.Sprite(PIXI.Texture.fromFrame("js/editor/placeholder.png"));
+            for (var a = aStart; a < aEnd; a++) {
                 
                 if ((b & 1) != (a & 1)) {
                     continue;
                 }
 
-                x = (a + b) / 2;
-                y = (a - b) / 2;
+                row = (a + b) / 2;
+                col = (a - b) / 2;
 
-                textSprite = new PIXI.Text(x + "," + y, { font: "11px serif", fill: "white", align: "left" });
+                if (Map.source[row] === undefined) continue;
+                if (Map.source[row][col] === undefined) continue;
+
+                sprite = new PIXI.Sprite(PIXI.Texture.fromImage("js/editor/placeholder.png"));
+
+                textSprite = new PIXI.Text(row + "," + col, { font: "11px serif", fill: "white", align: "left" });
                 textSprite.position.x = 16;
-                textSprite.position.y = 32;
+                textSprite.position.y = -8;
 
                 sprite.addChild(textSprite);
 
-                sprite.position.x = (a * 32); // + xOffset;
-                sprite.position.y = (b * 16); // + yOffset;
+                sprite.anchor.y = 0.58;
+                sprite.position.x = (a * Map.TILE_WIDTH_HALF);
+                sprite.position.y = (b * Map.TILE_HEIGHT_HALF); // - tileYOffset;
 
-                console.log(sprite.position);
+                //if (row === 0 && col === 0) {
+                    console.log('sprite ' + count + ' - ' + sprite.position.x + ',' + sprite.position.y);
+                //}
 
                 Map.buffer.addChild(sprite);
 
@@ -152,25 +173,23 @@ var Map = {
         Map.xOffset = xOffset;
         Map.yOffset = yOffset;
 
-        console.log(count + " tiles...");
-
-        Map.transformMatrix = new Matrix4();
-        Map.transformMatrix.identity();
-        Map.transformMatrix.makeTranslation(0.0, 0.25, 0.0);
-        Map.transformMatrix.makeRotationAxis({ x: 0, y: 0, z: 1.0 }, -45.0);
-        Map.transformMatrix.makeScale((Math.sqrt(2.0) / 2.0), (Math.sqrt(2.0) / 4.0), 1.0);
-        Map.transformMatrix.getInverse(Map.transformMatrix);
+        console.log(count + " tiles... offset: " + xOffset + ',' + yOffset);
 
         Map.stage.mousedown = function (data) {
             console.log(data.global);
 
-            // Transform way:
-            Map.touch.set(data.global.x, data.global.y, 1);
-            Map.touch.applyMatrix4(Map.transformMatrix);
+            var result = Map.indexFromScreen(data.global);
 
-            console.log(Map.touch);
-            
+            console.log(result.row + ', ' + result.col);
+
+            texture_name = "grass_and_water_" + getRandomInt(0, 3) + ".png";
+            sprites[count] = new PIXI.Sprite(PIXI.Texture.fromFrame(texture_name));
+
         };
+
+    },
+
+    update: function () {
 
     },
 
@@ -181,55 +200,23 @@ var Map = {
         }
     },
 
-    assetsLoaded: function () {
-        var roughRows = Math.round((Landscape.height / 16)) + 1;
-        var roughCols = Math.round((Landscape.width / 64));
+    indexFromScreen: function(screen) {
+    
+        var map = {};
 
-        // Testing fps hit with larger area
-        roughRows = roughRows * 2;
-        roughCols = roughCols * 2;
+        screen.y -= Map.yOffset;
+        screen.x -= Map.xOffset;
+    
+        map.row = (screen.x / Map.TILE_WIDTH_HALF + screen.y / Map.TILE_HEIGHT_HALF) / 2;
+        map.col = (screen.y / Map.TILE_HEIGHT_HALF - screen.x / Map.TILE_WIDTH_HALF) / -2;
+    
+        //map.row = Math.round(map.row + 1); // + origin.x;
+        //map.col = Math.round(map.col); // + origin.y;
+    
+        map.row = Math.floor(map.row);
+        map.col = Math.floor(map.col);
 
-        var rowOffset = 0;
-
-        var count = 0;
-
-        var texture_name;
-
-        var sprites = [];
-
-        Landscape.buffer = new PIXI.DisplayObjectContainer();
-
-        // TODO: In the future this will be a map parsed
-        for (row = 0; row < roughRows; row++) {
-            for (col = 0; col < roughCols; col++) {
-                texture_name = "grass_and_water_" + getRandomInt(0, 3) + ".png";
-                sprites[count] = new PIXI.Sprite(PIXI.Texture.fromFrame(texture_name)); //textures[getRandomInt(0, 3)]);
-
-                if ((row % 2) === 0) {
-                    rowOffset = 32;
-                } else {
-                    rowOffset = 0;
-                }
-
-                sprites[count].position.x = (col * 64) + rowOffset - 32;
-                sprites[count].position.y = (row * 16) - 32;
-
-                Landscape.buffer.addChild(sprites[count]);
-
-                count++;
-            }
-        }
-
-        Landscape.texture = new PIXI.RenderTexture(1600, 1200);
-
-        Landscape.view = new PIXI.Sprite(Landscape.texture);
-
-        Landscape.view.position.x = 0;
-        Landscape.view.position.y = 0;
-
-        Landscape.texture.render(Landscape.buffer, new PIXI.Point(0, 0), true);
-
-        stage.addChild(Landscape.view);
+        return map;
     }
 
 }
@@ -237,7 +224,7 @@ var Map = {
 document.onkeydown = function (evt) {
     evt = evt || window.event;
 
-    console.log(evt.keyCode);
+    
 
     switch (evt.keyCode) {
         case 87:
@@ -257,6 +244,8 @@ document.onkeydown = function (evt) {
             Map.xOffset++;
             break;
     }
+
+    console.log(evt.keyCode + ' - ' + Map.xOffset + ',' + Map.yOffset);
 
     Map.texture.render(Map.buffer, new PIXI.Point(Map.xOffset, Map.yOffset), true);
 };

@@ -1,4 +1,8 @@
-﻿Vector2 = function (x, y) {
+﻿function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+Vector2 = function (x, y) {
 
     this.x = x || 0;
     this.y = y || 0;
