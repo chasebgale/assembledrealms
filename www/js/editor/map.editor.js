@@ -28,6 +28,8 @@ var Map = {
     playerPos: { x: 9500, y: 0 },
     offsetTracker: { x: 0, y: 0 },
     stats: null,
+    tiles: [],
+    tile: 0,
 
     init: function (div) {
 
@@ -38,7 +40,7 @@ var Map = {
         canvas.setAttribute("style", "padding: 2px; display: inline-block;");
         canvas.id = 'mapMain';
         target.appendChild(canvas);
-        
+
         var miniCanvas = document.createElement('div');
         miniCanvas.setAttribute("style", "padding: 2px; display: inline-block;");
         miniCanvas.id = 'mapMini';
@@ -104,7 +106,7 @@ var Map = {
         };
         */
         assetsLoader.load();
-        
+
     },
 
     load: function (map) {
@@ -114,9 +116,8 @@ var Map = {
             Map.source = map;
         }
         */
-        
-        // TODO:
-        //event map.content.json
+
+        Map.createTileIndexes(map.content.json);
         Map.tilesLoaded(map.content.json);
 
         var sprite, textSprite;
@@ -141,7 +142,7 @@ var Map = {
         for (var b = bStart; b < bEnd + 1; b++) {
 
             for (var a = aStart; a < aEnd; a++) {
-                
+
                 if ((b & 1) != (a & 1)) {
                     continue;
                 }
@@ -165,7 +166,7 @@ var Map = {
                 sprite.position.y = (b * Map.TILE_HEIGHT_HALF); // - tileYOffset;
 
                 //if (row === 0 && col === 0) {
-                    console.log('sprite ' + count + ' - ' + sprite.position.x + ',' + sprite.position.y);
+                console.log('sprite ' + count + ' - ' + sprite.position.x + ',' + sprite.position.y);
                 //}
 
                 Map.buffer.addChild(sprite);
@@ -196,19 +197,19 @@ var Map = {
 
             console.log(result.row + ', ' + result.col);
 
-            Map.source[result.row][result.col] = getRandomInt(1, 3);
+            Map.source[result.row][result.col] = Map.tile;
             Map.update();
             Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
 
         };
 
         Map.stage.mousemove = function (data) {
-            
+
             if (data.target.__isDown) {
                 var result = Map.indexFromScreen(data.global);
 
                 if (Map.source[result.row][result.col] === 0) {
-                    Map.source[result.row][result.col] = getRandomInt(1, 3);
+                    Map.source[result.row][result.col] = Map.tile;
                     Map.update();
                     Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
                 }
@@ -252,7 +253,7 @@ var Map = {
                 if (Map.source[row][col] === undefined) continue;
 
                 if (Map.source[row][col] > 0) {
-                    sprite = new PIXI.Sprite(PIXI.Texture.fromFrame("grass_and_water_" + Map.source[row][col] + ".png"));
+                    sprite = new PIXI.Sprite(PIXI.Texture.fromFrame( Map.tiles[Map.source[row][col]] ));
                 } else {
                     sprite = new PIXI.Sprite(Map.emptyTexture);
                 }
@@ -280,26 +281,32 @@ var Map = {
         }
     },
 
-    indexFromScreen: function(screen) {
-    
+    indexFromScreen: function (screen) {
+
         var map = {};
 
         screen.y -= Map.offset.y;
         screen.x -= Map.offset.x;
-    
+
         map.row = (screen.x / Map.TILE_WIDTH_HALF + screen.y / Map.TILE_HEIGHT_HALF) / 2;
         map.col = (screen.y / Map.TILE_HEIGHT_HALF - screen.x / Map.TILE_WIDTH_HALF) / -2;
-    
+
         //map.row = Math.round(map.row + 1); // + origin.x;
         //map.col = Math.round(map.col); // + origin.y;
-    
+
         map.row = Math.floor(map.row);
         map.col = Math.floor(map.col);
 
         return map;
-    }
+    },
 
-}
+    createTileIndexes: function (json) {
+        Map.tiles[0] = "";
+        _.each(json.frames, function (frame, key) {
+            Map.tiles.push(key);
+        });
+    }
+};
 
 document.onkeydown = function (evt) {
     evt = evt || window.event;

@@ -3,14 +3,14 @@
 <head>
     <title></title>
 
-    <link href="models/site-templates/default.css" rel="stylesheet" type="text/css">
+    <link rel='stylesheet' href="models/site-templates/default.css" type="text/css">
+    <link rel='stylesheet' type="text/css" href="css/jquery.treeview.css" />
+    <link rel='stylesheet' href='css/root.css' />
+    <link rel='stylesheet' href='css/bootstrap.min.css' />
+    <link rel='stylesheet' href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' />
 
-    <link rel="stylesheet" type="text/css" href="css/jquery.treeview.css" />
-    <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
-    <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel='stylesheet' />
-
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>    
-    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
+    <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js'></script>
+    <script src='//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js'></script>
 
     <script src="js/editor/utilities.js"></script>
     <script src="js/editor/stats.min.js"></script>
@@ -54,7 +54,11 @@
         $(document).ready(function () {
 
             // UI
-            $("#tabs").tabs();
+            $('#mapTabs a').click(function (e) {
+                e.preventDefault()
+                $(this).tab('show')
+            });
+            $('#mapTabs a:first').tab('show');
 
             // VIEWS
             var templateFn = _.template($('#files_template').html());
@@ -74,7 +78,15 @@
                                 'name': 'engine',
                                 'children': ['landscape.js', 'actors.js', 'engine.js']
                             },
-                            'main.js', 'map.json']
+                            {
+                                'name': 'maps',
+                                'children': ['desert.json', 'forest.json', 'town.json', 'dungeon.json']
+                            },
+                            {
+                                'name': 'assets',
+                                'children': ['dungeon_sprites.png', 'dungeon_sprites.json']
+                            },
+                            'main.js']
                     }
                 ]
             };
@@ -103,7 +115,8 @@
                     $("#editor").text(data);
                     var editor = ace.edit("editor");
                     Map.tilesLoaded = function (json) {
-                        $("#tiles").html(_.template($('#tiles_template').html()));
+                        var template = $('#tiles_template').html();
+                        $("#tiles").html(_.template(template, {model: json}));
                     };
                     Map.init("map");//, JSON.parse(data));
                     Map.create(500, 500);
@@ -112,6 +125,19 @@
                 error: function (data) {
                     alert("error");
                 }
+            });
+
+            $("#tiles").on("click", ".tileBox", function () {
+                var tileKey = $(this).attr('data-id');
+                Map.tile = _.indexOf(Map.tiles, tileKey);
+
+                var offset = parseInt($(this).attr('data-offset'));
+                offset = offset / -2;
+
+                $('#tileButton').css('background-image', $(this).css('background-image'));
+                $('#tileButton').css('background-position-x', offset + 'px');
+
+                $('#modalTiles').modal('hide');
             });
 
         });
@@ -132,15 +158,26 @@
 </head>
 <body>
 
-    <div id="top">
-        <div id="top_content">
-            <div id="logo">
-                <a href="http://www.assembledrealms.com/"><img src="models/site-templates/images/logo.png"></a>
-                    <div><a href="builder.php" class="header-link"><i class="fa fa-cogs fa-2x" style="display: block;"></i>Build</a></div>
-                    <div><a href="#" class="header-link"><i class="fa fa-rocket fa-2x" style="display: block;"></i>Play</a></div>
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="http://www.assembledrealms.com/"><img src='models/site-templates/images/logo.png' /></a>
             </div>
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li><a href='builder.php' class='header-link'><i class='fa fa-cogs fa-2x' style='display: block;'></i>Build</a></li>
+                    <li><a href='#' class='header-link'><i class='fa fa-rocket fa-2x' style='display: block;'></i>Play</a></li>
+                </ul>
+            </div><!--/.nav-collapse -->
         </div>
     </div>
+
 
     <section id="mapEdit">
         <div id="tree" class="sectionbase">
@@ -152,19 +189,46 @@
         </div>
 
         <div id="tabs">
-            <ul>
-                <li><a href="#editor">Raw Text</a></li>
-                <li><a href="#map">Map Editor</a></li>
+            <ul class="nav nav-tabs" id="mapTabs">
+                <li class="active"><a href="#editor" data-toggle="tab">Raw Text</a></li>
+                <li><a href="#map" data-toggle="tab">Map Editor</a></li>
             </ul>
-            <div id="editor"></div>
-            <div id="map"></div>
-            <div id="tiles"></div>
+
+            <div class="tab-content">
+                <div class="tab-pane active" id="editor"></div>
+                <div class="tab-pane" id="map">
+                    <nav class="navbar navbar-default" role="navigation">
+                        <div class="container-fluid">
+                            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                                <ul class="nav navbar-nav">
+                                    <button id="tileButton" type="button" class="btn btn-default navbar-btn" data-toggle="modal" data-target=".tiles-modal-lg"></button>
+                                </ul>
+                            </div>
+                        </div>
+                    </nav>
+                </div>
+            </div>
         </div>
+
     </section>
+
+    <div class="modal fade tiles-modal-lg" id="modalTiles" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Select a tile...</h4>
+                </div>
+                <div class="modal-body" id="tiles">
+                </div>
+            </div>
+        </div>
+    </div>
     
     <script id="files_template" type="text/template">
-        <% if (model.frames) { %>
+        <% if (model.children) { %>
         <li class='collapsable'>
+            <span class='folder'><%= model.name %></span>
             <ul>
                 <% _.each(model.children, function(child) { %>
                 <%= templateFn({'model': child, 'templateFn': templateFn}) %>
@@ -177,15 +241,15 @@
     </script>
 
     <script id="tiles_template" type="text/template">
-        <% if (model.children) { %>
-            <ul>
-                <% _.each(model.children, function(child) { %>
-                <li>
-
-                </li>
-                <% }); %>
-            </ul>
-        <% } %>
+        <div class="container-fluid">
+            <div class="row">
+                <% if (model.frames) { %>
+                    <% _.each(model.frames, function(frame, key) { %>
+                        <div class="col-md-1 tileBox" data-id="<%- key %>" data-offset="<%- frame.frame.x %>" style="background-image: url(js/editor/<%- model.meta.image %>); background-position-x: <%- (frame.frame.x * -1) + 'px' %>; width: 64px; height: 64px;"></div>
+                    <% }); %>
+                <% } %>
+            </div>
+        </div>
     </script>
 
 </body>

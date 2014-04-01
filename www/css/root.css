@@ -7,6 +7,17 @@
     width: 1000px;
 }
 
+#tileButton {
+    width: 32px;
+    height: 32px;
+    background-size: auto 32px;
+}
+
+.tileBox {
+    width: 64px;
+    height: 64px;
+}
+
 #newRealmRoot {
     margin-top: 24px;
     padding: 6px;
