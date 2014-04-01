@@ -94,20 +94,30 @@ var Map = {
         }
 
         // Load the map:
-        var assetsLoader = new PIXI.AssetLoader(["js/editor/landscape.json"]);
-        assetsLoader.onComplete = Map.load;
+        var assetsLoader = new PIXI.JsonLoader("js/editor/landscape.json");
+
+        assetsLoader.addEventListener("loaded", Map.load);
+        //assetsLoader.onComplete = Map.load;
+        /*
         assetsLoader.onProgress = function (e) {
             console.log(e);
         };
+        */
         assetsLoader.load();
         
     },
 
     load: function (map) {
 
+        /*
         if (map) {
             Map.source = map;
         }
+        */
+        
+        // TODO:
+        //event map.content.json
+        Map.tilesLoaded(map.content.json);
 
         var sprite, textSprite;
         var count = 0;

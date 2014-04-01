@@ -17,7 +17,7 @@
     <script src="js/editor/map.editor.js"></script>
     
     <script src="js/jquery.treeview.js"></script>
-    <script src="js/pixi.js"></script>
+    <script src="js/pixi.dev.js"></script>
     <script src="js/lodash.min.js"></script>
     <script src="js/ace/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
 
@@ -102,6 +102,9 @@
                 success: function (data, textStatus) {
                     $("#editor").text(data);
                     var editor = ace.edit("editor");
+                    Map.tilesLoaded = function (json) {
+                        $("#tiles").html(_.template($('#tiles_template').html()));
+                    };
                     Map.init("map");//, JSON.parse(data));
                     Map.create(500, 500);
                     requestAnimationFrame(animate);
@@ -155,13 +158,13 @@
             </ul>
             <div id="editor"></div>
             <div id="map"></div>
+            <div id="tiles"></div>
         </div>
     </section>
     
     <script id="files_template" type="text/template">
-        <% if (model.children) { %>
+        <% if (model.frames) { %>
         <li class='collapsable'>
-            <span class='folder'><%= model.name %></span>
             <ul>
                 <% _.each(model.children, function(child) { %>
                 <%= templateFn({'model': child, 'templateFn': templateFn}) %>
@@ -170,6 +173,18 @@
         </li>
         <% } else { %>
         <li><span class="file"><%- model %></span></li>
+        <% } %>
+    </script>
+
+    <script id="tiles_template" type="text/template">
+        <% if (model.children) { %>
+            <ul>
+                <% _.each(model.children, function(child) { %>
+                <li>
+
+                </li>
+                <% }); %>
+            </ul>
         <% } %>
     </script>
 
