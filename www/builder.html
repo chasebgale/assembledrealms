@@ -130,6 +130,7 @@
             $("#tiles").on("click", ".tileBox", function () {
                 var tileKey = $(this).attr('data-id');
                 Map.tile = _.indexOf(Map.tiles, tileKey);
+                Map.brushSprite.setTexture(PIXI.Texture.fromFrame(Map.tiles[Map.tile]));
 
                 var offset = parseInt($(this).attr('data-offset'));
                 offset = offset / -2;

@@ -56,6 +56,9 @@ var Map = {
         miniCanvas.appendChild(Map.rendererMini.view);
 
         Map.emptyTexture = PIXI.Texture.fromImage("js/editor/placeholder.png");
+        Map.brushSprite = new PIXI.Sprite(Map.emptyTexture);
+        Map.brushSprite.anchor.x = 0.5;
+        Map.brushSprite.anchor.y = 0.5;
 
         Map.VIEWPORT_WIDTH_TILES = Math.ceil(Map.width / 32) + 1;
         Map.VIEWPORT_HEIGHT_TILES = Math.ceil(Map.height / 16) + 1;
@@ -183,6 +186,8 @@ var Map = {
         Map.texture.render(Map.buffer, new PIXI.Point(xOffset, yOffset), true);
 
         Map.stage.addChild(Map.view);
+        Map.stage.addChild(Map.brushSprite);
+
         Map.renderer.render(Map.stage);
 
         Map.offset = { x: xOffset, y: yOffset };
@@ -204,6 +209,8 @@ var Map = {
         };
 
         Map.stage.mousemove = function (data) {
+
+            Map.brushSprite.position = data.global;
 
             if (data.target.__isDown) {
                 var result = Map.indexFromScreen(data.global);
