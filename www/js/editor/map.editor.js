@@ -15,7 +15,6 @@ var Map = {
 
     stage: null,
     renderer: null,
-    rendererMini: null,
     source: [],
     emptyTexture: null,
     width: 896,
@@ -41,19 +40,25 @@ var Map = {
         canvas.id = 'mapMain';
         target.appendChild(canvas);
 
-        var miniCanvas = document.createElement('div');
-        miniCanvas.setAttribute("style", "padding: 2px; display: inline-block;");
-        miniCanvas.id = 'mapMini';
-        target.appendChild(miniCanvas);
+        var miniMapDiv = document.createElement('div');
+        miniMapDiv.setAttribute("style", "padding: 2px; display: inline-block;");
+        miniMapDiv.id = 'mapMini';
+        target.appendChild(miniMapDiv);
+
+        var miniMapCanvas = document.createElement('canvas');
+        miniMapCanvas.setAttribute('width', '448');
+        miniMapCanvas.setAttribute('height', '252');
+
+        Map.miniMapContext = miniMapCanvas.getContext('2d');
+
+        miniMapDiv.appendChild(miniMapCanvas);
 
         // Initialize PIXI:
         Map.renderer = new PIXI.WebGLRenderer(Map.width, Map.height);
-        Map.rendererMini = new PIXI.WebGLRenderer(400, 300);
 
         Map.stage = new PIXI.Stage(0x000000, true);
 
         canvas.appendChild(Map.renderer.view);
-        miniCanvas.appendChild(Map.rendererMini.view);
 
         Map.emptyTexture = PIXI.Texture.fromImage("js/editor/placeholder.png");
         Map.brushSprite = new PIXI.Sprite(Map.emptyTexture);
