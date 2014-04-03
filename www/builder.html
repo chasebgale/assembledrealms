@@ -24,7 +24,7 @@
 
     <style>
         #mapEdit {
-            width: 90%;
+            width: 100%;
             height: 100%;
             margin: auto;
             padding: 10px;
@@ -43,6 +43,7 @@
 
         div#editor {
             height: 600px;
+            width: 100%;
         }
 
         div#map {
@@ -116,7 +117,7 @@
                     var editor = ace.edit("editor");
                     Map.tilesLoaded = function (json) {
                         var template = $('#tiles_template').html();
-                        $("#tiles").html(_.template(template, {model: json}));
+                        $("#tiles").append(_.template(template, {model: json}));
                     };
                     Map.init("map");//, JSON.parse(data));
                     Map.create(500, 500);
@@ -242,11 +243,12 @@
     </script>
 
     <script id="tiles_template" type="text/template">
+        <h2><%- model.meta.image %></h2>
         <div class="container-fluid">
             <div class="row">
                 <% if (model.frames) { %>
                     <% _.each(model.frames, function(frame, key) { %>
-                        <div class="col-md-1 tileBox" data-id="<%- key %>" data-offset="<%- frame.frame.x %>" style="background-image: url(js/editor/<%- model.meta.image %>); background-position-x: <%- (frame.frame.x * -1) + 'px' %>; width: 64px; height: 64px;"></div>
+                        <div class="col-md-1 tileBox" data-id="<%- key %>" data-offset="<%- frame.frame.x %>" style="background-image: url(js/editor/<%- model.meta.image %>); background-position-x: <%- (frame.frame.x * -1) + 'px' %>; width: <%- frame.frame.w + 'px' %>; height: <%- frame.frame.h + 'px' %>; "></div>
                     <% }); %>
                 <% } %>
             </div>

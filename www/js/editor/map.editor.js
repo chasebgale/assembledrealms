@@ -9,6 +9,11 @@ EG:
 
 http://www.openspace-engine.com/support/tutorials/mapStructure
 
+LIBRARIES:
+
+https://github.com/lokesh/color-thief - Determine dominant color in image JS (for mini map pixel representation of tile)
+https://gist.github.com/boazsender/cf23f8bddb307ad4abd8 - same thing as above but in php, depends on the direction I go in
+
 */
 
 var Map = {
@@ -106,15 +111,20 @@ var Map = {
         // Load the map:
         var assetsLoader = new PIXI.JsonLoader("js/editor/landscape.json");
 
-        assetsLoader.addEventListener("loaded", Map.load);
-        //assetsLoader.onComplete = Map.load;
-        /*
-        assetsLoader.onProgress = function (e) {
-            console.log(e);
-        };
-        */
+        assetsLoader.addEventListener("loaded", Map.jsonLoaded);
+        assetsLoader.addEventListener("loaded", function (json) {
+            var assetsLoader = new PIXI.JsonLoader("js/editor/dungeon_walls.json");
+            assetsLoader.addEventListener("loaded", Map.jsonLoaded);
+            assetsLoader.addEventListener("loaded", Map.load);
+            assetsLoader.load();
+        });
         assetsLoader.load();
 
+    },
+
+    jsonLoaded: function (json) {
+        Map.createTileIndexes(json.content.json);
+        Map.tilesLoaded(json.content.json);
     },
 
     load: function (map) {
@@ -125,8 +135,7 @@ var Map = {
         }
         */
 
-        Map.createTileIndexes(map.content.json);
-        Map.tilesLoaded(map.content.json);
+        
 
         var sprite, textSprite;
         var count = 0;
@@ -270,7 +279,8 @@ var Map = {
                     sprite = new PIXI.Sprite(Map.emptyTexture);
                 }
 
-                sprite.anchor.y = 0.5;
+                sprite.anchor.y = (sprite.height - 32) / sprite.height;
+                sprite.anchor.x = ((sprite.width / 2) - 32) / sprite.width;
                 sprite.position.x = (a * Map.TILE_WIDTH_HALF);
                 sprite.position.y = (b * Map.TILE_HEIGHT_HALF);
 
