@@ -115,9 +115,13 @@
                 success: function (data, textStatus) {
                     $("#editor").text(data);
                     var editor = ace.edit("editor");
-                    Map.tilesLoaded = function (json) {
+                    Map.onTilesLoaded = function (json) {
                         var template = $('#tiles_template').html();
                         $("#tiles").append(_.template(template, {model: json}));
+                    };
+                    Map.onObjectsLoaded = function (json) {
+                        var template = $('#objects_template').html();
+                        $("#objects").append(_.template(template, { model: json }));
                     };
                     Map.init("map");//, JSON.parse(data));
                     Map.create(500, 500);
@@ -130,8 +134,10 @@
 
             $("#tiles").on("click", ".tileBox", function () {
                 var tileKey = $(this).attr('data-id');
-                Map.tile = _.indexOf(Map.tiles, tileKey);
-                Map.brushSprite.setTexture(PIXI.Texture.fromFrame(Map.tiles[Map.tile]));
+                var tileLayer = parseInt($(this).attr('data-layer'));
+                
+                Map.layer = tileLayer;
+                Map.setBrush(Map.tiles, tileKey);
 
                 var offset = parseInt($(this).attr('data-offset'));
                 offset = offset / -2;
@@ -140,6 +146,22 @@
                 $('#tileButton').css('background-position-x', offset + 'px');
 
                 $('#modalTiles').modal('hide');
+            });
+
+            $("#objects").on("click", ".objectBox", function () {
+                var objectKey = $(this).attr('data-id');
+                var objectLayer = parseInt($(this).attr('data-layer'));
+
+                Map.layer = objectLayer;
+                Map.setBrush(Map.objects, objectKey);
+
+                var offset = parseInt($(this).attr('data-offset'));
+                offset = offset / -2;
+
+                $('#objectButton').css('background-image', $(this).css('background-image'));
+                $('#objectButton').css('background-position-x', offset + 'px');
+
+                $('#modalObjects').modal('hide');
             });
 
         });
@@ -204,6 +226,7 @@
                             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                                 <ul class="nav navbar-nav">
                                     <button id="tileButton" type="button" class="btn btn-default navbar-btn" data-toggle="modal" data-target=".tiles-modal-lg"></button>
+                                    <button id="objectButton" type="button" class="btn btn-default navbar-btn" data-toggle="modal" data-target=".objects-modal-lg"></button>
                                 </ul>
                             </div>
                         </div>
@@ -222,6 +245,19 @@
                     <h4 class="modal-title">Select a tile...</h4>
                 </div>
                 <div class="modal-body" id="tiles">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade objects-modal-lg" id="modalObjects" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Select an object...</h4>
+                </div>
+                <div class="modal-body" id="objects">
                 </div>
             </div>
         </div>
@@ -248,8 +284,21 @@
             <div class="row">
                 <% if (model.frames) { %>
                     <% _.each(model.frames, function(frame, key) { %>
-                        <div class="col-md-1 tileBox" data-id="<%- key %>" data-offset="<%- frame.frame.x %>" style="background-image: url(js/editor/<%- model.meta.image %>); background-position-x: <%- (frame.frame.x * -1) + 'px' %>; width: <%- frame.frame.w + 'px' %>; height: <%- frame.frame.h + 'px' %>; "></div>
+                        <div class="col-md-1 tileBox" data-id="<%- key %>" data-layer="0" data-offset="<%- frame.frame.x %>" style="background-image: url(js/editor/<%- model.meta.image %>); background-position-x: <%- (frame.frame.x * -1) + 'px' %>; width: <%- frame.frame.w + 'px' %>; height: <%- frame.frame.h + 'px' %>; "></div>
                     <% }); %>
+                <% } %>
+            </div>
+        </div>
+    </script>
+
+    <script id="objects_template" type="text/template">
+        <h2><%- model.meta.image %></h2>
+        <div class="container-fluid">
+            <div class="row">
+                <% if (model.frames) { %>
+                <% _.each(model.frames, function(frame, key) { %>
+                <div class="col-md-1 objectBox" data-id="<%- key %>" data-layer="1" data-offset="<%- frame.frame.x %>" style="background-image: url(js/editor/<%- model.meta.image %>); background-position-x: <%- (frame.frame.x * -1) + 'px' %>; width: <%- frame.frame.w + 'px' %>; height: <%- frame.frame.h + 'px' %>; "></div>
+                <% }); %>
                 <% } %>
             </div>
         </div>
