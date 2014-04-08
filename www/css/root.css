@@ -11,12 +11,14 @@
     width: 32px;
     height: 32px;
     background-size: auto 32px;
+    background-repeat: no-repeat;
 }
 
 #objectButton {
     width: 32px;
     height: 32px;
     background-size: auto 32px;
+    background-repeat: no-repeat;
 }
 
 .tileBox {

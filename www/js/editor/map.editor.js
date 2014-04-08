@@ -329,36 +329,34 @@ var Map = {
 document.onkeydown = function (evt) {
     evt = evt || window.event;
 
-    
+    var amount = 2;
 
     switch (evt.keyCode) {
         case 87:
             //Map.view.position.y--;
-            Map.offset.y--;
-            Map.offsetTracker.y--;
-            Map.playerPos.y++;
+            Map.offset.y -= amount;
+            Map.offsetTracker.y -= amount;
+            Map.playerPos.y += amount;
             break;
         case 83:
             //Map.view.position.y++;
-            Map.offset.y++;
-            Map.offsetTracker.y++;
-            Map.playerPos.y--;
+            Map.offset.y += amount;
+            Map.offsetTracker.y += amount;
+            Map.playerPos.y -= amount;
             break;
         case 65:
             //Map.view.position.x--;
-            Map.offset.x--;
-            Map.offsetTracker.x--;
-            Map.playerPos.x++;
+            Map.offset.x -= amount;
+            Map.offsetTracker.x -= amount;
+            Map.playerPos.x += amount;
             break;
         case 68:
             //Map.view.position.x++;
-            Map.offset.x++;
-            Map.offsetTracker.x++;
-            Map.playerPos.x--;
+            Map.offset.x += amount;
+            Map.offsetTracker.x += amount;
+            Map.playerPos.x -= amount;
             break;
     }
-
-    console.log(evt.keyCode + ' - ' + Map.xOffset + ',' + Map.yOffset);
 
     /*
     if ( Map.offsetTracker.x  >= 32 ) {
