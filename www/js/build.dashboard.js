@@ -28,4 +28,16 @@ $(document).ready(function () {
 
     $("#existingRealmsList").html(templateFn({ 'realms': responseJSON }));
 
+    $("#createRealm").on("click", function () {
+
+        $.post("builder.php", { name: $("#realmName").val(), type: "0" })
+        .done(function (data) {
+            alert("Data Loaded: " + data);
+        })
+        .fail(function (error) {
+            alert("Error: " + error);
+        });
+
+    });
+
 });

@@ -9,20 +9,6 @@ if(!isUserLoggedIn()) {
   die(); 
 }
 
-if(!empty($_POST))
-{
-	//$username = sanitize(trim($_POST["username"]));
-	//$password = trim($_POST["password"]);
-  
-  // Step 1: Does this user need a gitlab acct?
-  
-  // Step 2: Create project in their gitlab
-  
-  // Step 3: Create SQL 
-  
-  // Step 4: Redirect to Realm's Dashboard
-}
-
 ?>
 
 <div id="content">
@@ -32,7 +18,7 @@ if(!empty($_POST))
       <div>
         <h1>New Realm!</h1>
         <br />
-        <input type="text" placeholder="Realm Name"></input>
+        <input id="realmName" type="text" placeholder="Realm Name"></input>
       </div>
       <div>
         <i class="fa fa-caret-left fa-2x"></i>
@@ -44,7 +30,7 @@ if(!empty($_POST))
         <i class="fa fa-caret-right fa-2x"></i>
       </div>
       <div style="float: right;">
-        <a class="btn btn-default btn-lg" href="#" role="button">Create »</a>
+        <a id="createRealm" class="btn btn-default btn-lg" href="#" role="button">Create »</a>
       </div>
     </div>
   </section>
