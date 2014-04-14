@@ -123,8 +123,8 @@
                         var template = $('#objects_template').html();
                         $("#objects").append(_.template(template, { model: json }));
                     };
-                    Map.init("map");//, JSON.parse(data));
-                    Map.create(500, 500);
+                    Map.init("map", JSON.parse(data));
+                    //Map.create(10, 10);
                     requestAnimationFrame(animate);
                 },
                 error: function (data) {

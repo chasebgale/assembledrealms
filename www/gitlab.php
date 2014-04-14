@@ -60,6 +60,7 @@ curl_setopt_array($curl, array(
 
 $resp = curl_exec($curl);
 
+// THIRD: Call API on gitlab box that will start a shell script to move iso engine files into new repo and call commit 
 
 curl_close($curl);
 
