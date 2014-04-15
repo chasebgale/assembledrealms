@@ -20,7 +20,6 @@ var Map = {
 
     stage: null,
     renderer: null,
-    emptyTexture: null,
     width: 896,
     height: 504,
     TILE_WIDTH: 64,
@@ -31,11 +30,10 @@ var Map = {
     playerPos: { x: 0, y: 0 },
     offsetTracker: { x: 0, y: 0 },
     stats: null,
-    tiles: [],
-    objects: [],
     terrain: {},
+    objects: {},
+    brush: {},
     tile: 0,
-    brushSource: null,
 
     init: function (div, map) {
 
@@ -43,7 +41,7 @@ var Map = {
         var target = document.getElementById(div);
 
         var canvas = document.createElement('div');
-        canvas.setAttribute("style", "padding: 2px; display: inline-block;");
+        canvas.setAttribute("style", "padding: 2px; display: inline-block; cursor: none;");
         canvas.id = 'mapMain';
         target.appendChild(canvas);
 
@@ -67,11 +65,6 @@ var Map = {
 
         canvas.appendChild(Map.renderer.view);
 
-        Map.emptyTexture = PIXI.Texture.fromImage("js/editor/placeholder.png");
-        Map.brushSprite = new PIXI.Sprite(Map.emptyTexture);
-        Map.brushSprite.anchor.x = 0.5;
-        Map.brushSprite.anchor.y = 0.5;
-
         Map.VIEWPORT_WIDTH_TILES = Math.ceil(Map.width / 32) + 1;
         Map.VIEWPORT_HEIGHT_TILES = Math.ceil(Map.height / 16) + 1;
 
@@ -79,6 +72,7 @@ var Map = {
         Map.VIEWPORT_HEIGHT_TILES_HALF = Math.ceil(Map.VIEWPORT_HEIGHT_TILES / 2);
 
         Map.terrain = map.terrain;
+        Map.objects = map.objects;
         Map.buffer = new PIXI.SpriteBatch();
 
         Map.stats = new Stats();
@@ -86,8 +80,9 @@ var Map = {
         Map.stats.domElement.style.position = "absolute";
         Map.stats.domElement.style.top = "200px";
 
-
-        var assets = _.union(map.terrain.source, map.objects.source, map.actors.source);
+        // Maybe in the future we can load them from one array, for now though we need the manual chaining to 
+        // setup the markup properly... :/
+        // var assets = _.union(map.terrain.source, map.objects.source, map.actors.source);
 
         var tilesLoader = new PIXI.AssetLoader(map.terrain.source);
 
@@ -161,22 +156,52 @@ var Map = {
     },
 
     tilesLoaded: function (obj) {
-        Map.createTileIndexes(obj.json);
+        //Map.createTileIndexes(obj.json);
         Map.onTilesLoaded(obj.json);
     },
 
     objectsLoaded: function (obj) {
-        Map.createObjectIndexes(obj.json);
+        //Map.createObjectIndexes(obj.json);
         Map.onObjectsLoaded(obj.json);
     },
 
-    setBrush: function (brushSource, brushKey) {
-        Map.tile = _.indexOf(brushSource, brushKey);
-        Map.brushSource = brushSource;
+    setBrush: function (source, textureKey) {
 
-        Map.brushSprite.setTexture(PIXI.Texture.fromFrame(Map.brushSource[Map.tile]));
-        Map.brushSprite.anchor.y = (Map.brushSprite.height - 32) / Map.brushSprite.height;
-        Map.brushSprite.anchor.x = (Map.brushSprite.width / 2) / Map.brushSprite.width;
+        var indexFromKey = -1;
+
+        _.each(source.index, function (key, index) {
+            if (key === textureKey) {
+                indexFromKey = parseInt(key);
+                return false;
+            }
+        });
+
+        if (indexFromKey > -1) {
+            Map.brush.index = indexFromKey;
+        } else {
+
+            var indexSize = _.size(source) + 1;
+            for (var i = 0; i < indexSize; i++) {
+                if (source.index[i] === undefined) {
+                    source.index[i] = textureKey;
+                    Map.brush.index = i;
+                    break;
+                }
+            }
+
+        }
+
+        Map.brush.source = source;
+
+        if (Map.brush.sprite === undefined) {
+            Map.brush.sprite = new PIXI.Sprite(PIXI.Texture.fromFrame(textureKey));
+            Map.stage.addChild(Map.brush.sprite);
+        } else {
+            Map.brush.sprite.setTexture(PIXI.Texture.fromFrame(textureKey));
+        }
+
+        Map.brush.sprite.anchor.y = (Map.brush.sprite.height - 32) / Map.brush.sprite.height;
+        Map.brush.sprite.anchor.x = (Map.brush.sprite.width / 2) / Map.brush.sprite.width;
 
     },
 
@@ -193,7 +218,6 @@ var Map = {
 
         Map.stage.addChild(Map.layer_terrain);
         Map.stage.addChild(Map.layer_actors);
-        Map.stage.addChild(Map.brushSprite);
 
         Map.renderer.render(Map.stage);
 
@@ -227,11 +251,11 @@ var Map = {
             }
             */
             
-            if (Map.terrain[result.row] === undefined) {
-                Map.terrain[result.row] = {};
+            if (Map.brush.source[result.row] === undefined) {
+                Map.brush.source[result.row] = {};
             }
 
-            Map.terrain[result.row][result.col] = Map.tile;
+            Map.brush.source[result.row][result.col] = Map.brush.index;
             Map.draw();
             Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
 
@@ -244,18 +268,18 @@ var Map = {
             if (data.target.__isDown) {
                 var result = Map.indexFromScreen(data.global);
 
-                if (Map.terrain[result.row] === undefined) {
-                    Map.terrain[result.row] = {};
+                if (Map.brush.source[result.row] === undefined) {
+                    Map.brush.source[result.row] = {};
                 }
 
-                Map.terrain[result.row][result.col] = Map.tile;
+                Map.brush.source[result.row][result.col] = Map.brush.index;
                 Map.draw();
                 Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
                 
             }
 
-            Map.brushSprite.position = data.global;
-            console.log("brushSprite: " + data.global.x + ", " + data.global.y);
+            if (Map.brush.sprite)
+                Map.brush.sprite.position = data.global;
 
         };
     },
@@ -304,32 +328,23 @@ var Map = {
                 if (Map.terrain[row] === undefined) continue;
                 if (Map.terrain[row][col] === undefined) continue;
 
-                /*
-                switch (layer) {
-                    case 0:
-                        if (Map.source[layer][row][col] > 0) {
-                            sprite = new PIXI.Sprite(PIXI.Texture.fromFrame(Map.tiles[Map.source[layer][row][col]]));
-                        } else {
-                            sprite = new PIXI.Sprite(Map.emptyTexture);
-                        }
-                        break;
-                    case 1:
-                        if (Map.source[layer][row][col] > 0) {
-                            sprite = new PIXI.Sprite(PIXI.Texture.fromFrame(Map.objects[Map.source[layer][row][col]]));
-                        }
-                        break;
-                }
-                */
-
-                sprite = new PIXI.Sprite(PIXI.Texture.fromFrame(Map.tiles[Map.terrain[row][col]]));
-                    
-
+                sprite = new PIXI.Sprite(PIXI.Texture.fromFrame(Map.terrain.index[Map.terrain[row][col]]));
                 sprite.anchor.y = (sprite.height - 32) / sprite.height;
                 sprite.anchor.x = ((sprite.width / 2) - 32) / sprite.width;
                 sprite.position.x = (a * Map.TILE_WIDTH_HALF);
                 sprite.position.y = (b * Map.TILE_HEIGHT_HALF);
-
                 Map.buffer.addChild(sprite);
+
+                if (Map.objects[row] !== undefined) {
+                    if (Map.objects[row][col] !== undefined) {
+                        sprite = new PIXI.Sprite(PIXI.Texture.fromFrame(Map.objects.index[Map.objects[row][col]]));
+                        sprite.anchor.y = (sprite.height - 32) / sprite.height;
+                        sprite.anchor.x = ((sprite.width / 2) - 32) / sprite.width;
+                        sprite.position.x = (a * Map.TILE_WIDTH_HALF);
+                        sprite.position.y = (b * Map.TILE_HEIGHT_HALF);
+                        Map.buffer.addChild(sprite);
+                    }
+                }
 
                 count++;
                 
@@ -375,18 +390,6 @@ var Map = {
         map.col = Math.floor(map.col);
 
         return map;
-    },
-
-    createTileIndexes: function (json) {
-        _.each(json.frames, function (frame, key) {
-            Map.tiles.push(key);
-        });
-    },
-
-    createObjectIndexes: function (json) {
-        _.each(json.frames, function (frame, key) {
-            Map.objects.push(key);
-        });
     }
 };
 

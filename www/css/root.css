@@ -7,16 +7,22 @@
     width: 1000px;
 }
 
+.navbar-light {
+    background-color: #E0E0E0;
+    border-color: #E0E0E0;
+    border-radius: 0 !important;
+}
+
 #tileButton {
     width: 32px;
-    height: 32px;
+    height: 34px;
     background-size: auto 32px;
     background-repeat: no-repeat;
 }
 
 #objectButton {
     width: 32px;
-    height: 32px;
+    height: 34px;
     background-size: auto 32px;
     background-repeat: no-repeat;
 }

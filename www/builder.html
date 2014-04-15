@@ -107,6 +107,8 @@
             //var editor = ace.edit("editor");
             //editor.getSession().setMode("ace/mode/javascript");
             
+            $("#mapToolbar [data-toggle='tooltip']").tooltip();
+
             $.ajax({
                 type: "GET",
                 url: "map.json",
@@ -134,13 +136,14 @@
 
             $("#tiles").on("click", ".tileBox", function () {
                 var tileKey = $(this).attr('data-id');
-                Map.setBrush(Map.tiles, tileKey);
+                Map.setBrush(Map.terrain, tileKey);
 
                 var offset = parseInt($(this).attr('data-offset'));
                 offset = offset / -2;
 
                 $('#tileButton').css('background-image', $(this).css('background-image'));
                 $('#tileButton').css('background-position-x', offset + 'px');
+                setToolbarFocus($('#tileButton'));
 
                 $('#modalTiles').modal('hide');
             });
@@ -154,11 +157,23 @@
 
                 $('#objectButton').css('background-image', $(this).css('background-image'));
                 $('#objectButton').css('background-position-x', offset + 'px');
+                setToolbarFocus($('#objectButton'));
 
                 $('#modalObjects').modal('hide');
             });
 
+            $("#moveButton").on("click", function () {
+                $("#mapMain").css('cursor', 'move');
+            });
+
         });
+
+        function setToolbarFocus(target) {
+            $("#tileButton").removeClass('active');
+            $("#objectButton").removeClass('active');
+
+            target.button('toggle');
+        }
 
         function animate() {
 
@@ -215,12 +230,27 @@
             <div class="tab-content">
                 <div class="tab-pane active" id="editor"></div>
                 <div class="tab-pane" id="map">
-                    <nav class="navbar navbar-default" role="navigation">
+                    <nav class="navbar navbar-light" role="navigation">
                         <div class="container-fluid">
                             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                                <ul class="nav navbar-nav">
-                                    <button id="tileButton" type="button" class="btn btn-default navbar-btn" data-toggle="modal" data-target=".tiles-modal-lg"></button>
-                                    <button id="objectButton" type="button" class="btn btn-default navbar-btn" data-toggle="modal" data-target=".objects-modal-lg"></button>
+                                <ul class="nav navbar-nav" id="mapToolbar">
+                                    <!--<button id="tileButton" type="button" class="btn btn-default navbar-btn" data-toggle="modal" data-target=".tiles-modal-lg"></button>-->
+                                    <button type="button" class="btn btn-default navbar-btn" id="moveButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Navigate the map"><i class="fa fa-arrows"></i></button>
+                                    <button type="button" class="btn btn-default navbar-btn" id="eraserButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Erase tiles"><i class="fa fa-eraser"></i></button>
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-default navbar-btn" id="tileButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Place terrain"></button>
+                                        <button type="button" class="btn btn-default dropdown-toggle navbar-btn" data-toggle="modal" data-target=".tiles-modal-lg">
+                                            <span class="caret"></span>
+                                            <span class="sr-only">Toggle Dropdown</span>
+                                        </button>
+                                    </div>
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-default navbar-btn" id="objectButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Place objects over terrain"></button>
+                                        <button type="button" class="btn btn-default dropdown-toggle navbar-btn" data-toggle="modal" data-target=".objects-modal-lg">
+                                            <span class="caret"></span>
+                                            <span class="sr-only">Toggle Dropdown</span>
+                                        </button>
+                                    </div>
                                 </ul>
                             </div>
                         </div>
