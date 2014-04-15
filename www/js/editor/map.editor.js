@@ -87,8 +87,9 @@ var Map = {
         Map.stats.domElement.style.top = "200px";
 
 
+        var assets = _.union(map.terrain.source, map.objects.source, map.actors.source);
 
-        var tilesLoader = new PIXI.AssetLoader(["js/editor/landscape.json"]);
+        var tilesLoader = new PIXI.AssetLoader(map.terrain.source);
 
         tilesLoader.addEventListener("loaded", Map.jsonLoaded);
         tilesLoader.onProgress = function (json) {
@@ -184,13 +185,14 @@ var Map = {
         Map.draw();
 
         Map.texture = new PIXI.RenderTexture(Map.renderer.width, Map.renderer.height);
-        Map.actors = new PIXI.DisplayObjectContainer();
-        Map.view = new PIXI.Sprite(Map.texture);
+
+        Map.layer_actors = new PIXI.DisplayObjectContainer();
+        Map.layer_terrain = new PIXI.Sprite(Map.texture);
 
         Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
 
-        Map.stage.addChild(Map.view);
-        Map.stage.addChild(Map.actors);
+        Map.stage.addChild(Map.layer_terrain);
+        Map.stage.addChild(Map.layer_actors);
         Map.stage.addChild(Map.brushSprite);
 
         Map.renderer.render(Map.stage);
@@ -230,7 +232,7 @@ var Map = {
             }
 
             Map.terrain[result.row][result.col] = Map.tile;
-            Map.update();
+            Map.draw();
             Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
 
         };
@@ -247,7 +249,7 @@ var Map = {
                 }
 
                 Map.terrain[result.row][result.col] = Map.tile;
-                Map.update();
+                Map.draw();
                 Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
                 
             }
@@ -266,7 +268,7 @@ var Map = {
         var sprite;
         var count = 0;
 
-        Map.buffer = new PIXI.SpriteBatch();
+        Map.buffer.children = []; //= new PIXI.SpriteBatch(); <-- Leaks memory :-/
 
         var startPoint = {};
 
@@ -337,23 +339,31 @@ var Map = {
 
     render: function () {
 
-        Map.draw();
+        Map.stats.begin();
+
+        if (Map.invalidate) {
+            Map.draw();
+            Map.invalidate = false;
+        }
 
         if (Map.texture) {
             //Map.texture.render(Map.buffer, new PIXI.Point(Map.xOffset, Map.yOffset), true);
-            Map.stats.begin();
+
             //Map.update();
             Map.renderer.render(Map.stage);
-            Map.stats.end();
+
         }
+
+        Map.stats.end();
     },
 
-    indexFromScreen: function (screen) {
+    indexFromScreen: function (point) {
 
         var map = {};
 
-        screen.y -= Map.offset.y;
-        screen.x -= Map.offset.x;
+        var screen = {};
+        screen.x = point.x - Map.offset.x;
+        screen.y = point.y - Map.offset.y;
 
         map.row = (screen.x / Map.TILE_WIDTH_HALF + screen.y / Map.TILE_HEIGHT_HALF) / 2;
         map.col = (screen.y / Map.TILE_HEIGHT_HALF - screen.x / Map.TILE_WIDTH_HALF) / -2;
@@ -387,42 +397,51 @@ document.onkeydown = function (evt) {
 
     switch (evt.keyCode) {
         case 87:
-            //Map.view.position.y--;
+            //Map.layer_terrain.position.y--;
             Map.offset.y -= amount;
             Map.offsetTracker.y -= amount;
             Map.playerPos.y += amount;
             break;
         case 83:
-            //Map.view.position.y++;
+            //Map.layer_terrain.position.y++;
             Map.offset.y += amount;
             Map.offsetTracker.y += amount;
             Map.playerPos.y -= amount;
             break;
         case 65:
-            //Map.view.position.x--;
+            //Map.layer_terrain.position.x--;
             Map.offset.x -= amount;
             Map.offsetTracker.x -= amount;
             Map.playerPos.x += amount;
             break;
         case 68:
-            //Map.view.position.x++;
+            //Map.layer_terrain.position.x++;
             Map.offset.x += amount;
             Map.offsetTracker.x += amount;
             Map.playerPos.x -= amount;
             break;
     }
 
-    /*
+
     if ( Map.offsetTracker.x  >= 32 ) {
         Map.offsetTracker.x = 0;
-        Map.update();
+        Map.invalidate = true;
     }
 
     if (Map.offsetTracker.x <= -32) {
         Map.offsetTracker.x = 0;
-        Map.update();
+        Map.invalidate = true;
     }
-    */
     
+    if (Map.offsetTracker.y >= 16) {
+        Map.offsetTracker.y = 0;
+        Map.invalidate = true;
+    }
+
+    if (Map.offsetTracker.y <= -16) {
+        Map.offsetTracker.y = 0;
+        Map.invalidate = true;
+    }
+
     Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
 };

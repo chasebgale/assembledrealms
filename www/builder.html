@@ -134,9 +134,6 @@
 
             $("#tiles").on("click", ".tileBox", function () {
                 var tileKey = $(this).attr('data-id');
-                var tileLayer = parseInt($(this).attr('data-layer'));
-                
-                Map.layer = tileLayer;
                 Map.setBrush(Map.tiles, tileKey);
 
                 var offset = parseInt($(this).attr('data-offset'));
@@ -150,9 +147,6 @@
 
             $("#objects").on("click", ".objectBox", function () {
                 var objectKey = $(this).attr('data-id');
-                var objectLayer = parseInt($(this).attr('data-layer'));
-
-                Map.layer = objectLayer;
                 Map.setBrush(Map.objects, objectKey);
 
                 var offset = parseInt($(this).attr('data-offset'));
@@ -284,7 +278,7 @@
             <div class="row">
                 <% if (model.frames) { %>
                     <% _.each(model.frames, function(frame, key) { %>
-                        <div class="col-md-1 tileBox" data-id="<%- key %>" data-layer="0" data-offset="<%- frame.frame.x %>" style="background-image: url(js/editor/<%- model.meta.image %>); background-position-x: <%- (frame.frame.x * -1) + 'px' %>; width: <%- frame.frame.w + 'px' %>; height: <%- frame.frame.h + 'px' %>; "></div>
+                        <div class="col-md-1 tileBox" data-id="<%- key %>" data-offset="<%- frame.frame.x %>" style="background-image: url(js/editor/<%- model.meta.image %>); background-position-x: <%- (frame.frame.x * -1) + 'px' %>; width: <%- frame.frame.w + 'px' %>; height: <%- frame.frame.h + 'px' %>; "></div>
                     <% }); %>
                 <% } %>
             </div>
@@ -297,7 +291,7 @@
             <div class="row">
                 <% if (model.frames) { %>
                 <% _.each(model.frames, function(frame, key) { %>
-                <div class="col-md-1 objectBox" data-id="<%- key %>" data-layer="1" data-offset="<%- frame.frame.x %>" style="background-image: url(js/editor/<%- model.meta.image %>); background-position-x: <%- (frame.frame.x * -1) + 'px' %>; width: <%- frame.frame.w + 'px' %>; height: <%- frame.frame.h + 'px' %>; "></div>
+                <div class="col-md-1 objectBox" data-id="<%- key %>" data-offset="<%- frame.frame.x %>" style="background-image: url(js/editor/<%- model.meta.image %>); background-position-x: <%- (frame.frame.x * -1) + 'px' %>; width: <%- frame.frame.w + 'px' %>; height: <%- frame.frame.h + 'px' %>; "></div>
                 <% }); %>
                 <% } %>
             </div>
