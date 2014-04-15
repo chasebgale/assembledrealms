@@ -171,7 +171,7 @@ var Map = {
 
         _.each(source.index, function (key, index) {
             if (key === textureKey) {
-                indexFromKey = parseInt(key);
+                indexFromKey = parseInt(index);
                 return false;
             }
         });
