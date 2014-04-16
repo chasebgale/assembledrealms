@@ -12,19 +12,14 @@ echo "
 
 <!--<link href='".$template."' rel='stylesheet' type='text/css' />-->
 
+<link rel='shortcut icon' href='/img/favicon.png')'>
+
 <link rel='stylesheet' href='css/root.css' />
 <link rel='stylesheet' href='css/bootstrap.min.css' />
 <link rel='stylesheet' href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' />
 
 <script src='models/funcs.js' type='text/javascript'></script>
 <script src='js/lodash.min.js'></script>
-
-<script>
-  $(function() {
-    $( document ).tooltip();
-    $( '.ui-button' ).button();
-  });
-</script>
 
 </head>
 
@@ -50,8 +45,12 @@ echo "
     </div>
     <div class="collapse navbar-collapse">
       <ul class="nav navbar-nav">
-        <li><a href='builder.php' class='header-link'><i class='fa fa-cogs fa-2x' style='display: block;'></i>Build</a></li>
+        <li><a href='../../builder.php' class='header-link'><i class='fa fa-cogs fa-2x' style='display: block;'></i>Build</a></li>
         <li><a href='#' class='header-link'><i class='fa fa-rocket fa-2x' style='display: block;'></i>Play</a></li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li><a href='../../blog' class='header-link'><i class='fa fa-pencil-square-o fa-2x' style='display: block;'></i>Blog</a></li>
+        <li><a href='/login.php' class='header-link'><i class='fa fa-sign-in fa-2x' style='display: block;'></i>Login</a></li>
       </ul>
     </div><!--/.nav-collapse -->
   </div>
