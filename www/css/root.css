@@ -5,6 +5,40 @@
 #content {
     margin: 0 auto;
     width: 1000px;
+    margin-top: 40px;
+}
+
+#form-signin {
+    width: 300px;
+    margin: 0 auto;
+}
+
+.header-link {
+    text-align: center;
+}
+
+#realm-engine-carousel {
+    width: 600px;
+}
+
+.new-realm-area {
+    display: inline-block;
+    vertical-align: top;
+}
+
+#new-realm-form {
+    width: 330px;
+    margin-left: 20px;
+}
+
+.realm-panel-title {
+    display: inline-block;
+    margin: 0;
+}
+
+.realm-panel-title-right {
+    display: inline-block;
+    float: right;
 }
 
 .navbar-light {

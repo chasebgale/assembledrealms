@@ -1,22 +1,19 @@
 <?php
-/*
-UserCake Version: 2.0.2
-http://usercake.com
-*/
+
 echo "
-<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
-<html xmlns='http://www.w3.org/1999/xhtml'>
+<!DOCTYPE html>
+<html>
 <head>
 <meta http-equiv='Content-Type' content='text/html; charset=utf-8' />
-<title>".$websiteName."</title>
-
-<!--<link href='".$template."' rel='stylesheet' type='text/css' />-->
+<title>Assembled Realms</title>
 
 <link rel='shortcut icon' href='/img/favicon.png')'>
 
 <link rel='stylesheet' href='css/root.css' />
-<link rel='stylesheet' href='css/bootstrap.min.css' />
+
 <link rel='stylesheet' href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' />
+<link rel='stylesheet' href='//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css'>
+<link rel='stylesheet' href='css/bootstrap-theme.css' />
 
 <script src='models/funcs.js' type='text/javascript'></script>
 <script src='js/lodash.min.js'></script>
@@ -27,8 +24,6 @@ echo "
 <div id='wrapper'>
 <!--<div id='top-nav'>-->
 ";
-
-//include("top-nav.php");
 
 ?>
 
@@ -50,7 +45,14 @@ echo "
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li><a href='../../blog' class='header-link'><i class='fa fa-pencil-square-o fa-2x' style='display: block;'></i>Blog</a></li>
-        <li><a href='/login.php' class='header-link'><i class='fa fa-sign-in fa-2x' style='display: block;'></i>Login</a></li>
+        <?php
+        if (isUserLoggedIn()) {
+            echo "<li><a href='/account.php' class='header-link'><i class='fa fa-user fa-2x' style='display: block; text-align: center;'></i>Profile</a></li>";
+        } else {
+            echo "<li><a href='/login.php' class='header-link'><i class='fa fa-sign-in fa-2x' style='display: block;'></i>Login</a></li>";
+            echo "<li><a href='/register.php' class='header-link'><i class='fa fa-lightbulb-o fa-2x' style='display: block;'></i>Join</a></li>";
+        }
+        ?>
       </ul>
     </div><!--/.nav-collapse -->
   </div>
