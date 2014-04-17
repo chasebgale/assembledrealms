@@ -26,7 +26,7 @@ $(document).ready(function () {
         }
     ];
 
-    $("#existingRealmsList").html(templateFn({ 'realms': responseJSON }));
+    $("#existingRealms").html(templateFn({ 'realms': responseJSON }));
 
     $("#createRealm").on("click", function () {
 

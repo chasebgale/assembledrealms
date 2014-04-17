@@ -1,8 +1,4 @@
 <?php
-/*
-UserCake Version: 2.0.2
-http://usercake.com
-*/
 
 require_once("models/config.php");
 if (!securePage($_SERVER['PHP_SELF'])){die();}
@@ -83,11 +79,24 @@ if(!empty($_POST))
 require_once("models/header.php");
 
 echo "
-<div id='main'>";
+<div id='content'>";
 
 echo resultBlock($errors,$successes);
 
-echo "
+
+?>
+
+<form id="form-signin" role="form" action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
+    <h2 class="form-signin-heading">Please sign in</h2>
+    <input name="username" type="text" class="form-control" placeholder="Username" required="true" autofocus="">
+    <input name="password" type="password" class="form-control" placeholder="Password" required="true">
+    <label class="checkbox">
+        <input type="checkbox" value="remember-me"> Remember me
+    </label>
+    <button class="btn btn-lg btn-default btn-block" type="submit">Sign in</button>
+</form>
+
+<!--
 <div id='regbox'>
 <form name='login' action='".$_SERVER['PHP_SELF']."' method='post'>
 <p>
@@ -110,4 +119,4 @@ echo "
 </body>
 </html>";
 
-?>
+-->
