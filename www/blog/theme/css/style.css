@@ -123,7 +123,7 @@ h1 {
 	}
 		.posts .items > li:first-child {
 			background: #fff !important;
-			padding: 110px 0;
+			padding: 50px 0;
 		}
 			.items li h1 a, .posts .items > li:first-child h2 a {
 				color: #3d4551;
