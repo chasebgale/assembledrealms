@@ -182,12 +182,12 @@ table.admin td {
     font-size: 2em;
 }
 
-#existingRealmsList {
+#existingRealmsLists {
     list-style: none;
     padding: 0;
 }
         
-#existingRealmsList div {
+#existingRealmsLists div {
     display: inline-block;
 }
 

@@ -3,47 +3,17 @@
 <head>
     <title></title>
 
-    <link href="models/site-templates/default.css" rel="stylesheet" type="text/css">
-    <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel='stylesheet' />
+    <link rel='stylesheet' href="models/site-templates/default.css" type="text/css">
+    <link rel='stylesheet' type="text/css" href="css/jquery.treeview.css" />
+    <link rel='stylesheet' href='css/root.css' />
+    <link rel='stylesheet' href='css/bootstrap.min.css' />
+    <link rel='stylesheet' href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' />
 
-    <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>    
-    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
-
+    <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js'></script>
+    <script src='//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js'></script>
+    
+    <script src="js/jquery.treeview.js"></script>
     <script src="js/lodash.min.js"></script>
-
-
-    <style>
-        #existingRealmsList {
-            list-style: none;
-            margin: 0 auto;
-            width: 1000px;
-        }
-
-            #existingRealmsList div {
-                display: inline-block;
-            }
-
-        .existingRealmsListItem {
-            margin-top: 24px;
-            padding: 6px;
-            border: solid 2px #E0E0E0;
-            border-top-width: 8px;
-        }
-
-        .existingRealmsStatsLabel {
-            display: inline-block;
-            width: 100px;
-        }
-
-        .light {
-            color: #E0E0E0;
-        }
-
-        .online {
-            color: #B9FAC2;
-        }
-    </style>
 
     <script>
         $(document).ready(function () {
@@ -73,7 +43,7 @@
                 }
             ];
 
-            $("#existingRealmsList").html(templateFn({ 'realms': responseJSON }));
+            $("#content").html(templateFn({ 'realms': responseJSON }));
 
         });
         
@@ -82,13 +52,23 @@
 </head>
 <body>
     
-    <div id="top">
-        <div id="top_content">
-            <div id="logo">
-                <a href="http://www.assembledrealms.com/"><img src="models/site-templates/images/logo.png"></a>
-                <div><a href="builder.php" class="header-link"><i class="fa fa-cogs fa-2x" style="display: block;"></i>Build</a></div>
-                <div><a href="#" class="header-link"><i class="fa fa-rocket fa-2x" style="display: block;"></i>Play</a></div>
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="http://www.assembledrealms.com/"><img src='models/site-templates/images/logo.png' /></a>
             </div>
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li><a href='builder.php' class='header-link'><i class='fa fa-cogs fa-2x' style='display: block;'></i>Build</a></li>
+                    <li><a href='#' class='header-link'><i class='fa fa-rocket fa-2x' style='display: block;'></i>Play</a></li>
+                </ul>
+            </div><!--/.nav-collapse -->
         </div>
     </div>
 
@@ -97,37 +77,41 @@
     </section>
 
     <section id="existingRealms">
-        <ul id="existingRealmsList">
+        <div id="content">
             
-        </ul>
+        </div>
     </section>
 
     <script id="realms_template" type="text/template">
         <% _.each( realms, function( realm ){ %>
-        <li class="existingRealmsListItem">
-            <div>
-                <h1><%- realm.name %></h1>
-                <br />
-                <span>Built: <%- realm.buildDate %></span>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title"><%- realm.name %> </h3><span> (<%- realm.buildDate %>)</span>
             </div>
+            <div class="panel-body">
+        
+                <div>
+                    <span>Built: </span>
+                </div>
 
-            <div style="float: right;">
-                <% if (realm.status == 0) { %>
-                <i class="fa fa-power-off fa-4x light"></i>
-                <% } else { %>
-                <i class="fa fa-power-off fa-4x online"></i>
-                <% } %>
-            </div>
+                <div style="float: right;">
+                    <% if (realm.status == 0) { %>
+                    <i class="fa fa-power-off fa-4x light"></i>
+                    <% } else { %>
+                    <i class="fa fa-power-off fa-4x online"></i>
+                    <% } %>
+                </div>
 
-            <div style="float: right; width: 300px;">
-                <ul>
-                    <li><span class="existingRealmsStatsLabel">Funds:</span><%- realm.funds %></li>
-                    <li><span class="existingRealmsStatsLabel">Online/Max:</span><%- realm.playersOnline %>/<%- realm.playersMax %></li>
-                    <li><span class="existingRealmsStatsLabel">Likes:</span><%- realm.likes %></li>
-                </ul>
+                <div style="float: right; width: 300px;">
+                    <ul>
+                        <li><span class="existingRealmsStatsLabel">Funds:</span><%- realm.funds %></li>
+                        <li><span class="existingRealmsStatsLabel">Online/Max:</span><%- realm.playersOnline %>/<%- realm.playersMax %></li>
+                        <li><span class="existingRealmsStatsLabel">Likes:</span><%- realm.likes %></li>
+                    </ul>
+                </div>
+
             </div>
-            
-        </li>
+        </div>
         <% }); %>
     </script>
 
