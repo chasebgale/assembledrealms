@@ -18,6 +18,7 @@
         <li><a href='../../blog' class='header-link'><i class='fa fa-pencil-square-o fa-2x' style='display: block;'></i>Blog</a></li>
         <?php
         if (isUserLoggedIn()) {
+            echo "<li><a href='/logout.php' class='header-link'><i class='fa fa-sign-out fa-2x' style='display: block;'></i>Logout</a></li>";
             echo "<li><a href='/account.php' class='header-link'><i class='fa fa-user fa-2x' style='display: block; text-align: center;'></i>Profile</a></li>";
         } else {
             echo "<li><a href='/login.php' class='header-link'><i class='fa fa-sign-in fa-2x' style='display: block;'></i>Login</a></li>";

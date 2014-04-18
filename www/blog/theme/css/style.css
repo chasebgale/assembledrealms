@@ -2,6 +2,14 @@
  *
  */
 
+.wrap {
+	min-width: 280px;
+	max-width: 1000px;
+	width: 60%;
+	
+	margin: 0 auto;
+}
+
 h1 {
 	padding: 40px 0 40px;
 
@@ -12,52 +20,6 @@ h1 {
 	.search h1 {
 		padding: 60px 0;
 	}
-
-/* The slide-down panel at the very top of the page. Like literally. It's above the page, hidden. */
-.slidey {
-	overflow: hidden;
-	padding: 30px 0;
-
-	background: #f3f5f8;
-	border-bottom: 1px solid #e5e8ed;
-}
-	.js-enabled .slidey {
-		-webkit-transition: margin-top .2s;
-		-moz-transition: margin-top .2s;
-		transition: margin-top .2s;
-	}
-	.slidey b, .slidey label {
-		display: block;
-		font-weight: 500;
-		padding-bottom: 15px;
-
-		font-size: 15px;
-		font-weight: 500;
-	}
-	.slidey form, .slidey aside {
-		float: left;
-		width: 50%;
-	}
-		.slidey form input {
-			padding: 20px;
-			width: 75%;
-		}
-	.slidey li {
-		list-style: none;
-	}
-		.slidey a {
-			display: block;
-			text-decoration: none;
-
-			color: #717985;
-		}
-			.slidey a:hover {
-				color: #414b59;
-			}
-		.slidey li span {
-			float: right;
-			opacity: .6;
-		}
 
 #top {
 	overflow: hidden;
@@ -117,17 +79,10 @@ h1 {
 }
 	.items > li {
 		padding: 70px 0 60px;
-
-		color: #97aec9;
-		background: #3c4552;
 	}
 		.posts .items > li:first-child {
-			background: #fff !important;
 			padding: 50px 0;
 		}
-			.items li h1 a, .posts .items > li:first-child h2 a {
-				color: #3d4551;
-			}
 	.items h1 {
 		padding: 0 0 8px;
 	}
@@ -142,20 +97,18 @@ h1 {
 			display: block;
 			padding-bottom: 12px;
 
-			color: #fff;
-			color: rgba(176,200,236,.8);
-
 			text-decoration: none;
 		}
-			.items h2 a:hover {
-				color: #fff;
-			}
 	.items .content {
 		padding: 10px 0 0;
 	}
 		.items .content p {
-			padding-bottom: 15px;
+			/*padding-bottom: 15px;*/
 		}
+
+.wrap p {
+    padding-bottom: 15px;
+}
 
 /**
  *   Pagination

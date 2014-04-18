@@ -13,19 +13,6 @@
 	box-sizing: border-box;
 }
 
-/**
- *   Typographic reset
- */
-body {
-	/* Use a serif font for nice readability, but not Times */
-	font: 17px/26px Skolar, Tisa, "Chaparral Pro", Merriweather, Georgia, serif;
-}
-
-h1, h2, h3, h4, h5, #logo, #top, .slidey b, .slidey label, .counter, input, textarea, button, .pagination {
-	font-family: "Helvetica Neue", sans-serif;
-	font-weight: 300;
-}
-
 pre, code, .mono {
 	font: 12px/19px "Anonymous Pro", Consolas, monospace;
 	padding: 0 2px;
@@ -60,7 +47,7 @@ a {
  */
 .wrap {
 	min-width: 280px;
-	max-width: 750px;
+	max-width: 1000px;
 	width: 60%;
 	
 	margin: 0 auto;
@@ -70,7 +57,7 @@ a {
  *   Default colours
  */
 body, .items > li:first-child {
-	color: #6e7886;
+	color: #6e7886 !important;
 }
 a, .items h1 a:hover {
 	color: #4075c3;

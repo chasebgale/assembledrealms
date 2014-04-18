@@ -55,14 +55,6 @@ function relative_time($date) {
 	}
 }
 
-function twitter_account() {
-	return site_meta('twitter', 'idiot');
-}
-
-function twitter_url() {
-	return 'https://twitter.com/' . twitter_account();
-}
-
 function total_articles() {
 	return Post::where(Base::table('posts.status'), '=', 'published')->count();
 }
