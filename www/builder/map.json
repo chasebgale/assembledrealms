@@ -4,7 +4,7 @@
 		"description": "Initial starting area for new players..."
 	},
 	"terrain": {
-		"source" : ["js/editor/terrain.json"],
+		"source" : ["/www/js/editor/terrain.json"],
 		"index" : {
 			"0": "grass_and_water_0.png"
 			},
@@ -15,9 +15,12 @@
 		"4" : {"0": 0, "1": 0, "2": 0, "3": 0, "4": 0}
 	},
 	"objects": {
-		"source" : [],
+		"source" : ["/www/js/editor/dungeon_walls.json"],
 		"index" : {
-			}
+			"0": "dungeon_walls_0.png"
+			},
+		"2" : {"2": 0},
+		"3" : {"1": 0, "4": 0}
 	},
 	"actors": {
 		"source" : [],

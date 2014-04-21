@@ -368,6 +368,7 @@ function flagLostPasswordRequest($username,$value)
 function isUserLoggedIn()
 {
 	global $loggedInUser,$mysqli,$db_table_prefix;
+    /*
 	$stmt = $mysqli->prepare("SELECT 
 		id,
 		password
@@ -384,11 +385,19 @@ function isUserLoggedIn()
 	$stmt->store_result();
 	$num_returns = $stmt->num_rows;
 	$stmt->close();
-	
+	*/
+    
 	if($loggedInUser == NULL)
 	{
 		return false;
 	}
+    
+    if (isset($_SESSION["userCakeUser"])) {
+        return true;
+    }
+    
+    
+    /*
 	else
 	{
 		if ($num_returns > 0)
@@ -401,6 +410,7 @@ function isUserLoggedIn()
 			return false;	
 		}
 	}
+    */
 }
 
 //Change a user from inactive to active

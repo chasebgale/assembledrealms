@@ -91,7 +91,7 @@ var Map = {
             Map.tilesLoaded(json);
         };
         tilesLoader.onComplete = function () {
-            var objectsLoader = new PIXI.AssetLoader(["js/editor/dungeon_walls.json"]);
+            var objectsLoader = new PIXI.AssetLoader(map.objects.source);
             objectsLoader.onProgress = function (json) {
                 Map.objectsLoaded(json);
             };

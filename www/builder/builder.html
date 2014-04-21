@@ -3,24 +3,24 @@
 <head>
     <title></title>
 
-    <link rel='stylesheet' type="text/css" href="css/jquery.treeview.css" />
-    <link rel='stylesheet' href='css/root.css' />
+    <link rel='stylesheet' type="text/css" href="/www/css/jquery.treeview.css" />
+    <link rel='stylesheet' href='/www/css/root.css' />
 
     <link rel='stylesheet' href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' />
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
-    <link rel='stylesheet' href='css/bootstrap-theme.css' />
+    <link rel='stylesheet' href='/www/css/bootstrap-theme.css' />
 
     <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js'></script>
     <script src='//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js'></script>
 
-    <script src="js/editor/utilities.js"></script>
-    <script src="js/editor/stats.min.js"></script>
-    <script src="js/editor/map.editor.js"></script>
+    <script src="/www/js/editor/utilities.js"></script>
+    <script src="/www/js/editor/stats.min.js"></script>
+    <script src="/www/js/editor/map.editor.js"></script>
     
-    <script src="js/jquery.treeview.js"></script>
-    <script src="js/pixi.dev.js"></script>
-    <script src="js/lodash.min.js"></script>
-    <script src="js/ace/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+    <script src="/www/js/jquery.treeview.js"></script>
+    <script src="/www/js/pixi.dev.js"></script>
+    <script src="/www/js/lodash.min.js"></script>
+    <script src="/www/js/ace/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
 
 
     <style>
@@ -201,7 +201,7 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="http://www.assembledrealms.com/"><img src='models/site-templates/images/logo.png' /></a>
+                <a class="navbar-brand" href="http://www.assembledrealms.com/"><img src='/www/img/logo.png' /></a>
             </div>
             <div class="collapse navbar-collapse">
                 <ul class="nav navbar-nav">
@@ -309,7 +309,7 @@
             <div class="row">
                 <% if (model.frames) { %>
                     <% _.each(model.frames, function(frame, key) { %>
-                        <div class="col-md-1 tileBox" data-id="<%- key %>" data-offset="<%- frame.frame.x %>" style="background-image: url(js/editor/<%- model.meta.image %>); background-position-x: <%- (frame.frame.x * -1) + 'px' %>; width: <%- frame.frame.w + 'px' %>; height: <%- frame.frame.h + 'px' %>; "></div>
+                        <div class="col-md-1 tileBox" data-id="<%- key %>" data-offset="<%- frame.frame.x %>" style="background-image: url(/www/js/editor/<%- model.meta.image %>); background-position-x: <%- (frame.frame.x * -1) + 'px' %>; width: <%- frame.frame.w + 'px' %>; height: <%- frame.frame.h + 'px' %>; "></div>
                     <% }); %>
                 <% } %>
             </div>
@@ -322,7 +322,7 @@
             <div class="row">
                 <% if (model.frames) { %>
                 <% _.each(model.frames, function(frame, key) { %>
-                <div class="col-md-1 objectBox" data-id="<%- key %>" data-offset="<%- frame.frame.x %>" style="background-image: url(js/editor/<%- model.meta.image %>); background-position-x: <%- (frame.frame.x * -1) + 'px' %>; width: <%- frame.frame.w + 'px' %>; height: <%- frame.frame.h + 'px' %>; "></div>
+                <div class="col-md-1 objectBox" data-id="<%- key %>" data-offset="<%- frame.frame.x %>" style="background-image: url(/www/js/editor/<%- model.meta.image %>); background-position-x: <%- (frame.frame.x * -1) + 'px' %>; width: <%- frame.frame.w + 'px' %>; height: <%- frame.frame.h + 'px' %>; "></div>
                 <% }); %>
                 <% } %>
             </div>
