@@ -45,10 +45,13 @@ if ($loggedInUser->gitlab_password == "") {
     
 }
 
+// Hardcoded to isometric for now
+$engineURL = "https://github.com/chasebgale/assembledrealms-isometric.git";
 
-// SECOND: Create new project
+// SECOND: Create new project 
 $fields =  "user_id=" . $loggedInUser->username . "&";
-$fields .= "name=" . $new_project;
+$fields .= "name=" . $new_project . "&";
+$fields .= "import_url=" . $engineURL;
 
 curl_setopt_array($curl, array(
     CURLOPT_HTTPHEADER => array('PRIVATE-TOKEN: ' . $admin_token),
@@ -58,10 +61,10 @@ curl_setopt_array($curl, array(
     CURLOPT_POSTFIELDS => $fields
 ));
 
-$resp = curl_exec($curl);
-
-// THIRD: Call API on gitlab box that will start a shell script to move iso engine files into new repo and call commit 
+$resp = curl_exec($curl); 
 
 curl_close($curl);
+
+echo "OK -- " . $resp;
 
 ?>
