@@ -66,14 +66,14 @@ if(!isUserLoggedIn()) {
                     <form role="form">
                         <div class="form-group">
                             <label class="control-label" for="realmName">Realm Name:</label>
-                            <input id="realmName" placeholder="Realm Name" type="text" class="form-control">
+                            <input id="realmName" name="name" placeholder="Realm Name" type="text" class="form-control">
                         </div>
                         <div class="form-group">
                             <label class="control-label" for="realmDescription">Realm Description:</label>
-                            <textarea id="realmDescription" placeholder="Realm Description (optional)" class="form-control" rows="2"></textarea>
+                            <textarea id="realmDescription" name="description" placeholder="Realm Description (optional)" class="form-control" rows="2"></textarea>
                         </div>
                         <div class="form-group">
-                            <button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-flash"></span> Create</button>
+                            <button type="submit" id="buttonCreateProject" class="btn btn-default"><span class="glyphicon glyphicon-flash"></span> Create</button>
                         </div>
                     </form>
                 </div>
@@ -115,7 +115,7 @@ if(!isUserLoggedIn()) {
 
 <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js'></script>
 <script src='//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js'></script>
-<script src="/js/build.dashboard.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/build.dashboard.js" type="text/javascript" charset="utf-8"></script>
 
 </body>
 </html>

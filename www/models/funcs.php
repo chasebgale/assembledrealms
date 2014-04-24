@@ -332,7 +332,9 @@ function fetchUserDetails($username=NULL,$token=NULL, $id=NULL)
 		active,
 		title,
 		sign_up_stamp,
-		last_sign_in_stamp
+		last_sign_in_stamp,
+        gitlab_id,
+        gitlab_password
 		FROM ".$db_table_prefix."users
 		WHERE
 		$column = ?
@@ -340,9 +342,9 @@ function fetchUserDetails($username=NULL,$token=NULL, $id=NULL)
 		$stmt->bind_param("s", $data);
 	
 	$stmt->execute();
-	$stmt->bind_result($id, $user, $display, $password, $email, $token, $activationRequest, $passwordRequest, $active, $title, $signUp, $signIn);
+	$stmt->bind_result($id, $user, $display, $password, $email, $token, $activationRequest, $passwordRequest, $active, $title, $signUp, $signIn, $gitlabId, $gitlabPassword);
 	while ($stmt->fetch()){
-		$row = array('id' => $id, 'user_name' => $user, 'display_name' => $display, 'password' => $password, 'email' => $email, 'activation_token' => $token, 'last_activation_request' => $activationRequest, 'lost_password_request' => $passwordRequest, 'active' => $active, 'title' => $title, 'sign_up_stamp' => $signUp, 'last_sign_in_stamp' => $signIn);
+		$row = array('id' => $id, 'user_name' => $user, 'display_name' => $display, 'password' => $password, 'email' => $email, 'activation_token' => $token, 'last_activation_request' => $activationRequest, 'lost_password_request' => $passwordRequest, 'active' => $active, 'title' => $title, 'sign_up_stamp' => $signUp, 'last_sign_in_stamp' => $signIn, 'gitlab_id' => $gitlabId, 'gitlab_password' => $gitlabPassword);
 	}
 	$stmt->close();
 	return ($row);

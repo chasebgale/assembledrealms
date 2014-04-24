@@ -62,6 +62,8 @@ if(!empty($_POST))
 					$loggedInUser->title = $userdetails["title"];
 					$loggedInUser->displayname = $userdetails["display_name"];
 					$loggedInUser->username = $userdetails["user_name"];
+                    $loggedInUser->gitlab_id = $userdetails["gitlab_id"];
+                    $loggedInUser->gitlab_password = $userdetails["gitlab_password"];
 					
 					//Update last sign in
 					$loggedInUser->updateLastSignIn();

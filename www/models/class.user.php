@@ -8,7 +8,8 @@ class loggedInUser {
 	public $email = NULL;
 	public $hash_pw = NULL;
 	public $user_id = NULL;
-    public $gitlab = NULL;
+    public $gitlab_password = NULL;
+    public $gitlab_id = 0;
 	
 	//Simple function to update the last sign in of a user
 	public function updateLastSignIn()
@@ -73,16 +74,18 @@ class loggedInUser {
 	}
     
     //Update a users email
-	public function updateGitlab($password)
+	public function updateGitlab($id, $password)
 	{
 		global $mysqli,$db_table_prefix;
-		$this->gitlab = $password;
+		$this->gitlab_id = $id;
+        $this->gitlab_password = $password;
 		$stmt = $mysqli->prepare("UPDATE ".$db_table_prefix."users
 			SET 
+            gitlab_id = ?,
 			gitlab_password = ?
 			WHERE
 			id = ?");
-		$stmt->bind_param("si", $password, $this->user_id);
+		$stmt->bind_param("isi", $id, $password, $this->user_id);
 		$stmt->execute();
 		$stmt->close();	
 	}
