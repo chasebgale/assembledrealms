@@ -61,7 +61,20 @@ $(document).ready(function () {
                     success: function (data) {
                         console.log("Got project, url: " + data.web_url);
 
-                        // TODO: Insert new record into db: core/realms
+                        var payload = {};
+                        payload.gitlab_id = data.id;
+                        payload.title = $("#realmName").val();
+                        payload.description = $("#realmDescription").val();
+
+                        var parameters = {};
+                        parameters.directive = "create";
+                        parameters.payload = JSON.stringify(payload);
+
+                        $.post("api.php", parameters, function (data) {
+                            if (data == "OK") {
+                                window.location = "http://www.assembledrealms.com/builder/editor.php?" + payload.gitlab_id;
+                            }
+                        });
                     }
                 });
 

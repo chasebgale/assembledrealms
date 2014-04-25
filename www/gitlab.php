@@ -15,8 +15,6 @@ $new_project = sanitize(trim($_POST["name"]));
 $curl = curl_init();
 $admin_token = "iHrbUiraXaAaiDiNgMAV";
 
-// FIRST: Create user in gitlab if need be
-
 if ($loggedInUser->gitlab_id == 0) {
         
     $generated_pass = randomPassword();

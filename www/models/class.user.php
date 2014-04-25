@@ -89,6 +89,40 @@ class loggedInUser {
 		$stmt->execute();
 		$stmt->close();	
 	}
+    
+    public function createRealm($gitlab_id, $title, $description)
+	{
+		global $mysqli,$db_table_prefix;
+		$stmt = $mysqli->prepare("INSERT INTO realms (
+            user_id,
+            gitlab_id,
+            title,
+            description
+            )
+			VALUES (
+            ?,
+            ?,
+            ?
+            )");
+		$stmt->bind_param("iiss", $this->user_id, $gitlab_id, $title, $description);
+		$stmt->execute();
+		$stmt->close();	
+	}
+    
+    public function fetchRealm($gitlab_id)
+	{
+		global $mysqli,$db_table_prefix;
+		$stmt = $mysqli->prepare("SELECT 
+            id
+            FROM realms
+            WHERE gitlab_id = ?");
+		$stmt->bind_param("i", $gitlab_id);
+		$stmt->execute();
+		$stmt->bind_result($id);
+		$stmt->fetch();
+		$stmt->close();
+		return ($id);
+	}
 	
 	//Is a user has a permission
 	public function checkPermission($permission)
