@@ -102,6 +102,7 @@ class loggedInUser {
 			VALUES (
             ?,
             ?,
+            ?,
             ?
             )");
 		$stmt->bind_param("iiss", $this->user_id, $gitlab_id, $title, $description);

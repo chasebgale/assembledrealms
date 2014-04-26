@@ -31,58 +31,40 @@ $(document).ready(function () {
     $("#buttonCreateProject").on('click', function (e) {
         e.preventDefault();
 
-        $.post("/gitlab.php", function (data) {
+        var token = getGitlabSession();
 
-            data = JSON.parse(data);
+        var parameters = {};
+        parameters.name = $("#realmName").val();
+        parameters.import_url = "https://github.com/chasebgale/assembledrealms-isometric.git";
 
-            console.log("Got auth, user_id: " + data.user_id + ", auth: " + data.auth);
 
-            var parameters = {};
-            parameters.login = data.user_id;
-            parameters.password = data.auth;
+        $.ajax({
+            url: 'http://source-01.assembledrealms.com/api/v3/projects',
+            type: 'post',
+            data: parameters,
+            headers: {
+                "PRIVATE-TOKEN": token
+            },
+            dataType: 'json',
+            success: function (data) {
+                console.log("Got project, url: " + data.web_url);
 
-            $.post("http://source-01.assembledrealms.com/api/v3/session", parameters, function (data) {
-
-                console.log("Got session, private_token: " + data.private_token);
+                var payload = {};
+                payload.gitlab_id = data.id;
+                payload.title = $("#realmName").val();
+                payload.description = $("#realmDescription").val();
 
                 var parameters = {};
-                parameters.name = $("#realmName").val();
-                parameters.import_url = "https://github.com/chasebgale/assembledrealms-isometric.git";
+                parameters.directive = "create";
+                parameters.payload = JSON.stringify(payload);
 
-
-                $.ajax({
-                    url: 'http://source-01.assembledrealms.com/api/v3/projects',
-                    type: 'post',
-                    data: parameters,
-                    headers: {
-                        "PRIVATE-TOKEN": data.private_token
-                    },
-                    dataType: 'json',
-                    success: function (data) {
-                        console.log("Got project, url: " + data.web_url);
-
-                        var payload = {};
-                        payload.gitlab_id = data.id;
-                        payload.title = $("#realmName").val();
-                        payload.description = $("#realmDescription").val();
-
-                        var parameters = {};
-                        parameters.directive = "create";
-                        parameters.payload = JSON.stringify(payload);
-
-                        $.post("api.php", parameters, function (data) {
-                            if (data == "OK") {
-                                window.location = "http://www.assembledrealms.com/builder/editor.php?" + payload.gitlab_id;
-                            }
-                        });
+                $.post("api.php", parameters, function (data) {
+                    if (data == "OK") {
+                        window.location = "http://www.assembledrealms.com/builder/editor.php?" + payload.gitlab_id;
                     }
                 });
 
-                /*
-                $.post("http://source-01.assembledrealms.com/api/v3/projects", parameters, function (data) {
-                    console.log("Got project, url: " + data.web_url);
-                });
-                */
+                }
             });
 
         });

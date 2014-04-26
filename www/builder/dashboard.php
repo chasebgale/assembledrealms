@@ -1,8 +1,8 @@
 <?php
 
-require_once("models/config.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . "models/config.php");
 if (!securePage($_SERVER['PHP_SELF'])){die();}
-require_once("models/header.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 
 if(!isUserLoggedIn()) { 
   echo "<h1>You must be logged in to access our build tools!</h1>";
@@ -31,21 +31,21 @@ if(!isUserLoggedIn()) {
                     <!-- Wrapper for slides -->
                     <div class="carousel-inner">
                         <div class="item active">
-                            <img src="img/isometric.jpg" alt="Isometric Engine">
+                            <img src="../img/isometric.jpg" alt="Isometric Engine">
                             <div class="carousel-caption">
                                 <h3>Isometric Engine</h3>
                                 <p>Classic style used in many popular games from Diablo to Age of Empires to Bastion.</p>
                             </div>
                         </div>
                         <div class="item">
-                            <img src="img/isometric.jpg" alt="Isometric Engine">
+                            <img src="../img/isometric.jpg" alt="Isometric Engine">
                             <div class="carousel-caption">
                                 <h3>Isometric Engine</h3>
                                 <p>Classic style used in many popular games from Diablo to Age of Empires to Bastion.</p>
                             </div>
                         </div>
                         <div class="item">
-                            <img src="img/isometric.jpg" alt="Isometric Engine">
+                            <img src="../img/isometric.jpg" alt="Isometric Engine">
                             <div class="carousel-caption">
                                 <h3>Isometric Engine</h3>
                                 <p>Classic style used in many popular games from Diablo to Age of Empires to Bastion.</p>
@@ -116,6 +116,7 @@ if(!isUserLoggedIn()) {
 <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js'></script>
 <script src='//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js'></script>
 <script src="js/dashboard.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/utilities.js" type="text/javascript" charset="utf-8"></script>
 
 </body>
 </html>

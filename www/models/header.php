@@ -7,6 +7,7 @@
 
 <link rel='shortcut icon' href='/img/favicon.png')'>
 
+<link rel='stylesheet' href="/css/jquery.treeview.css" />
 <link rel='stylesheet' href='/css/root.css' />
 
 <link rel='stylesheet' href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' />
@@ -23,6 +24,6 @@
 
 <?php
 
-require_once("models/header_markup.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . "models/header_markup.php");
 
 ?>

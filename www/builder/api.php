@@ -1,6 +1,6 @@
 <?php
 
-require_once("models/config.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . "models/config.php");
 if (!securePage($_SERVER['PHP_SELF'])){die();}
 
 if(!isUserLoggedIn()) { 
@@ -9,14 +9,41 @@ if(!isUserLoggedIn()) {
 }
 
 $directive = $_POST['directive'];
-$data = json_decode($_POST['payload'], true);
+
+if ($_POST['payload']) {
+    $data = json_decode($_POST['payload'], true);
+}
 
 switch ($directive) {
 	case "create":
         $loggedInUser->createRealm($data['gitlab_id'], $data['title'], $data['description']);
+        echo "OK";
+        die();
+        break;
+    case "files":
+        $curl = curl_init();
+        $admin_token = "iHrbUiraXaAaiDiNgMAV";
+        
+        $req = $_POST['gitlab_id'] . '/repository/tree?id=' . $_POST['gitlab_id'];
+        
+        if ($_POST['root']) {
+            $req .= "&path=" . $_POST['root'] . "/";
+        }
+
+        curl_setopt_array($curl, array(
+            CURLOPT_HTTPHEADER => array('PRIVATE-TOKEN: ' . $admin_token),
+            CURLOPT_RETURNTRANSFER => 1,
+            CURLOPT_URL => 'http://source-01.assembledrealms.com/api/v3/projects/' . $req
+        ));
+
+        $resp = curl_exec($curl);
+
+        //$parsed = json_decode($resp, true);
+        echo $resp;
+        die();
         break;
 }
 
-echo "OK";
+
 
 ?>
