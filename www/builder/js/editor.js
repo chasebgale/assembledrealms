@@ -34,8 +34,9 @@
     $("#explorer .hasChildren").on("click", function () {
         
         console.log(this);
-        var path = encodeURIComponent($(this).attr('data-path'));
-        var name = $(this).text().trim();
+        var root = $(this);
+        var path = encodeURIComponent(root.attr('data-path'));
+        var name = root.text().trim();
         var token = getGitlabSession();
         var gitlab_id = window.location.search.slice(1);
 
@@ -60,7 +61,8 @@
                     }
                 }
 
-                var branch = $(this).html(templateFnDynamic({ 'model': formatted, 'templateFnDynamic': templateFnDynamic }));
+                var branch = root.html(templateFnDynamic({ 'model': formatted, 'templateFnDynamic': templateFnDynamic })).parent();
+                root.attr('class', 'collapsable');
                 $("#explorer").treeview({
                     add: branch
                 });
