@@ -34,45 +34,9 @@
 
         var token = getGitlabSession();
 
-<<<<<<< HEAD
-        if (token) {
-
-            var parameters = {};
-            parameters.name = $("#realmName").val();
-            parameters.import_url = "https://github.com/chasebgale/assembledrealms-isometric.git";
-            parameters.private_token = token;
-
-
-            $.ajax({
-                url: 'http://source-01.assembledrealms.com/api/v3/projects',
-                type: 'post',
-                data: parameters,
-                headers: {
-                    "PRIVATE-TOKEN": token
-                },
-                dataType: 'json',
-                success: function (data) {
-                    console.log("Got project, url: " + data.web_url);
-
-                    var payload = {};
-                    payload.gitlab_id = data.id;
-                    payload.title = $("#realmName").val();
-                    payload.description = $("#realmDescription").val();
-
-                    var parameters = {};
-                    parameters.directive = "create";
-                    parameters.payload = JSON.stringify(payload);
-
-                    $.post("api.php", parameters, function (data) {
-                        if (data == "OK") {
-                            window.location = "http://www.assembledrealms.com/builder/editor.php?" + payload.gitlab_id;
-                        }
-                    });
-=======
         var parameters = {};
         parameters.name = $("#realmName").val();
         parameters.import_url = "https://github.com/chasebgale/assembledrealms-isometric.git";
-
 
         $.ajax({
             url: 'http://source-01.assembledrealms.com/api/v3/projects',
@@ -99,11 +63,10 @@
                         window.location = "http://www.assembledrealms.com/builder/editor.php?" + payload.gitlab_id;
                     }
                 });
->>>>>>> 5ae3a3ff574252521b7a2130ee592b4cd16d46f5
 
-                }
-            });
-        } // If (token)
+            }
+        });
+
     });
 
 });

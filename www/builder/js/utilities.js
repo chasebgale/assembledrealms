@@ -5,7 +5,6 @@ function getRandomInt(min, max) {
 }
 
 function getGitlabSession() {
-<<<<<<< HEAD
 
     // This cookie approach is awesome but gitlab trashes sessions too fast
     //var cached = readCookie("gitlab");
@@ -50,53 +49,6 @@ function getGitlabSession() {
         }
 
         return null;
-
-        /*
-=======
-    var cached = readCookie("gitlab");
-
-    if (cached) {
-        return cached;
-    } else {
-
->>>>>>> 5ae3a3ff574252521b7a2130ee592b4cd16d46f5
-        $.post("/gitlab.php", function (data) {
-
-            data = JSON.parse(data);
-
-            console.log("Got auth, user_id: " + data.user_id + ", auth: " + data.auth);
-
-<<<<<<< HEAD
-            
-
-            console.log(result);
-
-            .done(function (data) {
-=======
-            var parameters = {};
-            parameters.login = data.user_id;
-            parameters.password = data.auth;
-
-            $.post("http://source-01.assembledrealms.com/api/v3/session", parameters, function (data) {
->>>>>>> 5ae3a3ff574252521b7a2130ee592b4cd16d46f5
-
-                console.log("Got session, private_token: " + data.private_token);
-
-                createCookie("gitlab", data.private_token, 1);
-
-                return data.private_token;
-<<<<<<< HEAD
-            })
-            .fail(function (data) {
-                console.log("FAIL: " + data);
-            });
-            
-        });*/
-=======
-            });
-
-        });
->>>>>>> 5ae3a3ff574252521b7a2130ee592b4cd16d46f5
 
     }
 }
