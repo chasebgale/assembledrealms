@@ -4,7 +4,7 @@ UserCake Version: 2.0.2
 http://usercake.com
 */
 
-require_once("models/config.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . "models/config.php");
 if (!securePage($_SERVER['PHP_SELF'])){die();}
 
 //Prevent the user visiting the logged in page if he/she is already logged in
@@ -80,7 +80,7 @@ if(!empty($_POST))
 	}
 }
 
-require_once("models/header.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 echo "
 <div id='main'>";
 
