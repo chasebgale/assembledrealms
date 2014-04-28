@@ -44,6 +44,11 @@ div#map {
     margin: 0 auto;
 }
 
+#form-register {
+    width: 400px;
+    margin: 0 auto;
+}
+
 .header-link {
     text-align: center;
 }

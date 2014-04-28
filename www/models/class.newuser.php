@@ -11,7 +11,6 @@ class User
 	private $clean_email;
 	public $status = false;
 	private $clean_password;
-	private $username;
 	private $displayname;
 	public $sql_failure = false;
 	public $mail_failure = false;
@@ -21,7 +20,7 @@ class User
 	public $activation_token = 0;
 	public $success = NULL;
 	
-	function __construct($user,$display,$pass,$email)
+	function __construct($display,$pass,$email)
 	{
 		//Used for display only
 		$this->displayname = $display;
@@ -29,13 +28,8 @@ class User
 		//Sanitize
 		$this->clean_email = sanitize($email);
 		$this->clean_password = trim($pass);
-		$this->username = sanitize($user);
 		
-		if(usernameExists($this->username))
-		{
-			$this->username_taken = true;
-		}
-		else if(displayNameExists($this->displayname))
+		if(displayNameExists($this->displayname))
 		{
 			$this->displayname_taken = true;
 		}
@@ -111,7 +105,6 @@ class User
 			{
 				//Insert the user into the database providing no errors have been found.
 				$stmt = $mysqli->prepare("INSERT INTO ".$db_table_prefix."users (
-					user_name,
 					display_name,
 					password,
 					email,
@@ -128,7 +121,6 @@ class User
 					?,
 					?,
 					?,
-					?,
 					'".time()."',
 					'0',
 					?,
@@ -137,7 +129,7 @@ class User
 					'0'
 					)");
 				
-				$stmt->bind_param("sssssi", $this->username, $this->displayname, $secure_pass, $this->clean_email, $this->activation_token, $this->user_active);
+				$stmt->bind_param("ssssi", $this->displayname, $secure_pass, $this->clean_email, $this->activation_token, $this->user_active);
 				$stmt->execute();
 				$inserted_id = $mysqli->insert_id;
 				$stmt->close();

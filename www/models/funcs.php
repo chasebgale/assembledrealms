@@ -305,11 +305,11 @@ function fetchAllUsers()
 }
 
 //Retrieve complete user information by username, token or ID
-function fetchUserDetails($username=NULL,$token=NULL, $id=NULL)
+function fetchUserDetails($email=NULL,$token=NULL, $id=NULL)
 {
-	if($username!=NULL) {
-		$column = "user_name";
-		$data = $username;
+	if($email!=NULL) {
+		$column = "email";
+		$data = $email;
 	}
 	elseif($token!=NULL) {
 		$column = "activation_token";
@@ -322,7 +322,6 @@ function fetchUserDetails($username=NULL,$token=NULL, $id=NULL)
 	global $mysqli,$db_table_prefix; 
 	$stmt = $mysqli->prepare("SELECT 
 		id,
-		user_name,
 		display_name,
 		password,
 		email,
@@ -342,9 +341,9 @@ function fetchUserDetails($username=NULL,$token=NULL, $id=NULL)
 		$stmt->bind_param("s", $data);
 	
 	$stmt->execute();
-	$stmt->bind_result($id, $user, $display, $password, $email, $token, $activationRequest, $passwordRequest, $active, $title, $signUp, $signIn, $gitlabId, $gitlabPassword);
+	$stmt->bind_result($id, $display, $password, $email, $token, $activationRequest, $passwordRequest, $active, $title, $signUp, $signIn, $gitlabId, $gitlabPassword);
 	while ($stmt->fetch()){
-		$row = array('id' => $id, 'user_name' => $user, 'display_name' => $display, 'password' => $password, 'email' => $email, 'activation_token' => $token, 'last_activation_request' => $activationRequest, 'lost_password_request' => $passwordRequest, 'active' => $active, 'title' => $title, 'sign_up_stamp' => $signUp, 'last_sign_in_stamp' => $signIn, 'gitlab_id' => $gitlabId, 'gitlab_password' => $gitlabPassword);
+		$row = array('id' => $id, 'display_name' => $display, 'password' => $password, 'email' => $email, 'activation_token' => $token, 'last_activation_request' => $activationRequest, 'lost_password_request' => $passwordRequest, 'active' => $active, 'title' => $title, 'sign_up_stamp' => $signUp, 'last_sign_in_stamp' => $signIn, 'gitlab_id' => $gitlabId, 'gitlab_password' => $gitlabPassword);
 	}
 	$stmt->close();
 	return ($row);
