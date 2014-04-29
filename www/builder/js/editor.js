@@ -31,7 +31,7 @@
         $(this).addClass('activefile');
     });
 
-    $("#explorer .hasChildren").on("click", function () {
+    $("#explorer .no-data").on("click", function () {
         
         console.log(this);
         var root = $(this);
@@ -62,7 +62,7 @@
                 }
 
                 var branch = root.html(templateFnDynamic({ 'model': formatted, 'templateFnDynamic': templateFnDynamic })).parent();
-                root.attr('class', 'collapsable');
+                root.attr('class', 'collapsable open');
                 $("#explorer").treeview({
                     add: branch
                 });

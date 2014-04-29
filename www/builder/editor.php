@@ -60,6 +60,8 @@ $parsed = json_decode($resp, true);
                                                 <span class="sr-only">Toggle Dropdown</span>
                                             </button>
                                         </div>
+										
+										
                                         <div class="btn-group">
                                             <button type="button" class="btn btn-default navbar-btn" id="objectButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Place objects over terrain"></button>
                                             <button type="button" class="btn btn-default dropdown-toggle navbar-btn" data-toggle="modal" data-target=".objects-modal-lg">
@@ -115,7 +117,7 @@ $parsed = json_decode($resp, true);
             </ul>
         </li>
         <% } else if (model.hasChildren) { %>
-        <li class='hasChildren closed' data-path='<%= model.path %>'>
+        <li class='hasChildren closed no-data' data-path='<%= model.path %>'>
             <span class='folder'><%= model.name %></span>
             <ul>
                 <li><span class="placeholder">&nbsp;</span></li>
@@ -128,6 +130,7 @@ $parsed = json_decode($resp, true);
     
     <script id="files_dynamic_template" type="text/template">
         <% if (model.children) { %>
+		<div class="hitarea collapsable-hitarea open-hitarea"></div>
         <span class='folder'><%= model.name %></span>
         <ul>
             <% _.each(model.children, function(child) { %>
@@ -135,7 +138,8 @@ $parsed = json_decode($resp, true);
             <% }); %>
         </ul>
         <% } else if (model.hasChildren) { %>
-        <li class='hasChildren closed' data-path='<%= model.path %>'>
+		<li class='hasChildren closed no-data' data-path='<%= model.path %>'>
+			<div class="hitarea hasChildren-hitarea closed-hitarea"></div>
             <span class='folder'><%= model.name %></span>
             <ul>
                 <li><span class="placeholder">&nbsp;</span></li>
