@@ -8,6 +8,7 @@ class loggedInUser {
 	public $email = NULL;
 	public $hash_pw = NULL;
 	public $user_id = NULL;
+    public $gitlab_user = NULL;
     public $gitlab_password = NULL;
     public $gitlab_id = 0;
 	

@@ -17,7 +17,7 @@ function getGitlabSession() {
 
         var result = $.ajax({
             type: "POST",
-            url: "/gitlab.php",
+            url: "/account/gitlab.php",
             async: false,
             cache: false
         });

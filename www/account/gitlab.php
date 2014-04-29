@@ -1,6 +1,6 @@
 <?php
 
-require_once("models/config.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . "models/config.php");
 if (!securePage($_SERVER['PHP_SELF'])){die();}
 
 if(!isUserLoggedIn()) { 
@@ -9,8 +9,6 @@ if(!isUserLoggedIn()) {
 }
 
 $response = "";
-
-$new_project = sanitize(trim($_POST["name"]));
 
 $curl = curl_init();
 $admin_token = "iHrbUiraXaAaiDiNgMAV";
@@ -21,7 +19,7 @@ if ($loggedInUser->gitlab_id == 0) {
         
     $fields =  "email=" . $loggedInUser->email . "&";
     $fields .= "password=" . $generated_pass . "&";
-    $fields .= "username=" . $loggedInUser->username . "&";
+    $fields .= "username=" . $loggedInUser->gitlab_user . "&";
     $fields .= "name=" . $loggedInUser->displayname;
        
     curl_setopt_array($curl, array(
@@ -33,9 +31,6 @@ if ($loggedInUser->gitlab_id == 0) {
     ));
         
     $resp = curl_exec($curl);
-    
-    $response .= "Action: Created Gitlab user -- " . $resp . "\n\r\n\r";
-    
     $parsed = json_decode($resp, true);
         
     // {"message":"400 (Bad request) \"name\" not given"}
@@ -45,7 +40,7 @@ if ($loggedInUser->gitlab_id == 0) {
     
 }
 
-echo '{"user_id":"' . $loggedInUser->username . '","auth":"' . $loggedInUser->gitlab_password . '"}';
+echo '{"user_id":"' . $loggedInUser->gitlab_user . '","auth":"' . $loggedInUser->gitlab_password . '"}';
 
 /* THIS SHOULD BE DONE HERE, HOWEVER THERE IS A BUG WHERE YOU CAN'T SET THE IMPORT_URL ON
  * A PROJECT YOU ARE CREATING FOR ANOTHER USER, SO INSTEAD WE ARE NOW RETURNING THE GITLAB
