@@ -125,6 +125,24 @@ class loggedInUser {
 		$stmt->close();
 		return ($id);
 	}
+    
+    public function fetchRealms()
+	{
+		global $mysqli,$db_table_prefix;
+		$stmt = $mysqli->prepare("SELECT *
+            FROM realms
+            WHERE user_id = ?");
+		$stmt->bind_param("i", $this->user_id);
+		$stmt->execute();
+        
+		$stmt->bind_result($id, $user_id, $gitlab_id, $title, $description, $status, $players);
+        
+        while ($stmt->fetch()){
+            $row[] = array('id' => $id, 'user_id' => $user_id, 'gitlab_id' => $gitlab_id, 'title' => $title, 'description' => $description, 'status' => $status, 'players' => $players);
+        }
+        $stmt->close();
+        return ($row);
+	}
 	
 	//Is a user has a permission
 	public function checkPermission($permission)

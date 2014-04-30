@@ -4,6 +4,7 @@
     var templateFn = _.template($('#realms_template').html());
 
     // For now we fake data, in future this is in the result of an AJAX request:
+    /*
     var responseJSON = [
         {
             'name': 'Ultima Re-Imagined',
@@ -26,8 +27,14 @@
             'buildDate': '02/05/2014 09:49PM ET'
         }
     ];
+    */
 
-    $("#existingRealms").html(templateFn({ 'realms': responseJSON }));
+    var parameters = {};
+    parameters.directive = "realms";
+
+    $.post("api.php", parameters, function (data) {
+        $("#existingRealms").html(templateFn({ 'realms': JSON.parse( data ) }));
+    });
 
     $("#buttonCreateProject").on('click', function (e) {
         e.preventDefault();
@@ -35,7 +42,7 @@
         var token = getGitlabSession();
 
         var parameters = {};
-        parameters.name = $("#realmName").val();
+        parameters.name = $("#realmName").val().replace(/([^a-z0-9 ]+)/gi, '') + "-" + makeRandomness();
         parameters.import_url = "https://github.com/chasebgale/assembledrealms-isometric.git";
 
         $.ajax({
@@ -70,3 +77,13 @@
     });
 
 });
+
+function makeRandomness() {
+    var text = "";
+    var possible = "abcdefghijklmnopqrstuvwxyz0123456789";
+
+    for (var i = 0; i < 8; i++)
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+    return text;
+}

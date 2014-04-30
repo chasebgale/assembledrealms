@@ -88,9 +88,14 @@ if(!isUserLoggedIn()) {
     <% _.each( realms, function( realm ){ %>
         <div class="panel panel-default">
             <div class="panel-heading">
-                <h3 class="realm-panel-title"><%- realm.name %> </h3><span class="realm-panel-title-right"> (<%- realm.buildDate %>)</span>
+                <h3 class="realm-panel-title"><%- realm.title %> </h3><span class="realm-panel-title-right"> Published: 02/05/2014 09:49PM ET</span>
             </div>
             <div class="panel-body">
+
+                <div style="float: left;">
+                    <a class="btn btn-default" href="editor.php?<%- realm.gitlab_id %>"><span class="glyphicon glyphicon-fire"></span> Edit Codebase</a>
+                    <a class="btn btn-default" href="manager.php?<%- realm.id %>"><span class="glyphicon glyphicon-eye-open"></span> Manage</a>
+                </div>
 
                 <div style="float: right;">
                     <% if (realm.status == 0) { %>
@@ -103,7 +108,7 @@ if(!isUserLoggedIn()) {
                 <div style="float: right; width: 300px;">
                     <ul>
                         <li><span class="existingRealmsStatsLabel">Funds:</span><%- realm.funds %></li>
-                        <li><span class="existingRealmsStatsLabel">Online/Max:</span><%- realm.playersOnline %>/<%- realm.playersMax %></li>
+                        <li><span class="existingRealmsStatsLabel">Online:</span><%- realm.players %></li>
                         <li><span class="existingRealmsStatsLabel">Likes:</span><%- realm.likes %></li>
                     </ul>
                 </div>
@@ -117,6 +122,8 @@ if(!isUserLoggedIn()) {
 <script src='//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js'></script>
 <script src="js/dashboard.js" type="text/javascript" charset="utf-8"></script>
 <script src="js/utilities.js" type="text/javascript" charset="utf-8"></script>
+
+<?php require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php"); ?>
 
 </body>
 </html>

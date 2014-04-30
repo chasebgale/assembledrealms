@@ -1,20 +1,35 @@
 <?php
-/*
-UserCake Version: 2.0.2
-http://usercake.com
-*/
 
 require_once($_SERVER['DOCUMENT_ROOT'] . "models/config.php");
 if (!securePage($_SERVER['PHP_SELF'])){die();}
 require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 
-echo "
-<div id='main'>
-Hey, $loggedInUser->displayname. This is an example secure page designed to demonstrate some of the basic features of UserCake. Just so you know, your title at the moment is $loggedInUser->title, and that can be changed in the admin panel. You registered this account on " . date("M d, Y", $loggedInUser->signupTimeStamp()) . ".
-</div>
-<div id='bottom'></div>
-</div>
-</body>
-</html>";
-
 ?>
+
+<div id="content">
+
+    <div class="panel panel-default">
+        <div class="panel-heading">General</div>
+        <div class="panel-body">
+            <div>
+                <img src="/img/profiles/1.jpg" />
+            </div>
+            <div>
+                <span>chase.b.gale@gmail.com</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel panel-default">
+        <div class="panel-heading">Funding</div>
+        <div class="panel-body">
+            <div>
+                <span>Current Balance: </span><span style="font-weight: bold;">$ 12.83</span>
+            </div>
+            <div>
+                <a class="btn btn-default" href="#">Deposit Funds</a>
+            </div>
+        </div>
+    </div>
+
+</div>

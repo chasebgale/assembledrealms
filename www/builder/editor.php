@@ -124,7 +124,7 @@ $parsed = json_decode($resp, true);
             </ul>
         </li>
         <% } else { %>
-        <li><span class="file"><%- model.name %></span></li>
+        <li><span class="file" data-id="<%- model.id %>"><%- model.name %></span></li>
         <% } %>
     </script>
     
@@ -146,7 +146,7 @@ $parsed = json_decode($resp, true);
             </ul>
         </li>
         <% } else { %>
-        <li><span class="file"><%- model.name %></span></li>
+        <li><span class="file" data-id="<%- model.id %>"><%- model.name %></span></li>
         <% } %>
     </script>
 
@@ -182,7 +182,7 @@ $parsed = json_decode($resp, true);
 <?php 
 
 if ($parsed['message']) { 
-
+    echo "<h1>" + $parsed['message'] + "</h1>";
 } else { 
 
     $ret = "var responseJSON = {'name': 'Realm Title', 'children': [";

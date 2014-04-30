@@ -1,47 +1,27 @@
 ﻿$(document).ready(function () {
 
-    // UI
-    $('#mapTabs a').click(function (e) {
-        e.preventDefault();
-        $(this).tab('show');
-    });
-    $('#mapTabs a:first').tab('show');
-
-    // VIEWS
+    // Templates
     var templateFn = _.template($('#files_template').html());
     var templateFnDynamic = _.template($('#files_dynamic_template').html());
 
     $("#explorer").html(templateFn({ 'model': responseJSON, 'templateFn': templateFn }));
 
     $("#explorer").treeview({
-        animated: "fast" /*,
-        url: "api.php",
-        ajax: {
-            data: {
-                "directive": "files",
-                "gitlab_id": window.location.search.slice(1)
-            },
-            type: "post"
-        }*/
+        animated: "fast"
     });
 
-    $("#explorer .file").on("click", function () {
-        console.log(this);
-        $("#explorer .file").removeClass('activefile');
-        $(this).addClass('activefile');
-    });
-
-    $("#explorer .no-data").on("click", function () {
+    // Fetch folder contents:
+    $("#explorer").on("click", ".no-data", function () {
         
         console.log(this);
         var root = $(this);
-        var path = encodeURIComponent(root.attr('data-path'));
+        var path = root.attr('data-path');
         var name = root.text().trim();
         var token = getGitlabSession();
         var gitlab_id = window.location.search.slice(1);
 
         var req = gitlab_id + '/repository/tree?id=' + gitlab_id +
-                                              '&path=' + path + 
+                                              '&path=' + encodeURIComponent(path) +
                                               '&private_token=' + token;
 
         $.ajax({
@@ -70,6 +50,58 @@
             }
         });
     });
+
+    // Fetch file:
+    $("#explorer").on("click", ".file", function () {
+
+        var root = $(this);
+
+        $("#explorer .file").removeClass('activefile');
+        root.addClass('activefile');
+
+        var path = root.attr('data-path');
+        var name = root.text().trim();
+        var token = getGitlabSession();
+        var gitlab_id = window.location.search.slice(1);
+
+        var req = gitlab_id + '/repository/tree?id=' + gitlab_id +
+                                              '&path=' + encodeURIComponent(path) +
+                                              '&private_token=' + token;
+
+        $.ajax({
+            url: 'http://source-01.assembledrealms.com/api/v3/projects/' + req,
+            type: 'get',
+            dataType: 'json',
+            success: function (data) {
+                console.log("Got files: " + data);
+                var arrayLength = data.length;
+                var formatted = { 'name': name, 'children': [] };
+
+                for (var i = 0; i < arrayLength; i++) {
+                    formatted.children[i] = { 'name': data[i].name, 'path': path + data[i].name + '/', 'id': data[i].id };
+
+                    if (data[i].type == "tree") {
+                        formatted.children[i].hasChildren = true;
+                    }
+                }
+
+                var branch = root.html(templateFnDynamic({ 'model': formatted, 'templateFnDynamic': templateFnDynamic })).parent();
+                root.attr('class', 'collapsable open');
+                $("#explorer").treeview({
+                    add: branch
+                });
+
+            }
+        });
+
+    });
+
+    $('#mapTabs a').click(function (e) {
+        e.preventDefault();
+        $(this).tab('show');
+    });
+
+    $('#mapTabs a:first').tab('show');
 
     //var editor = ace.edit("editor");
     //editor.getSession().setMode("ace/mode/javascript");

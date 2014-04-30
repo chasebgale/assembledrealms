@@ -20,6 +20,11 @@ switch ($directive) {
         echo "OK";
         die();
         break;
+    case "realms":
+        $out = array_values($loggedInUser->fetchRealms());
+        echo json_encode($out);
+        die();
+        break;
     case "files":
         $curl = curl_init();
         $admin_token = "iHrbUiraXaAaiDiNgMAV";

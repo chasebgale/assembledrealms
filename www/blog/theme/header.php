@@ -1,6 +1,7 @@
-<?php 
-    //require_once($_SERVER['DOCUMENT_ROOT'] . "models/config.php"); 
-    //if (!securePage($_SERVER['PHP_SELF'])){die();}
+<?php
+
+session_start();
+
 ?>
 
 <!doctype html>
@@ -72,12 +73,16 @@
                 </div>
                 <div class="collapse navbar-collapse">
                   <ul class="nav navbar-nav">
-                    <li><a href='../../../builder.php' class='header-link'><i class='fa fa-cogs fa-2x' style='display: block;'></i>Build</a></li>
+                    <li><a href='../../../builder/dashboard.php' class='header-link'><i class='fa fa-cogs fa-2x' style='display: block;'></i>Build</a></li>
                     <li><a href='#' class='header-link'><i class='fa fa-rocket fa-2x' style='display: block;'></i>Play</a></li>
                   </ul>
                   <ul class="nav navbar-nav navbar-right">
                     <li><a href='../../../blog' class='header-link'><i class='fa fa-pencil-square-o fa-2x' style='display: block;'></i>Blog</a></li>
+            <?php if(isset($_SESSION["userCakeUser"])): ?>
+                    <li><a href='../../../account/logout.php' class='header-link'><i class='fa fa-sign-out fa-2x' style='display: block;'></i>Logout</a></li>
+                    <li><a href='../../../account/account.php' class='header-link'><i class='fa fa-user fa-2x' style='display: block; text-align: center;'></i>Profile</a></li>
+            <?php endif; ?>
                   </ul>
-                </div><!--/.nav-collapse -->
+                </div>
               </div>
             </div>
