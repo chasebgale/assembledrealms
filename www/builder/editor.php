@@ -29,10 +29,7 @@ $parsed = json_decode($resp, true);
     <div id="content">
 
         <section id="mapEdit">
-            <div id="tree" class="sectionbase">
-                <div class="sectionbar">
-                    <span>Source files</span>
-                </div>
+            <div id="tree" class="panel panel-default">
                 <ul id="explorer" class="filetree treeview">
                 </ul>
             </div>
@@ -107,25 +104,18 @@ $parsed = json_decode($resp, true);
     </div>
     
     <script id="files_template" type="text/template">
-        <% if (model.children) { %>
-        <li class='collapsable'>
-            <span class='folder'><%= model.name %></span>
-            <ul>
-                <% _.each(model.children, function(child) { %>
-                <%= templateFn({'model': child, 'templateFn': templateFn}) %>
-                <% }); %>
-            </ul>
-        </li>
-        <% } else if (model.hasChildren) { %>
-        <li class='hasChildren closed no-data' data-path='<%= model.path %>'>
-            <span class='folder'><%= model.name %></span>
-            <ul>
-                <li><span class="placeholder">&nbsp;</span></li>
-            </ul>
-        </li>
-        <% } else { %>
-        <li><span class="file" data-id="<%- model.id %>"><%- model.name %></span></li>
-        <% } %>
+        <% _.each(model, function(child) { %>
+            <% if (child.hasChildren) { %>
+                <li class='hasChildren closed no-data' data-path='<%= child.path %>'>
+                    <span class='folder'><%= child.name %></span>
+                    <ul>
+                        <li><span class="placeholder">&nbsp;</span></li>
+                    </ul>
+                </li>
+            <% } else { %>
+                <li><span class="file" data-id="<%- child.id %>" data-path="<%= child.path %>"><%- child.name %></span></li>
+            <% } %>
+        <% }); %>
     </script>
     
     <script id="files_dynamic_template" type="text/template">
@@ -146,7 +136,7 @@ $parsed = json_decode($resp, true);
             </ul>
         </li>
         <% } else { %>
-        <li><span class="file" data-id="<%- model.id %>"><%- model.name %></span></li>
+        <li><span class="file" data-id="<%- model.id %>" data-path='<%= model.path %>'><%- model.name %></span></li>
         <% } %>
     </script>
 
@@ -184,23 +174,25 @@ $parsed = json_decode($resp, true);
 if ($parsed['message']) { 
     echo "<h1>" + $parsed['message'] + "</h1>";
 } else { 
-
-    $ret = "var responseJSON = {'name': 'Realm Title', 'children': [";
+    //'name': 'Realm Title', 'children': 
+    $ret = "var responseJSON = [";
 
     foreach ($parsed as &$value) {
         $ret .= "{'name':'" . $value['name'] . "'";
-        $ret .= ",'path':'" . $value['name'] . "/'";
         $ret .= ",'id':'" . $value['id'] . "'";
         
         if ($value['type'] == 'tree') {
+            $ret .= ",'path':'" . $value['name'] . "/'";
             $ret .= ",'hasChildren':'true'";
+        } else {
+            $ret .= ",'path':'" . $value['name'] . "'";
         }
         
         $ret .= "},";
     }
     
     $ret = rtrim($ret, ",");
-    $ret .= "]};";
+    $ret .= "];";
     
     echo "<script>";
     echo $ret;

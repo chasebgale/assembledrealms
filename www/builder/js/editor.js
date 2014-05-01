@@ -1,10 +1,12 @@
-﻿$(document).ready(function () {
+﻿var __editor;
+
+$(document).ready(function () {
 
     // Templates
-    var templateFn = _.template($('#files_template').html());
+    var templateFnInitial = _.template($('#files_template').html());
     var templateFnDynamic = _.template($('#files_dynamic_template').html());
 
-    $("#explorer").html(templateFn({ 'model': responseJSON, 'templateFn': templateFn }));
+    $("#explorer").html(templateFnInitial({ 'model': responseJSON, 'templateFnInitial': templateFnInitial }));
 
     $("#explorer").treeview({
         animated: "fast"
@@ -34,10 +36,11 @@
                 var formatted = { 'name': name, 'children': [] };
                 
                 for (var i = 0; i < arrayLength; i++) {
-                    formatted.children[i] = { 'name': data[i].name, 'path': path + data[i].name + '/', 'id': data[i].id };
+                    formatted.children[i] = { 'name': data[i].name, 'path': path + data[i].name, 'id': data[i].id };
 
                     if (data[i].type == "tree") {
                         formatted.children[i].hasChildren = true;
+                        formatted.children[i].path += '/';
                     }
                 }
 
@@ -59,13 +62,17 @@
         $("#explorer .file").removeClass('activefile');
         root.addClass('activefile');
 
-        var path = root.attr('data-path');
-        var name = root.text().trim();
-        var token = getGitlabSession();
+        var id      = root.attr('data-id');
+        var path    = root.attr('data-path');
+        var name    = root.text().trim();
+        var token   = getGitlabSession();
+        var ref     = "master"; // For now hit master, in the future, pull from working branch (master is the current production copy of the realm)
+
         var gitlab_id = window.location.search.slice(1);
 
-        var req = gitlab_id + '/repository/tree?id=' + gitlab_id +
-                                              '&path=' + encodeURIComponent(path) +
+        var req = gitlab_id + '/repository/files?id=' + gitlab_id +
+                                              '&file_path=' + encodeURIComponent(path) +
+                                              '&ref=' + ref + 
                                               '&private_token=' + token;
 
         $.ajax({
@@ -73,24 +80,34 @@
             type: 'get',
             dataType: 'json',
             success: function (data) {
-                console.log("Got files: " + data);
-                var arrayLength = data.length;
-                var formatted = { 'name': name, 'children': [] };
+                console.log(data);
 
-                for (var i = 0; i < arrayLength; i++) {
-                    formatted.children[i] = { 'name': data[i].name, 'path': path + data[i].name + '/', 'id': data[i].id };
+                var plainText = "";
 
-                    if (data[i].type == "tree") {
-                        formatted.children[i].hasChildren = true;
-                    }
+                if (data.encoding == "base64") {
+                    plainText = decode_utf8(atob(data.content));
                 }
 
-                var branch = root.html(templateFnDynamic({ 'model': formatted, 'templateFnDynamic': templateFnDynamic })).parent();
-                root.attr('class', 'collapsable open');
-                $("#explorer").treeview({
-                    add: branch
-                });
+                var ext = data.file_name.split('.').pop();
 
+                switch (ext) {
+                    case "js":
+                        __editor.getSession().setMode("ace/mode/javascript");
+                        break;
+                    case "json":
+                        __editor.getSession().setMode("ace/mode/json");
+                        break;
+                    case "html":
+                        __editor.getSession().setMode("ace/mode/html");
+                        break;
+                    default:
+                        __editor.getSession().setMode("ace/mode/plain_text");
+                        break;
+                }
+
+                __editor.setValue(plainText);
+                __editor.clearSelection();
+                __editor.moveCursorTo(0, 0);
             }
         });
 
@@ -115,7 +132,7 @@
         contentType: "text/plain; charset=utf-8",
         success: function (data, textStatus) {
             $("#editor").text(data);
-            var editor = ace.edit("editor");
+            __editor = ace.edit("editor");
             Map.onTilesLoaded = function (json) {
                 var template = $('#tiles_template').html();
                 $("#tiles").append(_.template(template, { model: json }));
@@ -181,3 +198,15 @@ function animate() {
     Map.render();
 
 }
+
+function encode_utf8(s) {
+    return unescape(encodeURIComponent(s));
+}
+
+function decode_utf8(s) {
+    return decodeURIComponent(escape(s));
+}
+
+String.prototype.endsWith = function (suffix) {
+    return this.indexOf(suffix, this.length - suffix.length) !== -1;
+};
