@@ -26,56 +26,53 @@ $parsed = json_decode($resp, true);
     
 ?>
 
-    <div id="content">
+    <section id="mapEdit">
+        <div id="tree" class="panel panel-default">
+            <ul id="explorer" class="filetree treeview">
+            </ul>
+        </div>
 
-        <section id="mapEdit">
-            <div id="tree" class="panel panel-default">
-                <ul id="explorer" class="filetree treeview">
-                </ul>
-            </div>
+        <div id="tabs">
+            <ul class="nav nav-tabs" id="mapTabs">
+                <li class="active"><a href="#editor" data-toggle="tab">Raw Text</a></li>
+                <li><a href="#map" data-toggle="tab">Map Editor</a></li>
+            </ul>
 
-            <div id="tabs">
-                <ul class="nav nav-tabs" id="mapTabs">
-                    <li class="active"><a href="#editor" data-toggle="tab">Raw Text</a></li>
-                    <li><a href="#map" data-toggle="tab">Map Editor</a></li>
-                </ul>
-
-                <div class="tab-content">
-                    <div class="tab-pane active" id="editor"></div>
-                    <div class="tab-pane" id="map">
-                        <nav class="navbar navbar-light" role="navigation">
-                            <div class="container-fluid">
-                                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                                    <ul class="nav navbar-nav" id="mapToolbar">
-                                        <!--<button id="tileButton" type="button" class="btn btn-default navbar-btn" data-toggle="modal" data-target=".tiles-modal-lg"></button>-->
-                                        <button type="button" class="btn btn-default navbar-btn" id="moveButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Navigate the map"><i class="fa fa-arrows"></i></button>
-                                        <button type="button" class="btn btn-default navbar-btn" id="eraserButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Erase tiles"><i class="fa fa-eraser"></i></button>
-                                        <div class="btn-group">
-                                            <button type="button" class="btn btn-default navbar-btn" id="tileButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Place terrain"></button>
-                                            <button type="button" class="btn btn-default dropdown-toggle navbar-btn" data-toggle="modal" data-target=".tiles-modal-lg">
-                                                <span class="caret"></span>
-                                                <span class="sr-only">Toggle Dropdown</span>
-                                            </button>
-                                        </div>
+            <div class="tab-content">
+                <div class="tab-pane active" id="editor"></div>
+                <div class="tab-pane" id="map">
+                    <nav class="navbar navbar-light" role="navigation">
+                        <div class="container-fluid">
+                            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                                <ul class="nav navbar-nav" id="mapToolbar">
+                                    <!--<button id="tileButton" type="button" class="btn btn-default navbar-btn" data-toggle="modal" data-target=".tiles-modal-lg"></button>-->
+                                    <button type="button" class="btn btn-default navbar-btn" id="moveButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Navigate the map"><i class="fa fa-arrows"></i></button>
+                                    <button type="button" class="btn btn-default navbar-btn" id="eraserButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Erase tiles"><i class="fa fa-eraser"></i></button>
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-default navbar-btn" id="tileButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Place terrain"></button>
+                                        <button type="button" class="btn btn-default dropdown-toggle navbar-btn" data-toggle="modal" data-target=".tiles-modal-lg">
+                                            <span class="caret"></span>
+                                            <span class="sr-only">Toggle Dropdown</span>
+                                        </button>
+                                    </div>
 										
 										
-                                        <div class="btn-group">
-                                            <button type="button" class="btn btn-default navbar-btn" id="objectButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Place objects over terrain"></button>
-                                            <button type="button" class="btn btn-default dropdown-toggle navbar-btn" data-toggle="modal" data-target=".objects-modal-lg">
-                                                <span class="caret"></span>
-                                                <span class="sr-only">Toggle Dropdown</span>
-                                            </button>
-                                        </div>
-                                    </ul>
-                                </div>
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-default navbar-btn" id="objectButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Place objects over terrain"></button>
+                                        <button type="button" class="btn btn-default dropdown-toggle navbar-btn" data-toggle="modal" data-target=".objects-modal-lg">
+                                            <span class="caret"></span>
+                                            <span class="sr-only">Toggle Dropdown</span>
+                                        </button>
+                                    </div>
+                                </ul>
                             </div>
-                        </nav>
-                    </div>
+                        </div>
+                    </nav>
                 </div>
             </div>
+        </div>
 
-        </section>
-    </div>
+    </section>
 
     <div class="modal fade tiles-modal-lg" id="modalTiles" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg">
