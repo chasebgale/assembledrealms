@@ -8,25 +8,19 @@ if(!isUserLoggedIn()) {
 	echo "<h1>You must be logged in to access our build tools!</h1>";
     die(); 
 }
-
-$gitlab_project_id = $_SERVER['QUERY_STRING'];
-
-$curl = curl_init();
-$admin_token = "iHrbUiraXaAaiDiNgMAV";
-
-curl_setopt_array($curl, array(
-    CURLOPT_HTTPHEADER => array('PRIVATE-TOKEN: ' . $admin_token),
-    CURLOPT_RETURNTRANSFER => 1,
-    CURLOPT_URL => 'http://source-01.assembledrealms.com/api/v3/projects/' . $gitlab_project_id . '/repository/tree?id=' . $gitlab_project_id
-));
-
-$resp = curl_exec($curl);
-
-$parsed = json_decode($resp, true);
     
 ?>
 
-    <section id="mapEdit">
+    <div id="loading" style="width: 500px; margin: 0 auto; margin-top: 100px;">
+        <div class="progress progress-striped active">
+            <div class="progress-bar"  role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%;">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+        <p style="text-align: center;">Your realm is loading, please wait...</p>
+    </div>
+    
+    <section id="mapEdit" style="display: none;">
         <div id="tree" class="panel panel-default">
             <ul id="explorer" class="filetree treeview">
             </ul>
@@ -34,12 +28,15 @@ $parsed = json_decode($resp, true);
 
         <div id="tabs">
             <ul class="nav nav-tabs" id="mapTabs">
-                <li class="active"><a href="#editor" data-toggle="tab">Raw Text</a></li>
-                <li><a href="#map" data-toggle="tab">Map Editor</a></li>
+                <li id="tab-nav-editor" class="active"><a href="#editor" data-toggle="tab">Raw Text</a></li>
+                <li id="tab-nav-map" style="display: none;"><a href="#map" data-toggle="tab">Map Editor</a></li>
+                <li id="tab-nav-markdown" style="display: none;"><a href="#markdown" data-toggle="tab">Rendered Markdown</a></li>
             </ul>
 
             <div class="tab-content">
+
                 <div class="tab-pane active" id="editor"></div>
+
                 <div class="tab-pane" id="map">
                     <nav class="navbar navbar-light" role="navigation">
                         <div class="container-fluid">
@@ -69,6 +66,8 @@ $parsed = json_decode($resp, true);
                         </div>
                     </nav>
                 </div>
+
+                <div class="tab-pane" id="markdown"></div>
             </div>
         </div>
 
@@ -165,44 +164,14 @@ $parsed = json_decode($resp, true);
     
     <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js'></script>
     <script src='//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js'></script>
-    
-<?php 
-
-if ($parsed['message']) { 
-    echo "<h1>" + $parsed['message'] + "</h1>";
-} else { 
-    //'name': 'Realm Title', 'children': 
-    $ret = "var responseJSON = [";
-
-    foreach ($parsed as &$value) {
-        $ret .= "{'name':'" . $value['name'] . "'";
-        $ret .= ",'id':'" . $value['id'] . "'";
-        
-        if ($value['type'] == 'tree') {
-            $ret .= ",'path':'" . $value['name'] . "/'";
-            $ret .= ",'hasChildren':'true'";
-        } else {
-            $ret .= ",'path':'" . $value['name'] . "'";
-        }
-        
-        $ret .= "},";
-    }
-    
-    $ret = rtrim($ret, ",");
-    $ret .= "];";
-    
-    echo "<script>";
-    echo $ret;
-    echo "</script>";
-}
-
-?>
 
     <script src="js/utilities.js"></script>
     <script src="js/stats.min.js"></script>
     <script src="js/map.editor.js"></script>
     <script src="js/editor.js"></script>
     <script src="js/jquery.treeview.js"></script>
+    <script src="js/md5.js"></script>
+    <script src="js/marked.js"></script>
     
     <script src="/../js/pixi.dev.js"></script>
     <script src="/../js/lodash.min.js"></script>

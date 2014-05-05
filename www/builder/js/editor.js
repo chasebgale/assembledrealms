@@ -1,4 +1,5 @@
 ﻿var __editor;
+var __activeId;
 
 $(document).ready(function () {
 
@@ -6,7 +7,7 @@ $(document).ready(function () {
     var templateFnInitial = _.template($('#files_template').html());
     var templateFnDynamic = _.template($('#files_dynamic_template').html());
 
-    $("#explorer").html(templateFnInitial({ 'model': responseJSON, 'templateFnInitial': templateFnInitial }));
+    $("#explorer").html(templateFnInitial({ 'model': loadRealmRoot(), 'templateFnInitial': templateFnInitial }));
 
     $("#explorer").treeview({
         animated: "fast"
@@ -15,7 +16,6 @@ $(document).ready(function () {
     // Fetch folder contents:
     $("#explorer").on("click", ".no-data", function () {
         
-        console.log(this);
         var root = $(this);
         var path = root.attr('data-path');
         var name = root.text().trim();
@@ -59,59 +59,63 @@ $(document).ready(function () {
 
         var root = $(this);
 
+        __editor.off("change", editor_onChange);
+
         $("#explorer .file").removeClass('activefile');
         root.addClass('activefile');
 
         var id      = root.attr('data-id');
         var path    = root.attr('data-path');
         var name    = root.text().trim();
-        var token   = getGitlabSession();
-        var ref     = "master"; // For now hit master, in the future, pull from working branch (master is the current production copy of the realm)
 
-        var gitlab_id = window.location.search.slice(1);
+        if (localStorage[id]) {
 
-        var req = gitlab_id + '/repository/files?id=' + gitlab_id +
-                                              '&file_path=' + encodeURIComponent(path) +
-                                              '&ref=' + ref + 
-                                              '&private_token=' + token;
+            loadEditor(name, localStorage[id]);
+            __activeId = id;
+            __editor.on("change", editor_onChange);
 
-        $.ajax({
-            url: 'http://source-01.assembledrealms.com/api/v3/projects/' + req,
-            type: 'get',
-            dataType: 'json',
-            success: function (data) {
-                console.log(data);
+        } else {
 
-                var plainText = "";
+            var token = getGitlabSession();
+            var ref = "master"; // For now hit master, in the future, pull from working branch (master is the current production copy of the realm)
 
-                if (data.encoding == "base64") {
-                    plainText = decode_utf8(atob(data.content));
+            var gitlab_id = window.location.search.slice(1);
+
+            var req = gitlab_id + '/repository/files?id=' + gitlab_id +
+                                                  '&file_path=' + encodeURIComponent(path) +
+                                                  '&ref=' + ref +
+                                                  '&private_token=' + token;
+
+            $.ajax({
+                url: 'http://source-01.assembledrealms.com/api/v3/projects/' + req,
+                type: 'get',
+                dataType: 'json',
+                success: function (data) {
+                    console.log(data);
+
+                    var plainText = "";
+
+                    if (data.encoding == "base64") {
+                        plainText = decode_utf8(atob(data.content));
+                    }
+
+                    localStorage[id] = plainText;
+                    localStorage[id + '-commit-md5'] = md5(plainText);
+
+                    loadEditor(data.file_name, plainText);
+                    __activeId = id;
+                    __editor.on("change", editor_onChange);
+
                 }
+            });
 
-                var ext = data.file_name.split('.').pop();
+        }
 
-                switch (ext) {
-                    case "js":
-                        __editor.getSession().setMode("ace/mode/javascript");
-                        break;
-                    case "json":
-                        __editor.getSession().setMode("ace/mode/json");
-                        break;
-                    case "html":
-                        __editor.getSession().setMode("ace/mode/html");
-                        break;
-                    default:
-                        __editor.getSession().setMode("ace/mode/plain_text");
-                        break;
-                }
-
-                __editor.setValue(plainText);
-                __editor.clearSelection();
-                __editor.moveCursorTo(0, 0);
-            }
-        });
 
     });
+
+    __editor = ace.edit("editor");
+    loadRealmFile($('#explorer [data-path="README.md"').attr('data-id'), 'README.md', 'README.md');
 
     $('#mapTabs a').click(function (e) {
         e.preventDefault();
@@ -125,6 +129,7 @@ $(document).ready(function () {
 
     $("#mapToolbar [data-toggle='tooltip']").tooltip();
 
+    /*
     $.ajax({
         type: "GET",
         url: "map.json",
@@ -149,6 +154,7 @@ $(document).ready(function () {
             alert("error");
         }
     });
+    */
 
     $("#tiles").on("click", ".tileBox", function () {
         var tileKey = $(this).attr('data-id');
@@ -182,7 +188,125 @@ $(document).ready(function () {
         $("#mapMain").css('cursor', 'move');
     });
 
+    $("#loading").fadeOut(500, function () {
+        $("#mapEdit").fadeIn();
+    });
+
 });
+
+function loadRealmRoot() {
+
+    var token = getGitlabSession();
+    var gitlab_id = window.location.search.slice(1);
+
+    var req = gitlab_id + '/repository/tree?id=' + gitlab_id +
+                                          '&private_token=' + token;
+
+    var resp = $.ajax({
+        url: 'http://source-01.assembledrealms.com/api/v3/projects/' + req,
+        type: 'get',
+        dataType: 'json',
+        async: false
+    }).responseText;
+
+    var json = JSON.parse(resp);
+
+    _.each(json, function (value) {
+
+        value.path = value.name;
+
+        if (value.type == "tree") {
+            value.hasChildren = true;
+            value.path += '/';
+        }
+    });
+
+    console.log(json);
+
+    return json;
+}
+
+function loadRealmFile(id, path, name) {
+
+    if (localStorage[id]) {
+
+        loadEditor(name, localStorage[id]);
+        __activeId = id;
+
+    } else {
+
+        var token = getGitlabSession();
+        var ref = "master"; // For now hit master, in the future, pull from working branch (master is the current production copy of the realm)
+
+        var gitlab_id = window.location.search.slice(1);
+
+        var req = gitlab_id + '/repository/files?id=' + gitlab_id +
+                                              '&file_path=' + encodeURIComponent(path) +
+                                              '&ref=' + ref +
+                                              '&private_token=' + token;
+
+        $.ajax({
+            url: 'http://source-01.assembledrealms.com/api/v3/projects/' + req,
+            type: 'get',
+            dataType: 'json',
+            success: function (data) {
+
+                var plainText = "";
+
+                if (data.encoding == "base64") {
+                    plainText = decode_utf8(atob(data.content));
+                }
+
+                localStorage[id] = plainText;
+                localStorage[id + '-commit-md5'] = md5(plainText);
+
+                loadEditor(data.file_name, plainText);
+                __activeId = id;
+
+            }
+        });
+
+    }
+}
+
+function loadEditor(filename, content) {
+
+    __editor.off("change", editor_onChange);
+    var ext = filename.split('.').pop();
+
+    $("#mapTabs li").css('display', 'none');
+    $("#tab-nav-editor").css('display', 'block');
+
+    switch (ext) {
+        case "js":
+            __editor.getSession().setMode("ace/mode/javascript");
+            break;
+        case "json":
+            __editor.getSession().setMode("ace/mode/json");
+            break;
+        case "html":
+            __editor.getSession().setMode("ace/mode/html");
+            break;
+        case "md":
+            __editor.getSession().setMode("ace/mode/plain_text");
+            $("#tab-nav-markdown").css('display', 'block');
+            $("#markdown").html(marked(content));
+            break;
+        default:
+            __editor.getSession().setMode("ace/mode/plain_text");
+            break;
+    }
+
+    __editor.setValue(content);
+    __editor.clearSelection();
+    __editor.moveCursorTo(0, 0);
+
+    __editor.on("change", editor_onChange);
+}
+
+function editor_onChange(e) {
+    localStorage[__activeId] = __editor.getValue();
+}
 
 function setToolbarFocus(target) {
     $("#tileButton").removeClass('active');
