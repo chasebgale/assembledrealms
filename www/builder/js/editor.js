@@ -72,7 +72,6 @@ $(document).ready(function () {
 
             loadEditor(name, localStorage[id]);
             __activeId = id;
-            __editor.on("change", editor_onChange);
 
         } else {
 
@@ -104,7 +103,6 @@ $(document).ready(function () {
 
                     loadEditor(data.file_name, plainText);
                     __activeId = id;
-                    __editor.on("change", editor_onChange);
 
                 }
             });
@@ -115,14 +113,24 @@ $(document).ready(function () {
     });
 
     __editor = ace.edit("editor");
-    loadRealmFile($('#explorer [data-path="README.md"').attr('data-id'), 'README.md', 'README.md');
+
+    var readmeDOM = $('#explorer [data-path="README.md"');
+    readmeDOM.addClass('activefile');
+
+    loadRealmFile(readmeDOM.attr('data-id'), 'README.md', 'README.md');
 
     $('#mapTabs a').click(function (e) {
         e.preventDefault();
         $(this).tab('show');
     });
 
-    $('#mapTabs a:first').tab('show');
+    $('#tab-nav-markdown a:first').tab('show');
+
+    $('#tab-nav-markdown a:first').on('shown.bs.tab', function (e) {
+        //e.target // activated tab
+        //e.relatedTarget // previous tab
+        $("#markdown").html(marked(__editor.getValue()));
+    });
 
     //var editor = ace.edit("editor");
     //editor.getSession().setMode("ace/mode/javascript");
@@ -283,6 +291,7 @@ function loadEditor(filename, content) {
             break;
         case "json":
             __editor.getSession().setMode("ace/mode/json");
+            $("#tab-nav-map").css('display', 'block');
             break;
         case "html":
             __editor.getSession().setMode("ace/mode/html");
@@ -296,6 +305,8 @@ function loadEditor(filename, content) {
             __editor.getSession().setMode("ace/mode/plain_text");
             break;
     }
+
+    $('#tab-nav-editor a:first').tab('show');
 
     __editor.setValue(content);
     __editor.clearSelection();
