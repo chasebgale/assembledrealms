@@ -111,6 +111,7 @@ class loggedInUser {
 		$stmt->close();	
 	}
     
+    /*
     public function fetchRealm($gitlab_id)
 	{
 		global $mysqli,$db_table_prefix;
@@ -125,6 +126,23 @@ class loggedInUser {
 		$stmt->close();
 		return ($id);
 	}
+    */
+    
+    public function fetchRealm($gitlab_id)
+	{
+		global $mysqli,$db_table_prefix;
+		$stmt = $mysqli->prepare("SELECT 
+            *
+            FROM realms
+            WHERE gitlab_id = ?");
+		$stmt->bind_param("i", $gitlab_id);
+		$stmt->execute();
+		$stmt->bind_result($id, $user_id, $gitlab_id, $title, $description, $status, $players, $funds);
+		$stmt->fetch();
+		$stmt->close();
+		return array('id' => $id, 'user_id' => $user_id, 'gitlab_id' => $gitlab_id, 'title' => $title, 'description' => $description, 'status' => $status, 'players' => $players, 'funds' => $funds);
+	}
+    
     
     public function fetchRealms()
 	{
@@ -135,10 +153,10 @@ class loggedInUser {
 		$stmt->bind_param("i", $this->user_id);
 		$stmt->execute();
         
-		$stmt->bind_result($id, $user_id, $gitlab_id, $title, $description, $status, $players);
+		$stmt->bind_result($id, $user_id, $gitlab_id, $title, $description, $status, $players, $funds);
         
         while ($stmt->fetch()){
-            $row[] = array('id' => $id, 'user_id' => $user_id, 'gitlab_id' => $gitlab_id, 'title' => $title, 'description' => $description, 'status' => $status, 'players' => $players);
+            $row[] = array('id' => $id, 'user_id' => $user_id, 'gitlab_id' => $gitlab_id, 'title' => $title, 'description' => $description, 'status' => $status, 'players' => $players, 'funds' => $funds);
         }
         $stmt->close();
         return ($row);

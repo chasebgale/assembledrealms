@@ -61,6 +61,23 @@ if(!empty($_POST))
         
 		$successes[] = $user->success;
         
+        // Log the user in:
+        $userdetails = fetchUserDetails($email);
+        
+        $loggedInUser = new loggedInUser();
+        $loggedInUser->email = $userdetails["email"];
+        $loggedInUser->user_id = $userdetails["id"];
+        $loggedInUser->hash_pw = $userdetails["password"];
+        $loggedInUser->title = $userdetails["title"];
+        $loggedInUser->displayname = $userdetails["display_name"];
+        $loggedInUser->gitlab_user = "realmer-" . $userdetails["id"];
+        $loggedInUser->gitlab_id = $userdetails["gitlab_id"];
+        $loggedInUser->gitlab_password = $userdetails["gitlab_password"];
+        
+        //Update last sign in
+        $loggedInUser->updateLastSignIn();
+        $_SESSION["userCakeUser"] = $loggedInUser;
+        
         //Redirect to user account page
         echo "OK";
         die();
@@ -82,8 +99,22 @@ if(!empty($_POST))
 }
 
 require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
-echo "
-<div id='content'>";
+echo "<div id='content'>";
+
+$wrapper = '<div class="panel panel-warning" style="width: 500px; margin: 0 auto; margin-bottom: 50px;">
+                <div class="panel-body">
+                    <h2 style="text-align: center; margin-top: 0;"><small>
+                        %message%
+                    </small></h2>
+                </div>
+           </div>';
+
+switch ($_SERVER['QUERY_STRING']) {
+    case '0':
+        echo str_replace("%message%", "You must be logged in to access our build tools. Please take a moment to register.", $wrapper);
+        break;
+}
+
 ?>
 
 <form id="form-register" role="form">
@@ -121,7 +152,18 @@ echo "
 
         $.post("<?php echo $_SERVER['PHP_SELF']; ?>", $("#form-register").serialize(), function (data) {
             if (data == "OK") {
-                window.location = "account.php";
+
+                switch (window.location.search) {
+                    case '?0':
+                        window.location = "/builder/dashboard.php";
+                        break;
+                    default:
+                        window.location = "account.php";
+                        break;
+                }
+
+                //window.location = "account.php";
+
             } else {
                 var parsed = JSON.parse(data);
                 var input;

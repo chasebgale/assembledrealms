@@ -2,12 +2,13 @@
 
 require_once($_SERVER['DOCUMENT_ROOT'] . "models/config.php");
 if (!securePage($_SERVER['PHP_SELF'])){die();}
-require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 
 if(!isUserLoggedIn()) { 
-  echo "<h1>You must be logged in to access our build tools!</h1>";
-  die(); 
+    header("Location: /account/register.php?0");
+    die();
 }
+
+require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 
 ?>
 
@@ -94,7 +95,7 @@ if(!isUserLoggedIn()) {
 
                 <div style="float: left;">
                     <a class="btn btn-default" href="editor.php?<%- realm.gitlab_id %>"><span class="glyphicon glyphicon-fire"></span> Edit Codebase</a>
-                    <a class="btn btn-default" href="manager.php?<%- realm.id %>"><span class="glyphicon glyphicon-eye-open"></span> Manage</a>
+                    <a class="btn btn-default" href="manager.php?<%- realm.gitlab_id %>"><span class="glyphicon glyphicon-eye-open"></span> Manage</a>
                 </div>
 
                 <div style="float: right;">
