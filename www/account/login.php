@@ -92,8 +92,5 @@ echo resultBlock($errors,$successes);
     <h2 class="form-signin-heading">Please sign in</h2>
     <input name="email" type="email" class="form-control" placeholder="contact@domain.com" required="true" autofocus="">
     <input name="password" type="password" class="form-control" placeholder="Password" required="true">
-    <label class="checkbox">
-        <input type="checkbox" value="remember-me"> Remember me
-    </label>
     <button class="btn btn-lg btn-default btn-block" type="submit">Sign in</button>
 </form>

@@ -81,6 +81,9 @@ session_start();
             <?php if(isset($_SESSION["userCakeUser"])): ?>
                     <li><a href='../../../account/logout.php' class='header-link'><i class='fa fa-sign-out fa-2x' style='display: block;'></i>Logout</a></li>
                     <li><a href='../../../account/account.php' class='header-link'><i class='fa fa-user fa-2x' style='display: block; text-align: center;'></i>Profile</a></li>
+            <?php else: ?>
+                    <li><a href='../../../account/login.php' class='header-link'><i class='fa fa-sign-in fa-2x' style='display: block;'></i>Login</a></li>
+                    <li><a href='../../../account/register.php' class='header-link'><i class='fa fa-lightbulb-o fa-2x' style='display: block;'></i>Join</a></li>
             <?php endif; ?>
                   </ul>
                 </div>
