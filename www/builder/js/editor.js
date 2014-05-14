@@ -1,7 +1,18 @@
 ﻿var __editor;
-var __activeId;
+var __fileId;
+var __projectId;
+var __trackedFiles = [];
+var __trackedStorageId;
 
 $(document).ready(function () {
+    
+    __projectId = window.location.search.slice(1);
+
+    __trackedStorageId = __projectId + "-tracking";
+
+    if (localStorage[__trackedStorageId]) {
+        __trackedFiles = JSON.parse(localStorage[__trackedStorageId]);
+    }
 
     // Templates
     var templateFnInitial = _.template($('#files_template').html());
@@ -20,9 +31,8 @@ $(document).ready(function () {
         var path = root.attr('data-path');
         var name = root.text().trim();
         var token = getGitlabSession();
-        var gitlab_id = window.location.search.slice(1);
 
-        var req = gitlab_id + '/repository/tree?id=' + gitlab_id +
+        var req = __projectId + '/repository/tree?id=' + __projectId +
                                               '&path=' + encodeURIComponent(path) +
                                               '&private_token=' + token;
 
@@ -66,21 +76,21 @@ $(document).ready(function () {
 
         var id      = root.attr('data-id');
         var path    = root.attr('data-path');
-        var name    = root.text().trim();
+        var name = root.text().trim();
 
-        if (localStorage[id]) {
+        var storageId = __projectId + "-" + id;
 
-            loadEditor(name, localStorage[id]);
-            __activeId = id;
+        if (localStorage[storageId]) {
+
+            loadEditor(name, localStorage[storageId]);
+            __fileId = id;
 
         } else {
 
             var token = getGitlabSession();
             var ref = "master"; // For now hit master, in the future, pull from working branch (master is the current production copy of the realm)
 
-            var gitlab_id = window.location.search.slice(1);
-
-            var req = gitlab_id + '/repository/files?id=' + gitlab_id +
+            var req = __projectId + '/repository/files?id=' + __projectId +
                                                   '&file_path=' + encodeURIComponent(path) +
                                                   '&ref=' + ref +
                                                   '&private_token=' + token;
@@ -98,11 +108,14 @@ $(document).ready(function () {
                         plainText = decode_utf8(atob(data.content));
                     }
 
-                    localStorage[id] = plainText;
-                    localStorage[id + '-commit-md5'] = md5(plainText);
+                    localStorage[storageId] = plainText;
+                    localStorage[storageId + '-commit-md5'] = md5(plainText);
+
+                    __trackedFiles.push(id);
+                    localStorage[__trackedStorageId] = JSON.stringify(__trackedFiles);
 
                     loadEditor(data.file_name, plainText);
-                    __activeId = id;
+                    __fileId = id;
 
                 }
             });
@@ -205,9 +218,8 @@ $(document).ready(function () {
 function loadRealmRoot() {
 
     var token = getGitlabSession();
-    var gitlab_id = window.location.search.slice(1);
 
-    var req = gitlab_id + '/repository/tree?id=' + gitlab_id +
+    var req = __projectId + '/repository/tree?id=' + __projectId +
                                           '&private_token=' + token;
 
     var resp = $.ajax({
@@ -239,16 +251,14 @@ function loadRealmFile(id, path, name) {
     if (localStorage[id]) {
 
         loadEditor(name, localStorage[id]);
-        __activeId = id;
+        __fileId = id;
 
     } else {
 
         var token = getGitlabSession();
         var ref = "master"; // For now hit master, in the future, pull from working branch (master is the current production copy of the realm)
 
-        var gitlab_id = window.location.search.slice(1);
-
-        var req = gitlab_id + '/repository/files?id=' + gitlab_id +
+        var req = __projectId + '/repository/files?id=' + __projectId +
                                               '&file_path=' + encodeURIComponent(path) +
                                               '&ref=' + ref +
                                               '&private_token=' + token;
@@ -269,7 +279,7 @@ function loadRealmFile(id, path, name) {
                 localStorage[id + '-commit-md5'] = md5(plainText);
 
                 loadEditor(data.file_name, plainText);
-                __activeId = id;
+                __fileId = id;
 
             }
         });
@@ -316,7 +326,7 @@ function loadEditor(filename, content) {
 }
 
 function editor_onChange(e) {
-    localStorage[__activeId] = __editor.getValue();
+    localStorage[__fileId] = __editor.getValue();
 }
 
 function setToolbarFocus(target) {
