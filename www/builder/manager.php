@@ -4,9 +4,9 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/config.php");
 if (!securePage($_SERVER['PHP_SELF'])){die();}
 require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 
-if(!isUserLoggedIn()) { 
-	echo "<h1>You must be logged in to access our build tools!</h1>";
-    die(); 
+if(!isUserLoggedIn()) {
+    header("Location: /account/register.php?0");
+    die();
 }
 
 if (is_numeric($_SERVER['QUERY_STRING'])) {

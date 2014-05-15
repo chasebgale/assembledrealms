@@ -4,9 +4,9 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/config.php");
 if (!securePage($_SERVER['PHP_SELF'])){die();}
 require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 
-if(!isUserLoggedIn()) { 
-	echo "<h1>You must be logged in to access our build tools!</h1>";
-    die(); 
+if(!isUserLoggedIn()) {
+    header("Location: /account/register.php?0");
+    die();
 }
     
 ?>
@@ -21,11 +21,18 @@ if(!isUserLoggedIn()) {
     </div>
     
     <section id="mapEdit" style="display: none;">
-        <div id="tree" class="panel panel-default">
-            <ul id="explorer" class="filetree treeview">
-            </ul>
+        <div id="leftBar">
+            <button id="btnCommit" type="button" class="btn btn-default">
+		<span class="glyphicon glyphicon-open"></span> Commit
+	    </button>
+	    <button type="button" class="btn btn-default">
+		<span class="glyphicon glyphicon-play"></span> Debug
+	    </button>
+            <div id="tree" class="panel panel-default">
+                <ul id="explorer" class="filetree treeview">
+                </ul>
+            </div>
         </div>
-
         <div id="tabs">
             <ul class="nav nav-tabs" id="mapTabs">
                 <li id="tab-nav-editor" class="active"><a href="#editor" data-toggle="tab">Raw Text</a></li>
@@ -73,6 +80,7 @@ if(!isUserLoggedIn()) {
 
     </section>
 
+
     <div class="modal fade tiles-modal-lg" id="modalTiles" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -95,6 +103,28 @@ if(!isUserLoggedIn()) {
                 </div>
                 <div class="modal-body" id="objects">
                 </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade objects-modal-lg" id="modalCommit" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Commit Progress - Branch: "working"</h4>
+                </div>
+                <div class="modal-body">
+			<div id="commitProgressbar" class="progress progress-striped">
+				<div class="progress-bar"  role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%;">
+				<span class="sr-only">Loading...</span>
+			    </div>
+			</div>
+			<p id="commitProgressMessage" style="text-align: center;"></p>
+			<ul id="commitProgressList"></ul>
+                </div>
+		<div class="modal-footer">
+			<button id="closeCommit" type="button" disabled="disabled" class="btn btn-default" data-dismiss="modal">Close</button>
+		</div>
             </div>
         </div>
     </div>

@@ -4,14 +4,16 @@ var __projectId;
 var __trackedFiles = [];
 var __trackedStorageId;
 
+var __processingFiles = [];
+
 $(document).ready(function () {
     
     __projectId = window.location.search.slice(1);
 
     __trackedStorageId = __projectId + "-tracking";
 
-    if (localStorage[__trackedStorageId]) {
-        __trackedFiles = JSON.parse(localStorage[__trackedStorageId]);
+    if (sessionStorage[__trackedStorageId]) {
+        __trackedFiles = JSON.parse(sessionStorage[__trackedStorageId]);
     }
 
     // Templates
@@ -80,48 +82,7 @@ $(document).ready(function () {
 
         var storageId = __projectId + "-" + id;
 
-        if (localStorage[storageId]) {
-
-            loadEditor(name, localStorage[storageId]);
-            __fileId = id;
-
-        } else {
-
-            var token = getGitlabSession();
-            var ref = "master"; // For now hit master, in the future, pull from working branch (master is the current production copy of the realm)
-
-            var req = __projectId + '/repository/files?id=' + __projectId +
-                                                  '&file_path=' + encodeURIComponent(path) +
-                                                  '&ref=' + ref +
-                                                  '&private_token=' + token;
-
-            $.ajax({
-                url: 'http://source-01.assembledrealms.com/api/v3/projects/' + req,
-                type: 'get',
-                dataType: 'json',
-                success: function (data) {
-                    console.log(data);
-
-                    var plainText = "";
-
-                    if (data.encoding == "base64") {
-                        plainText = decode_utf8(atob(data.content));
-                    }
-
-                    localStorage[storageId] = plainText;
-                    localStorage[storageId + '-commit-md5'] = md5(plainText);
-
-                    __trackedFiles.push(id);
-                    localStorage[__trackedStorageId] = JSON.stringify(__trackedFiles);
-
-                    loadEditor(data.file_name, plainText);
-                    __fileId = id;
-
-                }
-            });
-
-        }
-
+        loadRealmFile(storageId, path, name);
 
     });
 
@@ -130,14 +91,12 @@ $(document).ready(function () {
     var readmeDOM = $('#explorer [data-path="README.md"');
     readmeDOM.addClass('activefile');
 
-    loadRealmFile(readmeDOM.attr('data-id'), 'README.md', 'README.md');
+    loadRealmFile(__projectId + "-" + readmeDOM.attr('data-id'), 'README.md', 'README.md');
 
     $('#mapTabs a').click(function (e) {
         e.preventDefault();
         $(this).tab('show');
     });
-
-    $('#tab-nav-markdown a:first').tab('show');
 
     $('#tab-nav-markdown a:first').on('shown.bs.tab', function (e) {
         //e.target // activated tab
@@ -145,9 +104,9 @@ $(document).ready(function () {
         $("#markdown").html(marked(__editor.getValue()));
     });
 
-    //var editor = ace.edit("editor");
-    //editor.getSession().setMode("ace/mode/javascript");
+    $('#tab-nav-markdown a:first').tab('show');
 
+    // TOOLTIPS:
     $("#mapToolbar [data-toggle='tooltip']").tooltip();
 
     /*
@@ -209,11 +168,64 @@ $(document).ready(function () {
         $("#mapMain").css('cursor', 'move');
     });
 
+    $("#btnCommit").on("click", function () {
+        $("#commitProgressMessage").text('Initiating commit to branch.');
+        $('#commitProgressbar').addClass('active');
+        $('#modalCommit').modal('show');
+        commit();
+    });
+    
     $("#loading").fadeOut(500, function () {
         $("#mapEdit").fadeIn();
     });
 
 });
+
+function commit() {
+    if (sessionStorage[__trackedStorageId]) {
+        __processingFiles = JSON.parse(sessionStorage[__trackedStorageId]);
+        var fileMD5;
+        var file;
+        var fileName;
+        var filePath;
+        
+        var commitProgressList = $("#commitProgressList");
+        commitProgressList.empty();
+        
+        if (_.isArray(__processingFiles)) {
+            __processingFiles = $.grep(__processingFiles, function (fileId, i) {
+                file = sessionStorage[fileId];
+                fileName = sessionStorage[fileId + '-name'];
+                filePath = sessionStorage[fileId + '-path'];
+                fileMD5 = sessionStorage[fileId + '-commit-md5'];
+                
+                commitProgressList.append('<li id="' + fileId + '"><span style="font-weight: bold; width: 200px; display: inline-block;">' + fileName + ': </span><span></span></li>');
+                
+                if (md5(file) !== fileMD5) {
+                    // Push to gitlab
+                    $('#' + fileId + ' span:last').html('<i class="fa fa-cog fa-spin"></i> Pushing to git.');
+                    
+                    updateRealmFile(fileId, filePath, file);
+                    
+                    return true;
+                } else {
+                    $('#' + fileId).css('color', '#999');
+                    $('#' + fileId + ' span:last').text('No local changes, no action taken.');
+                    return false;
+                }
+            });
+        }
+        
+        if (__processingFiles.length === 0) {
+            $('#commitProgressbar').removeClass('active');
+            $('#closeCommit').removeAttr('disabled');
+            $("#commitProgressMessage").text('No commit, realm branch is up to date.');
+        } else {
+            $("#commitProgressMessage").text('Uploading source files to git.');
+        }
+        
+    }
+}
 
 function loadRealmRoot() {
 
@@ -248,9 +260,9 @@ function loadRealmRoot() {
 
 function loadRealmFile(id, path, name) {
 
-    if (localStorage[id]) {
+    if (sessionStorage[id]) {
 
-        loadEditor(name, localStorage[id]);
+        loadEditor(name, sessionStorage[id]);
         __fileId = id;
 
     } else {
@@ -275,8 +287,13 @@ function loadRealmFile(id, path, name) {
                     plainText = decode_utf8(atob(data.content));
                 }
 
-                localStorage[id] = plainText;
-                localStorage[id + '-commit-md5'] = md5(plainText);
+                sessionStorage[id] = plainText;
+                sessionStorage[id + '-name'] = name;
+                sessionStorage[id + '-path'] = path;
+                sessionStorage[id + '-commit-md5'] = md5(plainText);
+
+                __trackedFiles.push(id);
+                sessionStorage[__trackedStorageId] = JSON.stringify(__trackedFiles);
 
                 loadEditor(data.file_name, plainText);
                 __fileId = id;
@@ -285,6 +302,59 @@ function loadRealmFile(id, path, name) {
         });
 
     }
+}
+
+function updateRealmFile(id, path, content) {
+    
+    var token = getGitlabSession();
+    var ref = "master"; // For now hit master, in the future, pull from working branch (master is the current production copy of the realm)
+
+    var data = {
+        file_path: path,
+        branch_name: ref,
+        encoding: 'base64',
+        content: btoa(encode_utf8(content)),
+        commit_message: '"' + Date.now() + '"',
+        private_token: token
+    };
+    
+    var req = __projectId + '/repository/files';
+    
+    $.ajax({
+        url: 'http://source-01.assembledrealms.com/api/v3/projects//' + req,
+        type: 'put',
+        dataType: 'json',
+        contentType: 'application/json',
+        headers: {
+                "PRIVATE-TOKEN": token
+        },
+        data: JSON.stringify(data),
+        success: function (response) {
+            
+            // Update sessionStorage with new MD5
+            sessionStorage[id + '-commit-md5'] = md5(sessionStorage[id]);
+            
+            // Update DOM to reflect we completed ok:
+            $('#' + id + ' span:last').html('<i class="fa fa-thumbs-up"></i> Success!');
+
+        },
+        error: function (response) {
+            
+            // Update DOM to reflect we messed up:
+            $('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
+            
+        },
+        complete: function (response) {
+            // Remove file from processing queue
+            __processingFiles = _.without(__processingFiles, id);
+            
+            if (__processingFiles.length === 0) {
+                $('#commitProgressbar').removeClass('active');
+                $('#closeCommit').removeAttr('disabled');
+                $("#commitProgressMessage").text('Commit completed.');
+            }
+        }
+    });
 }
 
 function loadEditor(filename, content) {
@@ -326,7 +396,7 @@ function loadEditor(filename, content) {
 }
 
 function editor_onChange(e) {
-    localStorage[__fileId] = __editor.getValue();
+    sessionStorage[__fileId] = __editor.getValue();
 }
 
 function setToolbarFocus(target) {
