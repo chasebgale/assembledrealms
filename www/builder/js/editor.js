@@ -4,6 +4,8 @@ var __projectId;
 var __trackedFiles = [];
 var __trackedStorageId;
 
+var __checkInMsg;
+
 var __processingFiles = [];
 
 $(document).ready(function () {
@@ -192,6 +194,8 @@ function commit() {
         var commitProgressList = $("#commitProgressList");
         commitProgressList.empty();
         
+        __checkInMsg = "Pushed: " + Date.now();
+        
         if (_.isArray(__processingFiles)) {
             __processingFiles = $.grep(__processingFiles, function (fileId, i) {
                 file = sessionStorage[fileId];
@@ -314,7 +318,7 @@ function updateRealmFile(id, path, content) {
         branch_name: ref,
         encoding: 'base64',
         content: btoa(encode_utf8(content)),
-        commit_message: '"' + Date.now() + '"',
+        commit_message: __checkInMsg,
         private_token: token
     };
     
