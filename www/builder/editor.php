@@ -2,12 +2,13 @@
 
 require_once($_SERVER['DOCUMENT_ROOT'] . "models/config.php");
 if (!securePage($_SERVER['PHP_SELF'])){die();}
-require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 
 if(!isUserLoggedIn()) {
     header("Location: /account/register.php?0");
     die();
 }
+
+require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
     
 ?>
 

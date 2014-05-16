@@ -194,6 +194,8 @@ function commit() {
         var commitProgressList = $("#commitProgressList");
         commitProgressList.empty();
         
+        $('#closeCommit').attr('disabled', 'disabled');
+        
         __checkInMsg = "Pushed: " + Date.now();
         
         if (_.isArray(__processingFiles)) {

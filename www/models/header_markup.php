@@ -25,6 +25,17 @@
             echo "<li><a href='/account/register.php' class='header-link'><i class='fa fa-lightbulb-o fa-2x' style='display: block;'></i>Join</a></li>";
         }
         ?>
+        <li class="dropdown">
+          <a class="dropdown-toggle header-link" data-toggle="dropdown" href="#" id="helpDropdown">
+            <i class='fa fa-life-ring fa-2x' style='display: block;'></i>Help
+          </a>
+          <ul class="dropdown-menu" role="menu" aria-labelledby="helpDropdown">
+            <li role="presentation"><a role="menuitem" tabindex="-1" href="/blog/index.php/posts/an-adventure-in-the-making">About</a></li>
+            <li role="presentation" class="divider"></li>
+            <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Tour</a></li>
+            <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Builder 101</a></li>
+          </ul>
+        </li>
       </ul>
     </div><!--/.nav-collapse -->
   </div>
