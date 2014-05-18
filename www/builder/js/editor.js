@@ -111,33 +111,6 @@ $(document).ready(function () {
     // TOOLTIPS:
     $("#mapToolbar [data-toggle='tooltip']").tooltip();
 
-    /*
-    $.ajax({
-        type: "GET",
-        url: "map.json",
-        dataType: "text",
-        contentType: "text/plain; charset=utf-8",
-        success: function (data, textStatus) {
-            $("#editor").text(data);
-            __editor = ace.edit("editor");
-            Map.onTilesLoaded = function (json) {
-                var template = $('#tiles_template').html();
-                $("#tiles").append(_.template(template, { model: json }));
-            };
-            Map.onObjectsLoaded = function (json) {
-                var template = $('#objects_template').html();
-                $("#objects").append(_.template(template, { model: json }));
-            };
-            Map.init("map", JSON.parse(data));
-            //Map.create(10, 10);
-            requestAnimationFrame(animate);
-        },
-        error: function (data) {
-            alert("error");
-        }
-    });
-    */
-
     $("#tiles").on("click", ".tileBox", function () {
         var tileKey = $(this).attr('data-id');
         Map.setBrush(Map.terrain, tileKey);
@@ -180,6 +153,15 @@ $(document).ready(function () {
     $("#loading").fadeOut(500, function () {
         $("#mapEdit").fadeIn();
     });
+    
+    Map.onTilesLoaded = function (json) {
+        var template = $('#tiles_template').html();
+        $("#tiles").append(_.template(template, { model: json }));
+    };
+    Map.onObjectsLoaded = function (json) {
+        var template = $('#objects_template').html();
+        $("#objects").append(_.template(template, { model: json }));
+    };
 
 });
 
@@ -310,6 +292,11 @@ function loadRealmFile(id, path, name) {
     }
 }
 
+function loadRealmResource(id, path, name) {
+    // /projects//id/repository/blobs//sha
+    
+}
+
 function updateRealmFile(id, path, content) {
     
     var token = getGitlabSession();
@@ -371,12 +358,47 @@ function loadEditor(filename, content) {
     $("#mapTabs li").css('display', 'none');
     $("#tab-nav-editor").css('display', 'block');
 
+    
+    
+        /*
+    $.ajax({
+        type: "GET",
+        url: "map.json",
+        dataType: "text",
+        contentType: "text/plain; charset=utf-8",
+        success: function (data, textStatus) {
+            $("#editor").text(data);
+            __editor = ace.edit("editor");
+            Map.onTilesLoaded = function (json) {
+                var template = $('#tiles_template').html();
+                $("#tiles").append(_.template(template, { model: json }));
+            };
+            Map.onObjectsLoaded = function (json) {
+                var template = $('#objects_template').html();
+                $("#objects").append(_.template(template, { model: json }));
+            };
+            Map.init("map", JSON.parse(data));
+            //Map.create(10, 10);
+            requestAnimationFrame(animate);
+        },
+        error: function (data) {
+            alert("error");
+        }
+    });
+    */
+    
+    
+    
     switch (ext) {
         case "js":
             __editor.getSession().setMode("ace/mode/javascript");
             break;
         case "json":
             __editor.getSession().setMode("ace/mode/json");
+            
+            Map.init("map", JSON.parse(content));
+            requestAnimationFrame(animate);
+            
             $("#tab-nav-map").css('display', 'block');
             break;
         case "html":

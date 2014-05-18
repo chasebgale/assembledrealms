@@ -84,6 +84,32 @@ var Map = {
         // setup the markup properly... :/
         // var assets = _.union(map.terrain.source, map.objects.source, map.actors.source);
 
+        
+        // SHOULD BE TAKING THE SOURCE (map.terrain.source) AND CREATING A URL LIKE:
+        // http://source-01.assembledrealms.com/api/v3/projects/12/repository/blobs/master?id=12&filepath=client%2Fsprites%2Fzombie_0.png&private_token=o4sq1j9WsQXqhxuyis5Z
+        // FROM IT...
+        
+        // Actually we're going to have to do it manually.
+        // 1.) Load json resource file, e.g. terrain.json
+        // 2.) Load spritesheet .png defined in terrain.json using above method (api)
+        // 3.) Add large texture png to png texture cache
+        // 4.) Parse json and for each frame defined:
+        // 5.) Create new frame and add it to the texture cache
+        // (see: PIXI.ImageLoader.prototype.loadFramedSpriteSheet for a how-to)
+        
+        var assets = _.union(map.terrain.source, map.objects.source, map.actors.source);
+        
+        _.each(assets, function (asset) {
+           
+           _.each(asset, function (res) {
+                
+                // Load the json file, then load the image file, then parse. Wohoo!
+                
+           });
+            
+        });
+        
+        /*
         var tilesLoader = new PIXI.AssetLoader(map.terrain.source);
 
         tilesLoader.addEventListener("loaded", Map.jsonLoaded);
@@ -101,6 +127,8 @@ var Map = {
             objectsLoader.load();
         };
         tilesLoader.load();
+        */
+        
     },
 
     create: function (tileWidth, tileHeight) {
