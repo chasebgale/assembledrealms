@@ -105,6 +105,7 @@ var Map = {
                 
                 // Load the json file, then load the image file, then parse. Wohoo!
                 
+                
            });
             
         });
