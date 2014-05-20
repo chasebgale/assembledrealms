@@ -98,37 +98,65 @@ var Map = {
         // (see: PIXI.ImageLoader.prototype.loadFramedSpriteSheet for a how-to)
         
         var assets = _.union(map.terrain.source, map.objects.source, map.actors.source);
+        Map.assetLoadCount = assets.length;
         
         _.each(assets, function (asset) {
            
-           _.each(asset, function (res) {
-                
-                // Load the json file, then load the image file, then parse. Wohoo!
-                
-                
-           });
+            asset = 'client' + asset;
+           
+            // Load the json file, then load the image file, then parse. Wohoo!
+            var assetPath = asset.substring(0, asset.lastIndexOf("/") + 1);
             
-        });
+            $.ajax({
+                url: realmResourceURL(asset),
+                type: 'get',
+                dataType: 'json',
+                success: function (data) {
+            
+                    if (data.frames) {
+                     
+                        var resp = $.ajax({
+                           url: realmResourceURL_WORKAROUND(assetPath + data.meta.image),
+                           type: 'get',
+                           dataType: 'json',
+                           async: false
+                        }).responseText;
+                   
+                        var json = JSON.parse(resp);
+                     
+                        var img = new Image();
+                        img.src = 'data:image/png;base64,' + json.content;
+                        
+                        var baseTexture = new PIXI.BaseTexture(img);
+                        var texture = new PIXI.Texture(baseTexture);
+                        
+                        _.each(data.frames, function(frame, frameName) {
+                           
+                           var frameTexture = new PIXI.Texture(texture, {
+                              x: parseInt(frame.frame.x),
+                              y: parseInt(frame.frame.y),
+                              width: parseInt(frame.frame.w),
+                              height: parseInt(frame.frame.h)
+                           });
+                           
+                           PIXI.Texture.addTextureToCache(frameTexture, frameName);
+                              
+                        });
+                        
+                        Map.assetLoadCount--;
+                        
+                        if (Map.assetLoadCount === 0) {
+                           Map.load();
+                        }
+                        
+                        
+                    }
+            
+                }
+            });
+               
+         });
         
-        /*
-        var tilesLoader = new PIXI.AssetLoader(map.terrain.source);
-
-        tilesLoader.addEventListener("loaded", Map.jsonLoaded);
-        tilesLoader.onProgress = function (json) {
-            Map.tilesLoaded(json);
-        };
-        tilesLoader.onComplete = function () {
-            var objectsLoader = new PIXI.AssetLoader(map.objects.source);
-            objectsLoader.onProgress = function (json) {
-                Map.objectsLoaded(json);
-            };
-            objectsLoader.onComplete = function () {
-                Map.load();
-            };
-            objectsLoader.load();
-        };
-        tilesLoader.load();
-        */
         
     },
 

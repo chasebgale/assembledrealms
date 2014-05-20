@@ -292,42 +292,37 @@ function loadRealmFile(id, path, name) {
     }
 }
 
-function loadRealmResource(id, path, name) {
+function realmResourceURL(path) {
     // /projects//id/repository/blobs//sha
     // http://source-01.assembledrealms.com/api/v3/projects/12/repository/blobs/master?id=12&filepath=client%2Fsprites%2Fzombie_0.png&private_token=o4sq1j9WsQXqhxuyis5Z
 
     var token = getGitlabSession();
     var ref = "master"; // For now hit master, in the future, pull from working branch (master is the current production copy of the realm)
-
+    
     var req = __projectId + '/repository/blobs/' + ref + '?id=' + __projectId +
                                           '&filepath=' + encodeURIComponent(path) +
                                           '&private_token=' + token;
+    
+    return 'http://source-01.assembledrealms.com/api/v3/projects/' + req;
+    
+}
 
-    $.ajax({
-        url: 'http://source-01.assembledrealms.com/api/v3/projects/' + req,
-        type: 'get',
-        dataType: 'json',
-        success: function (data) {
 
-            var plainText = "";
-
-            if (data.encoding == "base64") {
-                plainText = decode_utf8(atob(data.content));
-            }
-
-            sessionStorage[id] = plainText;
-            sessionStorage[id + '-name'] = name;
-            sessionStorage[id + '-path'] = path;
-            sessionStorage[id + '-commit-md5'] = md5(plainText);
-
-            __trackedFiles.push(id);
-            sessionStorage[__trackedStorageId] = JSON.stringify(__trackedFiles);
-
-            loadEditor(data.file_name, plainText);
-            __fileId = id;
-
-        }
-    });
+function realmResourceURL_WORKAROUND(path) {
+    // Gitlab doesn't return CORS headers (Access-Control-Allow-Origin) for image blobs,
+    // So for now we have to load the full json file details and pull out the encoded image
+    // content...
+    
+    var token = getGitlabSession();
+    var ref = "master"; // For now hit master, in the future, pull from working branch (master is the current production copy of the realm)
+    
+    var req = __projectId + '/repository/files?id=' + __projectId +
+                                              '&file_path=' + encodeURIComponent(path) +
+                                              '&ref=' + ref +
+                                              '&private_token=' + token;
+    
+    return 'http://source-01.assembledrealms.com/api/v3/projects/' + req;
+    
 }
 
 function updateRealmFile(id, path, content) {
@@ -429,8 +424,12 @@ function loadEditor(filename, content) {
         case "json":
             __editor.getSession().setMode("ace/mode/json");
             
-            Map.init("map", JSON.parse(content));
-            requestAnimationFrame(animate);
+            var parsed = JSON.parse(content);
+            
+            if (parsed.terrain) {
+                Map.init("map", parsed);
+                requestAnimationFrame(animate);
+            }
             
             $("#tab-nav-map").css('display', 'block');
             break;
