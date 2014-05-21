@@ -111,7 +111,7 @@ $(document).ready(function () {
     // TOOLTIPS:
     $("#mapToolbar [data-toggle='tooltip']").tooltip();
 
-    $("#tiles").on("click", ".tileBox", function () {
+    $("#terrain").on("click", ".terrain", function () {
         var tileKey = $(this).attr('data-id');
         Map.setBrush(Map.terrain, tileKey);
 
@@ -122,10 +122,10 @@ $(document).ready(function () {
         $('#tileButton').css('background-position-x', offset + 'px');
         setToolbarFocus($('#tileButton'));
 
-        $('#modalTiles').modal('hide');
+        $('#modalTerrain').modal('hide');
     });
 
-    $("#objects").on("click", ".objectBox", function () {
+    $("#objects").on("click", ".objects", function () {
         var objectKey = $(this).attr('data-id');
         Map.setBrush(Map.objects, objectKey);
 
@@ -154,13 +154,11 @@ $(document).ready(function () {
         $("#mapEdit").fadeIn();
     });
     
-    Map.onTilesLoaded = function (json) {
-        var template = $('#tiles_template').html();
-        $("#tiles").append(_.template(template, { model: json }));
-    };
-    Map.onObjectsLoaded = function (json) {
-        var template = $('#objects_template').html();
-        $("#objects").append(_.template(template, { model: json }));
+    Map.onResourceLoaded = function (json, base64Image) {
+        var template = $('#resource_template').html();
+        var target = $('#' + json.meta.category);
+        
+        target.append(_.template(template, { model: json, source: base64Image }));
     };
 
 });
@@ -272,7 +270,9 @@ function loadRealmFile(id, path, name) {
                 var plainText = "";
 
                 if (data.encoding == "base64") {
-                    plainText = decode_utf8(atob(data.content));
+                    // The replace regex removes whitespace from the raw base64.
+                    // Of course, Only IE blows up and needs this addition: .replace(/\s/g, '')
+                    plainText = decode_utf8(atob(data.content.replace(/\s/g, '')));
                 }
 
                 sessionStorage[id] = plainText;
@@ -424,14 +424,18 @@ function loadEditor(filename, content) {
         case "json":
             __editor.getSession().setMode("ace/mode/json");
             
-            var parsed = JSON.parse(content);
-            
-            if (parsed.terrain) {
-                Map.init("map", parsed);
-                requestAnimationFrame(animate);
+            try {
+                var parsed = JSON.parse(content);
+                
+                if (parsed.terrain) {
+                    Map.init("map", parsed);
+                    $("#tab-nav-map").css('display', 'block');
+                    requestAnimationFrame(animate);
+                }
+            } catch (e) {
+                console.log(e);
             }
             
-            $("#tab-nav-map").css('display', 'block');
             break;
         case "html":
             __editor.getSession().setMode("ace/mode/html");

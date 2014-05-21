@@ -37,6 +37,11 @@ var Map = {
 
     init: function (div, map) {
 
+      if ($('#mapMain').length) {
+         // We've already init'd, so:
+         return;
+      }
+    
         // Append elements:
         var target = document.getElementById(div);
 
@@ -143,6 +148,8 @@ var Map = {
                               
                         });
                         
+                        Map.onResourceLoaded(data, img.src);
+                        
                         Map.assetLoadCount--;
                         
                         if (Map.assetLoadCount === 0) {
@@ -158,68 +165,6 @@ var Map = {
          });
         
         
-    },
-
-    create: function (tileWidth, tileHeight) {
-
-        /*
-               *     
-             *   *     
-           *   *   *
-         *   *   *   *
- height    *   *   *
-             *   *   width
-               *
-        */
-
-        Map.buffer = new PIXI.SpriteBatch(); //PIXI.DisplayObjectContainer();
-        Map.source = [];
-
-        for (var layer = 0; layer < Map.LAYERS; layer++) {
-
-            Map.source[layer] = [];
-
-            for (var row = 0; row < tileHeight; row++) {
-
-                Map.source[layer][row] = [];
-
-                for (var col = 0; col < tileWidth; col++) {
-
-                    Map.source[layer][row][col] = 0;
-
-                }
-            }
-        }
-
-        // Load the map:
-        var tilesLoader = new PIXI.AssetLoader(["js/editor/landscape.json"]);
-
-        tilesLoader.addEventListener("loaded", Map.jsonLoaded);
-        tilesLoader.onProgress = function (json) {
-            Map.tilesLoaded(json);
-        };
-        tilesLoader.onComplete = function () {
-            var objectsLoader = new PIXI.AssetLoader(["js/editor/dungeon_walls.json"]);
-            objectsLoader.onProgress = function (json) {
-                Map.objectsLoaded(json);
-            };
-            objectsLoader.onComplete = function () {
-                Map.load();
-            };
-            objectsLoader.load();
-        };
-        tilesLoader.load();
-
-    },
-
-    tilesLoaded: function (obj) {
-        //Map.createTileIndexes(obj.json);
-        Map.onTilesLoaded(obj.json);
-    },
-
-    objectsLoaded: function (obj) {
-        //Map.createObjectIndexes(obj.json);
-        Map.onObjectsLoaded(obj.json);
     },
 
     setBrush: function (source, textureKey) {

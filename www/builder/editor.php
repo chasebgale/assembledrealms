@@ -82,14 +82,14 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
     </section>
 
 
-    <div class="modal fade tiles-modal-lg" id="modalTiles" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal fade tiles-modal-lg" id="modalTerrain" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                     <h4 class="modal-title">Select a tile...</h4>
                 </div>
-                <div class="modal-body" id="tiles">
+                <div class="modal-body" id="terrain">
                 </div>
             </div>
         </div>
@@ -108,7 +108,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
         </div>
     </div>
     
-    <div class="modal fade objects-modal-lg" id="modalCommit" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
+    <div class="modal fade" id="modalCommit" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
@@ -167,27 +167,14 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
         <% } %>
     </script>
 
-    <script id="tiles_template" type="text/template">
-        <h2><%- model.meta.image %></h2>
+    <script id="resource_template" type="text/template">
+        <h3><%- model.meta.image %></h3>
         <div class="container-fluid">
             <div class="row">
                 <% if (model.frames) { %>
                     <% _.each(model.frames, function(frame, key) { %>
-                        <div class="col-md-1 tileBox" data-id="<%- key %>" data-offset="<%- frame.frame.x %>" style="background-image: url(/www/js/editor/<%- model.meta.image %>); background-position-x: <%- (frame.frame.x * -1) + 'px' %>; width: <%- frame.frame.w + 'px' %>; height: <%- frame.frame.h + 'px' %>; "></div>
+                        <div class="col-md-1 <%- model.meta.category %>" data-id="<%- key %>" data-offset="<%- frame.frame.x %>" style="background-image: url(<%- source %>); background-position-x: <%- (frame.frame.x * -1) + 'px' %>; width: <%- frame.frame.w + 'px' %>; height: <%- frame.frame.h + 'px' %>; "></div>
                     <% }); %>
-                <% } %>
-            </div>
-        </div>
-    </script>
-
-    <script id="objects_template" type="text/template">
-        <h2><%- model.meta.image %></h2>
-        <div class="container-fluid">
-            <div class="row">
-                <% if (model.frames) { %>
-                <% _.each(model.frames, function(frame, key) { %>
-                <div class="col-md-1 objectBox" data-id="<%- key %>" data-offset="<%- frame.frame.x %>" style="background-image: url(/www/js/editor/<%- model.meta.image %>); background-position-x: <%- (frame.frame.x * -1) + 'px' %>; width: <%- frame.frame.w + 'px' %>; height: <%- frame.frame.h + 'px' %>; "></div>
-                <% }); %>
                 <% } %>
             </div>
         </div>
