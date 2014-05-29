@@ -94,3 +94,5 @@ echo resultBlock($errors,$successes);
     <input name="password" type="password" class="form-control" placeholder="Password" required="true">
     <button class="btn btn-lg btn-default btn-block" type="submit">Sign in</button>
 </form>
+
+<?php require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php"); ?>

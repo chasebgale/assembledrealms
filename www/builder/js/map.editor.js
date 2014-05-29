@@ -29,7 +29,6 @@ var Map = {
     TILE_Y_OFFSET: 14,
     playerPos: { x: 0, y: 0 },
     offsetTracker: { x: 0, y: 0 },
-    stats: null,
     terrain: {},
     objects: {},
     brush: {},
@@ -76,14 +75,17 @@ var Map = {
         Map.VIEWPORT_WIDTH_TILES_HALF = Math.ceil(Map.VIEWPORT_WIDTH_TILES / 2);
         Map.VIEWPORT_HEIGHT_TILES_HALF = Math.ceil(Map.VIEWPORT_HEIGHT_TILES / 2);
 
+        Map.settings = map.settings;
         Map.terrain = map.terrain;
         Map.objects = map.objects;
+        Map.actors  = map.actors;
+        
         Map.buffer = new PIXI.SpriteBatch();
 
-        Map.stats = new Stats();
-        document.body.appendChild(Map.stats.domElement);
-        Map.stats.domElement.style.position = "absolute";
-        Map.stats.domElement.style.top = "200px";
+        // Map.stats = new Stats();
+        // document.body.appendChild(Map.stats.domElement);
+        // Map.stats.domElement.style.position = "absolute";
+        // Map.stats.domElement.style.top = "200px";
 
         // Maybe in the future we can load them from one array, for now though we need the manual chaining to 
         // setup the markup properly... :/
@@ -260,6 +262,8 @@ var Map = {
             Map.brush.source[result.row][result.col] = Map.brush.index;
             Map.draw();
             Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
+            
+            Map.updateSource();
 
         };
 
@@ -278,16 +282,30 @@ var Map = {
                 Map.draw();
                 Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
                 
+                Map.updateSource();
+                
             }
 
             if (Map.brush.sprite)
                 Map.brush.sprite.position = data.global;
 
         };
+        
     },
 
     update: function () {
         Map.draw();
+    },
+    
+    updateSource: function () {
+         var worker = {};
+         worker.settings = Map.settings;
+         worker.terrain = Map.terrain;
+         worker.objects = Map.objects;
+         worker.actors = Map.actors;
+         
+         __editor.setValue(JSON.stringify(worker, undefined, 2), -1);
+         sessionStorage[__fileId] = __editor.getValue();
     },
 
     draw: function () {
@@ -356,7 +374,7 @@ var Map = {
 
     render: function () {
 
-        Map.stats.begin();
+        // Map.stats.begin();
 
         if (Map.invalidate) {
             Map.draw();
@@ -371,7 +389,7 @@ var Map = {
 
         }
 
-        Map.stats.end();
+        // Map.stats.end();
     },
 
     indexFromScreen: function (point) {

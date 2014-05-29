@@ -33,3 +33,5 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
     </div>
 
 </div>
+
+<?php require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php"); ?>
