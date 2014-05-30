@@ -15,11 +15,17 @@ if ($_POST['payload']) {
 }
 
 switch ($directive) {
-	case "create":
+
+    case "create":
         $loggedInUser->createRealm($data['gitlab_id'], $data['title'], $data['description']);
         echo "OK";
         die();
         break;
+    case "destroy":
+	
+	echo "OK";
+	die();
+	break;
     case "realms":
         $out = array_values($loggedInUser->fetchRealms());
         echo json_encode($out);

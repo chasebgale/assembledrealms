@@ -66,5 +66,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
 <?php require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php"); ?>
 
+<script src="js/manager.js"></script>
+
 </body>
 </html>
