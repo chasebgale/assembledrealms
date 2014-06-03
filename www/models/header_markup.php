@@ -11,7 +11,7 @@
     </div>
     <div class="collapse navbar-collapse">
       <ul class="nav navbar-nav">
-        <li><a href='../../builder/dashboard.php' class='header-link'><i class='fa fa-cogs fa-2x' style='display: block;'></i>Build</a></li>
+        <li><a href='../../build' class='header-link'><i class='fa fa-cogs fa-2x' style='display: block;'></i>Build</a></li>
         <li><a href='#' class='header-link'><i class='fa fa-rocket fa-2x' style='display: block;'></i>Play</a></li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
