@@ -1,0 +1,333 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+
+    <link rel='stylesheet' type="text/css" href="/www/css/jquery.treeview.css" />
+    <link rel='stylesheet' href='/www/css/root.css' />
+
+    <link rel='stylesheet' href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' />
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+    <link rel='stylesheet' href='/www/css/bootstrap-theme.css' />
+
+    <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js'></script>
+    <script src='//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js'></script>
+
+    <script src="/www/js/editor/utilities.js"></script>
+    <script src="/www/js/editor/stats.min.js"></script>
+    <script src="/www/js/editor/map.editor.js"></script>
+    
+    <script src="/www/js/jquery.treeview.js"></script>
+    <script src="/www/js/pixi.dev.js"></script>
+    <script src="/www/js/lodash.min.js"></script>
+    <script src="/www/js/ace/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+
+
+    <style>
+        #mapEdit {
+            width: 100%;
+            height: 100%;
+            margin: auto;
+            padding: 10px;
+        }
+
+        div#tree {
+            width: 15%;
+            height: 100%;
+            float: left;
+        }
+
+        div#tabs {
+            width: 80%;
+            float: left;
+        }
+
+        div#editor {
+            height: 600px;
+            width: 100%;
+        }
+
+        div#map {
+            height: 600px;
+        }
+    </style>
+
+    <script>
+        $(document).ready(function () {
+
+            // UI
+            $('#mapTabs a').click(function (e) {
+                e.preventDefault();
+                $(this).tab('show');
+            });
+            $('#mapTabs a:first').tab('show');
+
+            // VIEWS
+            var templateFn = _.template($('#files_template').html());
+
+            // For now we fake data, in future this is in the result of an AJAX request:
+            var responseJSON = {
+                'name': 'Realm Title',
+                'children': [
+                    {
+                        'name': 'server',
+                        'children': ['app.js', 'util.js']
+                    },
+                    {
+                        'name': 'client',
+                        'children': [
+                            {
+                                'name': 'engine',
+                                'children': ['landscape.js', 'actors.js', 'engine.js']
+                            },
+                            {
+                                'name': 'maps',
+                                'children': ['desert.json', 'forest.json', 'town.json', 'dungeon.json']
+                            },
+                            {
+                                'name': 'assets',
+                                'children': ['dungeon_sprites.png', 'dungeon_sprites.json']
+                            },
+                            'main.js']
+                    }
+                ]
+            };
+
+            $("#explorer").html(templateFn({ 'model': responseJSON, 'templateFn': templateFn }));
+
+            $("#explorer").treeview({
+                animated: "fast"
+            });
+
+            $("#explorer .file").on("click", function () {
+                console.log(this);
+                $("#explorer .file").removeClass('activefile');
+                $(this).addClass('activefile');
+            });
+
+            //var editor = ace.edit("editor");
+            //editor.getSession().setMode("ace/mode/javascript");
+            
+            $("#mapToolbar [data-toggle='tooltip']").tooltip();
+
+            $.ajax({
+                type: "GET",
+                url: "map.json",
+                dataType: "text",
+                contentType: "text/plain; charset=utf-8",
+                success: function (data, textStatus) {
+                    $("#editor").text(data);
+                    var editor = ace.edit("editor");
+                    Map.onTilesLoaded = function (json) {
+                        var template = $('#tiles_template').html();
+                        $("#tiles").append(_.template(template, {model: json}));
+                    };
+                    Map.onObjectsLoaded = function (json) {
+                        var template = $('#objects_template').html();
+                        $("#objects").append(_.template(template, { model: json }));
+                    };
+                    Map.init("map", JSON.parse(data));
+                    //Map.create(10, 10);
+                    requestAnimationFrame(animate);
+                },
+                error: function (data) {
+                    alert("error");
+                }
+            });
+
+            $("#tiles").on("click", ".tileBox", function () {
+                var tileKey = $(this).attr('data-id');
+                Map.setBrush(Map.terrain, tileKey);
+
+                var offset = parseInt($(this).attr('data-offset'));
+                offset = offset / -2;
+
+                $('#tileButton').css('background-image', $(this).css('background-image'));
+                $('#tileButton').css('background-position-x', offset + 'px');
+                setToolbarFocus($('#tileButton'));
+
+                $('#modalTiles').modal('hide');
+            });
+
+            $("#objects").on("click", ".objectBox", function () {
+                var objectKey = $(this).attr('data-id');
+                Map.setBrush(Map.objects, objectKey);
+
+                var offset = parseInt($(this).attr('data-offset'));
+                offset = offset / -2;
+
+                $('#objectButton').css('background-image', $(this).css('background-image'));
+                $('#objectButton').css('background-position-x', offset + 'px');
+                setToolbarFocus($('#objectButton'));
+
+                $('#modalObjects').modal('hide');
+            });
+
+            $("#moveButton").on("click", function () {
+                $("#mapMain").css('cursor', 'move');
+            });
+
+        });
+
+        function setToolbarFocus(target) {
+            $("#tileButton").removeClass('active');
+            $("#objectButton").removeClass('active');
+
+            target.button('toggle');
+        }
+
+        function animate() {
+
+            requestAnimationFrame(animate);
+
+            Map.render();
+
+        }
+
+        
+
+        
+    </script>
+
+</head>
+<body>
+
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="http://www.assembledrealms.com/"><img src='/www/img/logo.png' /></a>
+            </div>
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li><a href='builder.php' class='header-link'><i class='fa fa-cogs fa-2x' style='display: block;'></i>Build</a></li>
+                    <li><a href='#' class='header-link'><i class='fa fa-rocket fa-2x' style='display: block;'></i>Play</a></li>
+                </ul>
+            </div><!--/.nav-collapse -->
+        </div>
+    </div>
+
+
+    <section id="mapEdit">
+        <div id="tree" class="sectionbase">
+            <div class="sectionbar">
+                <span>Source files</span>
+            </div>
+            <ul id="explorer" class="filetree treeview">
+            </ul>
+        </div>
+
+        <div id="tabs">
+            <ul class="nav nav-tabs" id="mapTabs">
+                <li class="active"><a href="#editor" data-toggle="tab">Raw Text</a></li>
+                <li><a href="#map" data-toggle="tab">Map Editor</a></li>
+            </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane active" id="editor"></div>
+                <div class="tab-pane" id="map">
+                    <nav class="navbar navbar-light" role="navigation">
+                        <div class="container-fluid">
+                            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                                <ul class="nav navbar-nav" id="mapToolbar">
+                                    <!--<button id="tileButton" type="button" class="btn btn-default navbar-btn" data-toggle="modal" data-target=".tiles-modal-lg"></button>-->
+                                    <button type="button" class="btn btn-default navbar-btn" id="moveButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Navigate the map"><i class="fa fa-arrows"></i></button>
+                                    <button type="button" class="btn btn-default navbar-btn" id="eraserButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Erase tiles"><i class="fa fa-eraser"></i></button>
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-default navbar-btn" id="tileButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Place terrain"></button>
+                                        <button type="button" class="btn btn-default dropdown-toggle navbar-btn" data-toggle="modal" data-target=".tiles-modal-lg">
+                                            <span class="caret"></span>
+                                            <span class="sr-only">Toggle Dropdown</span>
+                                        </button>
+                                    </div>
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-default navbar-btn" id="objectButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Place objects over terrain"></button>
+                                        <button type="button" class="btn btn-default dropdown-toggle navbar-btn" data-toggle="modal" data-target=".objects-modal-lg">
+                                            <span class="caret"></span>
+                                            <span class="sr-only">Toggle Dropdown</span>
+                                        </button>
+                                    </div>
+                                </ul>
+                            </div>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+    <div class="modal fade tiles-modal-lg" id="modalTiles" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Select a tile...</h4>
+                </div>
+                <div class="modal-body" id="tiles">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade objects-modal-lg" id="modalObjects" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Select an object...</h4>
+                </div>
+                <div class="modal-body" id="objects">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script id="files_template" type="text/template">
+        <% if (model.children) { %>
+        <li class='collapsable'>
+            <span class='folder'><%= model.name %></span>
+            <ul>
+                <% _.each(model.children, function(child) { %>
+                <%= templateFn({'model': child, 'templateFn': templateFn}) %>
+                <% }); %>
+            </ul>
+        </li>
+        <% } else { %>
+        <li><span class="file"><%- model %></span></li>
+        <% } %>
+    </script>
+
+    <script id="tiles_template" type="text/template">
+        <h2><%- model.meta.image %></h2>
+        <div class="container-fluid">
+            <div class="row">
+                <% if (model.frames) { %>
+                    <% _.each(model.frames, function(frame, key) { %>
+                        <div class="col-md-1 tileBox" data-id="<%- key %>" data-offset="<%- frame.frame.x %>" style="background-image: url(/www/js/editor/<%- model.meta.image %>); background-position-x: <%- (frame.frame.x * -1) + 'px' %>; width: <%- frame.frame.w + 'px' %>; height: <%- frame.frame.h + 'px' %>; "></div>
+                    <% }); %>
+                <% } %>
+            </div>
+        </div>
+    </script>
+
+    <script id="objects_template" type="text/template">
+        <h2><%- model.meta.image %></h2>
+        <div class="container-fluid">
+            <div class="row">
+                <% if (model.frames) { %>
+                <% _.each(model.frames, function(frame, key) { %>
+                <div class="col-md-1 objectBox" data-id="<%- key %>" data-offset="<%- frame.frame.x %>" style="background-image: url(/www/js/editor/<%- model.meta.image %>); background-position-x: <%- (frame.frame.x * -1) + 'px' %>; width: <%- frame.frame.w + 'px' %>; height: <%- frame.frame.h + 'px' %>; "></div>
+                <% }); %>
+                <% } %>
+            </div>
+        </div>
+    </script>
+
+</body>
+</html>
