@@ -1,16 +1,12 @@
 <?php
-/*
-UserCake Version: 2.0.2
-http://usercake.com
-*/
 
 class loggedInUser {
 	public $email = NULL;
 	public $hash_pw = NULL;
 	public $user_id = NULL;
-    public $gitlab_user = NULL;
-    public $gitlab_password = NULL;
-    public $gitlab_id = 0;
+	public $gitlab_user = NULL;
+	public $gitlab_password = NULL;
+	public $gitlab_id = 0;
 	
 	//Simple function to update the last sign in of a user
 	public function updateLastSignIn()
@@ -74,15 +70,15 @@ class loggedInUser {
 		$stmt->close();	
 	}
     
-    //Update a users email
+	//Update a users email
 	public function updateGitlab($id, $password)
 	{
 		global $mysqli,$db_table_prefix;
 		$this->gitlab_id = $id;
-        $this->gitlab_password = $password;
+		$this->gitlab_password = $password;
 		$stmt = $mysqli->prepare("UPDATE ".$db_table_prefix."users
 			SET 
-            gitlab_id = ?,
+			gitlab_id = ?,
 			gitlab_password = ?
 			WHERE
 			id = ?");
@@ -91,50 +87,43 @@ class loggedInUser {
 		$stmt->close();	
 	}
     
-    public function createRealm($gitlab_id, $title, $description)
+	public function createRealm($gitlab_id, $title, $description)
 	{
 		global $mysqli,$db_table_prefix;
 		$stmt = $mysqli->prepare("INSERT INTO realms (
-            user_id,
-            gitlab_id,
-            title,
-            description
-            )
+			user_id,
+			gitlab_id,
+			title,
+			description
+			)
 			VALUES (
-            ?,
-            ?,
-            ?,
-            ?
-            )");
+			?,
+			?,
+			?,
+			?)");
 		$stmt->bind_param("iiss", $this->user_id, $gitlab_id, $title, $description);
 		$stmt->execute();
 		$stmt->close();	
 	}
-    
-    /*
-    public function fetchRealm($gitlab_id)
+	
+	public function destroyRealm($gitlab_id)
 	{
 		global $mysqli,$db_table_prefix;
-		$stmt = $mysqli->prepare("SELECT 
-            id
-            FROM realms
-            WHERE gitlab_id = ?");
-		$stmt->bind_param("i", $gitlab_id);
+		$stmt = $mysqli->prepare("DELETE FROM realms
+			WHERE user_id = ? AND
+			gitlab_id = ?");
+		$stmt->bind_param("ii", $this->user_id, $gitlab_id);
 		$stmt->execute();
-		$stmt->bind_result($id);
-		$stmt->fetch();
-		$stmt->close();
-		return ($id);
+		$stmt->close();	
 	}
-    */
     
-    public function fetchRealm($gitlab_id)
+	public function fetchRealm($gitlab_id)
 	{
 		global $mysqli,$db_table_prefix;
 		$stmt = $mysqli->prepare("SELECT 
-            *
-            FROM realms
-            WHERE gitlab_id = ?");
+			*
+			FROM realms
+			WHERE gitlab_id = ?");
 		$stmt->bind_param("i", $gitlab_id);
 		$stmt->execute();
 		$stmt->bind_result($id, $user_id, $gitlab_id, $title, $description, $status, $players, $funds);
@@ -144,22 +133,22 @@ class loggedInUser {
 	}
     
     
-    public function fetchRealms()
+	public function fetchRealms()
 	{
 		global $mysqli,$db_table_prefix;
 		$stmt = $mysqli->prepare("SELECT *
-            FROM realms
-            WHERE user_id = ?");
+			FROM realms
+			WHERE user_id = ?");
 		$stmt->bind_param("i", $this->user_id);
 		$stmt->execute();
         
 		$stmt->bind_result($id, $user_id, $gitlab_id, $title, $description, $status, $players, $funds);
         
-        while ($stmt->fetch()){
-            $row[] = array('id' => $id, 'user_id' => $user_id, 'gitlab_id' => $gitlab_id, 'title' => $title, 'description' => $description, 'status' => $status, 'players' => $players, 'funds' => $funds);
-        }
-        $stmt->close();
-        return ($row);
+		while ($stmt->fetch()){
+		    $row[] = array('id' => $id, 'user_id' => $user_id, 'gitlab_id' => $gitlab_id, 'title' => $title, 'description' => $description, 'status' => $status, 'players' => $players, 'funds' => $funds);
+		}
+		$stmt->close();
+		return ($row);
 	}
 	
 	//Is a user has a permission

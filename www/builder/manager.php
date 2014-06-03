@@ -58,7 +58,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
             <h3 class="realm-panel-title">Think-about-it-first Actions</h3>
         </div>
         <div class="panel-body">
-            <button>Destroy Realm</button>
+            <button id="button-destroy-realm" data-id="<?php echo $realm["gitlab_id"] ?>">Destroy Realm</button>
         </div>
     </div>
 
@@ -66,7 +66,8 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
 <?php require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php"); ?>
 
-<script src="js/manager.js"></script>
+<script src="js/manager.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/utilities.js" type="text/javascript" charset="utf-8"></script>
 
 </body>
 </html>

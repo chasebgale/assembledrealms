@@ -22,7 +22,7 @@ switch ($directive) {
         die();
         break;
     case "destroy":
-	
+	$loggedInUser->destroyRealm($data['gitlab_id']);
 	echo "OK";
 	die();
 	break;
