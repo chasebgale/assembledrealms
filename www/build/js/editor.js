@@ -18,16 +18,6 @@ $(document).ready(function () {
         __trackedFiles = JSON.parse(sessionStorage[__trackedStorageId]);
     }
 
-    // Templates
-    var templateFnInitial = _.template($('#files_template').html());
-    var templateFnDynamic = _.template($('#files_dynamic_template').html());
-
-    $("#explorer").html(templateFnInitial({ 'model': loadRealmRoot(), 'templateFnInitial': templateFnInitial }));
-
-    $("#explorer").treeview({
-        animated: "fast"
-    });
-
     // Fetch folder contents:
     $("#explorer").on("click", ".no-data", function () {
         
@@ -90,11 +80,6 @@ $(document).ready(function () {
 
     __editor = ace.edit("editor");
 
-    var readmeDOM = $('#explorer [data-path="README.md"');
-    readmeDOM.addClass('activefile');
-
-    loadRealmFile(__projectId + "-" + readmeDOM.attr('data-id'), 'README.md', 'README.md');
-
     $('#mapTabs a').click(function (e) {
         e.preventDefault();
         $(this).tab('show');
@@ -106,7 +91,7 @@ $(document).ready(function () {
         $("#markdown").html(marked(__editor.getValue()));
     });
 
-    $('#tab-nav-markdown a:first').tab('show');
+    
 
     // TOOLTIPS:
     $("#mapToolbar [data-toggle='tooltip']").tooltip();
@@ -150,10 +135,6 @@ $(document).ready(function () {
         commit();
     });
     
-    $("#loading").fadeOut(500, function () {
-        $("#mapEdit").fadeIn();
-    });
-    
     Map.onResourceLoaded = function (json, base64Image) {
         var template = $('#resource_template').html();
         var target = $('#' + json.meta.category);
@@ -161,6 +142,8 @@ $(document).ready(function () {
         target.append(_.template(template, { model: json, source: base64Image }));
     };
 
+    loadRealmRoot();
+    
 });
 
 function commit() {
@@ -213,6 +196,8 @@ function commit() {
     }
 }
 
+var __waitTime = 500;
+
 function loadRealmRoot() {
 
     var token = getGitlabSession();
@@ -220,28 +205,58 @@ function loadRealmRoot() {
     var req = __projectId + '/repository/tree?id=' + __projectId +
                                           '&private_token=' + token;
 
+                                          
+    var failureMessage = '{"message"=>"500 Internal Server Error"}';
+    
     var resp = $.ajax({
         url: 'http://source-01.assembledrealms.com/api/v3/projects/' + req,
         type: 'get',
         dataType: 'json',
         async: false
     }).responseText;
+    
+    if (resp === failureMessage) {
+        // Retry:
+        
+        __waitTime = __waitTime * 2;
+        setTimeout(loadRealmRoot, __waitTime);
+        
+    } else {
+        
+        var json = JSON.parse(resp);
 
-    var json = JSON.parse(resp);
+        _.each(json, function (value) {
+    
+            value.path = value.name;
+    
+            if (value.type == "tree") {
+                value.hasChildren = true;
+                value.path += '/';
+            }
+        });
+        
+        // Templates
+        var templateFnInitial = _.template($('#files_template').html());
+        var templateFnDynamic = _.template($('#files_dynamic_template').html());
+        
+        $("#explorer").html(templateFnInitial({ 'model': json, 'templateFnInitial': templateFnInitial }));
 
-    _.each(json, function (value) {
-
-        value.path = value.name;
-
-        if (value.type == "tree") {
-            value.hasChildren = true;
-            value.path += '/';
-        }
-    });
-
-    console.log(json);
-
-    return json;
+        $("#explorer").treeview({
+            animated: "fast"
+        });
+        
+        var readmeDOM = $('#explorer [data-path="README.md"');
+        readmeDOM.addClass('activefile');
+    
+        loadRealmFile(__projectId + "-" + readmeDOM.attr('data-id'), 'README.md', 'README.md');
+        
+        $('#tab-nav-markdown a:first').tab('show');
+        
+        $("#loading").fadeOut(500, function () {
+            $("#mapEdit").fadeIn();
+        });
+        
+    }
 }
 
 function loadRealmFile(id, path, name) {

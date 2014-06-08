@@ -25,7 +25,7 @@ $(document).ready(function () {
 
                 $.post("api.php", parameters, function (data) {
                     if (data == "OK") {
-                        window.location = "http://www.assembledrealms.com/builder/dashboard.php";
+                        window.location = "http://www.assembledrealms.com/build";
                     }
                 });
 

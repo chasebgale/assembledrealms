@@ -38,6 +38,11 @@ $(document).ready(function () {
 
     $("#buttonCreateProject").on('click', function (e) {
         e.preventDefault();
+        
+        var buttonOriginalContent = $(this).html();
+        
+        $(this).attr('disabled', 'disabled');
+        $(this).html('<i class="fa fa-cog fa-spin"></i> Create');
 
         var token = getGitlabSession();
 
@@ -67,7 +72,7 @@ $(document).ready(function () {
 
                 $.post("api.php", parameters, function (data) {
                     if (data == "OK") {
-                        window.location = "http://www.assembledrealms.com/builder/editor.php?" + payload.gitlab_id;
+                        window.location = "http://www.assembledrealms.com/build/editor.php?" + payload.gitlab_id;
                     }
                 });
 
