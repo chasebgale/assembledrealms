@@ -61,9 +61,9 @@ if(!empty($_POST))
 					$loggedInUser->hash_pw = $userdetails["password"];
 					$loggedInUser->title = $userdetails["title"];
 					$loggedInUser->displayname = $userdetails["display_name"];
-                    $loggedInUser->gitlab_user = "realmer-" . $userdetails["id"];
-                    $loggedInUser->gitlab_id = $userdetails["gitlab_id"];
-                    $loggedInUser->gitlab_password = $userdetails["gitlab_password"];
+					$loggedInUser->gitlab_user = "realmer-" . $userdetails["id"];
+					$loggedInUser->gitlab_id = $userdetails["gitlab_id"];
+					$loggedInUser->gitlab_password = $userdetails["gitlab_password"];
 					
 					//Update last sign in
 					$loggedInUser->updateLastSignIn();
