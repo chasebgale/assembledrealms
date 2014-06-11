@@ -48,9 +48,9 @@ exports.open = function(req, res){
       branch.getTree(function(error, tree) {
         if (error) throw error;
     
+        /*
         console.log(req.query.path);
     
-    //"/root/deploy-live/projects/" + req.params.id + 
         var root = tree.getEntry(req.query.path);
         if (root) {
           var entries = root.entries();
@@ -67,27 +67,26 @@ exports.open = function(req, res){
         }
         
         res.json(JSON.stringify(files));
-  
+        */
+        
         // `walk()` returns an event.
-        /*
+        
         var walker = tree.walk(false);
         walker.on('entry', function(entry) {
           file = {};
           file.path = entry.path();
+          file.name = entry.name();
           file.hasChildren = entry.isTree();
           
           files.push(file);
-          
-          console.log(entry.path());
         });
         walker.on('end', function(errors, entries) {
           //console.log(entry.path());
-          //res.json(JSON.stringify(files));
+          res.json(files);
         });
   
         // Don't forget to call `start()`!
         walker.start();
-        */
       
       });
       

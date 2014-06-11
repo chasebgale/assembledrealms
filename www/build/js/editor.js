@@ -199,23 +199,15 @@ function commit() {
 var __waitTime = 500;
 
 function loadRealmRoot() {
-
-    var token = getGitlabSession();
-
-    var req = __projectId + '/repository/tree?id=' + __projectId +
-                                          '&private_token=' + token;
-
-                                          
-    var failureMessage = '{"message"=>"500 Internal Server Error"}';
-    
+            
     var resp = $.ajax({
-        url: 'http://source-01.assembledrealms.com/api/v3/projects/' + req,
+        url: 'http://debug-01.assembledrealms.com/api/project/open/' + __projectId,
         type: 'get',
         dataType: 'json',
         async: false
     }).responseText;
     
-    if (resp === failureMessage) {
+    if (resp === null) {
         // Retry:
         
         __waitTime = __waitTime * 2;
@@ -223,13 +215,38 @@ function loadRealmRoot() {
         
     } else {
         
+        // Templates
+        //var templateFnInitial = _.template($('#files_template').html());
+        //var templateFnDynamic = _.template($('#files_dynamic_template').html());
+        
+        /*
+        var formatted = [];
+        var root = _find(resp, function (obj) {
+           return (obj.path.indexOf('/') === - 1);
+        });
+        
+        _.each(root, function (obj) {
+            
+            if (obj.hasChildren) {
+                
+                obj.children = [];
+                
+                
+                
+            } else {
+                
+            }
+            
+            fomatted.push(formattedEntry);
+        });
+        */
+        
         var json = JSON.parse(resp);
         
-        // Templates
-        var templateFnInitial = _.template($('#files_template').html());
-        var templateFnDynamic = _.template($('#files_dynamic_template').html());
+        var templateFnFiles = _.template($('#root_files_template').html());
+        var templateChildFnFiles = _.template($('#dynamic_template').html());
         
-        $("#explorer").html(templateFnInitial({ 'model': json, 'templateFnInitial': templateFnInitial }));
+        $("#explorer").html(templateFnFiles({ 'model': json, 'templateChildFnFiles': templateChildFnFiles }));
 
         $("#explorer").treeview({
             animated: "fast"
