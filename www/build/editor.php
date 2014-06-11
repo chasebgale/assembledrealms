@@ -155,13 +155,13 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
             <% }); %>
         </ul>
         <% } else if (model.hasChildren) { %>
-		<li class='hasChildren closed no-data' data-path='<%= model.path %>'>
-			<div class="hitarea hasChildren-hitarea closed-hitarea"></div>
-            <span class='folder'><%= model.name %></span>
-            <ul>
-                <li><span class="placeholder">&nbsp;</span></li>
-            </ul>
-        </li>
+	    <li class='hasChildren closed no-data' data-path='<%= model.path %>'>
+		    <div class="hitarea hasChildren-hitarea closed-hitarea"></div>
+		<span class='folder'><%= model.name %></span>
+		<ul>
+		    <li><span class="placeholder">&nbsp;</span></li>
+		</ul>
+	    </li>
         <% } else { %>
         <li><span class="file" data-id="<%- model.id %>" data-path='<%= model.path %>'><%- model.name %></span></li>
         <% } %>

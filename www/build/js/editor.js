@@ -224,16 +224,6 @@ function loadRealmRoot() {
     } else {
         
         var json = JSON.parse(resp);
-
-        _.each(json, function (value) {
-    
-            value.path = value.name;
-    
-            if (value.type == "tree") {
-                value.hasChildren = true;
-                value.path += '/';
-            }
-        });
         
         // Templates
         var templateFnInitial = _.template($('#files_template').html());

@@ -47,16 +47,26 @@ exports.open = function(req, res){
   
       branch.getTree(function(error, tree) {
         if (error) throw error;
-  
-        var entries = tree.entries();
+    
+        console.log(req.query.path);
+    
+    //"/root/deploy-live/projects/" + req.params.id + 
+        var root = tree.getEntry(req.query.path);
+        if (root) {
+          var entries = root.entries();
+        }
+        
         
         for (var entry in entries) {
           file = {};
           file.path = entry.path();
+          file.name = entry.name();
           file.hasChildren = entry.isTree();
           
           files.push(file);
         }
+        
+        res.json(JSON.stringify(files));
   
         // `walk()` returns an event.
         /*
@@ -67,10 +77,12 @@ exports.open = function(req, res){
           file.hasChildren = entry.isTree();
           
           files.push(file);
+          
+          console.log(entry.path());
         });
         walker.on('end', function(errors, entries) {
           //console.log(entry.path());
-          res.json(JSON.stringify(files));
+          //res.json(JSON.stringify(files));
         });
   
         // Don't forget to call `start()`!
