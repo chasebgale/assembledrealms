@@ -33,3 +33,56 @@ exports.create = function(req, res){
         });
     //}
 };
+
+exports.open = function(req, res){
+  
+  var files = [];
+  var file = {};
+  
+  git.Repo.open(__dirname + "/../projects/" + req.params.id, function(error, repo) {
+    if (error) throw error;
+  
+    repo.getMaster(function(error, branch) {
+      if (error) throw error;
+  
+      branch.getTree(function(error, tree) {
+        if (error) throw error;
+  
+        var entries = tree.entries();
+        
+        for (var entry in entries) {
+          file = {};
+          file.path = entry.path();
+          file.hasChildren = entry.isTree();
+          
+          files.push(file);
+        }
+  
+        // `walk()` returns an event.
+        /*
+        var walker = tree.walk(false);
+        walker.on('entry', function(entry) {
+          file = {};
+          file.path = entry.path();
+          file.hasChildren = entry.isTree();
+          
+          files.push(file);
+        });
+        walker.on('end', function(errors, entries) {
+          //console.log(entry.path());
+          res.json(JSON.stringify(files));
+        });
+  
+        // Don't forget to call `start()`!
+        walker.start();
+        */
+      
+      });
+      
+    });
+    
+  });
+  
+  
+
+}

@@ -34,6 +34,7 @@ app.get('/', function(req, res){
 });
 
 app.get('/api/project/create/:id', project.create);
+app.get('/api/project/open/:id', project.open);
 
 app.listen(80, function(){
   console.log("Express server listening on port 80.");
