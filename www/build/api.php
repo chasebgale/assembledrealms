@@ -17,8 +17,14 @@ if ($_POST['payload']) {
 switch ($directive) {
 
     case "create":
-        $loggedInUser->createRealm($data['gitlab_id'], $data['title'], $data['description']);
-        echo "OK";
+	$project_id = $loggedInUser->createRealm($data['title'], $data['description']);
+
+	// $data['import_url']
+	// TODO: USE INTERNAL IP!!!
+	// TODO: PASS REALM TYPE/ENGINE ID
+	
+	echo $project_id;
+	
         die();
         break;
     case "destroy":
@@ -27,7 +33,14 @@ switch ($directive) {
 	die();
 	break;
     case "realms":
-        $out = array_values($loggedInUser->fetchRealms());
+	$raw = $loggedInUser->fetchRealms();
+	
+	if (!is_null($raw)) {
+		$out = array_values($raw);
+	} else {
+		//$out = "";
+	}
+        
         echo json_encode($out);
         die();
         break;

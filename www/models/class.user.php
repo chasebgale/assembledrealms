@@ -87,23 +87,24 @@ class loggedInUser {
 		$stmt->close();	
 	}
     
-	public function createRealm($gitlab_id, $title, $description)
+	public function createRealm($title, $description)
 	{
 		global $mysqli,$db_table_prefix;
 		$stmt = $mysqli->prepare("INSERT INTO realms (
 			user_id,
-			gitlab_id,
 			title,
 			description
 			)
 			VALUES (
 			?,
 			?,
-			?,
 			?)");
-		$stmt->bind_param("iiss", $this->user_id, $gitlab_id, $title, $description);
+		$stmt->bind_param("iss", $this->user_id, $title, $description);
 		$stmt->execute();
-		$stmt->close();	
+		$inserted_id = $mysqli->insert_id;
+		$stmt->close();
+		
+		return $inserted_id;
 	}
 	
 	public function destroyRealm($gitlab_id)
@@ -142,10 +143,10 @@ class loggedInUser {
 		$stmt->bind_param("i", $this->user_id);
 		$stmt->execute();
         
-		$stmt->bind_result($id, $user_id, $gitlab_id, $title, $description, $status, $players, $funds);
+		$stmt->bind_result($id, $user_id, $title, $description, $status, $players, $funds);
         
 		while ($stmt->fetch()){
-		    $row[] = array('id' => $id, 'user_id' => $user_id, 'gitlab_id' => $gitlab_id, 'title' => $title, 'description' => $description, 'status' => $status, 'players' => $players, 'funds' => $funds);
+		    $row[] = array('id' => $id, 'user_id' => $user_id, 'title' => $title, 'description' => $description, 'status' => $status, 'players' => $players, 'funds' => $funds);
 		}
 		$stmt->close();
 		return ($row);

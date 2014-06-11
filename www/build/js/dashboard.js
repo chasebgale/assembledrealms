@@ -44,39 +44,24 @@ $(document).ready(function () {
         $(this).attr('disabled', 'disabled');
         $(this).html('<i class="fa fa-cog fa-spin"></i> Create');
 
-        var token = getGitlabSession();
+        var payload = {};
+        payload.title = $("#realmName").val();
+        payload.description = $("#realmDescription").val();
+        payload.import_url = "https://github.com/chasebgale/assembledrealms-isometric.git";
 
         var parameters = {};
-        parameters.name = $("#realmName").val().replace(/([^a-z0-9 ]+)/gi, '') + "-" + makeRandomness();
-        parameters.import_url = "https://github.com/chasebgale/assembledrealms-isometric.git";
+        parameters.directive = "create";
+        parameters.payload = JSON.stringify(payload);
 
-        $.ajax({
-            url: 'http://source-01.assembledrealms.com/api/v3/projects',
-            type: 'post',
-            data: parameters,
-            headers: {
-                "PRIVATE-TOKEN": token
-            },
-            dataType: 'json',
-            success: function (data) {
-                console.log("Got project, url: " + data.web_url);
-
-                var payload = {};
-                payload.gitlab_id = data.id;
-                payload.title = $("#realmName").val();
-                payload.description = $("#realmDescription").val();
-
-                var parameters = {};
-                parameters.directive = "create";
-                parameters.payload = JSON.stringify(payload);
-
-                $.post("api.php", parameters, function (data) {
-                    if (data == "OK") {
-                        window.location = "http://www.assembledrealms.com/build/editor.php?" + payload.gitlab_id;
-                    }
-                });
-
-            }
+        $.post("api.php", parameters, function ( apiResponse ) {
+            var jqxhr = $.get( "http://debug-01.assembledrealms.com/api/project/create/" + apiResponse, function( gitResponse ) {
+                if (gitResponse === "OK") {
+                    window.location = "http://www.assembledrealms.com/build/editor.php?" + apiResponse;
+                }
+            })
+            .fail(function() {
+                // TODO: ALERT USER OF FAILURE
+            });
         });
 
     });
