@@ -8,6 +8,10 @@ var __checkInMsg;
 
 var __processingFiles = [];
 
+// TODO: In the future this will be part of the user's profile, as when the user
+// is created it is assigned the lowest-load server...
+var __rootURL = 'http://debug-01.assembledrealms.com/api/project/';
+
 $(document).ready(function () {
     
     __projectId = window.location.search.slice(1);
@@ -72,9 +76,7 @@ $(document).ready(function () {
         var path    = root.attr('data-path');
         var name = root.text().trim();
 
-        var storageId = __projectId + "-" + id;
-
-        loadRealmFile(storageId, path, name);
+        loadRealmFile(id, path, name);
 
     });
 
@@ -154,6 +156,8 @@ function commit() {
         var fileName;
         var filePath;
         
+        var filesToCommit = [];
+        
         var commitProgressList = $("#commitProgressList");
         commitProgressList.empty();
         
@@ -174,7 +178,13 @@ function commit() {
                     // Push to gitlab
                     $('#' + fileId + ' span:last').html('<i class="fa fa-cog fa-spin"></i> Pushing to git.');
                     
-                    updateRealmFile(fileId, filePath, file);
+                    //updateRealmFile(fileId, filePath, file);
+                    filesToCommit.push({
+                        content: file,
+                        name: fileName,
+                        path: filePath,
+                        sha: fileId
+                    });
                     
                     return true;
                 } else {
@@ -191,8 +201,46 @@ function commit() {
             $("#commitProgressMessage").text('No commit, realm branch is up to date.');
         } else {
             $("#commitProgressMessage").text('Uploading source files to git.');
-        }
+            
+            $.ajax({
+                url: __rootURL + __projectId + '/file/save',
+                type: 'post',
+                dataType: 'json',
+                contentType: 'application/json',
+                data: JSON.stringify(filesToCommit),
+                success: function (response) {
+                    
+                    _.each(filesToCommit, function (file) {
+                        // Update sessionStorage with new MD5
+                        sessionStorage[file.sha + '-commit-md5'] = md5(sessionStorage[file.sha]);
+                    });
+                    
+                    // Update DOM to reflect we completed ok:
+                    //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-up"></i> Success!');
         
+                    $('#commitProgressbar').removeClass('active');
+                    $('#closeCommit').removeAttr('disabled');
+                    $("#commitProgressMessage").text('Commit completed.');
+                },
+                error: function (response) {
+                    
+                    // Update DOM to reflect we messed up:
+                    $('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
+                    
+                },
+                complete: function (response) {
+                    // Remove file from processing queue
+                    __processingFiles = _.without(__processingFiles, id);
+                    
+                    if (__processingFiles.length === 0) {
+                        $('#commitProgressbar').removeClass('active');
+                        $('#closeCommit').removeAttr('disabled');
+                        $("#commitProgressMessage").text('Commit completed.');
+                    }
+                }
+            });
+            
+        }
     }
 }
 
@@ -201,7 +249,7 @@ var __waitTime = 500;
 function loadRealmRoot() {
             
     var resp = $.ajax({
-        url: 'http://debug-01.assembledrealms.com/api/project/open/' + __projectId,
+        url: __rootURL + __projectId + '/open',
         type: 'get',
         dataType: 'json',
         async: false
@@ -215,36 +263,10 @@ function loadRealmRoot() {
         
     } else {
         
-        // Templates
-        //var templateFnInitial = _.template($('#files_template').html());
-        //var templateFnDynamic = _.template($('#files_dynamic_template').html());
-        
-        /*
-        var formatted = [];
-        var root = _find(resp, function (obj) {
-           return (obj.path.indexOf('/') === - 1);
-        });
-        
-        _.each(root, function (obj) {
-            
-            if (obj.hasChildren) {
-                
-                obj.children = [];
-                
-                
-                
-            } else {
-                
-            }
-            
-            fomatted.push(formattedEntry);
-        });
-        */
-        
         var json = JSON.parse(resp);
         
         var templateFnFiles = _.template($('#root_files_template').html());
-        var templateChildFnFiles = _.template($('#dynamic_template').html());
+        var templateChildFnFiles = _.template($('#child_files_template').html());
         
         $("#explorer").html(templateFnFiles({ 'model': json, 'templateChildFnFiles': templateChildFnFiles }));
 
@@ -255,7 +277,7 @@ function loadRealmRoot() {
         var readmeDOM = $('#explorer [data-path="README.md"');
         readmeDOM.addClass('activefile');
     
-        loadRealmFile(__projectId + "-" + readmeDOM.attr('data-id'), 'README.md', 'README.md');
+        loadRealmFile(readmeDOM.attr('data-id'), 'README.md', 'README.md');
         
         $('#tab-nav-markdown a:first').tab('show');
         
@@ -277,36 +299,43 @@ function loadRealmFile(id, path, name) {
 
         var ref = "master"; // For now hit master, in the future, pull from working branch (master is the current production copy of the realm)
 
-        var req = __projectId + '/repository/files?id=' + __projectId +
-                                              '&file_path=' + encodeURIComponent(path) +
-                                              '&ref=' + ref +
-                                              '&private_token=' + token;
+        //var req = __projectId + '/repository/files?id=' + __projectId +
+        //                                      '&file_path=' + encodeURIComponent(path) +
+        //                                      '&ref=' + ref +
+        //                                      '&private_token=' + token;
 
         $.ajax({
-            url: 'http://debug-01.assembledrealms.com:8888/api/project/open/' + __projectId,
+            url: 'http://debug-01.assembledrealms.com/api/project/' + __projectId + '/file/open/' + id,
             type: 'get',
             dataType: 'json',
             success: function (data) {
 
-                var plainText = "";
-
+                /*
                 if (data.encoding == "base64") {
                     // The replace regex removes whitespace from the raw base64.
                     // Of course, Only IE blows up and needs this addition: .replace(/\s/g, '')
                     plainText = decode_utf8(atob(data.content.replace(/\s/g, '')));
                 }
-
-                sessionStorage[id] = plainText;
+                */
+                
+                sessionStorage[id] = data.content;
                 sessionStorage[id + '-name'] = name;
                 sessionStorage[id + '-path'] = path;
-                sessionStorage[id + '-commit-md5'] = md5(plainText);
+                sessionStorage[id + '-commit-md5'] = md5(data.content);
 
                 __trackedFiles.push(id);
                 sessionStorage[__trackedStorageId] = JSON.stringify(__trackedFiles);
 
-                loadEditor(data.file_name, plainText);
+                loadEditor(name, data.content);
                 __fileId = id;
 
+            },
+            error: function (data) {
+            
+                console.log(data);
+                // Update DOM to reflect we messed up:
+                //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
+            
             }
         });
 

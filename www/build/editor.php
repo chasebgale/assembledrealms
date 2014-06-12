@@ -146,12 +146,12 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
                     </ul>
                 </li>
             <% } else { %>
-                <li><span class="file" data-id="<%= child.id %>" data-path="<%= child.path %>"><%= child.name %></span></li>
+                <li><span class="file" data-id="<%= child.sha %>" data-path="<%= child.path %>"><%= child.name %></span></li>
             <% } %>
         <% }); %>
     </script>
     
-    <script id="dynamic_template" type="text/template">
+    <script id="child_files_template" type="text/template">
         <% _.each(model, function(child) { %>
             <% if (child.hasChildren) { %>
                 <li class='hasChildren closed' data-path='<%= child.path %>'>
@@ -167,7 +167,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
                     </ul>
                 </li>
             <% } else { %>
-                <li><span class="file" data-id="<%= child.id %>" data-path="<%= child.path %>"><%= child.name %></span></li>
+                <li><span class="file" data-id="<%= child.sha %>" data-path="<%= child.path %>"><%= child.name %></span></li>
             <% } %>
         <% }); %>
     </script>

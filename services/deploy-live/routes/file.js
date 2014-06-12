@@ -4,9 +4,6 @@ var git = require('nodegit');
 
 exports.open = function(req, res){
   
-  var files = [];
-  var file = {};
-  
   git.Repo.open(__dirname + "/../projects/" + req.params.id, function(error, repo) {
     if (error) throw error;
   
@@ -15,49 +12,78 @@ exports.open = function(req, res){
     repo.getBlob(oid, function(error, blob) {
       if (error) throw error;
   
-      console.log(blob.size());
+      console.log('Binary: ' + blob.isBinary() + ', Size: ' + blob.size());
   
       // You can access a node.js Buffer with the raw contents of the blob directly.
       // Note that this buffer may not be contain ASCII data for certain blobs
       // (e.g. binary files).
-      var buffer = blob.content();
+      if (!blob.isBinary()) {
+        //var buffer = blob.content();
+        var formatted = {};
+        formatted.content = blob.toString();
+        formatted.size = blob.size();
+        formatted.message = "OK";
+        
+        res.json(formatted);
+      } else {
+        // TODO: Some text source files will be treated as binary if they have weird characters...
+        // Solutions: A. Switch(file type) and return string if file type is source, i.e. .js, .json, regardless of encoding
+        //            B. Figure out what characters flag file as binary and restrict those characters, i.e. enforce ASCII editing.
+        console.log('Binary Content: ' + blob.toString());
+        res.send("BINARY");
+      }
+      
   
       // If you know that the blob is UTF-8, however, 
-      console.log("Blob contents:", blob.toString().slice(0, 38));
+      //console.log("Blob contents:", blob.toString().slice(0, 38));
     });
   
-  /*
+  });
+}
+
+exports.save = function(req, res){
+  
+  console.log("FILE SAVE: " + req.body[0].content);
+  
+  git.Repo.open(__dirname + "/../projects/" + req.params.id, function(error, repo) {
+    if (error) throw error;
+  
     repo.getMaster(function(error, branch) {
       if (error) throw error;
   
       branch.getTree(function(error, tree) {
         if (error) throw error;
+          
+        var builder = tree.builder();
+        var buffer;
         
-        var oidFromSHA = git.Oid.fromString(req.params.sha);
-        console.log('OID SHA:' + oidFromSHA.sha());
-    
-        tree.entryByOid(oidFromSHA, function (error, entry) {
+        req.body.forEach(function (entry) {
+          buffer = new Buffer(entry.content);
+          builder.insertBlob(entry.path, buffer, false)
+        });
+      
+        builder.write(function(error, treeId) {
           if (error) throw error;
           
-          entry.getBlob(function(error, blob) {
-            if (error) throw error;
-    
-            console.log(entry.name(), entry.sha(), blob.size() + 'b');
-            console.log('========================================================\n\n');
-            var firstTenLines = blob.toString().split('\n').slice(0, 10).join('\n');
-            console.log(firstTenLines);
-            console.log('...');
+          var author = git.Signature.now("Chase Gale", "chase.b.gale@gmail.com");
+          var committer = git.Signature.now("Chase Gale", "chase.b.gale@gmail.com");
+  
+          repo.createCommit(null, author, committer, "message", treeId, [tree], function(error, commitId) {
+            console.log("New Commit:", commitId.sha());
+            
+            var formatted = {};
+            formatted.commit = commitId.sha();
+            formatted.message = "OK";
+            
+            res.json(formatted);
+            
           });
           
         });
-      
+        
       });
       
     });
-    */
   
   });
-  
-  
-
 }
