@@ -275,7 +275,6 @@ function loadRealmFile(id, path, name) {
 
     } else {
 
-        var token = getGitlabSession();
         var ref = "master"; // For now hit master, in the future, pull from working branch (master is the current production copy of the realm)
 
         var req = __projectId + '/repository/files?id=' + __projectId +
@@ -284,7 +283,7 @@ function loadRealmFile(id, path, name) {
                                               '&private_token=' + token;
 
         $.ajax({
-            url: 'http://source-01.assembledrealms.com/api/v3/projects/' + req,
+            url: 'http://debug-01.assembledrealms.com:8888/api/project/open/' + __projectId,
             type: 'get',
             dataType: 'json',
             success: function (data) {

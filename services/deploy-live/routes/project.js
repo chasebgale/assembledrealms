@@ -76,6 +76,7 @@ exports.open = function(req, res){
           file = {};
           file.path = entry.path();
           file.name = entry.name();
+          file.sha = entry.sha();
           file.hasChildren = entry.isTree();
           
           files.push(file);

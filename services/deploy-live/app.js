@@ -4,8 +4,9 @@
  */
 
 var express = require('express')
-  , bodyParser = require('body-parser')
-  , project = require('./routes/project');
+  , bodyParser =  require('body-parser')
+  , project =     require('./routes/project')
+  , file =        require('./routes/file');
 
 var app = express();
 
@@ -33,9 +34,10 @@ app.get('/', function(req, res){
   res.send("assembledrealms api 0.1");  
 });
 
-app.get('/api/project/create/:id', project.create);
-app.get('/api/project/open/:id', project.open);
+app.get('/api/project/:id/create', project.create);
+app.get('/api/project/:id/open', project.open);
+app.get('/api/project/:id/file/open/:sha', file.open);
 
-app.listen(80, function(){
-  console.log("Express server listening on port 80.");
+app.listen(8888, function(){
+  console.log("Express server listening on port 8888.");
 });
