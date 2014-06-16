@@ -14,23 +14,37 @@ exports.open = function(req, res){
   
       console.log('Binary: ' + blob.isBinary() + ', Size: ' + blob.size());
   
+      var formatted = {};
+  
       // You can access a node.js Buffer with the raw contents of the blob directly.
       // Note that this buffer may not be contain ASCII data for certain blobs
       // (e.g. binary files).
       if (!blob.isBinary()) {
         //var buffer = blob.content();
-        var formatted = {};
+        
         formatted.content = blob.toString();
         formatted.size = blob.size();
         formatted.message = "OK";
         
         res.json(formatted);
+        
       } else {
         // TODO: Some text source files will be treated as binary if they have weird characters...
         // Solutions: A. Switch(file type) and return string if file type is source, i.e. .js, .json, regardless of encoding
         //            B. Figure out what characters flag file as binary and restrict those characters, i.e. enforce ASCII editing.
-        console.log('Binary Content: ' + blob.toString());
-        res.send("BINARY");
+        
+        //console.log('Binary Content: ' + blob.toString());
+        //res.send("BINARY");
+        
+        formatted.content = blob.content().toString('base64');
+        formatted.size = blob.size();
+        formatted.message = "OK";
+        
+        res.json(formatted);
+        
+        //res.contentType = 'image/png';
+        //res.contentLength = blob.size();
+        //res.end(blob.content(), 'binary');
       }
       
   

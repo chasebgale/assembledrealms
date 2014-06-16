@@ -37,6 +37,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
         <div id="tabs">
             <ul class="nav nav-tabs" id="mapTabs">
                 <li id="tab-nav-editor" class="active"><a href="#editor" data-toggle="tab">Raw Text</a></li>
+		<li id="tab-nav-image" style="display: none;"><a href="#image" data-toggle="tab">Raw Image</a></li>
                 <li id="tab-nav-map" style="display: none;"><a href="#map" data-toggle="tab">Map Editor</a></li>
                 <li id="tab-nav-markdown" style="display: none;"><a href="#markdown" data-toggle="tab">Rendered Markdown</a></li>
             </ul>
@@ -44,7 +45,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
             <div class="tab-content">
 
                 <div class="tab-pane active" id="editor"></div>
-
+		<div class="tab-pane" id="image"><img id="rawImage" /></div>
                 <div class="tab-pane" id="map">
                     <nav class="navbar navbar-light" role="navigation">
                         <div class="container-fluid">
