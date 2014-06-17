@@ -247,7 +247,7 @@ function loadRealmRoot() {
         async: false
     }).responseText;
     
-    if (resp === null) {
+    if ((resp === null) || (resp === undefined)) {
         // Retry:
         
         __waitTime = __waitTime * 2;
@@ -282,11 +282,29 @@ function loadRealmRoot() {
 
 function loadRealmFile(id, path, name) {
 
-    if (sessionStorage[id]) {
+    var ext = name.split('.').pop();
+    
+    if (ext === 'png') {
+        var img = $('#' + id);
+        if (img.length) {
+            
+            $('#image').children('img').each(function(i) { 
+                $(this).hide();
+            });
+            
+            img.show();
+            
+            displayImage();
+            
+            return;
+        }
+    }
+
+    if (sessionStorage[id + '-name']) {
 
         loadEditor(name, sessionStorage[id]);
         __fileId = id;
-
+                
     } else {
 
         var ref = "master"; // For now hit master, in the future, pull from working branch (master is the current production copy of the realm)
@@ -310,16 +328,28 @@ function loadRealmFile(id, path, name) {
                 }
                 */
                 
-                sessionStorage[id] = data.content;
-                sessionStorage[id + '-name'] = name;
-                sessionStorage[id + '-path'] = path;
-                sessionStorage[id + '-commit-md5'] = md5(data.content);
-
-                __trackedFiles.push(id);
-                sessionStorage[__trackedStorageId] = JSON.stringify(__trackedFiles);
-
-                loadEditor(name, data.content);
-                __fileId = id;
+                if (ext === 'png') {
+                    
+                    $('#image').children('img').each(function(i) { 
+                        $(this).hide();
+                    });
+                    
+                    $("#image").append("<img src='data:image/png;base64," + data.content + "' id='" + id + "' style='background-image: url(img/transparent_display.gif);' />");
+                    
+                    displayImage();
+                    
+                } else {
+                    sessionStorage[id + '-name'] = name;
+                    sessionStorage[id + '-path'] = path;
+                    sessionStorage[id] = data.content;
+                    sessionStorage[id + '-commit-md5'] = md5(data.content);
+    
+                    __trackedFiles.push(id);
+                    sessionStorage[__trackedStorageId] = JSON.stringify(__trackedFiles);
+    
+                    loadEditor(name, data.content);
+                    __fileId = id;
+                }
 
             },
             error: function (data) {
@@ -420,6 +450,12 @@ function updateRealmFile(id, path, content) {
     });
 }
 
+function displayImage() {
+    $("#mapTabs li").css('display', 'none');
+    $("#tab-nav-image").css('display', 'block');
+    $('#tab-nav-image a:first').tab('show');
+}
+
 function loadEditor(filename, content) {
 
     __editor.off("change", editor_onChange);
@@ -436,35 +472,6 @@ function loadEditor(filename, content) {
         $("#tab-nav-editor").css('display', 'block');
 
     }
-    
-        /*
-    $.ajax({
-        type: "GET",
-        url: "map.json",
-        dataType: "text",
-        contentType: "text/plain; charset=utf-8",
-        success: function (data, textStatus) {
-            $("#editor").text(data);
-            __editor = ace.edit("editor");
-            Map.onTilesLoaded = function (json) {
-                var template = $('#tiles_template').html();
-                $("#tiles").append(_.template(template, { model: json }));
-            };
-            Map.onObjectsLoaded = function (json) {
-                var template = $('#objects_template').html();
-                $("#objects").append(_.template(template, { model: json }));
-            };
-            Map.init("map", JSON.parse(data));
-            //Map.create(10, 10);
-            requestAnimationFrame(animate);
-        },
-        error: function (data) {
-            alert("error");
-        }
-    });
-    */
-    
-    
     
     switch (ext) {
         case "js":
@@ -495,7 +502,7 @@ function loadEditor(filename, content) {
             $("#markdown").html(marked(content));
             break;
         case "png":
-            $("#rawImage").attr("src", "data:image/png;base64," + content);
+            
             break;
         default:
             __editor.getSession().setMode("ace/mode/plain_text");

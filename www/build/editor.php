@@ -42,10 +42,10 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
                 <li id="tab-nav-markdown" style="display: none;"><a href="#markdown" data-toggle="tab">Rendered Markdown</a></li>
             </ul>
 
-            <div class="tab-content">
+            <div class="tab-content" style="border: 1px solid #ddd; border-top-width: 0; border-radius: 0 0 4px 4px;">
 
                 <div class="tab-pane active" id="editor"></div>
-		<div class="tab-pane" id="image"><img id="rawImage" /></div>
+		<div class="tab-pane" id="image"></div>
                 <div class="tab-pane" id="map">
                     <nav class="navbar navbar-light" role="navigation">
                         <div class="container-fluid">
