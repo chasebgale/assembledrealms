@@ -137,6 +137,10 @@ $(document).ready(function () {
         commit();
     });
     
+    $("#btnNewFile").on("click", function () {
+        $('#modalNewFile').modal('show');
+    });
+    
     Map.onResourceLoaded = function (json, base64Image) {
         var template = $('#resource_template').html();
         var target = $('#' + json.meta.category);
@@ -264,6 +268,14 @@ function loadRealmRoot() {
 
         $("#explorer").treeview({
             animated: "fast"
+        });
+        
+        var folderList = $('#newfileLocation');
+        
+        _.each(json, function (val) {
+           if (val.hasChildren) {
+                folderList.append('<option>' + val.path + '</option>');
+            }
         });
         
         var readmeDOM = $('#explorer [data-path="README.md"');

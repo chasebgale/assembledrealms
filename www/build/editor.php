@@ -33,6 +33,9 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
                 <ul id="explorer" class="filetree treeview">
                 </ul>
             </div>
+	    <button id="btnNewFile" type="button" class="btn btn-default">
+		<span class="glyphicon glyphicon-plus"></span> New File
+	    </button>
         </div>
         <div id="tabs">
             <ul class="nav nav-tabs" id="mapTabs">
@@ -40,6 +43,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 		<li id="tab-nav-image" style="display: none;"><a href="#image" data-toggle="tab">Raw Image</a></li>
                 <li id="tab-nav-map" style="display: none;"><a href="#map" data-toggle="tab">Map Editor</a></li>
                 <li id="tab-nav-markdown" style="display: none;"><a href="#markdown" data-toggle="tab">Rendered Markdown</a></li>
+		<li id="tab-nav-file" style="display: none;"><a href="#file" data-toggle="tab">File Tools</a></li>
             </ul>
 
             <div class="tab-content" style="border: 1px solid #ddd; border-top-width: 0; border-radius: 0 0 4px 4px;">
@@ -77,6 +81,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
                 </div>
 
                 <div class="tab-pane" id="markdown"></div>
+		<div class="tab-pane" id="file"></div>
             </div>
         </div>
 
@@ -104,6 +109,28 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
                     <h4 class="modal-title">Select an object...</h4>
                 </div>
                 <div class="modal-body" id="objects">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="modalNewFile" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Create New File...</h4>
+                </div>
+                <div class="modal-body">
+		    <div class="form-group">
+			<label for="newfileName">Filename:</label>
+			<input type="text" class="form-control" id="newfileName" placeholder="Filename, i.e. 'types.js'">
+		    </div>
+		    <div class="form-group">
+			<label for="newfileLocation">Location:</label>
+			<select multiple class="form-control" id="newfileLocation">
+			</select>
+		    </div>
                 </div>
             </div>
         </div>
