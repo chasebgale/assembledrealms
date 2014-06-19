@@ -128,10 +128,16 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 		    </div>
 		    <div class="form-group">
 			<label for="newfileLocation">Location:</label>
-			<select multiple class="form-control" id="newfileLocation">
-			</select>
+			<div class="list-group" id="newfileLocation">
+			    <a href="#" class="list-group-item active" data-path="">
+				<i class="fa fa-folder-o"></i> /
+			    </a>
+			</div>
 		    </div>
                 </div>
+		<div class="modal-footer">
+		    <button id="btnNewFileCreate" class="btn btn-default">Create</button>
+		</div>
             </div>
         </div>
     </div>

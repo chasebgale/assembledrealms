@@ -18,6 +18,10 @@
             overflow: auto;
             padding: 10px;
         }
+        
+#newfileLocation {
+    height: 200px;
+}
 
 div#tree {
     margin-top: 6px;

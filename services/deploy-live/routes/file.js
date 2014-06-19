@@ -1,4 +1,6 @@
-var git = require('nodegit');
+var git = require('nodegit'),
+    path = require('path'),
+    fs = require('fs');
 
 // https://github.com/nodegit/nodegit/tree/master/example
 
@@ -55,9 +57,60 @@ exports.open = function(req, res){
   });
 }
 
-exports.save = function(req, res){
+exports.create = function(req, res) {
+  git.Repo.open(__dirname + "/../projects/" + req.params.id, function(error, repo) {
+    if (error) throw error;
+    
+    var fileName = req.body.fullpath;
+    var fileContent = "";
+    
+    //create the file in the repo's workdir
+    fs.writeFile(path.join(repo.workdir(), fileName), fileContent, function(writeError) {
+      if (writeError) throw writeError;
   
-  console.log("FILE SAVE: " + req.body[0].content);
+      //add the file to the index...
+      repo.openIndex(function(openIndexError, index) {
+        if (openIndexError) throw openIndexError;
+  
+        index.read(function(readError) {
+          if (readError) throw readError;
+  
+          index.addByPath(fileName, function(addByPathError) {
+            if (addByPathError) throw addByPathError;
+  
+            index.write(function(writeError) {
+              if (writeError) throw writeError;
+  
+              index.writeTree(function(writeTreeError, oid) {
+                if (writeTreeError) throw writeTreeError;
+  
+                //get HEAD
+                git.Reference.oidForName(repo, 'HEAD', function(oidForName, head) {
+                  if (oidForName) throw oidForName;
+  
+                  //get latest commit (will be the parent commit)
+                  repo.getCommit(head, function(getCommitError, parent) {
+                    if (getCommitError) throw getCommitError;
+                    var author = git.Signature.now("Chase Gale", "chase.b.gale@gmail.com");
+                    var committer = git.Signature.now("Chase Gale", "chase.b.gale@gmail.com");
+  
+                    //commit
+                    repo.createCommit('HEAD', author, committer, 'message', oid, [parent], function(error, commitId) {
+                      console.log("New Commit:", commitId.sha());
+                    });
+                  });
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+    
+  });
+}
+
+exports.save = function(req, res){
   
   git.Repo.open(__dirname + "/../projects/" + req.params.id, function(error, repo) {
     if (error) throw error;

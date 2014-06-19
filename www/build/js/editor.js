@@ -141,6 +141,39 @@ $(document).ready(function () {
         $('#modalNewFile').modal('show');
     });
     
+    $("#newfileLocation").on("click", "a", function (e) {
+        e.preventDefault();
+        
+        $("#newfileLocation a").removeClass("active");
+        $(this).addClass("active");
+        
+    });
+    
+    $("#btnNewFileCreate").on("click", function (e) {
+        e.preventDefault();
+        
+        var selectedFolder = $("#newfileLocation .active");
+        var path = selectedFolder.attr("data-path");
+        var name = $("#newfileName").val();
+        var fileId = "NEW-" + name;
+        
+        if (path === "") {
+            $("#explorer").append('<li><span class="file" data-id="' + fileId + '" data-path="' + name + '">' + name + '</span></li>');
+        } else {
+            var parentFolder = $("#explorer [data-path='" + path + "']").children("ul");
+            parentFolder.append('<li><span class="file" data-id="' + fileId + '" data-path="' + path + "/" + name + '">' + name + '</span></li>');
+        }
+        
+        sessionStorage[fileId] = "";
+        sessionStorage[fileId + '-name'] = name;
+        sessionStorage[fileId + '-path'] = path + '/' + name;
+        sessionStorage[fileId + '-commit-md5'] = "";
+        
+        __trackedFiles.push(fileId);
+        sessionStorage[__trackedStorageId] = JSON.stringify(__trackedFiles);
+        
+    });
+    
     Map.onResourceLoaded = function (json, base64Image) {
         var template = $('#resource_template').html();
         var target = $('#' + json.meta.category);
@@ -274,9 +307,21 @@ function loadRealmRoot() {
         
         _.each(json, function (val) {
            if (val.hasChildren) {
-                folderList.append('<option>' + val.path + '</option>');
+                folderList.append('<a href="#" class="list-group-item" data-path="' + val.path + '"><i class="fa fa-folder-o"></i> /' + val.path + '</a>');
             }
         });
+        
+        /*
+        var folderListOptions = $("#newfileLocation option");
+
+        folderListOptions.sort(function(a,b) {
+            if (a.text > b.text) return 1;
+            else if (a.text < b.text) return -1;
+            else return 0
+        })
+
+        folderList.empty().append( folderListOptions );
+        */
         
         var readmeDOM = $('#explorer [data-path="README.md"');
         readmeDOM.addClass('activefile');
