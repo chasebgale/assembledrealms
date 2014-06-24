@@ -107,30 +107,31 @@ class loggedInUser {
 		return $inserted_id;
 	}
 	
-	public function destroyRealm($gitlab_id)
+	public function destroyRealm($realm_id)
 	{
 		global $mysqli,$db_table_prefix;
 		$stmt = $mysqli->prepare("DELETE FROM realms
 			WHERE user_id = ? AND
-			gitlab_id = ?");
-		$stmt->bind_param("ii", $this->user_id, $gitlab_id);
+			id = ?");
+		$stmt->bind_param("ii", $this->user_id, $realm_id);
 		$stmt->execute();
 		$stmt->close();	
 	}
     
-	public function fetchRealm($gitlab_id)
+	public function fetchRealm($realm_id)
 	{
 		global $mysqli,$db_table_prefix;
 		$stmt = $mysqli->prepare("SELECT 
 			*
 			FROM realms
-			WHERE gitlab_id = ?");
-		$stmt->bind_param("i", $gitlab_id);
+			WHERE  user_id = ? AND
+			id = ?");
+		$stmt->bind_param("ii", $this->user_id, $realm_id);
 		$stmt->execute();
-		$stmt->bind_result($id, $user_id, $gitlab_id, $title, $description, $status, $players, $funds);
+		$stmt->bind_result($id, $user_id, $title, $description, $status, $players, $funds);
 		$stmt->fetch();
 		$stmt->close();
-		return array('id' => $id, 'user_id' => $user_id, 'gitlab_id' => $gitlab_id, 'title' => $title, 'description' => $description, 'status' => $status, 'players' => $players, 'funds' => $funds);
+		return array('id' => $id, 'user_id' => $user_id, 'title' => $title, 'description' => $description, 'status' => $status, 'players' => $players, 'funds' => $funds);
 	}
     
     

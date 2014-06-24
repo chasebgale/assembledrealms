@@ -161,7 +161,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
                 </div>
 		<div class="modal-footer">
 		    <span id="commitProgressMessage"></span>
-			<button id="commitStart" type="button" disabled="disabled" class="btn btn-default">Commit</button>
+			<button id="commitStart" type="button" class="btn btn-default">Commit</button>
 		</div>
             </div>
         </div>

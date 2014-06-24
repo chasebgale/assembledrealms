@@ -5,14 +5,11 @@ $(document).ready(function () {
         e.preventDefault();
 
         var token = getGitlabSession();
-        var gitlab_id = $(this).attr('data-id');
+        var id = $(this).attr('data-id');
 
         $.ajax({
-            url: 'http://source-01.assembledrealms.com/api/v3/projects/' + gitlab_id,
+            url: 'http://debug-01.assembledrealms.com/api/project/' + id,
             type: 'DELETE',
-            headers: {
-                "PRIVATE-TOKEN": token
-            },
             dataType: 'json',
             success: function (data) {
                 

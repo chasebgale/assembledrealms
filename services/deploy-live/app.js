@@ -36,10 +36,16 @@ app.get('/', function(req, res){
 
 app.get('/api/project/:id/create', project.create);
 app.get('/api/project/:id/open', project.open);
+app.get('/api/project/:id/destroy', project.destroy);
 app.post('/api/project/:id/save', project.save);
 
 app.get('/api/project/:id/file/open/:sha', file.open);
 app.post('/api/project/:id/file/create', file.create);
+
+app.use(function(err, req, res, next){
+    console.error(err.stack);
+    res.send(500, err.stack);
+});
 
 app.listen(80, function(){
   console.log("Express server listening on port 80.");
