@@ -136,6 +136,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 		    </div>
                 </div>
 		<div class="modal-footer">
+		    <div id="newFileCreateAlert" class="alert alert-danger" style="display: none;"></div>
 		    <button id="btnNewFileCreate" class="btn btn-default">Create</button>
 		</div>
             </div>
@@ -146,19 +147,21 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Commit Progress - Branch: "working"</h4>
+                    <h4 class="modal-title">Commit</h4>
                 </div>
                 <div class="modal-body">
+		    <!--
 			<div id="commitProgressbar" class="progress progress-striped">
 				<div class="progress-bar"  role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%;">
-				<span class="sr-only">Loading...</span>
 			    </div>
 			</div>
-			<p id="commitProgressMessage" style="text-align: center;"></p>
-			<ul id="commitProgressList"></ul>
+		    -->
+		    <ul id="commitProgressList"></ul>
+		    <textarea id="commitMessage" rows="6" cols="120" placeholder="(Optional) Add a short message describing the changes you have made. Useful if you need to look up this work later!"></textarea>
                 </div>
 		<div class="modal-footer">
-			<button id="closeCommit" type="button" disabled="disabled" class="btn btn-default" data-dismiss="modal">Close</button>
+		    <span id="commitProgressMessage"></span>
+			<button id="commitStart" type="button" disabled="disabled" class="btn btn-default">Commit</button>
 		</div>
             </div>
         </div>

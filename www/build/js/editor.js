@@ -4,17 +4,19 @@ var __projectId;
 var __trackedFiles = [];
 var __trackedStorageId;
 
+// TODO: In the future this will be part of the user's profile, as when the user
+// is created it is assigned the lowest-load server...
+var __projectURL;
+
 var __checkInMsg;
 
 var __processingFiles = [];
-
-// TODO: In the future this will be part of the user's profile, as when the user
-// is created it is assigned the lowest-load server...
-var __rootURL = 'http://debug-01.assembledrealms.com/api/project/';
+var __commitFiles = [];
 
 $(document).ready(function () {
     
     __projectId = window.location.search.slice(1);
+    __projectURL = 'http://debug-01.assembledrealms.com/api/project/' + __projectId;
 
     __trackedStorageId = __projectId + "-tracking";
 
@@ -131,9 +133,15 @@ $(document).ready(function () {
     });
 
     $("#btnCommit").on("click", function () {
-        $("#commitProgressMessage").text('Initiating commit to branch.');
-        $('#commitProgressbar').addClass('active');
+        //$('#commitProgressbar').addClass('active');
         $('#modalCommit').modal('show');
+        
+    });
+    
+    $('#commitStart').on('click', function () {
+        $(this).attr('disabled', true);
+        $(this).html('<i class="fa fa-cog fa-spin"></i> Commit');
+        $("#commitProgressMessage").text('Initiating commit to branch.');
         commit();
     });
     
@@ -151,26 +159,73 @@ $(document).ready(function () {
     
     $("#btnNewFileCreate").on("click", function (e) {
         e.preventDefault();
+    
+        var button = $(this);
+        
+        button.attr('disabled', true);
+        button.html('<i class="fa fa-cog fa-spin"></i> Create');
         
         var selectedFolder = $("#newfileLocation .active");
         var path = selectedFolder.attr("data-path");
         var name = $("#newfileName").val();
         var fileId = "NEW-" + name;
+    
+        // TODO: SANITIZE THIS INPUT! THIS GOES RIGHT TO NODE!
+        // PERHAPS SANITIZE IN NODE, AS JS IS THE USER AND NOT TO BE TRUSTED
+        var post = {};
         
         if (path === "") {
-            $("#explorer").append('<li><span class="file" data-id="' + fileId + '" data-path="' + name + '">' + name + '</span></li>');
+            post.fullpath = name;
         } else {
-            var parentFolder = $("#explorer [data-path='" + path + "']").children("ul");
-            parentFolder.append('<li><span class="file" data-id="' + fileId + '" data-path="' + path + "/" + name + '">' + name + '</span></li>');
+            post.fullpath = path + '/' + name;
         }
         
-        sessionStorage[fileId] = "";
-        sessionStorage[fileId + '-name'] = name;
-        sessionStorage[fileId + '-path'] = path + '/' + name;
-        sessionStorage[fileId + '-commit-md5'] = "";
+        $.ajax({
+            url: __projectURL + '/file/create',
+            type: 'post',
+            dataType: 'json',
+            data: post
+        })
+        .done(function (data) {
+            console.log(data);
+            if (data.message === "OK") {
+                
+                if (path === "") {
+                    $("#explorer").append('<li><span class="file" data-id="' + fileId + '" data-path="' + name + '">' + name + '</span></li>');
+                } else {
+                    var parentFolder = $("#explorer [data-path='" + path + "']").children("ul");
+                    parentFolder.append('<li><span class="file" data-id="' + fileId + '" data-path="' + path + "/" + name + '">' + name + '</span></li>');
+                }
+                
+                sessionStorage[fileId] = "";
+                sessionStorage[fileId + '-name'] = name;
+                sessionStorage[fileId + '-path'] = path + '/' + name;
+                sessionStorage[fileId + '-commit-md5'] = "";
+                
+                __trackedFiles.push(fileId);
+                sessionStorage[__trackedStorageId] = JSON.stringify(__trackedFiles);
+                
+                $('#modalNewFile').modal('hide');
+                $('#newFileCreateAlert').hide();
+            } else {
+                $('#newFileCreateAlert').text('Creation Error: ' + data.message);
+                $('#newFileCreateAlert').fadeIn();
+            }
+            
+        })
+        .fail(function(data) {
+            console.log(data);
+            $('#newFileCreateAlert').text('Network Error: ' + data.statusText);
+            $('#newFileCreateAlert').fadeIn();
+                // Update DOM to reflect we messed up:
+                //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
+        })
+        .always(function () {
+            button.attr('disabled', false);
+            button.html('Create');
+        });
         
-        __trackedFiles.push(fileId);
-        sessionStorage[__trackedStorageId] = JSON.stringify(__trackedFiles);
+        
         
     });
     
@@ -185,22 +240,20 @@ $(document).ready(function () {
     
 });
 
-function commit() {
+function listCommitFiles() {
+    
+    __commitFiles = [];
+    
     if (sessionStorage[__trackedStorageId]) {
         __processingFiles = JSON.parse(sessionStorage[__trackedStorageId]);
+        
         var fileMD5;
         var file;
         var fileName;
         var filePath;
-        
-        var filesToCommit = [];
-        
+    
         var commitProgressList = $("#commitProgressList");
         commitProgressList.empty();
-        
-        $('#closeCommit').attr('disabled', 'disabled');
-        
-        __checkInMsg = "Pushed: " + Date.now();
         
         if (_.isArray(__processingFiles)) {
             __processingFiles = $.grep(__processingFiles, function (fileId, i) {
@@ -209,14 +262,12 @@ function commit() {
                 filePath = sessionStorage[fileId + '-path'];
                 fileMD5 = sessionStorage[fileId + '-commit-md5'];
                 
-                commitProgressList.append('<li id="' + fileId + '"><span style="font-weight: bold; width: 200px; display: inline-block;">' + fileName + ': </span><span></span></li>');
-                
                 if (md5(file) !== fileMD5) {
                     // Push to gitlab
-                    $('#' + fileId + ' span:last').html('<i class="fa fa-cog fa-spin"></i> Pushing to git.');
+                    commitProgressList.append('<li id="' + fileId + '"><span style="font-weight: bold; width: 200px; display: inline-block;">' + fileName + ': </span><span></span></li>');
                     
                     //updateRealmFile(fileId, filePath, file);
-                    filesToCommit.push({
+                    __commitFiles.push({
                         content: file,
                         name: fileName,
                         path: filePath,
@@ -225,60 +276,67 @@ function commit() {
                     
                     return true;
                 } else {
-                    $('#' + fileId).css('color', '#999');
-                    $('#' + fileId + ' span:last').text('No local changes, no action taken.');
                     return false;
                 }
             });
         }
-        
-        if (__processingFiles.length === 0) {
-            $('#commitProgressbar').removeClass('active');
-            $('#closeCommit').removeAttr('disabled');
-            $("#commitProgressMessage").text('No commit, realm branch is up to date.');
-        } else {
-            $("#commitProgressMessage").text('Uploading source files to git.');
-            
-            $.ajax({
-                url: __rootURL + __projectId + '/file/save',
-                type: 'post',
-                dataType: 'json',
-                contentType: 'application/json',
-                data: JSON.stringify(filesToCommit),
-                success: function (response) {
-                    
-                    _.each(filesToCommit, function (file) {
-                        // Update sessionStorage with new MD5
-                        sessionStorage[file.sha + '-commit-md5'] = md5(sessionStorage[file.sha]);
-                    });
-                    
-                    // Update DOM to reflect we completed ok:
-                    //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-up"></i> Success!');
-        
-                    $('#commitProgressbar').removeClass('active');
-                    $('#closeCommit').removeAttr('disabled');
-                    $("#commitProgressMessage").text('Commit completed.');
-                },
-                error: function (response) {
-                    
-                    // Update DOM to reflect we messed up:
-                    $('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
-                    
-                },
-                complete: function (response) {
-                }
-            });
-            
-        }
     }
 }
+
+function commit(filesToCommit) {
+    
+    __checkInMsg = $('#commitMessage').val();
+    
+    if (__processingFiles.length === 0) {
+        //$('#commitProgressbar').removeClass('active');
+        $('#commitStart').removeAttr('disabled');
+        $("#commitProgressMessage").text('No commit, realm branch is up to date.');
+    } else {
+        $("#commitProgressMessage").text('Uploading source files to git.');
+        
+        $.ajax({
+            url: __projectURL + '/save',
+            type: 'post',
+            dataType: 'json',
+            contentType: 'application/json',
+            data: JSON.stringify(__commitFiles),
+            success: function (response) {
+                
+                _.each(filesToCommit, function (file) {
+                    // Update sessionStorage with new MD5
+                    sessionStorage[file.sha + '-commit-md5'] = md5(sessionStorage[file.sha]);
+                });
+                
+                // Update DOM to reflect we completed ok:
+                //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-up"></i> Success!');
+    
+                //$('#commitProgressbar').removeClass('active');
+                $('#commitStart').removeAttr('disabled');
+                $('#commitStart').html('Commit');
+                $("#commitProgressMessage").text('');
+                
+                $('#modalCommit').modal('close');
+            },
+            error: function (response) {
+                
+                // Update DOM to reflect we messed up:
+                $('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
+                
+            },
+            complete: function (response) {
+            }
+        });
+        
+    }
+}
+
 
 var __waitTime = 500;
 
 function loadRealmRoot() {
             
     var resp = $.ajax({
-        url: __rootURL + __projectId + '/open',
+        url: __projectURL + '/open',
         type: 'get',
         dataType: 'json',
         async: false
@@ -372,50 +430,41 @@ function loadRealmFile(id, path, name) {
         //                                      '&private_token=' + token;
 
         $.ajax({
-            url: 'http://debug-01.assembledrealms.com/api/project/' + __projectId + '/file/open/' + id,
+            url: __projectURL + '/file/open/' + id,
             type: 'get',
-            dataType: 'json',
-            success: function (data) {
-
-                /*
-                if (data.encoding == "base64") {
-                    // The replace regex removes whitespace from the raw base64.
-                    // Of course, Only IE blows up and needs this addition: .replace(/\s/g, '')
-                    plainText = decode_utf8(atob(data.content.replace(/\s/g, '')));
-                }
-                */
+            dataType: 'json'
+        })
+        .done(function (data) {
+            if (ext === 'png') {
+                    
+                $('#image').children('img').each(function(i) { 
+                    $(this).hide();
+                });
                 
-                if (ext === 'png') {
-                    
-                    $('#image').children('img').each(function(i) { 
-                        $(this).hide();
-                    });
-                    
-                    $("#image").append("<img src='data:image/png;base64," + data.content + "' id='" + id + "' style='background-image: url(img/transparent_display.gif);' />");
-                    
-                    displayImage();
-                    
-                } else {
-                    sessionStorage[id + '-name'] = name;
-                    sessionStorage[id + '-path'] = path;
-                    sessionStorage[id] = data.content;
-                    sessionStorage[id + '-commit-md5'] = md5(data.content);
-    
-                    __trackedFiles.push(id);
-                    sessionStorage[__trackedStorageId] = JSON.stringify(__trackedFiles);
-    
-                    loadEditor(name, data.content);
-                    __fileId = id;
-                }
+                $("#image").append("<img src='data:image/png;base64," + data.content + "' id='" + id + "' style='background-image: url(img/transparent_display.gif);' />");
+                
+                displayImage();
+                
+            } else {
+                sessionStorage[id + '-name'] = name;
+                sessionStorage[id + '-path'] = path;
+                sessionStorage[id] = data.content;
+                sessionStorage[id + '-commit-md5'] = md5(data.content);
 
-            },
-            error: function (data) {
-            
-                console.log(data);
+                __trackedFiles.push(id);
+                sessionStorage[__trackedStorageId] = JSON.stringify(__trackedFiles);
+
+                loadEditor(name, data.content);
+                __fileId = id;
+            }
+        })
+        .fail(function() {
+            console.log(data);
                 // Update DOM to reflect we messed up:
                 //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
+        })
+        .always(function () {
             
-            }
         });
 
     }
