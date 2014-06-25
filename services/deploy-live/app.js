@@ -24,7 +24,15 @@ var allowCrossDomain = function(req, res, next) {
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
-app.use(bodyParser());
+
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
+
+// parse application/json
+app.use(bodyParser.json())
+
 app.use(allowCrossDomain);
 app.use(express.static(__dirname + '/public'));
 

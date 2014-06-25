@@ -7,7 +7,7 @@ $(document).ready(function () {
     parameters.directive = "realms";
 
     $.post("api.php", parameters, function (data) {
-        $("#existingRealms").html(templateFn({ 'realms': JSON.parse( data ) }));
+        $("#existingRealmsTableBody").html(templateFn({ 'realms': JSON.parse( data ) }));
     });
 
     $("#buttonCreateProject").on('click', function (e) {
@@ -28,7 +28,7 @@ $(document).ready(function () {
         parameters.payload = JSON.stringify(payload);
 
         $.post("api.php", parameters, function ( apiResponse ) {
-            var jqxhr = $.get( "http://debug-01.assembledrealms.com/api/project/create/" + apiResponse, function( gitResponse ) {
+            var jqxhr = $.get( "http://debug-01.assembledrealms.com/api/project/" + apiResponse + "/create", function( gitResponse ) {
                 if (gitResponse === "OK") {
                     window.location = "http://www.assembledrealms.com/build/editor.php?" + apiResponse;
                 }

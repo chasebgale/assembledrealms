@@ -81,41 +81,55 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
             </div>
         </section>
 
-        <section id="existingRealms"></section>
+    
+    <table id="existingRealmsTable" class="table table-hover">
+        <thead>
+            <tr>
+                <th></th>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Published</th>
+                <th>Funds</th>
+                <th>Likes</th>
+                <th>Tools</th>
+            </tr>
+        </thead>
+        <tbody id="existingRealmsTableBody">
+            
+        </tbody>
+    </table>
 
 </div>
 
 <script id="realms_template" type="text/template">
     <% _.each( realms, function( realm ){ %>
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="realm-panel-title"><%- realm.title %> </h3><span class="realm-panel-title-right"> Published: 02/05/2014 09:49PM ET</span>
-            </div>
-            <div class="panel-body">
-
-                <div style="float: left;">
-                    <a class="btn btn-default" href="editor.php?<%- realm.id %>"><span class="glyphicon glyphicon-fire"></span> Edit Codebase</a>
-                    <a class="btn btn-default" href="manager.php?<%- realm.id %>"><span class="glyphicon glyphicon-eye-open"></span> Manage</a>
-                </div>
-
-                <div style="float: right;">
-                    <% if (realm.status == 0) { %>
-                    <i class="fa fa-power-off fa-4x light"></i>
-                    <% } else { %>
-                    <i class="fa fa-power-off fa-4x online"></i>
-                    <% } %>
-                </div>
-
-                <div style="float: right; width: 300px;">
-                    <ul>
-                        <li><span class="existingRealmsStatsLabel">Funds:</span><%- realm.funds %></li>
-                        <li><span class="existingRealmsStatsLabel">Online:</span><%- realm.players %></li>
-                        <li><span class="existingRealmsStatsLabel">Likes:</span><%- realm.likes %></li>
-                    </ul>
-                </div>
-
-            </div>
-        </div>
+    
+        <% if (realm.status == 0) { %>
+        <tr>
+        <% } else { %>
+        <tr class="success">
+        <% } %>
+        
+            <td>
+            <% if (realm.status == 0) { %>
+                <i class="fa fa-power-off light"></i>
+            <% } else { %>
+                <i class="fa fa-power-off online"></i>
+            <% } %>
+            </td>
+            
+            <td><%- realm.id %></td>
+            <td><%- realm.title %></td>
+            <td>02/05/2014 09:49PM ET</td>
+            <td><%- realm.funds %></td>
+            <td><%- realm.likes %></td>
+            <td>
+                <a class="btn btn-default btn-xs" href="editor.php?<%- realm.id %>"><span class="glyphicon glyphicon-fire"></span> Edit</a>
+                <a class="btn btn-default btn-xs" href="manager.php?<%- realm.id %>"><span class="glyphicon glyphicon-eye-open"></span> Manage</a>
+            </td>
+        
+        </tr>
+        
     <% }); %>
 </script>
 
