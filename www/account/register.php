@@ -111,7 +111,7 @@ $wrapper = '<div class="panel panel-warning" style="width: 500px; margin: 0 auto
 
 switch ($_SERVER['QUERY_STRING']) {
     case '0':
-        echo str_replace("%message%", "You must be logged in to access our build tools. Please take a moment to register.", $wrapper);
+        echo str_replace("%message%", "You must be logged in to access our build tools. Please take a moment to register or <a href='/account/login.php?0'>login</a>.", $wrapper);
         break;
 }
 
