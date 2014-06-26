@@ -13,6 +13,8 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 ?>
 
 <div id="content">
+    
+    <div style="display: none;" class="alert alert-danger" id="errorMessage"></div>
 
     <section id="newRealm">
         <div class="panel panel-default">
@@ -79,7 +81,8 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
                     </form>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
     
     <table id="existingRealmsTable" class="table table-hover">
@@ -135,7 +138,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 
 <?php require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php"); ?>
 
-<script src="js/dashboard.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/index.js" type="text/javascript" charset="utf-8"></script>
 <script src="js/utilities.js" type="text/javascript" charset="utf-8"></script>
 </body>
 </html>

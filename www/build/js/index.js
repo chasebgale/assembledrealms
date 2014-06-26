@@ -13,10 +13,13 @@ $(document).ready(function () {
     $("#buttonCreateProject").on('click', function (e) {
         e.preventDefault();
         
-        var buttonOriginalContent = $(this).html();
+        $('#errorMessage').fadeOut();
         
-        $(this).attr('disabled', 'disabled');
-        $(this).html('<i class="fa fa-cog fa-spin"></i> Create');
+        var buttonOriginalContent = $(this).html();
+        var button = $("#buttonCreateProject");
+        
+        button.attr('disabled', 'disabled');
+        button.html('<i class="fa fa-cog fa-spin"></i> Create');
 
         var payload = {};
         payload.title = $("#realmName").val();
@@ -33,8 +36,13 @@ $(document).ready(function () {
                     window.location = "http://www.assembledrealms.com/build/editor.php?" + apiResponse;
                 }
             })
-            .fail(function() {
-                // TODO: ALERT USER OF FAILURE
+            .fail(function(data) {
+                button.removeAttr('disabled');
+                button.html('Create');
+                
+                // TODO: Friendly error display, real error should be logged in datastore
+                $('#errorMessage').text(data.status + ': ' + data.responseText);
+                $('#errorMessage').fadeIn();
             });
         });
 
