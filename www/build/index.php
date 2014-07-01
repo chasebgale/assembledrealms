@@ -85,22 +85,33 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
     </section>
 
     
-    <table id="existingRealmsTable" class="table table-hover">
-        <thead>
-            <tr>
-                <th></th>
-                <th>ID</th>
-                <th>Title</th>
-                <th>Published</th>
-                <th>Funds</th>
-                <th>Likes</th>
-                <th>Tools</th>
-            </tr>
-        </thead>
-        <tbody id="existingRealmsTableBody">
-            
-        </tbody>
-    </table>
+    <section id="existingRealms" style="display: none;">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="realm-panel-title">Your Realms</h3>
+            </div>
+            <div class="panel-body">
+                <table id="existingRealmsTable" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Published</th>
+                            <th>Funds</th>
+                            <th>Likes</th>
+                            <th>Tools</th>
+                        </tr>
+                    </thead>
+                    <tbody id="existingRealmsTableBody">
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+    
+    
 
 </div>
 
@@ -123,7 +134,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
             
             <td><%- realm.id %></td>
             <td><%- realm.title %></td>
-            <td>02/05/2014 09:49PM ET</td>
+            <td><%- realm.published %></td>
             <td><%- realm.funds %></td>
             <td><%- realm.likes %></td>
             <td>

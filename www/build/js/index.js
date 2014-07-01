@@ -7,7 +7,10 @@ $(document).ready(function () {
     parameters.directive = "realms";
 
     $.post("api.php", parameters, function (data) {
-        $("#existingRealmsTableBody").html(templateFn({ 'realms': JSON.parse( data ) }));
+        if (data !== "null") {
+            $("#existingRealmsTableBody").html(templateFn({ 'realms': JSON.parse( data ) }));
+            $("#existingRealms").fadeIn();
+        }
     });
 
     $("#buttonCreateProject").on('click', function (e) {
