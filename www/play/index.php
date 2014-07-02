@@ -33,11 +33,10 @@ $start = $page * $count;
 
 $stmt = $mysqli->prepare("SELECT * FROM realms LIMIT " . $start . ", " . $count);
 $result = $stmt->execute();
-$stmt->bind_result($id, $user_id, $title, $description, $status, $players_online, $funds);
+$stmt->bind_result($id, $user_id, $title, $description, $status, $players_online, $funds, $screenshots);
         
 while ($stmt->fetch()){
-    $row[] = array('id' => $id, 'user_id' => $user_id, 'title' => $title, 'description' => $description, 'status' => $status, 'players_online' => $players_online, 'funds' => $funds);
-    //$row['screenshots'] = 'one.jpg,two.jpg';
+    $row[] = array('id' => $id, 'user_id' => $user_id, 'title' => $title, 'description' => $description, 'status' => $status, 'players_online' => $players_online, 'funds' => $funds, 'screenshots' => $screenshots);
 }
 $stmt->close();
 
@@ -45,34 +44,74 @@ $stmt->close();
 
 <div id="content">
     
+    <div class="well" style="margin-bottom: 40px;">
+        <div class="row">
+            <div class="col-xs-2">
+                <div class="checkbox"><label><input type="checkbox"> Online</label></div>
+            </div>
+            <div class="col-xs-2">
+                <div class="checkbox"><label><input type="checkbox"> Screenshots</label></div>
+            </div>
+            <div class="col-xs-2">
+                <div class="checkbox"><label><input type="checkbox"> No Wait</label></div>
+            </div>
+            <div class="col-xs-3">
+                <select class="form-control">
+                    <option>Sort On: Loves</option>
+                    <option>Sort On: Users, Highest to Lowest</option>
+                    <option>Sort On: Users, Lowest to Highest</option>
+                    <option>Sort On: Reviews</option>
+                </select>
+            </div>
+            <div class="col-xs-3">
+                <button class="btn btn-default">Update Search</button>
+            </div>
+        </div>
+    </div>
+    
     <?php
+    
+        $alternate = false;
+    
         foreach($row as $realm) {
-            $output = '<div>';
+            if ($alternate) {
+                $output = '<div class="playListRealm" style="border: #eee solid 1px;">';
+            } else {
+                $output = '<div class="playListRealm">';
+            }
+            
+            $alternate = !$alternate;
             
             // Title
-            $output .= '<h3>' . $realm['title'] . '</h3>';
+            $output .= '<a href="realm/' . $realm['id'] . '"><h3>' . $realm['title'] . '<div class="pull-right"><small>';
             
-            //if ($realm['screenshots']) {
-            if (true) {  
-                $output .= '<div class="row">';
+            // Online / Offline + users
+            if ($realm['status'] == 1) {
+                $output .= '<span class="label label-success"><i class="fa fa-power-off"></i> Online</span>';
+                $output .= '<span class="label label-default" style="margin-left: 6px;"><i class="fa fa-child"></i> ' . $realm['players_online'] . '</span>';
+            } else {
+                $output .= '<span class="label label-default"><i class="fa fa-power-off"></i> Offline</span>';
+            }
+            
+            // Likes
+            $output .= '<span class="label label-default" style="margin-left: 6px;"><i class="fa fa-heart"></i> 12</span>';
+            $output .= '</small></div></h3></a>';
+            
+            if ($realm['screenshots']) {
+                $output .= '<div class="row wrapper-parent">';
                 
-                // TODO: Do this for each (up to 4 screenshots)
-                $output .= '<div class="col-md-2"><a href="#" class="thumbnail"><img src="img/thumb.jpg"></a></div>';
-                $output .= '<div class="col-md-2"><a href="#" class="thumbnail"><img src="img/thumb.jpg"></a></div>';
-                $output .= '<div class="col-md-2"><a href="#" class="thumbnail"><img src="img/thumb.jpg"></a></div>';
-                $output .= '<div class="col-md-2"><a href="#" class="thumbnail"><img src="img/thumb.jpg"></a></div>';
+                // Screenshots are in the format {id}-{#}-thumb.jpg and {id}-{#}.jpg, e.g. 42-1.jpg and 42-1-thumb.jpg
+                for ($i = 0; $i < $realm['screenshots']; $i++) {
+                    $output .= '<div class="col-md-2">';
+                    $output .= '<a href="img/' . $realm['id'] . '-' . $i . '.jpg" data-toggle="lightbox" data-title="' . $realm['title'] . ' <small> screenshot #' . ($i + 1) . ' </small>" data-parent=".wrapper-parent" data-gallery="gallery-' . $realm['id'] . '" class="thumbnail">';
+                    $output .= '<img src="img/' . $realm['id'] . '-' . $i . '-thumb' . '.jpg"></a></div>';
+                }
                 
                 $output .= '</div>';
             }
             
             if ($realm['description']) {
-                $output .= '<p>' . $realm['description'] . '</p>';
-            }
-            
-            if ($realm['status'] == 0) {
-                //$output .= '<i class="fa fa-power-off light"></i>';
-            } else {
-                //$output .= '<i class="fa fa-power-off online"></i>';
+                $output .= '<p class="text-justify">' . $realm['description'] . '</p>';
             }
             
             $output .= '</div>';
@@ -106,3 +145,17 @@ $stmt->close();
     </ul>
         
 </div>
+
+<?php require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php"); ?>
+
+<script src="js/ekko-lightbox.min.js" type="text/javascript" charset="utf-8"></script>
+
+<script type="text/javascript">
+    $(document).delegate('*[data-toggle="lightbox"]', 'click', function(event) {
+        event.preventDefault();
+        $(this).ekkoLightbox();
+    }); 
+</script>
+
+</body>
+</html>
