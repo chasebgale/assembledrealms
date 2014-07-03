@@ -16,8 +16,8 @@ function searchRealms(initial) {
     
     var parameters = {};
     parameters.page = __page;
-    parameters.online = $('#chkOnline').val();
-    parameters.screenshots = $('#chkScreenshots').val();
+    parameters.online = $('#chkOnline').prop('checked');
+    parameters.screenshots = $('#chkScreenshots').prop('checked');
     parameters.sort = $('#selectSort').val();
 
     $.post("index.php", parameters, function (data) {

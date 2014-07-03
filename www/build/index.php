@@ -99,7 +99,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
                             <th>Title</th>
                             <th>Published</th>
                             <th>Funds</th>
-                            <th>Likes</th>
+                            <th>Loves</th>
                             <th>Tools</th>
                         </tr>
                     </thead>
@@ -125,20 +125,24 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
         <% } %>
         
             <td>
-            <% if (realm.status == 0) { %>
-                <i class="fa fa-power-off light"></i>
-            <% } else { %>
-                <i class="fa fa-power-off online"></i>
+            <% if (realm.status == 1) { %>
+                <i class="fa fa-power-off" style="color: white;"></i>
             <% } %>
             </td>
             
             <td><%- realm.id %></td>
             <td><%- realm.title %></td>
-            <td><%- realm.published %></td>
-            <td><%- realm.funds %></td>
-            <td><%- realm.likes %></td>
             <td>
-                <a class="btn btn-default btn-xs" href="editor.php?<%- realm.id %>"><span class="glyphicon glyphicon-fire"></span> Edit</a>
+                <% if (realm.published) { %>
+                    <%- realm.published %>
+                <% } else { %>
+                    N/A
+                <% } %>
+            </td>
+            <td><%- realm.funds %></td>
+            <td><%- realm.loves %></td>
+            <td>
+                <a class="btn btn-default btn-xs" href="editor.php?<%- realm.id %>"><span class="glyphicon glyphicon-fire"></span> Edit Code</a>
                 <a class="btn btn-default btn-xs" href="manager.php?<%- realm.id %>"><span class="glyphicon glyphicon-eye-open"></span> Manage</a>
             </td>
         

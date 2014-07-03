@@ -26,13 +26,13 @@ if ($method == 'POST') {
     }
     
     if (isset($_POST['screenshots'])) {
-        if ($_POST['screenshots'] == 'on') {
+        if ($_POST['screenshots'] == 'true') {
             array_push($where, "screenshots > 0");
         }
     }
     
     if (isset($_POST['online'])) {
-        if ($_POST['online'] == 'on') {
+        if ($_POST['online'] == 'true') {
             array_push($where, "status > 0");
         }
     }
@@ -62,16 +62,6 @@ if ($method == 'POST') {
     
     global $mysqli,$db_table_prefix;
     
-    // COUNT
-    /*
-    $stmt = $mysqli->prepare("SELECT * FROM realms");
-    $result = $stmt->execute();
-    $stmt->store_result();
-    $totalrows = $stmt->num_rows;
-    $stmt->close();
-    
-    $totalpages = ceil($totalrows / $count);
-    */
     $start = $page * $count;
     
     $SQL = "SELECT * FROM realms ";
@@ -104,10 +94,10 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
     <div class="well" style="margin-bottom: 40px;">
         <div class="row">
             <div class="col-xs-2">
-                <div class="checkbox"><label><input id="chkOnline" type="checkbox"> Online</label></div>
+                <div class="checkbox"><label><input id="chkOnline" type="checkbox" value=""> Online</label></div>
             </div>
             <div class="col-xs-2">
-                <div class="checkbox"><label><input id="chkScreenshots" type="checkbox"> Screenshots</label></div>
+                <div class="checkbox"><label><input id="chkScreenshots" type="checkbox" value=""> Screenshots</label></div>
             </div>
             <div class="col-xs-2">
                 <div class="checkbox"><label><input type="checkbox"> No Wait</label></div>
