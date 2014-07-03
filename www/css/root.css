@@ -64,6 +64,10 @@ div#map {
     padding-right: 12px;
 }
 
+.playListRealm:nth-child(odd) {
+    border: 1px solid #eee;
+}
+
 .header-link {
     text-align: center;
 }
