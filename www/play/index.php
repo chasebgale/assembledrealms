@@ -36,10 +36,10 @@ if ($method == 'POST') {
     
     $stmt = $mysqli->prepare("SELECT * FROM realms LIMIT " . $start . ", " . $count);
     $result = $stmt->execute();
-    $stmt->bind_result($id, $user_id, $title, $description, $status, $players_online, $funds, $screenshots, $loves);
+    $stmt->bind_result($id, $user_id, $title, $description, $status, $players_online, $funds, $screenshots, $loves, $url);
             
     while ($stmt->fetch()){
-        $row[] = array('id' => $id, 'user_id' => $user_id, 'title' => $title, 'description' => $description, 'status' => $status, 'players_online' => $players_online, 'funds' => $funds, 'screenshots' => $screenshots, 'loves' => $loves);
+        $row[] = array('id' => $id, 'user_id' => $user_id, 'title' => $title, 'description' => $description, 'status' => $status, 'players_online' => $players_online, 'funds' => $funds, 'screenshots' => $screenshots, 'loves' => $loves, 'url' => $url);
     }
     $stmt->close();
     
@@ -91,7 +91,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
         <div class="playListRealm">
             
             <!-- Title -->
-            <a href="realm/<%- realm.id %>">
+            <a href="realm.php?<%- realm.id %>">
             <h3> <%- realm.title %>
             <div class="pull-right">
             <small>

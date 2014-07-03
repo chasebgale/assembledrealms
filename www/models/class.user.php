@@ -128,10 +128,10 @@ class loggedInUser {
 			id = ?");
 		$stmt->bind_param("ii", $this->user_id, $realm_id);
 		$stmt->execute();
-		$stmt->bind_result($id, $user_id, $title, $description, $status, $players, $funds);
+		$stmt->bind_result($id, $user_id, $title, $description, $status, $players, $funds, $screenshots, $loves, $url);
 		$stmt->fetch();
 		$stmt->close();
-		return array('id' => $id, 'user_id' => $user_id, 'title' => $title, 'description' => $description, 'status' => $status, 'players' => $players, 'funds' => $funds);
+		return array('id' => $id, 'user_id' => $user_id, 'title' => $title, 'description' => $description, 'status' => $status, 'players' => $players, 'funds' => $funds, 'screenshots' => $screenshots, 'loves' => $loves, 'url' => $url);
 	}
     
     
@@ -144,10 +144,10 @@ class loggedInUser {
 		$stmt->bind_param("i", $this->user_id);
 		$stmt->execute();
         
-		$stmt->bind_result($id, $user_id, $title, $description, $status, $players, $funds);
+		$stmt->bind_result($id, $user_id, $title, $description, $status, $players, $funds, $screenshots, $loves, $url);
         
 		while ($stmt->fetch()){
-		    $row[] = array('id' => $id, 'user_id' => $user_id, 'title' => $title, 'description' => $description, 'status' => $status, 'players' => $players, 'funds' => $funds);
+		    $row[] = array('id' => $id, 'user_id' => $user_id, 'title' => $title, 'description' => $description, 'status' => $status, 'players' => $players, 'funds' => $funds, 'screenshots' => $screenshots, 'loves' => $loves, 'url' => $url);
 		}
 		$stmt->close();
 		return ($row);
