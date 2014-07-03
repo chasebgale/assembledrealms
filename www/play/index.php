@@ -25,6 +25,7 @@ if ($method == 'POST') {
     global $mysqli,$db_table_prefix;
     
     // COUNT
+    /*
     $stmt = $mysqli->prepare("SELECT * FROM realms");
     $result = $stmt->execute();
     $stmt->store_result();
@@ -32,6 +33,7 @@ if ($method == 'POST') {
     $stmt->close();
     
     $totalpages = ceil($totalrows / $count);
+    */
     $start = $page * $count;
     
     $stmt = $mysqli->prepare("SELECT * FROM realms LIMIT " . $start . ", " . $count);

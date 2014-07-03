@@ -12,11 +12,10 @@ function searchRealms(initial) {
     
     initial = typeof initial !== 'undefined' ? initial : true;
     
-    var templateFn = _.template($('#realms_template').html());        
-    var parameters = {};
+    var templateFn = _.template($('#realms_template').html());
     
-    // TODO: Load parameters from search control values
-    parameters.directive = "realms";
+    var parameters = {};
+    parameters.page = __page;
 
     $.post("index.php", parameters, function (data) {
         if (data !== "null") {
