@@ -16,6 +16,9 @@ function searchRealms(initial) {
     
     var parameters = {};
     parameters.page = __page;
+    parameters.online = $('#chkOnline').val();
+    parameters.screenshots = $('#chkScreenshots').val();
+    parameters.sort = $('#selectSort').val();
 
     $.post("index.php", parameters, function (data) {
         if (data !== "null") {
@@ -29,6 +32,9 @@ function searchRealms(initial) {
             
             if (initial) {
                 $("#results").fadeIn();
+            } else {
+                $('#btnSearch').html('Update Search');
+                $('#btnSearch').removeAttr('disabled');
             }
         }
     });
@@ -36,6 +42,15 @@ function searchRealms(initial) {
 
 $(document).ready(function () {
     searchRealms();
+    
+    $('#btnSearch').on('click', function (e) {
+        e.preventDefault();
+        
+        $(this).attr('disabled', true);
+        $(this).html('<i class="fa fa-cog fa-spin"></i> Update Search');
+        
+        searchRealms(false);
+    });
     
     $('#prevPage').on('click', function (e) {
         e.preventDefault();

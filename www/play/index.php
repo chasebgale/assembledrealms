@@ -9,6 +9,9 @@ if ($method == 'POST') {
     
     $page = 0;
     $count = 20;
+    $sort = "ORDER BY loves DESC";
+    $where = [];
+    $whereSQL = "";
     
     if (isset($_POST['page'])) {
         if (is_numeric($_POST['page'])) {
@@ -19,6 +22,41 @@ if ($method == 'POST') {
     if (isset($_POST['count'])) {
         if (is_numeric($_POST['count'])) {
             $count = $_POST['count'];
+        }
+    }
+    
+    if (isset($_POST['screenshots'])) {
+        if ($_POST['screenshots'] == 'on') {
+            array_push($where, "screenshots > 0");
+        }
+    }
+    
+    if (isset($_POST['online'])) {
+        if ($_POST['online'] == 'on') {
+            array_push($where, "status > 0");
+        }
+    }
+    
+    $whereCount = count($where);
+    
+    if ($whereCount) {
+        $whereSQL = implode(" AND ", $where);
+        $whereSQL = "WHERE " . $whereSQL;
+    }
+    
+    if (isset($_POST['sort'])) {
+        if (is_numeric($_POST['sort'])) {
+            switch ($_POST['sort']) {
+                case 0:
+                    $sort = "ORDER BY loves DESC";
+                    break;
+                case 1:
+                    $sort = "ORDER BY players_online DESC";
+                    break;
+                case 2:
+                    $sort = "ORDER BY players_online ASC";
+                    break;
+            }
         }
     }
     
@@ -36,7 +74,15 @@ if ($method == 'POST') {
     */
     $start = $page * $count;
     
-    $stmt = $mysqli->prepare("SELECT * FROM realms LIMIT " . $start . ", " . $count);
+    $SQL = "SELECT * FROM realms ";
+    
+    if ($whereSQL) {
+        $SQL .= $whereSQL . " ";
+    }
+    
+    $SQL .= $sort . " LIMIT " . $start . ", " . $count;
+    
+    $stmt = $mysqli->prepare($SQL);
     $result = $stmt->execute();
     $stmt->bind_result($id, $user_id, $title, $description, $status, $players_online, $funds, $screenshots, $loves, $url);
             
@@ -58,24 +104,24 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
     <div class="well" style="margin-bottom: 40px;">
         <div class="row">
             <div class="col-xs-2">
-                <div class="checkbox"><label><input type="checkbox"> Online</label></div>
+                <div class="checkbox"><label><input id="chkOnline" type="checkbox"> Online</label></div>
             </div>
             <div class="col-xs-2">
-                <div class="checkbox"><label><input type="checkbox"> Screenshots</label></div>
+                <div class="checkbox"><label><input id="chkScreenshots" type="checkbox"> Screenshots</label></div>
             </div>
             <div class="col-xs-2">
                 <div class="checkbox"><label><input type="checkbox"> No Wait</label></div>
             </div>
             <div class="col-xs-3">
-                <select class="form-control">
-                    <option>Sort On: Loves</option>
-                    <option>Sort On: Users, Highest to Lowest</option>
-                    <option>Sort On: Users, Lowest to Highest</option>
-                    <option>Sort On: Reviews</option>
+                <select class="form-control" id="selectSort">
+                    <option value="0">Sort On: Loves</option>
+                    <option value="1">Sort On: Users, Highest to Lowest</option>
+                    <option value="2">Sort On: Users, Lowest to Highest</option>
+                    <option value="3">Sort On: Reviews</option>
                 </select>
             </div>
             <div class="col-xs-3">
-                <button class="btn btn-default">Update Search</button>
+                <button class="btn btn-default" id="btnSearch">Update Search</button>
             </div>
         </div>
     </div>
