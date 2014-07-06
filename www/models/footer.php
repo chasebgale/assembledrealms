@@ -10,4 +10,28 @@
     <script>
     (adsbygoogle = window.adsbygoogle || []).push({});
     </script>
+    <script>
+        $(function() {
+            console.log('Document ready!');
+            setTimeout(
+              function() 
+              { 
+                console.log('1 second later and...');
+                if ($('#footer_ad').is(':hidden')) {
+                    $('#footer').append('<div id="footer_msg" style="display: none; width: 900px; margin: 0 auto;" class="panel panel-danger">' +
+                                            '<div class="panel-heading"><span class="glyphicon glyphicon-exclamation-sign"></span> We need your help!</div>' +
+                                            '<div class="panel-body">' +
+                                                '<h3>If you enjoy this service, please whitelist us in your ad-blocking plugin!</h3>' +
+                                                '<p class="text-justify">Ads put food on the table! A developer with a full belly is a happy developer. Happy developers continue to write code and improve services! ' +
+                                                'If an ad offended or irritated you, or if you have a suggestion, please feel free to send it over: <a href="mailto:outreach@assembledrealms.com">outreach@assembledrealms.com</a></p>' +
+                                            '</div>' +
+                                        '</div>');
+                    $('#footer_msg').fadeIn();
+                    console.log('...ad was blocked, appended message!');
+                } else {
+                    console.log('...ad does not appear blocked!');
+                }
+            }, 1000);
+        });
+    </script>
 </div>
