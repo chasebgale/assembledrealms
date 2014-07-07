@@ -1,4 +1,4 @@
-<div class="navbar navbar-default navbar-fixed-top" role="navigation">
+<div class="navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
     <div class="navbar-header">
       <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -31,6 +31,7 @@
           </a>
           <ul class="dropdown-menu" role="menu" aria-labelledby="helpDropdown">
             <li role="presentation"><a role="menuitem" tabindex="-1" href="/blog/index.php/posts/an-adventure-in-the-making">About</a></li>
+            <li role="presentation"><a role="menuitem" tabindex="-1" href="/user/?1">Contact</a></li>
             <li role="presentation" class="divider"></li>
             <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Tour</a></li>
             <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Builder 101</a></li>

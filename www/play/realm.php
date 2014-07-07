@@ -19,7 +19,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     if ($realm['status'] == 0) {
         // TODO: Alert realm owner someone tried to play when offline,
         //       add messages to profile!
-        $alert = "Realm is offline! :(.";
+        $alert = "Realm is offline! <i class='fa fa-frown-o'></i>";
     }
     
 } else {
@@ -29,6 +29,15 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 ?>
 
 <div id="content">
+    <div id="realmBar" class="navbar-default" style="margin-bottom: 40px;">
+        <div class="container">
+            <button type="button" class="btn btn-default navbar-btn" data-toggle="button"><i class="fa fa-heart-o"></i> Love</button>
+            <button type="button" class="btn btn-default navbar-btn active" data-toggle="button"><i class="fa fa-heart"></i>  Loved!</button>
+            <a href="#">Loves</a>
+            <a href="#">Loves</a>
+        </div>
+    </div>
+    
     <?php
     if ($alert) {
         echo "<h2>" . $alert . "</h2>";

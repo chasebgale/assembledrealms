@@ -129,6 +129,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
         <div class="playListRealm">
             
             <!-- Title -->
+            <!-- TODO: Realm url should be different if offline, else we are just forwarding them to an 'offline' message -->
             <a href="realm.php?<%- realm.id %>">
             <h3> <%- realm.title %>
             <div class="pull-right">

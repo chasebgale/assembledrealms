@@ -8,8 +8,7 @@ if(!isUserLoggedIn()) {
     die();
 }
 
-if(!empty($_POST))
-{
+if(!empty($_POST)) {
     try {
     
         // Undefined | Multiple Files | $_FILES Corruption Attack
@@ -81,6 +80,7 @@ if(!empty($_POST))
         echo $e->getMessage();
     }
 }
+
 
 require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 
@@ -161,3 +161,6 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 </div>
 
 <?php require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php"); ?>
+
+</body>
+</html>

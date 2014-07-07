@@ -104,14 +104,19 @@ echo "<div id='content'>";
 $wrapper = '<div class="panel panel-warning" style="width: 500px; margin: 0 auto; margin-bottom: 50px;">
                 <div class="panel-body">
                     <h2 style="text-align: center; margin-top: 0;"><small>
-                        %message%
+                        %message% Please take a moment to register or <a href="/account/login.php?%target%">login</a>.
                     </small></h2>
                 </div>
            </div>';
+	   
+$wrapper = str_replace("%target%", $_SERVER['QUERY_STRING'], $wrapper);
 
 switch ($_SERVER['QUERY_STRING']) {
     case '0':
-        echo str_replace("%message%", "You must be logged in to access our build tools. Please take a moment to register or <a href='/account/login.php?0'>login</a>.", $wrapper);
+        echo str_replace("%message%", "You must be logged in to access our build tools.", $wrapper);
+        break;
+    case '1':
+        echo str_replace("%message%", "You must be logged in to enter a realm.", $wrapper);
         break;
 }
 
