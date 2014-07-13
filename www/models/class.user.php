@@ -122,16 +122,30 @@ class loggedInUser {
 	{
 		global $mysqli,$db_table_prefix;
 		$stmt = $mysqli->prepare("SELECT 
-			*
-			FROM realms
-			WHERE  user_id = ? AND
-			id = ?");
-		$stmt->bind_param("ii", $this->user_id, $realm_id);
+				realms.*, uc_users.display_name
+				FROM realms
+				INNER JOIN uc_users
+				ON realms.user_id = uc_users.id
+				WHERE realms.id = ?"
+			);
+		$stmt->bind_param("i", $realm_id);
 		$stmt->execute();
-		$stmt->bind_result($id, $user_id, $title, $description, $status, $players, $funds, $screenshots, $loves, $url);
+		$stmt->bind_result($id, $user_id, $title, $description, $status, $players, $funds, $screenshots, $loves, $url, $comments, $display_name);
 		$stmt->fetch();
 		$stmt->close();
-		return array('id' => $id, 'user_id' => $user_id, 'title' => $title, 'description' => $description, 'status' => $status, 'players' => $players, 'funds' => $funds, 'screenshots' => $screenshots, 'loves' => $loves, 'url' => $url);
+		return array('id' => $id,
+			     'user_id' => $user_id,
+			     'title' => $title,
+			     'description' => $description,
+			     'status' => $status,
+			     'players' => $players,
+			     'funds' => $funds,
+			     'screenshots' => $screenshots,
+			     'loves' => $loves,
+			     'url' => $url,
+			     'display_name' => $display_name,
+			     'comments' => $comments
+			     );
 	}
     
     
@@ -148,6 +162,29 @@ class loggedInUser {
         
 		while ($stmt->fetch()){
 		    $row[] = array('id' => $id, 'user_id' => $user_id, 'title' => $title, 'description' => $description, 'status' => $status, 'players' => $players, 'funds' => $funds, 'screenshots' => $screenshots, 'loves' => $loves, 'url' => $url);
+		}
+		$stmt->close();
+		return ($row);
+	}
+	
+	public function fetchRealmComments($realm_id)
+	{
+		global $mysqli,$db_table_prefix;
+		$stmt = $mysqli->prepare("SELECT *
+			FROM realm_comments
+			WHERE realm_id = ?");
+		$stmt->bind_param("i", $realm_id);
+		$stmt->execute();
+        
+		$stmt->bind_result($id, $realm_id, $user_id, $parent_id, $content);
+        
+		while ($stmt->fetch()){
+		    $row[] = array('id' => $id,
+				   'realm_id' => $realm_id,
+				   'user_id' => $user_id,
+				   'parent_id' => $parent_id,
+				   'content' => $content
+				   );
 		}
 		$stmt->close();
 		return ($row);
