@@ -186,7 +186,8 @@ class loggedInUser {
 				FROM realm_comments
 				INNER JOIN uc_users
 				ON realm_comments.user_id = uc_users.id
-				WHERE realm_comments.realm_id = ?"
+				WHERE realm_comments.realm_id = ?
+				ORDER BY id ASC"
 				);
 		$stmt->bind_param("i", $realm_id);
 		$stmt->execute();
@@ -207,19 +208,21 @@ class loggedInUser {
 		return ($row);
 	}
 	
-	public function createRealmComment($realmID, $content)
+	public function createRealmComment($realmID, $content, $parentID = NULL)
 	{
 		global $mysqli,$db_table_prefix;
 		$stmt = $mysqli->prepare("INSERT INTO realm_comments (
 			realm_id,
 			user_id,
-			content
+			content,
+			parent_id
 			)
 			VALUES (
 			?,
 			?,
+			?,
 			?)");
-		$stmt->bind_param("iis", $realmID, $this->user_id, $content);
+		$stmt->bind_param("iisi", $realmID, $this->user_id, $content, $parentID);
 		$stmt->execute();
 		$inserted_id = $mysqli->insert_id;
 		$stmt->close();

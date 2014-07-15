@@ -17,7 +17,11 @@ if ($method == 'POST') {
     
             if (isset($_POST['comment'])) {
                 // POST COMMENT
-                $row = $loggedInUser->createRealmComment($_POST['realmID'], $_POST['comment']);
+                if (isset($_POST['parentID'])) {
+                    $row = $loggedInUser->createRealmComment($_POST['realmID'], $_POST['comment'], $_POST['parentID']);
+                } else {
+                    $row = $loggedInUser->createRealmComment($_POST['realmID'], $_POST['comment']);
+                }
                 echo json_encode($row);
             } else {
                 // FETCH COMMENTS
@@ -106,31 +110,58 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     ?>
     
     <div id="comment" style="display: none;" class="well clearfix">
-        <textarea class="form-control" rows="10" cols="100" id="commentContent" placeholder="Add your voice to the conversation..."></textarea>
+        <textarea class="form-control" rows="5" cols="100" id="commentContent" placeholder="Add your voice to the conversation..."></textarea>
         <button id="btnAddComment" style="margin-top: 10px;" class="btn btn-default pull-right">Add Comment</button>
     </div>
-
+    
     <div>
-        <ul id="comments" class="media-list">
+        <ul id="comments" class="media-list" style="display:none;">
         </ul>
     </div>
+    
 </div>
 
 <script id="comments_template" type="text/template">
     
 <% _.each( comments, function( comment ){ %>
     
+    <% if (!comment.parent_id) { %>
     <li class="media">
-        <a class="pull-left" href="#">
+        <a class="pull-left" href="/user/?<%-comment.user_id%>">
             <img width="50" height="50" class="media-object" src="/img/profiles/<%- comment.user_id + ".jpg" %>">
         </a>
         <div class="media-body" data-id="<%- comment.id %>">
-            <h4 class="media-heading"><small><i><%- comment.display_name + ' commented ' + moment().utc(comment.timestamp).fromNow() %></i></small></h4>
+            <h4 class="media-heading">
+                <small><i>
+                <%= '<a href="/user/?' + comment.user_id + '">' + comment.display_name + '</a> commented ' + moment(comment.timestamp + '+00:00').fromNow() %>
+                <button class="btn btn-default btn-xs reply"><i class="fa fa-reply"></i></button>
+                </i></small>
+            </h4>
             <p><%- comment.content %></p>
         </div>
     </li>
+    <% } %>
         
 <% }); %>
+
+</script>
+
+<script id="comment_reply_template" type="text/template">
+    
+    <div class="media">
+        <a class="pull-left" href="/user/?<%-comment.user_id%>">
+            <img width="50" height="50" class="media-object" src="/img/profiles/<%- comment.user_id + ".jpg" %>">
+        </a>
+        <div class="media-body" data-id="<%- comment.id %>">
+            <h4 class="media-heading">
+                <small><i>
+                <%= '<a href="/user/?' + comment.user_id + '">' + comment.display_name + '</a> commented ' + moment(comment.timestamp + '+00:00').fromNow() %>
+                <button class="btn btn-default btn-xs reply"><i class="fa fa-reply"></i></button>
+                </i></small>
+            </h4>
+            <p><%- comment.content %></p>
+        </div>
+    </div>
 
 </script>
 
@@ -142,8 +173,10 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     $(document).ready(function () {
         
         var templateFn = _.template($('#comments_template').html());
+        var templateReplyFn = _.template($('#comment_reply_template').html());
         
        $('#btnLove').on('click', function (e) {
+        
             e.preventDefault();
             
             var button = $(this);
@@ -168,7 +201,17 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
             $.post( "realm.php", { realmID: "<?=$realmID?>" })
                 .done(function( data ) {
                     if (data !== "null") {
-                        $("#comments").html(templateFn({ 'comments': JSON.parse( data ) }));
+                        data = JSON.parse( data );
+                        $("#comments").html(templateFn({ 'comments': data }));
+                        
+                        for (var i =0; i < data.length; i++) {
+                            if (data[i].parent_id) {
+                                var target = $('#comments').find('[data-id="' + data[i].parent_id + '"]');
+                                target.append(templateReplyFn({'comment': data[i]}));
+                            }
+                        }
+                        
+                        $('#comments').fadeIn();
                         $("#comment").fadeIn();
                     }
                 });
@@ -201,6 +244,56 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                 });
             
        });
+       
+       $('#comments').on('click', '.reply', function (e) {
+            var button = $(this);
+            var contentBlock = button.closest('div [data-id]');
+            var commentID = contentBlock.attr('data-id');
+            
+            var existingReplyToBlock = $('#replyTo');
+            
+            if (existingReplyToBlock.length > 0) {
+                existingReplyToBlock.remove();
+            }
+            
+            contentBlock.append('<div id="replyTo" style="display: none;" class="well clearfix">' +
+                                '<textarea class="form-control" rows="5" cols="100" id="replyToCommentContent" placeholder="Add your voice to the conversation..."></textarea>' +
+                                '<button id="replyToComment" data-id="' + commentID + '" style="margin-top: 10px;" class="btn btn-default pull-right">Add Comment</button>' +
+                                '</div>'
+                                );
+            
+            $('#replyTo').fadeIn();
+       });
+       
+       $('#comments').on('click', '#replyToComment', function (e) {
+            var button = $(this);
+            
+            button.attr('disabled', true);
+            button.html('<i class="fa fa-cog fa-spin"></i> Add Comment');
+            
+            var commentID = button.attr('data-id');
+            
+            $.post( "realm.php", { realmID: "<?=$realmID?>", comment: $('#replyToCommentContent').val(), parentID: commentID })
+                .done(function( data ) {
+                    if (data !== "null") {
+                        
+                        data = JSON.parse( data );
+                        
+                        var target = $('#comments').find('[data-id="' + commentID + '"]');
+                        target.append(templateReplyFn({'comment': data}));
+                        
+                        $('#replyTo').remove();
+                        
+                        // Scroll page to new comment:
+                        $('html, body').animate({
+                            scrollTop: $('#comments').find('[data-id="' + data.id + '"]').offset().top
+                        }, 1000);
+
+                    }
+                });
+       });
+       
+       
     });
 </script>
 
