@@ -178,6 +178,33 @@ class loggedInUser {
 		return ($row);
 	}
 	
+	public function lovesRealm($realm_id)
+	{
+		global $mysqli,$db_table_prefix;
+		
+		$love = false;
+		
+		$stmt = $mysqli->prepare("SELECT 
+				id
+				FROM realm_loves
+				WHERE realm_id = ? 
+				AND user_id = ?"
+			);
+		$stmt->bind_param("ii", $realm_id, $this->user_id);
+		$stmt->execute();
+		$stmt->store_result();
+		$stmt->bind_result($id);
+		$stmt->fetch();
+		
+		if ($stmt->num_rows > 0){
+			$love = true;
+		}
+		
+		$stmt->close();
+		
+		return ($love);
+	}
+	
 	public function fetchRealmComments($realm_id)
 	{
 		global $mysqli,$db_table_prefix;

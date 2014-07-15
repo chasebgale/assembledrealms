@@ -42,6 +42,7 @@ $alert = '';
 if (is_numeric($_SERVER['QUERY_STRING'])) {
     $realmID = $_SERVER['QUERY_STRING'];
     $realm = $loggedInUser->fetchRealm($realmID);
+    $loved = $loggedInUser->lovesRealm($realmID);
     
     if ($realm['status'] == 0) {
         // TODO: Alert realm owner someone tried to play when offline,
@@ -86,7 +87,12 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
         </div>
         
         <div class="pull-right">
+        <?php if ($loved) { ?>
+            <button id="btnLove" type="button" class="btn btn-default navbar-btn" disabled="disabled"><i class="fa fa-heart"></i> Loved!</button>
+        <?php } else { ?>
             <button id="btnLove" type="button" class="btn btn-default navbar-btn" data-toggle="button"><i class="fa fa-heart-o"></i> Love</button>
+        <?php } ?>
+            
             <button id="btnComment" type="button" class="btn btn-default navbar-btn"><i class="fa fa-comments-o"></i> Comment</button>
         </div>
             
