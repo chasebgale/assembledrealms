@@ -12,6 +12,8 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
     
 ?>
 
+    <div style="width: 500px; display: none; margin: 0 auto; margin-top: 100px;" class="alert alert-danger" id="errorMessage"></div>
+
     <div id="loading" style="width: 500px; margin: 0 auto; margin-top: 100px;">
         <div class="progress progress-striped active">
             <div class="progress-bar"  role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%;">

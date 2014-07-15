@@ -158,10 +158,21 @@ class loggedInUser {
 		$stmt->bind_param("i", $this->user_id);
 		$stmt->execute();
         
-		$stmt->bind_result($id, $user_id, $title, $description, $status, $players, $funds, $screenshots, $loves, $url);
+		$stmt->bind_result($id, $user_id, $title, $description, $status, $players, $funds, $screenshots, $loves, $url, $comments);
         
 		while ($stmt->fetch()){
-		    $row[] = array('id' => $id, 'user_id' => $user_id, 'title' => $title, 'description' => $description, 'status' => $status, 'players' => $players, 'funds' => $funds, 'screenshots' => $screenshots, 'loves' => $loves, 'url' => $url);
+		    $row[] = array('id' => $id,
+				   'user_id' => $user_id,
+				   'title' => $title,
+				   'description' => $description,
+				   'status' => $status,
+				   'players' => $players,
+				   'funds' => $funds,
+				   'screenshots' => $screenshots,
+				   'loves' => $loves,
+				   'url' => $url,
+				   'comments' => $comments
+				   );
 		}
 		$stmt->close();
 		return ($row);
@@ -170,24 +181,69 @@ class loggedInUser {
 	public function fetchRealmComments($realm_id)
 	{
 		global $mysqli,$db_table_prefix;
-		$stmt = $mysqli->prepare("SELECT *
-			FROM realm_comments
-			WHERE realm_id = ?");
+		$stmt = $mysqli->prepare("SELECT 
+				realm_comments.*, uc_users.display_name
+				FROM realm_comments
+				INNER JOIN uc_users
+				ON realm_comments.user_id = uc_users.id
+				WHERE realm_comments.realm_id = ?"
+				);
 		$stmt->bind_param("i", $realm_id);
 		$stmt->execute();
         
-		$stmt->bind_result($id, $realm_id, $user_id, $parent_id, $content);
+		$stmt->bind_result($id, $realm_id, $user_id, $parent_id, $content, $timestamp, $display_name);
         
 		while ($stmt->fetch()){
 		    $row[] = array('id' => $id,
 				   'realm_id' => $realm_id,
 				   'user_id' => $user_id,
 				   'parent_id' => $parent_id,
-				   'content' => $content
+				   'content' => $content,
+				   'timestamp' => $timestamp,
+				   'display_name' => $display_name
 				   );
 		}
 		$stmt->close();
 		return ($row);
+	}
+	
+	public function createRealmComment($realmID, $content)
+	{
+		global $mysqli,$db_table_prefix;
+		$stmt = $mysqli->prepare("INSERT INTO realm_comments (
+			realm_id,
+			user_id,
+			content
+			)
+			VALUES (
+			?,
+			?,
+			?)");
+		$stmt->bind_param("iis", $realmID, $this->user_id, $content);
+		$stmt->execute();
+		$inserted_id = $mysqli->insert_id;
+		$stmt->close();
+		
+		$stmt = $mysqli->prepare("SELECT 
+				realm_comments.*, uc_users.display_name
+				FROM realm_comments
+				INNER JOIN uc_users
+				ON realm_comments.user_id = uc_users.id
+				WHERE realm_comments.id = ?"
+				);
+		$stmt->bind_param("i", $inserted_id);
+		$stmt->execute();
+		$stmt->bind_result($id, $realm_id, $user_id, $parent_id, $content, $timestamp, $display_name);
+		$stmt->fetch();
+		$stmt->close();
+		return array('id' => $id,
+				'realm_id' => $realm_id,
+				'user_id' => $user_id,
+				'parent_id' => $parent_id,
+				'content' => $content,
+				'timestamp' => $timestamp,
+				'display_name' => $display_name
+				);
 	}
 	
 	//Is a user has a permission

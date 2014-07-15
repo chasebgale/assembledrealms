@@ -24,19 +24,19 @@ exports.create = function(req, res, next){
 
 };
 
-exports.open = function(req, res){
+exports.open = function(req, res, next){
   
   var files = [];
   var file = {};
   
   git.Repo.open(__dirname + "/../projects/" + req.params.id, function(error, repo) {
-    if (error) throw error;
+    if (error) return next(error);
   
     repo.getMaster(function(error, branch) {
-      if (error) throw error;
+      if (error) return next(error);
   
       branch.getTree(function(error, tree) {
-        if (error) throw error;
+        if (error) return next(error);
 
         
         // `walk()` returns an event.

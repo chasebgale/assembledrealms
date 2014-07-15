@@ -74,10 +74,21 @@ if ($method == 'POST') {
     
     $stmt = $mysqli->prepare($SQL);
     $result = $stmt->execute();
-    $stmt->bind_result($id, $user_id, $title, $description, $status, $players_online, $funds, $screenshots, $loves, $url);
+    $stmt->bind_result($id, $user_id, $title, $description, $status, $players_online, $funds, $screenshots, $loves, $url, $comments);
             
     while ($stmt->fetch()){
-        $row[] = array('id' => $id, 'user_id' => $user_id, 'title' => $title, 'description' => $description, 'status' => $status, 'players_online' => $players_online, 'funds' => $funds, 'screenshots' => $screenshots, 'loves' => $loves, 'url' => $url);
+        $row[] = array('id' => $id,
+                       'user_id' => $user_id,
+                       'title' => $title,
+                       'description' => $description,
+                       'status' => $status,
+                       'players_online' => $players_online,
+                       'funds' => $funds,
+                       'screenshots' => $screenshots,
+                       'loves' => $loves,
+                       'url' => $url,
+                       'comments' => $comments
+                       );
     }
     $stmt->close();
     

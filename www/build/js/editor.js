@@ -340,9 +340,25 @@ function loadRealmRoot() {
         type: 'get',
         dataType: 'json',
         async: false
-    }).responseText;
+    });
     
-    if ((resp === null) || (resp === undefined)) {
+    // Server is up, error in server code
+    if (resp.status == 500) {
+        $('#loading').fadeOut();
+        $('#errorMessage').text(resp.responseText);
+        $('#errorMessage').fadeIn();
+        return;
+    }
+    
+    // Server is down, GET failed
+    if (resp.status == 0) {
+        $('#loading').fadeOut();
+        $('#errorMessage').text(resp.statusText);
+        $('#errorMessage').fadeIn();
+        return;
+    }
+    
+    if ((resp.responseText === null) || (resp.responseText === undefined)) {
         // Retry:
         
         __waitTime = __waitTime * 2;
