@@ -197,12 +197,10 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
        $('#btnComment').on('click', function (e) {
             e.preventDefault();
             
-            $('#comments').html('<i class="fa fa-cog fa-spin"></i> Loading the conversation...');
+            var button = $(this);
             
-            // Scroll page to comments section:
-            $('html, body').animate({
-                scrollTop: $("#comments").offset().top
-            }, 1000);
+            button.attr('disabled', true);
+            button.html('<i class="fa fa-cog fa-spin"></i> Comment');
             
             $.post( "realm.php", { realmID: "<?=$realmID?>" })
                 .done(function( data ) {
@@ -216,10 +214,17 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                                 target.append(templateReplyFn({'comment': data[i]}));
                             }
                         }
-                        
-                        $('#comments').fadeIn();
-                        $("#comment").fadeIn();
-                    }
+                    } 
+                    
+                    $('#comments').fadeIn();
+                    $("#comment").fadeIn(400, function() {
+                        // Scroll page to comments section:
+                        $('html, body').animate({
+                            scrollTop: $("#comment").offset().top - 100
+                        }, 400);
+                    });
+                    
+                    button.html('<i class="fa fa-comments-o"></i> Comment');
                 });
                 
        });

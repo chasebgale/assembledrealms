@@ -183,8 +183,9 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
         
         <% if (realm.description) { %>
             <p class="text-justify"><%- realm.description %></p>
+        <% } else { %>
+            <p class="text-justify">&nbsp;</p>
         <% } %>
-            
         </div>
         
     <% }); %>
