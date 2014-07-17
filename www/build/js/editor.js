@@ -13,11 +13,14 @@ var __checkInMsg;
 var __processingFiles = [];
 var __commitFiles = [];
 
-$(document).ready(function () {
+function initialize(projectID, projectURL) {
     
-    __projectId = window.location.search.slice(1);
-    __projectURL = 'http://debug-01.assembledrealms.com/api/project/' + __projectId;
-
+    //__projectId = window.location.search.slice(1);
+    //__projectURL = 'http://debug-01.assembledrealms.com/api/project/' + __projectId;
+    __projectId = projectID;
+    __projectURL = "http://" + projectURL + "/api/project/" + __projectId;
+    
+    
     __trackedStorageId = __projectId + "-tracking";
 
     if (sessionStorage[__trackedStorageId]) {
@@ -238,7 +241,7 @@ $(document).ready(function () {
 
     loadRealmRoot();
     
-});
+}
 
 function listCommitFiles() {
     

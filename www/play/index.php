@@ -74,7 +74,19 @@ if ($method == 'POST') {
     
     $stmt = $mysqli->prepare($SQL);
     $result = $stmt->execute();
-    $stmt->bind_result($id, $user_id, $title, $description, $status, $players_online, $funds, $screenshots, $loves, $url, $comments);
+    $stmt->bind_result($id,
+                       $user_id,
+                       $title,
+                       $description,
+                       $status,
+                       $players_online,
+                       $funds,
+                       $screenshots,
+                       $loves,
+                       $url,
+                       $comments,
+                       $source
+                       );
             
     while ($stmt->fetch()){
         $row[] = array('id' => $id,
@@ -87,7 +99,8 @@ if ($method == 'POST') {
                        'screenshots' => $screenshots,
                        'loves' => $loves,
                        'url' => $url,
-                       'comments' => $comments
+                       'comments' => $comments,
+                       'source' => $source
                        );
     }
     $stmt->close();

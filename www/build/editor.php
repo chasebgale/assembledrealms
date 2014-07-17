@@ -8,6 +8,25 @@ if(!isUserLoggedIn()) {
     die();
 }
 
+$realmID = -1;
+$sourceURL = '';
+
+if (isset($_GET['id'])) {
+    if (is_numeric($_GET['id'])) {
+	$realmID = $_GET['id'];
+    }
+}
+
+if (isset($_GET['source'])) {
+    $sourceURL = $_GET['source'];
+}
+
+if (($realmID < 0) || ($sourceURL == '')) {
+    echo "realmID: " . $realmID;
+    echo "sourceURL: " . $sourceURL;
+    die();
+}
+    
 require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
     
 ?>
@@ -263,6 +282,12 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
     </script>
     
     <?php require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php"); ?>
+    
+    <script type="text/javascript">
+	$(document).ready(function () {
+	    initialize(<?php echo $realmID; ?>, "<?php echo $sourceURL; ?>");
+	});
+    </script>
 
     <script src="js/utilities.js"></script>
     <script src="js/stats.min.js"></script>

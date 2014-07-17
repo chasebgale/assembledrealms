@@ -130,7 +130,20 @@ class loggedInUser {
 			);
 		$stmt->bind_param("i", $realm_id);
 		$stmt->execute();
-		$stmt->bind_result($id, $user_id, $title, $description, $status, $players, $funds, $screenshots, $loves, $url, $comments, $display_name);
+		$stmt->bind_result($id,
+				   $user_id,
+				   $title,
+				   $description,
+				   $status,
+				   $players,
+				   $funds,
+				   $screenshots,
+				   $loves,
+				   $url,
+				   $comments,
+				   $source,
+				   $display_name // DISPLAY NAME ALWAYS LAST (JOIN)
+				   );
 		$stmt->fetch();
 		$stmt->close();
 		return array('id' => $id,
@@ -144,7 +157,8 @@ class loggedInUser {
 			     'loves' => $loves,
 			     'url' => $url,
 			     'display_name' => $display_name,
-			     'comments' => $comments
+			     'comments' => $comments,
+			     'source' => $source
 			     );
 	}
     
@@ -158,7 +172,19 @@ class loggedInUser {
 		$stmt->bind_param("i", $this->user_id);
 		$stmt->execute();
         
-		$stmt->bind_result($id, $user_id, $title, $description, $status, $players, $funds, $screenshots, $loves, $url, $comments);
+		$stmt->bind_result($id,
+				   $user_id,
+				   $title,
+				   $description,
+				   $status,
+				   $players,
+				   $funds,
+				   $screenshots,
+				   $loves,
+				   $url,
+				   $comments,
+				   $source
+				   );
         
 		while ($stmt->fetch()){
 		    $row[] = array('id' => $id,
@@ -171,7 +197,8 @@ class loggedInUser {
 				   'screenshots' => $screenshots,
 				   'loves' => $loves,
 				   'url' => $url,
-				   'comments' => $comments
+				   'comments' => $comments,
+				   'source' => $source
 				   );
 		}
 		$stmt->close();
