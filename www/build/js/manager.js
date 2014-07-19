@@ -1,5 +1,13 @@
 $(document).ready(function () {
    
+   marked.setOptions({
+      sanitize: true
+   });
+   
+   $("#realmFundingSource").on("keyup", function (e) {
+      $("#realmFundingDisplay").html( marked($(this).val()) );
+   });
+   
    $("#button-destroy-realm").on("click", function (e) {
     
         e.preventDefault();
