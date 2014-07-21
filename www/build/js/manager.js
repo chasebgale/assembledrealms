@@ -5,7 +5,20 @@ $(document).ready(function () {
    });
    
    $("#realmFundingSource").on("keyup", function (e) {
-      $("#realmFundingDisplay").html( marked($(this).val()) );
+      
+      var variables = {};
+      variables.funds = "$12.45";
+      variables.priceHour = "$0.009";
+      variables.priceDay = "$0.22";
+      variables.fundsToTime = "9 days, 11 hours";
+      
+      var markedOutput = marked($(this).val());
+      
+      _.forIn(variables, function(value, key) {
+         markedOutput = markedOutput.replace('{' + key + '}', value);
+      });
+      
+      $("#realmFundingDisplay").html( markedOutput );
    });
    
    $("#button-destroy-realm").on("click", function (e) {
