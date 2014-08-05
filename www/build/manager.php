@@ -22,15 +22,49 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
     <h2>
         <?php echo $realm["title"] ?>
-        <br />
-        <small><?php echo $realm["description"] ?></small>
     </h2>
 
     <div class="panel panel-default">
         <div class="panel-heading">Primary Actions</div>
         <div class="panel-body">
-            <button>Take Realm Offline</button>
-            <button>Publish Latest Code (restarts realm)</button>
+            <div class="row">
+                <div class="col-md-3">
+                    <button>Take Realm Offline</button>
+                </div>
+                <div class="col-md-9">
+                    <p class="text-justify">This is a description of what the button does. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed augue nisl, pretium at sapien nec, commodo venenatis augue. Nulla aliquet et mi et iaculis. Aliquam auctor felis quis euismod bibendum. Duis vel libero cursus, varius sem quis, malesuada leo.</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <button>Publish Latest Code</button>
+                </div>
+                <div class="col-md-9">
+                    <p class="text-justify">Restarts realm. etc. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed augue nisl, pretium at sapien nec, commodo venenatis augue. Nulla aliquet et mi et iaculis. Aliquam auctor felis quis euismod bibendum. Duis vel libero cursus, varius sem quis, malesuada leo.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="panel panel-default">
+        <div class="panel-heading">Realm Details</div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <p class="text-right"><strong>Title</strong></p>
+                </div>
+                <div class="col-md-9">
+                    <span><?php echo $realm["title"] ?></span>
+                </div>
+            </div>
+            <div class="row" style="padding-top: 8px;">
+                <div class="col-md-3">
+                    <p class="text-right"><strong>Description</strong></p>
+                </div>
+                <div class="col-md-9">
+                    <p class="text-justify"><?php echo $realm["description"] ?></p>
+                </div>
+            </div>
         </div>
     </div>
 
