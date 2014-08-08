@@ -118,6 +118,30 @@ class loggedInUser {
 		$stmt->close();	
 	}
     
+	public function fetchRealmMarkdown($realm_id)
+	{
+		global $mysqli,$db_table_prefix;
+		$stmt = $mysqli->prepare("SELECT 
+					*
+					FROM realm_markdown
+					WHERE realm_id = ?"
+			);
+		$stmt->bind_param("i", $realm_id);
+		$stmt->execute();
+		$stmt->bind_result($id,
+				   $realm_id,
+				   $funding,
+				   $description
+				   );
+		$stmt->fetch();
+		$stmt->close();
+		return array('id' => $id,
+			     'realm_id' => $user_id,
+			     'funding' => $funding,
+			     'description' => $description
+			     );
+	}
+    
 	public function fetchRealm($realm_id)
 	{
 		global $mysqli,$db_table_prefix;

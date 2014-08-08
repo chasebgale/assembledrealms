@@ -4,6 +4,29 @@ $(document).ready(function () {
       sanitize: true
    });
    
+   $.ajax({
+            url: 'http://www.assembledrealms.com/build/manager.php',
+            type: 'post',
+            dataType: 'json',
+            data: {realm_id: realmID}
+   })
+   .done(function (data) {
+      console.log(data);
+      if (data.message === "OK") {
+         
+      } else {
+       
+      }
+
+   })
+   .fail(function(data) {
+       console.log(data);
+       $('#newFileCreateAlert').text('Network Error: ' + data.statusText);
+       $('#newFileCreateAlert').fadeIn();
+           // Update DOM to reflect we messed up:
+           //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
+   })
+   
    $("#realmFundingSource").on("keyup", function (e) {
       
       var variables = {};
