@@ -73,6 +73,24 @@ $(document).ready(function () {
             }
         });
         
-    });
+   });
+   
+   $('#details-description').on("keyup", function (e) {
+      enableSave();
+   });
     
 });
+
+function enableSave() {
+   var button = $('#savebutton');
+      
+   button.removeAttr('disabled');
+   button.html('<i class="fa fa-exclamation-triangle"></i> Save Changes!');
+}
+
+function disableSave() {
+   var button = $('#savebutton');
+      
+   button.attr('disabled', 'disabled');
+   button.html('Save Changes!');
+}

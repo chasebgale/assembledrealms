@@ -58,6 +58,10 @@ div#comment {
     margin: 0 auto;
 }
 
+#savebar {
+    margin-top: 18px;
+}
+
 #form-register {
     width: 400px;
     margin: 0 auto;

@@ -30,9 +30,14 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
 <div id="content">
 
-    <h2>
-        <?php echo $realm["title"] ?>
-    </h2>
+	<div class="row" style="padding-bottom: 26px;">
+		<div class="col-md-8">
+			<h2><?php echo $realm["title"] ?></h2>
+		</div>
+		<div id="savebar" class="col-md-4">
+			<button id="savebutton" disabled="disabled" class="btn btn-default pull-right">Save Changes!</button>
+		</div>
+	</div>
 
     <div class="panel panel-default">
         <div class="panel-heading">Primary Actions</div>
@@ -61,7 +66,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
         <div class="panel-body">
             <div class="row">
                 <div class="col-md-3">
-                    <p class="text-right"><strong>Title</strong></p>
+                    <p class="text-right text-muted"><strong>Title</strong></p>
                 </div>
                 <div class="col-md-9">
                     <span><?php echo $realm["title"] ?></span>
@@ -69,10 +74,10 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
             </div>
             <div class="row" style="padding-top: 8px;">
                 <div class="col-md-3">
-                    <p class="text-right"><strong>Description</strong></p>
+                    <p class="text-right text-muted"><strong>Description</strong></p>
                 </div>
                 <div class="col-md-9">
-                    <textarea class="form-control" rows="4"><?php echo $realm["description"] ?></textarea>
+                    <textarea id="details-description" class="form-control" rows="4"><?php echo $realm["description"] ?></textarea>
                 </div>
             </div>
         </div>
