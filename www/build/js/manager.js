@@ -69,8 +69,24 @@ $(document).ready(function () {
    });
    
    $('#chkFunding').on("change", function (e) {
-       
+      if ($(this).is(':checked') == false) {
+         $('#realmFundingSource').prop('disabled', true);
+         $('#realmFundingSource').parent().css('user-select', 'none');
+         $('#realmFundingSource').parent().css('opacity', '0.3');
+         $('#realmFundingSource').css('user-select', 'none');
+      } else {
+         $('#realmFundingSource').removeAttr('disabled');
+         $('#realmFundingSource').parent().css('user-select', 'text');
+         $('#realmFundingSource').parent().css('opacity', '1.0');
+         $('#realmFundingSource').css('user-select', 'text');
+      }
    });
+   
+   if ($('#chkFunding').is(':checked') == false) {
+      $('#realmFundingSource').prop('disabled', true);
+      $('#realmFundingSource').parent().css('user-select', 'none');
+      $('#realmFundingSource').css('user-select', 'none');
+   }
    
 });
 
