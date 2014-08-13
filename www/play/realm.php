@@ -115,7 +115,20 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     }
     ?>
     
-    <div id="comment" style="display: none;" class="well clearfix">
+    <?php if ($realm['show_funding']) { ?>
+    <h4 class="text-muted" style="margin-top: 24px;">Funding</h4>
+    <hr />
+    <div id="funding"></div>
+    <?php } ?>
+    
+    <h4 class="text-muted" style="padding-top: 24px;">Description</h4>
+    <hr />
+    <div id="description"></div>
+    
+    <h4 class="text-muted" style="padding-top: 24px;">Comments</h4>
+    <hr />
+    <button id="btnLoadComments" type="button" class="btn btn-default"><i class="fa fa-comments-o"></i> Load Comments</button>
+    <div id="comment" style="display: none;" class="clearfix">
         <textarea class="form-control" rows="5" cols="100" id="commentContent" placeholder="Add your voice to the conversation..."></textarea>
         <button id="btnAddComment" style="margin-top: 10px;" class="btn btn-default pull-right">Add Comment</button>
     </div>
@@ -176,6 +189,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 <?php require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php"); ?>
 
 <script type="text/javascript">
+    
     $(document).ready(function () {
         
         var templateFn = _.template($('#comments_template').html());
@@ -202,31 +216,29 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
             button.attr('disabled', true);
             button.html('<i class="fa fa-cog fa-spin"></i> Comment');
             
-            $.post( "realm.php", { realmID: "<?=$realmID?>" })
-                .done(function( data ) {
-                    if (data !== "null") {
-                        data = JSON.parse( data );
-                        $("#comments").html(templateFn({ 'comments': data }));
-                        
-                        for (var i =0; i < data.length; i++) {
-                            if (data[i].parent_id) {
-                                var target = $('#comments').find('[data-id="' + data[i].parent_id + '"]');
-                                target.append(templateReplyFn({'comment': data[i]}));
-                            }
-                        }
-                    } 
-                    
-                    $('#comments').fadeIn();
-                    $("#comment").fadeIn(400, function() {
-                        // Scroll page to comments section:
-                        $('html, body').animate({
-                            scrollTop: $("#comment").offset().top - 100
-                        }, 400);
-                    });
-                    
-                    button.html('<i class="fa fa-comments-o"></i> Comment');
-                });
+            var loadButton = $('#loadComments');
+            
+            loadButton.attr('disabled', true);
+            loadButton.html('<i class="fa fa-cog fa-spin"></i> Load Comments');
+            
+            loadComments();
                 
+       });
+       
+       $('#btnLoadComments').on('click', function (e) {
+            e.preventDefault();
+            
+            var button = $(this);
+            
+            button.attr('disabled', true);
+            button.html('<i class="fa fa-cog fa-spin"></i> Load Comments');
+            
+            var topButton = $('#btnComment');
+            
+            topButton.attr('disabled', true);
+            topButton.html('<i class="fa fa-cog fa-spin"></i> Comment');
+            
+            loadComments();
        });
        
        $('#btnAddComment').on('click', function (e) {
@@ -304,8 +316,37 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                 });
        });
        
+       function loadComments() {
+            $.post( "realm.php", { realmID: "<?=$realmID?>" })
+            .done(function( data ) {
+                if (data !== "null") {
+                    data = JSON.parse( data );
+                    $("#comments").html(templateFn({ 'comments': data }));
+                    
+                    for (var i =0; i < data.length; i++) {
+                        if (data[i].parent_id) {
+                            var target = $('#comments').find('[data-id="' + data[i].parent_id + '"]');
+                            target.append(templateReplyFn({'comment': data[i]}));
+                        }
+                    }
+                } 
+                
+                $('#btnLoadComments').hide();
+                $('#comments').fadeIn();
+                $("#comment").fadeIn(400, function() {
+                    // Scroll page to comments section:
+                    $('html, body').animate({
+                        scrollTop: $("#comment").offset().top - 100
+                    }, 400);
+                });
+                
+                $('#btnComment').html('<i class="fa fa-comments-o"></i> Comment');
+                
+            });
+        }
        
     });
+    
 </script>
 
 </body>

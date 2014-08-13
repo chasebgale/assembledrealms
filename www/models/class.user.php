@@ -129,17 +129,18 @@ class loggedInUser {
 		$stmt->bind_param("i", $realm_id);
 		$stmt->execute();
 		$stmt->bind_result($id,
-				   $realm_id,
+				   $realm_id_db,
 				   $funding,
 				   $description
 				   );
 		$stmt->fetch();
 		$stmt->close();
+		
 		return array('id' => $id,
-			     'realm_id' => $user_id,
-			     'funding' => $funding,
-			     'description' => $description
-			     );
+		     'realm_id' => $realm_id_db,
+		     'funding' => $funding,
+		     'description' => $description
+		);
 	}
     
 	public function fetchRealm($realm_id)
@@ -166,6 +167,7 @@ class loggedInUser {
 				   $url,
 				   $comments,
 				   $source,
+				   $show_funding,
 				   $display_name // DISPLAY NAME ALWAYS LAST (JOIN)
 				   );
 		$stmt->fetch();
@@ -182,7 +184,8 @@ class loggedInUser {
 			     'url' => $url,
 			     'display_name' => $display_name,
 			     'comments' => $comments,
-			     'source' => $source
+			     'source' => $source,
+			     'show_funding' => $show_funding
 			     );
 	}
     
@@ -207,7 +210,8 @@ class loggedInUser {
 				   $loves,
 				   $url,
 				   $comments,
-				   $source
+				   $source,
+				   $show_funding
 				   );
         
 		while ($stmt->fetch()){
@@ -222,7 +226,8 @@ class loggedInUser {
 				   'loves' => $loves,
 				   'url' => $url,
 				   'comments' => $comments,
-				   'source' => $source
+				   'source' => $source,
+				   'show_funding' => $show_funding
 				   );
 		}
 		$stmt->close();

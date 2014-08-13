@@ -21,6 +21,11 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 
 if (is_numeric($_SERVER['QUERY_STRING'])) {
     $realm = $loggedInUser->fetchRealm($_SERVER['QUERY_STRING']);
+    
+    $funding_opacity = "0.3";
+    if ($realm["display_funding"]) {
+	$funding_opacity = "1.0";
+    }
 } else {
     echo "<h2>Please stop tinkering.</h2>";
     die();
@@ -89,27 +94,17 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
         <div class="panel-heading">
             <div class="checkbox" style="display:inline">
                 <label>
-                   <input type="checkbox" style="float:inherit;"/> Display Crowd Funding / Donations Section
+                   <input id="chkFunding" type="checkbox" <?php if ($realm["display_funding"]) echo 'checked="checked"' ?> style="float:inherit;"/> Display Crowd Funding / Donations Section
                 </label>
             </div>
         </div>
-        <div class="panel-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <h4>Markdown Source</h4>
-                </div>
-                <div class="col-md-6">
-                    <h4>Display Preview</h4>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <textarea id="realmFundingSource" class="form-control" rows="20"></textarea>
-                </div>
-                <div class="col-md-6" id="realmFundingDisplay">
-                    
-                </div>
-            </div>
+        <div class="panel-body" style="opacity: <?php echo $funding_opacity ?>;">
+		<h4 class="text-muted">Markdown Source</h4>
+		<textarea id="realmFundingSource" class="form-control" rows="12"></textarea>
+		
+		<h4 class="text-muted" style="margin-top: 24px;">Display Preview</h4>
+		<div id="realmFundingDisplay">
+		</div>
         </div>
     </div>
 

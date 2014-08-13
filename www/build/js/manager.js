@@ -12,10 +12,10 @@ $(document).ready(function () {
    })
    .done(function (data) {
       console.log(data);
-      if (data.message === "OK") {
-         
+      if (data.funding == null) {
+         fetchFundingTemplate();
       } else {
-       
+      
       }
 
    })
@@ -29,19 +29,8 @@ $(document).ready(function () {
    
    $("#realmFundingSource").on("keyup", function (e) {
       
-      var variables = {};
-      variables.funds = "$12.45";
-      variables.priceHour = "$0.009";
-      variables.priceDay = "$0.22";
-      variables.fundsToTime = "9 days, 11 hours";
+      fundingMarkdown($(this).val());
       
-      var markedOutput = marked($(this).val());
-      
-      _.forIn(variables, function(value, key) {
-         markedOutput = markedOutput.replace('{' + key + '}', value);
-      });
-      
-      $("#realmFundingDisplay").html( markedOutput );
    });
    
    $("#button-destroy-realm").on("click", function (e) {
@@ -78,8 +67,39 @@ $(document).ready(function () {
    $('#details-description').on("keyup", function (e) {
       enableSave();
    });
-    
+   
+   $('#chkFunding').on("change", function (e) {
+       
+   });
+   
 });
+
+function fundingMarkdown(data) {
+   var variables = {};
+   variables.funds = "$12.45";
+   variables.priceHour = "$0.009";
+   variables.priceDay = "$0.22";
+   variables.fundsToTime = "9 days, 11 hours";
+   
+   var markedOutput = marked(data);
+   
+   _.forIn(variables, function(value, key) {
+      markedOutput = markedOutput.replace('{' + key + '}', value);
+   });
+   
+   $("#realmFundingDisplay").html( markedOutput );
+}
+
+function fetchFundingTemplate() {
+   $.get( "/data/markdown/funding.markdown", function( data ) {
+      $("#realmFundingSource").val( data );
+      fundingMarkdown(data);
+   });
+}
+
+function fetchDescriptionTemplate() {
+   
+}
 
 function enableSave() {
    var button = $('#savebutton');
