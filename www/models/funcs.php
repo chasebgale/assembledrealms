@@ -7,6 +7,10 @@ http://usercake.com
 //Functions that do not interact with DB
 //------------------------------------------------------------------------------
 
+function parse_boolean($obj) {
+    return filter_var($obj, FILTER_VALIDATE_BOOLEAN);
+}
+
 //Retrieve a list of all .php files in models/languages
 function getLanguageFiles()
 {

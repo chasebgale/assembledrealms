@@ -11,10 +11,57 @@ if(!isUserLoggedIn()) {
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method == 'POST') {
-    $raw = $loggedInUser->fetchRealmMarkdown($_POST['realm_id']);
+    $directive = $_POST['directive'];
     
-    echo json_encode($raw);
-    die();
+    if {$directive == 'fetch'} {
+	$raw = $loggedInUser->fetchRealmMarkdown($_POST['realm_id']);
+    
+	echo json_encode($raw);
+	die();
+    }
+    
+    if ($directive == 'update') {
+	
+	global $mysqli;
+	$mysqli->autocommit(FALSE);
+	
+	if ($_POST['markdown_funding'] || $_POST['markdown_description']) {
+		// INSERT OR CREATE REALM_MARKDOWN ROW
+		if ($_POST['markdown_create'] == true) {
+			$stmt_markdown = $mysqli->prepare("INSERT INTO realm_markdown(
+								user_id,
+								title,
+								description
+								)
+								VALUES (
+								?,
+								?,
+								?)"
+			);
+		} else {
+			$stmt_markdown = $mysqli->prepare("UPDATE ".$db_table_prefix."users
+								SET 
+								gitlab_id = ?,
+								gitlab_password = ?
+								WHERE
+								id = ?"
+			);
+		}
+	}
+	
+	
+	
+	$stmt = $mysqli->prepare("UPDATE ".$db_table_prefix."users
+		SET 
+		gitlab_id = ?,
+		gitlab_password = ?
+		WHERE
+		id = ?");
+	$stmt->bind_param("isi", $id, $password, $this->user_id);
+	$stmt->execute();
+	$stmt->close();	
+    }
+    
 }
 
 require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
@@ -23,7 +70,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     $realm = $loggedInUser->fetchRealm($_SERVER['QUERY_STRING']);
     
     $funding_opacity = "0.3";
-    if ($realm["display_funding"]) {
+    if ($realm["show_funding"]) {
 	$funding_opacity = "1.0";
     }
 } else {
@@ -82,7 +129,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                     <p class="text-right text-muted"><strong>Description</strong></p>
                 </div>
                 <div class="col-md-9">
-                    <textarea id="details-description" class="form-control" rows="4"><?php echo $realm["description"] ?></textarea>
+                    <textarea id="details-description" class="form-control monitored" data-id="description" rows="4"><?php echo $realm["description"] ?></textarea>
                 </div>
             </div>
         </div>
@@ -94,13 +141,13 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
         <div class="panel-heading">
             <div class="checkbox" style="display:inline">
                 <label>
-                   <input id="chkFunding" type="checkbox" <?php if ($realm["display_funding"]) echo 'checked="checked"' ?> style="float:inherit;"/> Display Crowd Funding / Donations Section
+                   <input id="chkFunding" type="checkbox" <?php if ($realm["show_funding"]) echo 'checked="checked"' ?> style="float:inherit;"/> Display Crowd Funding / Donations Section
                 </label>
             </div>
         </div>
         <div class="panel-body" style="opacity: <?php echo $funding_opacity ?>;">
 		<h4 class="text-muted">Markdown Source</h4>
-		<textarea id="realmFundingSource" class="form-control" rows="12"></textarea>
+		<textarea id="realmFundingSource" class="form-control monitored" data-id="markdown_funding" rows="12"></textarea>
 		
 		<h4 class="text-muted" style="margin-top: 24px;">Display Preview</h4>
 		<div id="realmFundingDisplay">
@@ -122,7 +169,14 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 <?php require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php"); ?>
 
 <script type="text/javascript">
-    var realmID = <?php echo $_SERVER['QUERY_STRING'] ?>;
+    var __markdownCreateNewDB = true;
+    var __realmID = <?php echo $_SERVER['QUERY_STRING'] ?>;
+    var __existingState = {
+	description: "<?php echo $realm["description"] ?>",
+	show_funding: <?php echo $realm["show_funding"] ?>
+    };
+    
+    var __currentState = _.clone(__existingState, true);
 </script>
 
 <script src="js/manager.js" type="text/javascript" charset="utf-8"></script>

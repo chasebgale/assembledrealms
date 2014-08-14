@@ -8,14 +8,27 @@ $(document).ready(function () {
             url: 'http://www.assembledrealms.com/build/manager.php',
             type: 'post',
             dataType: 'json',
-            data: {realm_id: realmID}
+            data: {directive: 'fetch', realm_id: __realmID}
    })
    .done(function (data) {
       console.log(data);
+      
       if (data.funding == null) {
          fetchFundingTemplate();
       } else {
       
+      }
+      
+      if (data.description == null) {
+         fetchDescriptionTemplate();
+      } else {
+      
+      }
+      
+      if (data.realm_id) {
+         // If a realm_id came down, we need to update a record in the DB,
+         // not create a new one...
+         __markdownCreateNewDB = false;
       }
 
    })
@@ -31,6 +44,12 @@ $(document).ready(function () {
       
       fundingMarkdown($(this).val());
       
+   });
+   
+   $('.monitored').on('change', function (e) {
+      var prop = $(this).attr('data-id');
+      __currentState[prop] = $(this).val();
+      checkForChanges();
    });
    
    $("#button-destroy-realm").on("click", function (e) {
@@ -64,8 +83,13 @@ $(document).ready(function () {
         
    });
    
-   $('#details-description').on("keyup", function (e) {
-      enableSave();
+   $("#savebutton").on('click', function (e) {
+      var button = $(this);
+      
+      button.attr('disabled', true);
+      button.html('<i class="fa fa-cog fa-spin"></i> Save Changes!');
+      
+      
    });
    
    $('#chkFunding').on("change", function (e) {
@@ -109,12 +133,22 @@ function fundingMarkdown(data) {
 function fetchFundingTemplate() {
    $.get( "/data/markdown/funding.markdown", function( data ) {
       $("#realmFundingSource").val( data );
+      __existingState.markdown_funding = data;
+      __currentState.markdown_funding = data;
       fundingMarkdown(data);
    });
 }
 
 function fetchDescriptionTemplate() {
    
+}
+
+function checkForChanges() {
+   if (_.isEqual(__existingState, __currentState)) {
+      disableSave();
+   } else {
+      enableSave();
+   }
 }
 
 function enableSave() {
