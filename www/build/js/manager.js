@@ -93,22 +93,25 @@ $(document).ready(function () {
    });
    
    $('#chkFunding').on("change", function (e) {
+      
+      var container = $('#realmFundingSource').closest('.panel-body');
+      
       if ($(this).is(':checked') == false) {
          $('#realmFundingSource').prop('disabled', true);
-         $('#realmFundingSource').parent().css('user-select', 'none');
-         $('#realmFundingSource').parent().css('opacity', '0.3');
+         container.css('user-select', 'none');
+         container.css('opacity', '0.3');
          $('#realmFundingSource').css('user-select', 'none');
       } else {
          $('#realmFundingSource').removeAttr('disabled');
-         $('#realmFundingSource').parent().css('user-select', 'text');
-         $('#realmFundingSource').parent().css('opacity', '1.0');
+         container.css('user-select', 'text');
+         container.css('opacity', '1.0');
          $('#realmFundingSource').css('user-select', 'text');
       }
    });
    
    if ($('#chkFunding').is(':checked') == false) {
       $('#realmFundingSource').prop('disabled', true);
-      $('#realmFundingSource').parent().css('user-select', 'none');
+      $('#realmFundingSource').closest('.panel-body').css('user-select', 'none');
       $('#realmFundingSource').css('user-select', 'none');
    }
    

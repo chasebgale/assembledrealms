@@ -13,7 +13,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 if ($method == 'POST') {
     $directive = $_POST['directive'];
     
-    if {$directive == 'fetch'} {
+    if ($directive == 'fetch') {
 	$raw = $loggedInUser->fetchRealmMarkdown($_POST['realm_id']);
     
 	echo json_encode($raw);
@@ -90,9 +90,11 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 			<button id="savebutton" disabled="disabled" class="btn btn-default pull-right">Save Changes!</button>
 		</div>
 	</div>
+	
+	<h3 class="text-muted" style="padding-top: 26px; padding-bottom: 12px;">Actions</h3>
 
     <div class="panel panel-default">
-        <div class="panel-heading">Primary Actions</div>
+        <div class="panel-heading">Primary</div>
         <div class="panel-body">
             <div class="row">
                 <div class="col-md-3">
@@ -112,6 +114,17 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
             </div>
         </div>
     </div>
+    
+    <div class="panel panel-danger">
+        <div class="panel-heading">
+            <h3 class="realm-panel-title">Think-about-it-first</h3>
+        </div>
+        <div class="panel-body">
+            <button id="button-destroy-realm" data-id="<?php echo $realm["id"] ?>">Destroy Realm</button>
+        </div>
+    </div>
+    
+    <h3 class="text-muted" style="padding-top: 26px; padding-bottom: 12px;">Realm Listing</h3>
     
     <div class="panel panel-default">
         <div class="panel-heading">Realm Details</div>
@@ -146,21 +159,21 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
             </div>
         </div>
         <div class="panel-body" style="opacity: <?php echo $funding_opacity ?>;">
-		<h4 class="text-muted">Markdown Source</h4>
-		<textarea id="realmFundingSource" class="form-control monitored" data-id="markdown_funding" rows="12"></textarea>
-		
-		<h4 class="text-muted" style="margin-top: 24px;">Display Preview</h4>
-		<div id="realmFundingDisplay">
+		<div class="row">
+			<div class="col-md-6">
+				<h4 class="text-muted">Markdown Source</h4>
+			</div>
+			<div class="col-md-6">
+				<h4 class="text-muted">Display Preview</h4>
+			</div>
 		</div>
-        </div>
-    </div>
-
-    <div class="panel panel-danger">
-        <div class="panel-heading">
-            <h3 class="realm-panel-title">Think-about-it-first Actions</h3>
-        </div>
-        <div class="panel-body">
-            <button id="button-destroy-realm" data-id="<?php echo $realm["id"] ?>">Destroy Realm</button>
+		<div class="row">
+			<div class="col-md-6">
+				<textarea id="realmFundingSource" class="form-control" rows="25"></textarea>
+			</div>
+			<div class="col-md-6" id="realmFundingDisplay">
+			</div>
+		</div>
         </div>
     </div>
 
