@@ -8,6 +8,19 @@ if(!isUserLoggedIn()) {
     die();
 }
 
+$method = $_SERVER['REQUEST_METHOD'];
+
+if ($method == 'POST') {
+    $directive = $_POST['directive'];
+    
+    if ($directive == 'create') {
+        $project_id = $loggedInUser->createRealm($_POST['title'], $_POST['description']);
+        echo json_encode(array ('project_id' => $project_id));
+    }
+    
+    die();
+}
+
 require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 
 ?>

@@ -369,7 +369,7 @@ function loadRealmRoot() {
         
     } else {
         
-        var json = JSON.parse(resp);
+        var json = resp.responseJSON;
         
         var templateFnFiles = _.template($('#root_files_template').html());
         var templateChildFnFiles = _.template($('#child_files_template').html());

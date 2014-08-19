@@ -55,6 +55,6 @@ app.use(function(err, req, res, next){
     res.send(500, err.stack);
 });
 
-app.listen(80, function(){
-  console.log("Express server listening on port 80.");
+app.listen(3000, function(){
+  console.log("Express server listening on port 3000, request to port 80 are redirected to 3000 by Fedora.");
 });

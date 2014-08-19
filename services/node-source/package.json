@@ -1,5 +1,5 @@
 {
-    "name": "deploy-debug"
+    "name": "node-source"
   , "version": "0.0.2"
   , "private": true
   , "dependencies": {
@@ -8,5 +8,7 @@
     , "body-parser": "~1.0.0"
     , "jade": "*"
     , "nodegit": "*"
+    , "ncp": "*"
+    , "async": "*"
   }
 }

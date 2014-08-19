@@ -1,5 +1,8 @@
-
-var git = require('nodegit');
+var ncp = require('ncp').ncp
+  , async = require('async')
+  , git = require('nodegit')
+  , fs = require('fs')
+  , path = require('path');
 
 /*
  * GET home page.
@@ -7,11 +10,12 @@ var git = require('nodegit');
 
 // This should be a parameter when we have more than one engine, duh!
 var import_url = "https://github.com/chasebgale/assembledrealms-isometric.git";
+var import_local = __dirname + "/../projects/assembledrealms-isometric";
 
 // https://github.com/nodegit/nodegit/tree/master/example
 
+/*
 exports.create = function(req, res, next){
-        
   git.Repo.clone(import_url, "projects/" + req.params.id, null, function(error, repo) {
     if (error) return next(error);
     
@@ -20,8 +24,73 @@ exports.create = function(req, res, next){
     
     res.json(formatted);
   });
-  
+};
+*/
 
+var copyDirAsync = function (dir, done) {
+  ncp(dir[0], dir[1], function (err) {
+    if (err) return done(err);
+    console.log('done: ' + dir[1]);
+    done();
+  });
+}
+
+exports.create = function(req, res, next){
+  
+  var dirs = [];
+  var destination = __dirname + '/../projects/' + req.params.id;
+  
+  
+  fs.mkdir(destination, 0777, function (error) {
+
+    if (error) return next(error);
+    
+    fs.readdir(import_local, function (error, files) {
+      
+      if (error) return next(error);
+  
+      var items = files.filter(function (file) {
+        
+        // TODO: Don't use SYNC file operations!
+        if (fs.statSync(import_local + '/' + file).isFile()) {
+          return false;
+        }
+        
+        if (file == '.git') {
+          return false;
+        }
+        
+        return true;
+        
+      }).forEach(function (file) {
+          dirs.push([
+                    import_local + '/' + file,
+                    destination + '/' + file
+                    ]);
+      });
+      
+      async.each(dirs, copyDirAsync, function(error){
+        if (error) return next(error);
+        
+        git.Repo.init(__dirname + "/../projects/" + req.params.id, false, function(error, repo) {
+          if (error) return next(error);
+          
+          // TODO: Now we need to stage the files with 'git add' (equivalant)
+          // TODO: Then we need to commit the new files and get and initial master branch back
+          
+          var formatted = {};
+          formatted.message = "OK";
+          
+          res.json(formatted);
+        });
+      });
+      
+    });
+    
+  });
+  
+  
+  
 };
 
 exports.open = function(req, res, next){

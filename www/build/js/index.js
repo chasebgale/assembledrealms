@@ -24,21 +24,23 @@ $(document).ready(function () {
         button.attr('disabled', 'disabled');
         button.html('<i class="fa fa-cog fa-spin"></i> Create');
 
+        /*
         var payload = {};
         payload.title = $("#realmName").val();
         payload.description = $("#realmDescription").val();
         payload.import_url = "https://github.com/chasebgale/assembledrealms-isometric.git";
-
+*/
         var parameters = {};
         parameters.directive = "create";
-        parameters.payload = JSON.stringify(payload);
+        parameters.title = $("#realmName").val();
+        parameters.description = $("#realmDescription").val();
 
-        $.post("api.php", parameters, function ( apiResponse ) {
-            var jqxhr = $.get( "http://debug-01.assembledrealms.com/api/project/" + apiResponse + "/create", function( gitResponse ) {
-                if (gitResponse === "OK") {
-                    window.location = "http://www.assembledrealms.com/build/editor.php?" + apiResponse;
+        $.post("http://www.assembledrealms.com/build/index.php", parameters, function ( response ) {
+            var jqxhr = $.get( "http://source-01.assembledrealms.com/api/project/" + response.project_id + "/create", function( sourceResponse ) {
+                if (sourceResponse.message === "OK") {
+                    window.location = "http://www.assembledrealms.com/build/editor.php?" + response.project_id;
                 }
-            })
+            }, 'json')
             .fail(function(data) {
                 button.removeAttr('disabled');
                 button.html('Create');
@@ -47,7 +49,7 @@ $(document).ready(function () {
                 $('#errorMessage').text(data.status + ': ' + data.responseText);
                 $('#errorMessage').fadeIn();
             });
-        });
+        }, 'json');
 
     });
 
