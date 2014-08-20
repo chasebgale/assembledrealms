@@ -10,5 +10,6 @@
     , "nodegit": "*"
     , "ncp": "*"
     , "async": "*"
+    , "node-dir": "*"
   }
 }

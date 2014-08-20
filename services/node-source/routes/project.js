@@ -2,7 +2,8 @@ var ncp = require('ncp').ncp
   , async = require('async')
   , git = require('nodegit')
   , fs = require('fs')
-  , path = require('path');
+  , path = require('path')
+  , dir = require('node-dir');
 
 /*
  * GET home page.
@@ -72,17 +73,73 @@ exports.create = function(req, res, next){
       async.each(dirs, copyDirAsync, function(error){
         if (error) return next(error);
         
-        git.Repo.init(__dirname + "/../projects/" + req.params.id, false, function(error, repo) {
+        dir.files(__dirname + "/../projects/" + req.params.id, function(error, files) {
           if (error) return next(error);
           
-          // TODO: Now we need to stage the files with 'git add' (equivalant)
-          // TODO: Then we need to commit the new files and get and initial master branch back
+          var remove = '/var/www/projects/' + req.params.id + '/';
+          var removeIdx = remove.length;
           
-          var formatted = {};
-          formatted.message = "OK";
+          files = files.map(function(file) {
+            return file.substring(removeIdx);
+          });
           
-          res.json(formatted);
+          git.Repo.init(__dirname + "/../projects/" + req.params.id, false, function(error, repo) {
+            if (error) return next(error);
+            
+            repo.openIndex(function(error, index) {
+              if (error) return next(error);
+        
+              index.read(function(error) {
+                if (error) return next(error);
+                
+                // Stage the files with 'git add' (equivalant)
+                async.forEach(files, function(file, callback) { 
+                  
+                  index.addByPath(file, function(error) {
+                    if (error) return next(error);
+                    
+                    callback();
+                  });
+                  
+                }, function (error) {
+                  if (error) return next(error);
+                  
+                  index.write(function(error) {
+                    if (error) return next(error);
+        
+                    index.writeTree(function(error, oid) {
+                      if (error) return next(error);
+                      
+                      var author = git.Signature.create("Scott Chacon", "schacon@gmail.com", 123456789, 60);
+                      var committer = git.Signature.create("Scott A Chacon", "scott@github.com", 987654321, 90);
+    
+                      //commit
+                      repo.createCommit('HEAD', author, committer, 'message', oid, [], function(error, commitId) {
+                        
+                        if (error) return next(error);
+                        
+                        var formatted = {};
+                        formatted.message = "OK";
+                        
+                        res.json(formatted);
+                        
+                      });
+                      
+                    });
+                    
+                  });
+                  
+                });
+                
+                
+              });
+              
+            });
+            
+          });
+          
         });
+        
       });
       
     });

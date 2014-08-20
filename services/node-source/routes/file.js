@@ -9,6 +9,7 @@ exports.open = function(req, res){
   git.Repo.open(__dirname + "/../projects/" + req.params.id, function(error, repo) {
     if (error) throw error;
   
+    // TODO: This crashes node if the request SHA is not parseable 
     var oid = git.Oid.fromString(req.params.sha);
   
     repo.getBlob(oid, function(error, blob) {
