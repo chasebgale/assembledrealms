@@ -477,7 +477,7 @@ function loadRealmFile(id, path, name) {
                 __fileId = id;
             }
         })
-        .fail(function() {
+        .fail(function(data) {
             console.log(data);
                 // Update DOM to reflect we messed up:
                 //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
@@ -493,14 +493,15 @@ function realmResourceURL(path) {
     // /projects//id/repository/blobs//sha
     // http://source-01.assembledrealms.com/api/v3/projects/12/repository/blobs/master?id=12&filepath=client%2Fsprites%2Fzombie_0.png&private_token=o4sq1j9WsQXqhxuyis5Z
 
-    var token = getGitlabSession();
+    // Crawl our file tree looking for the SHA of the given path:
+    var sha = $('#explorer').find('span[data-path~="' + path + '"]').attr('data-id');
+    
+    //var token = getGitlabSession();
     var ref = "master"; // For now hit master, in the future, pull from working branch (master is the current production copy of the realm)
     
-    var req = __projectId + '/repository/blobs/' + ref + '?id=' + __projectId +
-                                          '&filepath=' + encodeURIComponent(path) +
-                                          '&private_token=' + token;
+    var req = __projectId + '/file/open/' + sha;
     
-    return 'http://source-01.assembledrealms.com/api/v3/projects/' + req;
+    return 'http://source-01.assembledrealms.com/api/project/' + req;
     
 }
 

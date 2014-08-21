@@ -119,25 +119,25 @@ var Map = {
                 type: 'get',
                 dataType: 'json',
                 success: function (data) {
+                  
+                    var json = JSON.parse(data.content); 
             
-                    if (data.frames) {
+                    if (json.frames) {
                      
                         var resp = $.ajax({
-                           url: realmResourceURL_WORKAROUND(assetPath + data.meta.image),
+                           url: realmResourceURL(assetPath + json.meta.image),
                            type: 'get',
                            dataType: 'json',
                            async: false
-                        }).responseText;
-                   
-                        var json = JSON.parse(resp);
+                        }).responseJSON;
                      
                         var img = new Image();
-                        img.src = 'data:image/png;base64,' + json.content;
+                        img.src = 'data:image/png;base64,' + resp.content;
                         
                         var baseTexture = new PIXI.BaseTexture(img);
                         var texture = new PIXI.Texture(baseTexture);
                         
-                        _.each(data.frames, function(frame, frameName) {
+                        _.each(json.frames, function(frame, frameName) {
                            
                            var frameTexture = new PIXI.Texture(texture, {
                               x: parseInt(frame.frame.x),
@@ -150,7 +150,7 @@ var Map = {
                               
                         });
                         
-                        Map.onResourceLoaded(data, img.src);
+                        Map.onResourceLoaded(json, img.src);
                         
                         Map.assetLoadCount--;
                         
