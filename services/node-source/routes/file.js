@@ -63,7 +63,7 @@ exports.create = function(req, res) {
     if (error) throw error;
     
     var fileName = req.body.fullpath;
-    var fileContent = "";
+    var fileContent = "// Auto generated: " + new Date().getTime();
     
     console.log("Creating file: " + fileName);
     

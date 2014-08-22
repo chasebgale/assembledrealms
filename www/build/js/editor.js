@@ -13,12 +13,12 @@ var __checkInMsg;
 var __processingFiles = [];
 var __commitFiles = [];
 
-function initialize(projectID, projectURL) {
+function initialize(projectID, projectDomain) {
     
     //__projectId = window.location.search.slice(1);
-    //__projectURL = 'http://debug-01.assembledrealms.com/api/project/' + __projectId;
+    //__projectURL = 'http://' + 'source-01' + '.assembledrealms.com/api/project/' + __projectId;
     __projectId = projectID;
-    __projectURL = "http://" + projectURL + "/api/project/" + __projectId;
+    __projectURL = 'http://' + projectDomain + '.assembledrealms.com/api/project/' + __projectId;
     
     
     __trackedStorageId = __projectId + "-tracking";
@@ -28,6 +28,7 @@ function initialize(projectID, projectURL) {
     }
 
     // Fetch folder contents:
+    /*
     $("#explorer").on("click", ".no-data", function () {
         
         var root = $(this);
@@ -66,6 +67,7 @@ function initialize(projectID, projectURL) {
             }
         });
     });
+    */
 
     // Fetch file:
     $("#explorer").on("click", ".file", function () {
@@ -137,6 +139,7 @@ function initialize(projectID, projectURL) {
 
     $("#btnCommit").on("click", function () {
         //$('#commitProgressbar').addClass('active');
+        listCommitFiles();
         $('#modalCommit').modal('show');
         
     });
@@ -400,10 +403,12 @@ function loadRealmRoot() {
         folderList.empty().append( folderListOptions );
         */
         
+        /*
         var readmeDOM = $('#explorer [data-path="README.md"');
         readmeDOM.addClass('activefile');
     
         loadRealmFile(readmeDOM.attr('data-id'), 'README.md', 'README.md');
+        */
         
         $('#tab-nav-markdown a:first').tab('show');
         
@@ -499,27 +504,9 @@ function realmResourceURL(path) {
     //var token = getGitlabSession();
     var ref = "master"; // For now hit master, in the future, pull from working branch (master is the current production copy of the realm)
     
-    var req = __projectId + '/file/open/' + sha;
+    var req = '/file/open/' + sha;
     
-    return 'http://source-01.assembledrealms.com/api/project/' + req;
-    
-}
-
-
-function realmResourceURL_WORKAROUND(path) {
-    // Gitlab doesn't return CORS headers (Access-Control-Allow-Origin) for image blobs,
-    // So for now we have to load the full json file details and pull out the encoded image
-    // content...
-    
-    var token = getGitlabSession();
-    var ref = "master"; // For now hit master, in the future, pull from working branch (master is the current production copy of the realm)
-    
-    var req = __projectId + '/repository/files?id=' + __projectId +
-                                              '&file_path=' + encodeURIComponent(path) +
-                                              '&ref=' + ref +
-                                              '&private_token=' + token;
-    
-    return 'http://source-01.assembledrealms.com/api/v3/projects/' + req;
+    return __projectURL + req;
     
 }
 

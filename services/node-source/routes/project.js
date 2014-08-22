@@ -3,6 +3,7 @@ var ncp = require('ncp').ncp
   , git = require('nodegit')
   , fs = require('fs')
   , path = require('path')
+  , utilities = require('../utilities')
   , dir = require('node-dir');
 
 /*
@@ -118,6 +119,8 @@ exports.create = function(req, res, next){
                         
                         if (error) return next(error);
                         
+                        utilities.logMessage('Created REPO: ' + __dirname + "/../projects/" + req.params.id);
+                        
                         var formatted = {};
                         formatted.message = "OK";
                         
@@ -163,9 +166,6 @@ exports.open = function(req, res, next){
   
       branch.getTree(function(error, tree) {
         if (error) return next(error);
-
-        
-        // `walk()` returns an event.
         
         var walker = tree.walk(false);
         walker.on('entry', function(entry) {
@@ -179,6 +179,8 @@ exports.open = function(req, res, next){
         });
         walker.on('end', function(errors, entries) {
           //console.log(entry.path());
+          utilities.logMessage('Opened REPO: ' + __dirname + "/../projects/" + req.params.id);
+          
           res.json(files);
         });
   
@@ -218,7 +220,8 @@ exports.save = function(req, res){
           var committer = git.Signature.now("Chase Gale", "chase.b.gale@gmail.com");
   
           repo.createCommit(null, author, committer, "message", treeId, [tree], function(error, commitId) {
-            console.log("New Commit:", commitId.sha());
+            
+            utilities.logMessage('Commit (' + commitId.sha() + ') to REPO: ' + __dirname + "/../projects/" + req.params.id);
             
             var formatted = {};
             formatted.commit = commitId.sha();
