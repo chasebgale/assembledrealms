@@ -174,7 +174,6 @@ function initialize(projectID, projectDomain) {
         var selectedFolder = $("#newfileLocation .active");
         var path = selectedFolder.attr("data-path");
         var name = $("#newfileName").val();
-        var fileId = "NEW-" + name;
     
         // TODO: SANITIZE THIS INPUT! THIS GOES RIGHT TO NODE!
         // PERHAPS SANITIZE IN NODE, AS JS IS THE USER AND NOT TO BE TRUSTED
@@ -197,19 +196,25 @@ function initialize(projectID, projectDomain) {
             if (data.message === "OK") {
                 
                 if (path === "") {
-                    $("#explorer").append('<li><span class="file" data-id="' + fileId + '" data-path="' + name + '">' + name + '</span></li>');
+                    $("#explorer").append('<li><span class="file" data-id="' + data.sha + '" data-path="' + name + '">' + name + '</span></li>');
                 } else {
                     var parentFolder = $("#explorer [data-path='" + path + "']").children("ul");
-                    parentFolder.append('<li><span class="file" data-id="' + fileId + '" data-path="' + path + "/" + name + '">' + name + '</span></li>');
+                    parentFolder.append('<li><span class="file" data-id="' + data.sha + '" data-path="' + path + "/" + name + '">' + name + '</span></li>');
                 }
                 
-                sessionStorage[fileId] = "";
-                sessionStorage[fileId + '-name'] = name;
-                sessionStorage[fileId + '-path'] = path + '/' + name;
-                sessionStorage[fileId + '-commit-md5'] = "";
+                // Add entries to session storage
+                sessionStorage[data.sha] = data.content;
+                sessionStorage[data.sha + '-name'] = name;
+                sessionStorage[data.sha + '-path'] = path + '/' + name;
+                sessionStorage[data.sha + '-commit-md5'] = md5(data.content);
                 
-                __trackedFiles.push(fileId);
+                // Update tracked files array in session storage
+                __trackedFiles.push(data.sha);
                 sessionStorage[__trackedStorageId] = JSON.stringify(__trackedFiles);
+                
+                // Display new file and update UI
+                loadEditor(name, data.content);
+                __fileId = data.sha;
                 
                 $('#modalNewFile').modal('hide');
                 $('#newFileCreateAlert').hide();

@@ -1,8 +1,11 @@
 var git = require('nodegit'),
     path = require('path'),
+    utilities = require('../utilities'),
     fs = require('fs');
 
 // https://github.com/nodegit/nodegit/tree/master/example
+
+var EOL = require('os').EOL;
 
 exports.open = function(req, res){
   
@@ -14,8 +17,6 @@ exports.open = function(req, res){
   
     repo.getBlob(oid, function(error, blob) {
       if (error) throw error;
-  
-      console.log('Binary: ' + blob.isBinary() + ', Size: ' + blob.size());
   
       var formatted = {};
   
@@ -49,6 +50,9 @@ exports.open = function(req, res){
         //res.contentLength = blob.size();
         //res.end(blob.content(), 'binary');
       }
+      
+      utilities.logMessage('Opened FILE: ' + req.params.sha + EOL +
+                           'Binary: ' + blob.isBinary() + ', Size: ' + blob.size());
       
   
       // If you know that the blob is UTF-8, however, 
@@ -107,12 +111,13 @@ exports.create = function(req, res) {
                         latest.getEntry(fileName, function(error, entry) {
                           if (error) throw error;
                           
-                          console.log("File SHA:", entry.oid().sha());
+                          utilities.logMessage('Created FILE: ' + entry.oid().sha() + ' (' + fileName + ')');
                           
                           var formatted = {};
                           formatted.commit = commitId.sha();
                           formatted.sha = entry.oid().sha();
                           formatted.message = "OK";
+                          formatted.content = fileContent;
                           
                           res.json(formatted);
                           
