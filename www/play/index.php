@@ -85,7 +85,8 @@ if ($method == 'POST') {
                        $loves,
                        $url,
                        $comments,
-                       $source
+                       $source,
+                       $show_funding
                        );
             
     while ($stmt->fetch()){
@@ -100,7 +101,8 @@ if ($method == 'POST') {
                        'loves' => $loves,
                        'url' => $url,
                        'comments' => $comments,
-                       'source' => $source
+                       'source' => $source,
+                       'show_funding' => $show_funding
                        );
     }
     $stmt->close();
