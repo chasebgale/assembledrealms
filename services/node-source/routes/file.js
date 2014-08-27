@@ -69,8 +69,6 @@ exports.create = function(req, res) {
     var fileName = req.body.fullpath;
     var fileContent = "// Auto generated: " + new Date().getTime();
     
-    console.log("Creating file: " + fileName);
-    
     //create the file in the repo's workdir
     fs.writeFile(path.join(repo.workdir(), fileName), fileContent, function(writeError) {
       if (writeError) throw writeError;
@@ -103,7 +101,6 @@ exports.create = function(req, res) {
   
                     //commit
                     repo.createCommit('HEAD', author, committer, 'message', oid, [parent], function(error, commitId) {
-                      console.log("File Added to Commit:", commitId.sha());
                       
                       repo.getCommit(commitId, function(getCommitError, latest) {
                         if (getCommitError) throw getCommitError;

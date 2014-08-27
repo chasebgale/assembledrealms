@@ -51,8 +51,8 @@ app.get('/api/project/:id/file/open/:sha', file.open);
 app.post('/api/project/:id/file/create', file.create);
 
 app.use(function(err, req, res, next){
-    console.error(err.stack);
-    res.send(500, err.stack);
+    console.error(err.message);
+    res.send(500, err.message);
 });
 
 app.listen(3000, function(){

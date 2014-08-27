@@ -15,59 +15,13 @@ var __commitFiles = [];
 
 function initialize(projectID, projectDomain) {
     
-    //__projectId = window.location.search.slice(1);
-    //__projectURL = 'http://' + 'source-01' + '.assembledrealms.com/api/project/' + __projectId;
     __projectId = projectID;
     __projectURL = 'http://' + projectDomain + '.assembledrealms.com/api/project/' + __projectId;
-    
-    
     __trackedStorageId = __projectId + "-tracking";
 
     if (sessionStorage[__trackedStorageId]) {
         __trackedFiles = JSON.parse(sessionStorage[__trackedStorageId]);
     }
-
-    // Fetch folder contents:
-    /*
-    $("#explorer").on("click", ".no-data", function () {
-        
-        var root = $(this);
-        var path = root.attr('data-path');
-        var name = root.text().trim();
-        var token = getGitlabSession();
-
-        var req = __projectId + '/repository/tree?id=' + __projectId +
-                                              '&path=' + encodeURIComponent(path) +
-                                              '&private_token=' + token;
-
-        $.ajax({
-            url: 'http://source-01.assembledrealms.com/api/v3/projects/' + req,
-            type: 'get',
-            dataType: 'json',
-            success: function (data) {
-                console.log("Got files: " + data);
-                var arrayLength = data.length;
-                var formatted = { 'name': name, 'children': [] };
-                
-                for (var i = 0; i < arrayLength; i++) {
-                    formatted.children[i] = { 'name': data[i].name, 'path': path + data[i].name, 'id': data[i].id };
-
-                    if (data[i].type == "tree") {
-                        formatted.children[i].hasChildren = true;
-                        formatted.children[i].path += '/';
-                    }
-                }
-
-                var branch = root.html(templateFnDynamic({ 'model': formatted, 'templateFnDynamic': templateFnDynamic })).parent();
-                root.attr('class', 'collapsable open');
-                $("#explorer").treeview({
-                    add: branch
-                });
-
-            }
-        });
-    });
-    */
 
     // Fetch file:
     $("#explorer").on("click", ".file", function () {
@@ -174,9 +128,6 @@ function initialize(projectID, projectDomain) {
         var selectedFolder = $("#newfileLocation .active");
         var path = selectedFolder.attr("data-path");
         var name = $("#newfileName").val();
-    
-        // TODO: SANITIZE THIS INPUT! THIS GOES RIGHT TO NODE!
-        // PERHAPS SANITIZE IN NODE, AS JS IS THE USER AND NOT TO BE TRUSTED
         var post = {};
         
         if (path === "") {
@@ -195,12 +146,19 @@ function initialize(projectID, projectDomain) {
             console.log(data);
             if (data.message === "OK") {
                 
+                __editor.off("change", editor_onChange);
+                $("#explorer .file").removeClass('activefile');
+                
+                addToExplorer(path, name, data.sha);
+                
+                /*
                 if (path === "") {
-                    $("#explorer").append('<li><span class="file" data-id="' + data.sha + '" data-path="' + name + '">' + name + '</span></li>');
+                    $("#explorer").append('<li><span class="file activefile" data-id="' + data.sha + '" data-path="' + name + '">' + name + '</span></li>');
                 } else {
                     var parentFolder = $("#explorer [data-path='" + path + "']").children("ul");
-                    parentFolder.append('<li><span class="file" data-id="' + data.sha + '" data-path="' + path + "/" + name + '">' + name + '</span></li>');
+                    parentFolder.append('<li><span class="file activefile" data-id="' + data.sha + '" data-path="' + path + "/" + name + '">' + name + '</span></li>');
                 }
+                */
                 
                 // Add entries to session storage
                 sessionStorage[data.sha] = data.content;
@@ -214,7 +172,7 @@ function initialize(projectID, projectDomain) {
                 
                 // Display new file and update UI
                 loadEditor(name, data.content);
-                __fileId = data.sha;
+                __fileId = __projectId + '-' + data.sha;
                 
                 $('#modalNewFile').modal('hide');
                 $('#newFileCreateAlert').hide();
@@ -249,6 +207,34 @@ function initialize(projectID, projectDomain) {
 
     loadRealmRoot();
     
+}
+
+function addToExplorer(path, name, sha) {
+    
+    var root;
+    var inserted = false;
+    
+    if (path === "") {
+        root = $("#explorer");
+    } else {
+        root = $("#explorer [data-path='" + path + "']").children("ul");
+    }
+    
+    // Select subset of only files, not folders:
+    var items = root.children().not(".hasChildren");
+    
+    items.each(function () {
+        if ($(this).text() > name) {
+            inserted = true;
+            $(this).before('<li><span class="file activefile" data-id="' + sha + '" data-path="' + path + "/" + name + '">' + name + '</span></li>');
+            return false;
+        }
+    });
+    
+    if (!inserted) {
+        root.children().removeClass('last lastExpandable');
+        root.append('<li class="last"><span class="file activefile" data-id="' + sha + '" data-path="' + path + "/" + name + '">' + name + '</span></li>');
+    }
 }
 
 function listCommitFiles() {
@@ -379,6 +365,11 @@ function loadRealmRoot() {
         
         var json = resp.responseJSON;
         
+        // Process folders first:
+        json = _.sortBy(json, function (item) {
+            return !item.hasChildren;
+        });
+        
         var templateFnFiles = _.template($('#root_files_template').html());
         var templateChildFnFiles = _.template($('#child_files_template').html());
         
@@ -428,6 +419,8 @@ function loadRealmFile(id, path, name) {
 
     var ext = name.split('.').pop();
     
+    var tracking_id = __projectId + '-' + id;
+    
     if (ext === 'png') {
         var img = $('#' + id);
         if (img.length) {
@@ -444,10 +437,10 @@ function loadRealmFile(id, path, name) {
         }
     }
 
-    if (sessionStorage[id + '-name']) {
+    if (sessionStorage[tracking_id + '-name']) {
 
-        loadEditor(name, sessionStorage[id]);
-        __fileId = id;
+        loadEditor(name, sessionStorage[tracking_id]);
+        __fileId = tracking_id;
                 
     } else {
 
@@ -475,16 +468,16 @@ function loadRealmFile(id, path, name) {
                 displayImage();
                 
             } else {
-                sessionStorage[id + '-name'] = name;
-                sessionStorage[id + '-path'] = path;
-                sessionStorage[id] = data.content;
-                sessionStorage[id + '-commit-md5'] = md5(data.content);
+                sessionStorage[tracking_id] = data.content;
+                sessionStorage[tracking_id + '-name'] = name;
+                sessionStorage[tracking_id + '-path'] = path;
+                sessionStorage[tracking_id + '-commit-md5'] = md5(data.content);
 
-                __trackedFiles.push(id);
+                __trackedFiles.push(tracking_id);
                 sessionStorage[__trackedStorageId] = JSON.stringify(__trackedFiles);
 
                 loadEditor(name, data.content);
-                __fileId = id;
+                __fileId = tracking_id;
             }
         })
         .fail(function(data) {
@@ -513,59 +506,6 @@ function realmResourceURL(path) {
     
     return __projectURL + req;
     
-}
-
-function updateRealmFile(id, path, content) {
-    
-    var token = getGitlabSession();
-    var ref = "master"; // For now hit master, in the future, pull from working branch (master is the current production copy of the realm)
-
-    var data = {
-        file_path: path,
-        branch_name: ref,
-        encoding: 'base64',
-        content: btoa(encode_utf8(content)),
-        commit_message: __checkInMsg,
-        private_token: token
-    };
-    
-    var req = __projectId + '/repository/files';
-    
-    $.ajax({
-        url: 'http://source-01.assembledrealms.com/api/v3/projects//' + req,
-        type: 'put',
-        dataType: 'json',
-        contentType: 'application/json',
-        headers: {
-                "PRIVATE-TOKEN": token
-        },
-        data: JSON.stringify(data),
-        success: function (response) {
-            
-            // Update sessionStorage with new MD5
-            sessionStorage[id + '-commit-md5'] = md5(sessionStorage[id]);
-            
-            // Update DOM to reflect we completed ok:
-            $('#' + id + ' span:last').html('<i class="fa fa-thumbs-up"></i> Success!');
-
-        },
-        error: function (response) {
-            
-            // Update DOM to reflect we messed up:
-            $('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
-            
-        },
-        complete: function (response) {
-            // Remove file from processing queue
-            __processingFiles = _.without(__processingFiles, id);
-            
-            if (__processingFiles.length === 0) {
-                $('#commitProgressbar').removeClass('active');
-                $('#closeCommit').removeAttr('disabled');
-                $("#commitProgressMessage").text('Commit completed.');
-            }
-        }
-    });
 }
 
 function displayImage() {

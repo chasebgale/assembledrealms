@@ -38,7 +38,7 @@ $(document).ready(function () {
         $.post("http://www.assembledrealms.com/build/index.php", parameters, function ( response ) {
             var jqxhr = $.get( "http://source-01.assembledrealms.com/api/project/" + response.project_id + "/create", function( sourceResponse ) {
                 if (sourceResponse.message === "OK") {
-                    window.location = "http://www.assembledrealms.com/build/editor.php?" + response.project_id;
+                    window.location = "http://www.assembledrealms.com/build/editor.php?id=" + response.project_id + "&source=source-01";
                 }
             }, 'json')
             .fail(function(data) {
