@@ -164,10 +164,11 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
         </div>
     </div>
     
-    <div class="modal fade" id="modalCommit" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
+    <div class="modal fade" id="modalCommit" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
+		    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                     <h4 class="modal-title">Commit</h4>
                 </div>
                 <div class="modal-body">

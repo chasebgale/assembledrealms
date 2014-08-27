@@ -88,7 +88,8 @@ function initialize(projectID, projectDomain) {
     });
 
     $("#moveButton").on("click", function () {
-        $("#mapMain").css('cursor', 'move');
+        //$("#mapMain").css('cursor', 'move');
+        Map.moveMode();
     });
 
     $("#btnCommit").on("click", function () {
@@ -160,19 +161,21 @@ function initialize(projectID, projectDomain) {
                 }
                 */
                 
+                var tracking_id = __projectId + '-' + data.sha;
+                
                 // Add entries to session storage
-                sessionStorage[data.sha] = data.content;
-                sessionStorage[data.sha + '-name'] = name;
-                sessionStorage[data.sha + '-path'] = path + '/' + name;
-                sessionStorage[data.sha + '-commit-md5'] = md5(data.content);
+                sessionStorage[tracking_id] = data.content;
+                sessionStorage[tracking_id + '-name'] = name;
+                sessionStorage[tracking_id + '-path'] = path + '/' + name;
+                sessionStorage[tracking_id + '-commit-md5'] = md5(data.content);
                 
                 // Update tracked files array in session storage
-                __trackedFiles.push(data.sha);
+                __trackedFiles.push(tracking_id);
                 sessionStorage[__trackedStorageId] = JSON.stringify(__trackedFiles);
                 
                 // Display new file and update UI
                 loadEditor(name, data.content);
-                __fileId = __projectId + '-' + data.sha;
+                __fileId = tracking_id;
                 
                 $('#modalNewFile').modal('hide');
                 $('#newFileCreateAlert').hide();
@@ -261,9 +264,8 @@ function listCommitFiles() {
                 
                 if (md5(file) !== fileMD5) {
                     // Push to gitlab
-                    commitProgressList.append('<li id="' + fileId + '"><span style="font-weight: bold; width: 200px; display: inline-block;">' + fileName + ': </span><span></span></li>');
+                    commitProgressList.append('<li id="' + fileId + '"><span style="font-weight: bold; width: 200px; display: inline-block;">' + fileName + '</span><span></span></li>');
                     
-                    //updateRealmFile(fileId, filePath, file);
                     __commitFiles.push({
                         content: file,
                         name: fileName,
@@ -312,7 +314,7 @@ function commit(filesToCommit) {
                 $('#commitStart').html('Commit');
                 $("#commitProgressMessage").text('');
                 
-                $('#modalCommit').modal('close');
+                $('#modalCommit').modal('hide');
             },
             error: function (response) {
                 

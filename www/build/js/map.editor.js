@@ -45,7 +45,7 @@ var Map = {
         var target = document.getElementById(div);
 
         var canvas = document.createElement('div');
-        canvas.setAttribute("style", "padding: 2px; display: inline-block; cursor: none;");
+        canvas.setAttribute("style", "padding: 2px; display: inline-block;");
         canvas.id = 'mapMain';
         target.appendChild(canvas);
 
@@ -410,6 +410,50 @@ var Map = {
         map.col = Math.floor(map.col);
 
         return map;
+    },
+    
+    moveMode: function () {
+         Map.stage.mousedown = function (data) {
+
+            console.log(data.global);
+
+            var result = Map.indexFromScreen(data.global);
+
+            console.log(result.row + ', ' + result.col);
+            
+            if (Map.brush.source[result.row] === undefined) {
+                Map.brush.source[result.row] = {};
+            }
+
+            Map.brush.source[result.row][result.col] = Map.brush.index;
+            Map.draw();
+            Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
+            
+            Map.updateSource();
+
+        };
+
+        Map.stage.mousemove = function (data) {
+
+            if (data.target.__isDown) {
+                var result = Map.indexFromScreen(data.global);
+
+                if (Map.brush.source[result.row] === undefined) {
+                    Map.brush.source[result.row] = {};
+                }
+
+                Map.brush.source[result.row][result.col] = Map.brush.index;
+                Map.draw();
+                Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
+                
+                Map.updateSource();
+                
+            }
+
+            if (Map.brush.sprite)
+                Map.brush.sprite.position = data.global;
+
+        };
     }
 };
 
