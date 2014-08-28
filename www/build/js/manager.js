@@ -1,8 +1,19 @@
+var __editor;
+
 $(document).ready(function () {
    
    marked.setOptions({
       sanitize: true
    });
+   
+   var renderer = new marked.Renderer();
+   
+   renderer.table = function(header, body) {
+      return '<table class="table table-striped"><thead>' + header + '</thead><tbody>' + body + '</tbody></table>';
+   }
+   
+   __editor = ace.edit("realmReadmeSource");
+   __editor.getSession().setMode("ace/mode/markdown");
    
    $.ajax({
             url: 'http://www.assembledrealms.com/build/manager.php',
@@ -43,6 +54,12 @@ $(document).ready(function () {
    $("#realmFundingSource").on("keyup", function (e) {
       
       fundingMarkdown($(this).val());
+      
+   });
+   
+   $("#realmReadmeSource").on("keyup", function (e) {
+      
+      $("#realmReadmeDisplay").html( marked($(this).val(), { renderer: renderer }) );
       
    });
    

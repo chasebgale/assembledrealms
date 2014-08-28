@@ -261,6 +261,38 @@ class loggedInUser {
 		return ($love);
 	}
 	
+	public function loveRealm($realm_id)
+	{
+		global $mysqli,$db_table_prefix;
+		
+		if (!$this->lovesRealm($realm_id)) {
+			
+			$mysqli->autocommit(FALSE);
+			
+			$stmt = $mysqli->prepare("INSERT INTO realm_loves 
+				(realm_id, user_id)
+				VALUES
+				(?, ?)"
+			);
+			$stmt->bind_param("ii", $realm_id, $this->user_id);
+			$stmt->execute();
+			$stmt->close();
+			
+			$stmt = $mysqli->prepare("UPDATE realms
+						 SET loves = loves + 1
+						 WHERE
+						 id = ?");
+			$stmt->bind_param("i", $realm_id);
+			$stmt->execute();
+			$stmt->close();
+			
+			$mysqli->commit();
+			$mysqli->autocommit(TRUE);
+		}
+		
+		return true;
+	}
+	
 	public function fetchRealmComments($realm_id)
 	{
 		global $mysqli,$db_table_prefix;

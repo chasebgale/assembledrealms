@@ -151,6 +151,18 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     <h3 class="text-muted" style="padding-top: 26px; padding-bottom: 12px;">Realm Play Page</h3>
     
     <div class="panel panel-default">
+        <div class="panel-heading">Realm README</div>
+        <div class="panel-body">
+            <h4 class="text-muted">Markdown Source</h4>
+	    <div id="realmReadmeSource" style="height: 300px;"></div>
+	    
+	    <h4 class="text-muted">Display Preview</h4>
+	    <div id="realmReadmeDisplay" style="width: 100%;">
+	    </div>
+        </div>
+    </div>
+    
+    <div class="panel panel-default">
         <div class="panel-heading">
             <div class="checkbox" style="display:inline">
                 <label>
@@ -195,6 +207,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 <script src="js/manager.js" type="text/javascript" charset="utf-8"></script>
 <script src="js/utilities.js" type="text/javascript" charset="utf-8"></script>
 <script src="js/marked.js" type="text/javascript" charset="utf-8"></script>
+<script src="/../js/ace/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
 
 </body>
 </html>

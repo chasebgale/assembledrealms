@@ -12,24 +12,42 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method == 'POST') {
     
-    if (isset($_POST['realmID'])) {
-        if (is_numeric($_POST['realmID'])) {
-    
-            if (isset($_POST['comment'])) {
-                // POST COMMENT
-                if (isset($_POST['parentID'])) {
-                    $row = $loggedInUser->createRealmComment($_POST['realmID'], $_POST['comment'], $_POST['parentID']);
-                } else {
-                    $row = $loggedInUser->createRealmComment($_POST['realmID'], $_POST['comment']);
-                }
-                echo json_encode($row);
-            } else {
-                // FETCH COMMENTS
-                $row = $loggedInUser->fetchRealmComments($_POST['realmID']);
-                echo json_encode($row);
-            }
+    if (isset($_POST['directive'])) {
+        
+        $directive = $_POST['directive'];
+        
+        if ($directive == 'comment') {
+            if (isset($_POST['realmID'])) {
+                if (is_numeric($_POST['realmID'])) {
             
+                    if (isset($_POST['comment'])) {
+                        // POST COMMENT
+                        if (isset($_POST['parentID'])) {
+                            $row = $loggedInUser->createRealmComment($_POST['realmID'], $_POST['comment'], $_POST['parentID']);
+                        } else {
+                            $row = $loggedInUser->createRealmComment($_POST['realmID'], $_POST['comment']);
+                        }
+                        echo json_encode($row);
+                    } else {
+                        // FETCH COMMENTS
+                        $row = $loggedInUser->fetchRealmComments($_POST['realmID']);
+                        echo json_encode($row);
+                    }
+                    
+                }
+            }
         }
+        
+        if ($directive == 'love') {
+            if (isset($_POST['realmID'])) {
+                if (is_numeric($_POST['realmID'])) {
+                    if ($loggedInUser->loveRealm($_POST['realmID'])) {
+                        echo "OK";
+                    }
+                }
+            }
+        }
+        
     }
     
     die();
@@ -68,9 +86,9 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
             <div class="col-md-8"><h2 class="text-center" style="margin-top: 0;"><?=$realm['title']?></h2></div>
             <div class="col-md-2" style="padding-right: 0;">
                 <h4 class="text-right"><small>
-                    <i class="fa fa-heart"></i> <?=$realm['loves']?>
+                    <i class="fa fa-heart"></i>&nbsp;<span id="loveCount"><?=$realm['loves']?></span>
                     &nbsp;&nbsp;
-                    <i class="fa fa-comments"></i> <?=$realm['comments']?>
+                    <i class="fa fa-comments"></i>&nbsp;<span id="commentCount"><?=$realm['comments']?></span>
                 </small></h4></div>
         </div>
         
@@ -201,10 +219,22 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
             
             var button = $(this);
             
-            if (!button.hasClass('active')) {
-                button.html('<i class="fa fa-heart"></i>  Loved!');
-                button.prop("disabled",true);
-            }
+            $.post( "realm.php", { directive: "love", realmID: "<?=$realmID?>" })
+                .done(function( data ) {
+                    if (data !== "null") {
+                        
+                        button.html('<i class="fa fa-heart"></i>  Loved!');
+                        button.prop("disabled",true);
+                        
+                        var loveCountSpan = $("#loveCount");
+                        var loveCount = parseInt(loveCountSpan.text()) + 1;
+                        
+                        loveCountSpan.text(loveCount);
+
+                    }
+                });
+            
+            
             
        });
        
@@ -247,7 +277,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
             button.attr('disabled', true);
             button.html('<i class="fa fa-cog fa-spin"></i> Add Comment');
             
-            $.post( "realm.php", { realmID: "<?=$realmID?>", comment: $('#commentContent').val() })
+            $.post( "realm.php", { directive: "comment", realmID: "<?=$realmID?>", comment: $('#commentContent').val() })
                 .done(function( data ) {
                     if (data !== "null") {
                         
@@ -296,7 +326,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
             
             var commentID = button.attr('data-id');
             
-            $.post( "realm.php", { realmID: "<?=$realmID?>", comment: $('#replyToCommentContent').val(), parentID: commentID })
+            $.post( "realm.php", { directive: "comment", realmID: "<?=$realmID?>", comment: $('#replyToCommentContent').val(), parentID: commentID })
                 .done(function( data ) {
                     if (data !== "null") {
                         
@@ -317,7 +347,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
        });
        
        function loadComments() {
-            $.post( "realm.php", { realmID: "<?=$realmID?>" })
+            $.post( "realm.php", { directive: "comment", realmID: "<?=$realmID?>" })
             .done(function( data ) {
                 if (data !== "null") {
                     data = JSON.parse( data );
