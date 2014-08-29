@@ -53,6 +53,14 @@ div#comment {
     margin-top: 40px;
 }
 
+div#funding {
+    float: right;
+    width: 300px;
+    max-height: 400px;
+    margin-left: 12px;
+    margin-bottom: 12px;
+}
+
 #form-signin {
     width: 300px;
     margin: 0 auto;

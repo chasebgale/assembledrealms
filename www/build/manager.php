@@ -20,18 +20,17 @@ if ($method == 'POST') {
 	die();
     }
     
-    if ($directive == 'update') {
+    if ($directive == 'save') {
 	
 	global $mysqli;
-	$mysqli->autocommit(FALSE);
 	
 	if ($_POST['markdown_funding'] || $_POST['markdown_description']) {
 		// INSERT OR CREATE REALM_MARKDOWN ROW
 		if ($_POST['markdown_create'] == true) {
 			$stmt_markdown = $mysqli->prepare("INSERT INTO realm_markdown(
-								user_id,
-								title,
-								description
+								funding,
+								description,
+								realm_id
 								)
 								VALUES (
 								?,
@@ -39,27 +38,23 @@ if ($method == 'POST') {
 								?)"
 			);
 		} else {
-			$stmt_markdown = $mysqli->prepare("UPDATE ".$db_table_prefix."users
+			$stmt_markdown = $mysqli->prepare("UPDATE realm_markdown
 								SET 
-								gitlab_id = ?,
-								gitlab_password = ?
+								funding = ?,
+								description = ?
 								WHERE
-								id = ?"
+								realm_id = ?"
 			);
 		}
+		
+		$stmt_markdown->bind_param("ssi", $_POST['markdown_funding'], $_POST['markdown_description'], $_POST['realm_id']);
+		$stmt_markdown->execute();
+		$stmt_markdown->close();
+		
+		echo "OK";
+		die();
 	}
 	
-	
-	
-	$stmt = $mysqli->prepare("UPDATE ".$db_table_prefix."users
-		SET 
-		gitlab_id = ?,
-		gitlab_password = ?
-		WHERE
-		id = ?");
-	$stmt->bind_param("isi", $id, $password, $this->user_id);
-	$stmt->execute();
-	$stmt->close();	
     }
     
 }
@@ -87,7 +82,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 			<h2><?php echo $realm["title"] ?></h2>
 		</div>
 		<div id="savebar" class="col-md-4">
-			<button id="savebutton" disabled="disabled" class="btn btn-default pull-right">Save Changes!</button>
+			<button id="savebutton" class="btn btn-default pull-right">Save Changes!</button>
 		</div>
 	</div>
 	
@@ -180,8 +175,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 			</div>
 		</div>
 		<div class="row">
-			<div class="col-md-6">
-				<textarea id="realmFundingSource" class="form-control" rows="25"></textarea>
+			<div id="realmFundingSource" class="col-md-6" style="height: 400px;">
 			</div>
 			<div class="col-md-6" id="realmFundingDisplay">
 			</div>

@@ -48,6 +48,14 @@ if ($method == 'POST') {
             }
         }
         
+        if ($directive == 'markdown') {
+            if (isset($_POST['realmID'])) {
+                if (is_numeric($_POST['realmID'])) {
+                    echo json_encode( $loggedInUser->fetchRealmMarkdown($_POST['realmID']) );
+                }
+            }
+        }
+        
     }
     
     die();
@@ -129,19 +137,19 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
         echo "<h2>" . $alert . "</h2>";
     } else {
         echo '<iframe src="http://' . $realm['url'] . '"
-                style="border: 0; width:800px; height:600px; display: block; margin: 0 auto;"></iframe>';   
+                style="border: 0; width:896px; height:504px; display: block; margin: 0 auto;"></iframe>';   
     }
     ?>
     
+    <div>
+    
     <?php if ($realm['show_funding']) { ?>
-    <h4 class="text-muted" style="margin-top: 24px;">Funding</h4>
-    <hr />
-    <div id="funding"></div>
+        <div id="funding"></div>
     <?php } ?>
     
-    <h4 class="text-muted" style="padding-top: 24px;">Description</h4>
-    <hr />
-    <div id="description"></div>
+        <div id="description"></div>
+    
+    </div>
     
     <h4 class="text-muted" style="padding-top: 24px;">Comments</h4>
     <hr />
@@ -203,15 +211,48 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 </script>
 
 <script src="js/moment.min.js"></script>
+<script src="js/marked.js"></script>
 
 <?php require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php"); ?>
 
 <script type="text/javascript">
     
+    var __renderer;
+    
     $(document).ready(function () {
+        
+        __renderer = new marked.Renderer();
+   
+        __renderer.table = function(header, body) {
+           return '<table class="table table-striped"><thead>' + header + '</thead><tbody>' + body + '</tbody></table>';
+        }
+        
+        marked.setOptions({
+           sanitize: true,
+           renderer: __renderer
+        });
         
         var templateFn = _.template($('#comments_template').html());
         var templateReplyFn = _.template($('#comment_reply_template').html());
+        
+        $.post( "realm.php", { directive: "markdown", realmID: "<?=$realmID?>" })
+        .done(function( data ) {
+            if (data !== "null") {
+                
+                data = JSON.parse( data );
+                
+                if (data.description) {
+                    $("#description").html( marked(data.description) );
+                }
+                
+                if (data.funding) {
+                    $("#funding").html( marked(data.funding) );
+                }
+
+            }
+        });
+        
+        
         
        $('#btnLove').on('click', function (e) {
         

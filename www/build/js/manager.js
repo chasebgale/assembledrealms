@@ -1,19 +1,25 @@
-var __editor;
+var __editorReadme;
+var __editorFunding;
+var __renderer;
 
 $(document).ready(function () {
    
-   marked.setOptions({
-      sanitize: true
-   });
+   __renderer = new marked.Renderer();
    
-   var renderer = new marked.Renderer();
-   
-   renderer.table = function(header, body) {
+   __renderer.table = function(header, body) {
       return '<table class="table table-striped"><thead>' + header + '</thead><tbody>' + body + '</tbody></table>';
    }
    
-   __editor = ace.edit("realmReadmeSource");
-   __editor.getSession().setMode("ace/mode/markdown");
+   marked.setOptions({
+      sanitize: true,
+      renderer: __renderer
+   });
+   
+   __editorReadme = ace.edit("realmReadmeSource");
+   __editorReadme.getSession().setMode("ace/mode/markdown");
+   
+   __editorFunding = ace.edit("realmFundingSource");
+   __editorFunding.getSession().setMode("ace/mode/markdown");
    
    $.ajax({
             url: 'http://www.assembledrealms.com/build/manager.php',
@@ -45,21 +51,17 @@ $(document).ready(function () {
    })
    .fail(function(data) {
        console.log(data);
-       $('#newFileCreateAlert').text('Network Error: ' + data.statusText);
-       $('#newFileCreateAlert').fadeIn();
-           // Update DOM to reflect we messed up:
-           //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
-   })
+   });
    
-   $("#realmFundingSource").on("keyup", function (e) {
+   __editorFunding.getSession().on("change", function (e) {
       
-      fundingMarkdown($(this).val());
+      fundingMarkdown( __editorFunding.getValue() );
       
    });
    
-   $("#realmReadmeSource").on("keyup", function (e) {
+   __editorReadme.getSession().on("change", function (e) {
       
-      $("#realmReadmeDisplay").html( marked($(this).val(), { renderer: renderer }) );
+      descriptionMarkdown( __editorReadme.getValue() );
       
    });
    
@@ -106,6 +108,29 @@ $(document).ready(function () {
       button.attr('disabled', true);
       button.html('<i class="fa fa-cog fa-spin"></i> Save Changes!');
       
+      $.ajax({
+            url: 'manager.php',
+            type: 'post',
+            dataType: 'json',
+            data: {directive: 'save',
+                   realm_id: __realmID,
+                   markdown_funding: __editorFunding.getValue(),
+                   markdown_description: __editorReadme.getValue(),
+                   markdown_create: __markdownCreateNewDB}
+      })
+      .done(function (data) {
+         console.log(data);
+         __markdownCreateNewDB = false;
+         enableSave();
+      })
+      .fail(function(data) {
+          console.log(data);
+          $('#newFileCreateAlert').text('Network Error: ' + data.statusText);
+          $('#newFileCreateAlert').fadeIn();
+              // Update DOM to reflect we messed up:
+              //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
+      })
+      
       
    });
    
@@ -114,22 +139,19 @@ $(document).ready(function () {
       var container = $('#realmFundingSource').closest('.panel-body');
       
       if ($(this).is(':checked') == false) {
-         $('#realmFundingSource').prop('disabled', true);
+         __editorFunding.setReadOnly(true);
          container.css('user-select', 'none');
          container.css('opacity', '0.3');
-         $('#realmFundingSource').css('user-select', 'none');
       } else {
-         $('#realmFundingSource').removeAttr('disabled');
+         __editorFunding.setReadOnly(false);
          container.css('user-select', 'text');
          container.css('opacity', '1.0');
-         $('#realmFundingSource').css('user-select', 'text');
       }
    });
    
    if ($('#chkFunding').is(':checked') == false) {
-      $('#realmFundingSource').prop('disabled', true);
+      __editorFunding.setReadOnly(true);
       $('#realmFundingSource').closest('.panel-body').css('user-select', 'none');
-      $('#realmFundingSource').css('user-select', 'none');
    }
    
 });
@@ -152,7 +174,7 @@ function fundingMarkdown(data) {
 
 function fetchFundingTemplate() {
    $.get( "/data/markdown/funding.markdown", function( data ) {
-      $("#realmFundingSource").val( data );
+      __editorFunding.setValue(data);
       __existingState.markdown_funding = data;
       __currentState.markdown_funding = data;
       fundingMarkdown(data);
@@ -160,7 +182,16 @@ function fetchFundingTemplate() {
 }
 
 function fetchDescriptionTemplate() {
-   
+   $.get( "/data/markdown/readme.markdown", function( data ) {
+      __editorReadme.setValue(data);
+      __existingState.markdown_readme = data;
+      __currentState.markdown_readme = data;
+      descriptionMarkdown(data);
+   });
+}
+
+function descriptionMarkdown(data) {
+   $("#realmReadmeDisplay").html( marked(data) );
 }
 
 function checkForChanges() {
