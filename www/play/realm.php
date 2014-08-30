@@ -73,7 +73,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     if ($realm['status'] == 0) {
         // TODO: Alert realm owner someone tried to play when offline,
         //       (add messages/alerts to profile!)
-        $alert = "Realm is offline! <i class='fa fa-frown-o'></i>";
+        $alert = "<h3><i class='fa fa-power-off'></i> OFFLINE</h3>";
     }
     
 } else {
@@ -135,7 +135,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     <?php
     $style = 'style="border: 0; width:896px; height:504px; display: block; margin: 0 auto;"';
     if ($alert) {
-        echo '<div ' . $style . '>' . $alert . '</div>';
+        echo '<div class="bg-danger" ' . $style . '><div class="absoluteCenter text-danger" style="margin-top: 215px; text-align: center; width: 400px;">' . $alert . '</div></div>';
     } else {
         echo '<iframe ' . $style . ' src="http://' . $realm['url'] . '"></iframe>';   
     }
@@ -144,7 +144,38 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     <div>
     
     <?php if ($realm['show_funding']) { ?>
-        <div id="funding"></div>
+        <div class="panel panel-success" style="margin-top: 48px;">
+            <div class="panel-heading"><strong>FUNDING</strong></div>
+            <div class="panel-body" class="clearfix">
+                <div id="funding" style="float: left; width: 500px; height: 400px; overflow: hidden;"></div>
+                <div id="realmFundingDonate" style="float: right;">
+                    <form class="form-horizontal" role="form">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">
+                                <img src="/img/profiles/<?=$loggedInUser->user_id . ".jpg?" . time() ?>" />
+                            </label>
+                            <div class="col-sm-6">
+                                <p class="form-control-static"><?=$loggedInUser->displayname?></p>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">Account Balance</label>
+                            <div class="col-sm-6">
+                                <p class="form-control-static">$ 04.12</p>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label" for="donationAmount">Donation Amount</label>
+                            <div class="col-sm-6 left-inner-addon">
+                                <span>$</span>
+                                <input id="donationAmount" type="text" class="form-control" style="display: inline; width: 92%;" />
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-default pull-right">Donate</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     <?php } ?>
     
         <div id="description"></div>
@@ -219,6 +250,23 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     
     var __renderer;
     
+    
+    function fundingMarkdown(data) {
+       var variables = {};
+       variables.funds = "$12.45";
+       variables.priceHour = "$0.009";
+       variables.priceDay = "$0.22";
+       variables.fundsToTime = "9 days, 11 hours";
+       
+       var markedOutput = marked(data);
+       
+       _.forIn(variables, function(value, key) {
+          markedOutput = markedOutput.replace('{' + key + '}', value);
+       });
+       
+       return markedOutput;
+    }
+    
     $(document).ready(function () {
         
         __renderer = new marked.Renderer();
@@ -246,7 +294,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                 }
                 
                 if (data.funding) {
-                    $("#funding").html( marked(data.funding) );
+                    $("#funding").html( fundingMarkdown(data.funding) );
                 }
 
             }

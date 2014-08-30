@@ -227,7 +227,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                                     <input id="donationAmount" type="text" class="form-control" style="display: inline; width: 92%;" />
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-default pull-right">Donate</button>
+                            <button type="button" class="btn btn-default pull-right">Donate</button>
                         </form>
                     </div>
                 </div>
