@@ -15,12 +15,7 @@ Example Donation Benefits:
 * $0.50: Even cooler in-game item
 * $1.00: Special title added to name
 
-***
-
 > "The wise man does not lay up his own treasures.
-> 
 >  The more he gives to others,
-> 
 >  the more he has for his own."
->
-> ## - Lao Tzu
+>  - Lao Tzu

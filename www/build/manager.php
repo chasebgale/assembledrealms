@@ -207,6 +207,14 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                     <div id="realmFundingDonate" style="float: right;">
                         <form class="form-horizontal" role="form">
                             <div class="form-group">
+                                <label class="col-sm-6 control-label">
+                                    <img src="/img/profiles/<?=$loggedInUser->user_id . ".jpg?" . time() ?>" />
+                                </label>
+                                <div class="col-sm-6">
+                                    <p class="form-control-static"><?=$loggedInUser->displayname?></p>
+                                </div>
+                            </div>
+                            <div class="form-group">
                                 <label class="col-sm-6 control-label">Account Balance</label>
                                 <div class="col-sm-6">
                                     <p class="form-control-static">$ 04.12</p>
@@ -214,11 +222,12 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                             </div>
                             <div class="form-group">
                                 <label class="col-sm-6 control-label" for="donationAmount">Donation Amount</label>
-                                <div class="col-sm-6">
-                                    <input id="donationAmount" type="text" class="form-control" />
+                                <div class="col-sm-6 left-inner-addon">
+                                    <span>$</span>
+                                    <input id="donationAmount" type="text" class="form-control" style="display: inline; width: 92%;" />
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-default">Donate</button>
+                            <button type="submit" class="btn btn-default pull-right">Donate</button>
                         </form>
                     </div>
                 </div>
