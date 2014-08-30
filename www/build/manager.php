@@ -23,37 +23,67 @@ if ($method == 'POST') {
     if ($directive == 'save') {
 	
 	global $mysqli;
+        
+        $output = '';
 	
 	if ($_POST['markdown_funding'] || $_POST['markdown_description']) {
-		// INSERT OR CREATE REALM_MARKDOWN ROW
-		if ($_POST['markdown_create'] == true) {
-			$stmt_markdown = $mysqli->prepare("INSERT INTO realm_markdown(
-								funding,
-								description,
-								realm_id
-								)
-								VALUES (
-								?,
-								?,
-								?)"
-			);
-		} else {
-			$stmt_markdown = $mysqli->prepare("UPDATE realm_markdown
-								SET 
-								funding = ?,
-								description = ?
-								WHERE
-								realm_id = ?"
-			);
-		}
-		
-		$stmt_markdown->bind_param("ssi", $_POST['markdown_funding'], $_POST['markdown_description'], $_POST['realm_id']);
-		$stmt_markdown->execute();
-		$stmt_markdown->close();
-		
-		echo "OK";
-		die();
+            // INSERT OR CREATE REALM_MARKDOWN ROW
+            if ($_POST['markdown_create'] == 'true') {
+                    $stmt_markdown = $mysqli->prepare("INSERT INTO realm_markdown(
+                                                            funding,
+                                                            description,
+                                                            realm_id
+                                                            )
+                                                            VALUES (
+                                                            ?,
+                                                            ?,
+                                                            ?)"
+                    );
+            } else {
+                    $stmt_markdown = $mysqli->prepare("UPDATE realm_markdown
+                                                            SET 
+                                                            funding = ?,
+                                                            description = ?
+                                                            WHERE
+                                                            realm_id = ?"
+                    );
+            }
+            
+            $stmt_markdown->bind_param("ssi", $_POST['markdown_funding'], $_POST['markdown_description'], $_POST['realm_id']);
+            $rc = $stmt_markdown->execute();
+            
+            if ( false===$rc ) {
+                $output .= " Markdown.execute() failed: " . htmlspecialchars($stmt_markdown->error);
+            } else {
+                $output .= " Markdown updated.";
+            }
+            
+            $stmt_markdown->close();
 	}
+        
+        if (isset($_POST['funding'])) {
+            $stmt = $mysqli->prepare("UPDATE realms
+                                     SET show_funding = ?
+                                     WHERE id = ?"
+            );
+            
+            $funding = (int)($_POST['funding'] == 'true');
+            
+            $stmt->bind_param("ii", $funding, $_POST['realm_id']);
+            $rc = $stmt->execute();
+            
+            if ( false===$rc ) {
+                $output .= " Funding.execute() failed: " . htmlspecialchars($stmt->error);
+            } else {
+                $output .= " Funding updated.";
+            }
+            
+            $stmt->close();
+            
+        }
+        
+        echo json_encode( (object) ['message' => $output] );
+	die();
 	
     }
     
@@ -166,20 +196,34 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
             </div>
         </div>
         <div class="panel-body" style="opacity: <?php echo $funding_opacity ?>;">
-		<div class="row">
-			<div class="col-md-6">
-				<h4 class="text-muted">Markdown Source</h4>
-			</div>
-			<div class="col-md-6">
-				<h4 class="text-muted">Display Preview</h4>
-			</div>
-		</div>
-		<div class="row">
-			<div id="realmFundingSource" class="col-md-6" style="height: 400px;">
-			</div>
-			<div class="col-md-6" id="realmFundingDisplay">
-			</div>
-		</div>
+            <h4 class="text-muted">Markdown Source</h4>
+            <div id="realmFundingSource" style="height: 400px;"></div>
+                
+            <h4 class="text-muted">Display Preview</h4>
+            <div class="panel panel-success">
+                <div class="panel-heading"><strong>FUNDING</strong></div>
+                <div class="panel-body" class="clearfix">
+                    <div id="realmFundingDisplay" style="float: left; width: 500px; height: 400px; overflow: hidden;"></div>
+                    <div id="realmFundingDonate" style="float: right;">
+                        <form class="form-horizontal" role="form">
+                            <div class="form-group">
+                                <label class="col-sm-6 control-label">Account Balance</label>
+                                <div class="col-sm-6">
+                                    <p class="form-control-static">$ 04.12</p>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-6 control-label" for="donationAmount">Donation Amount</label>
+                                <div class="col-sm-6">
+                                    <input id="donationAmount" type="text" class="form-control" />
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-default">Donate</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
         </div>
     </div>
 

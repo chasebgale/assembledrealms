@@ -133,11 +133,11 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     </div>
     
     <?php
+    $style = 'style="border: 0; width:896px; height:504px; display: block; margin: 0 auto;"';
     if ($alert) {
-        echo "<h2>" . $alert . "</h2>";
+        echo '<div ' . $style . '>' . $alert . '</div>';
     } else {
-        echo '<iframe src="http://' . $realm['url'] . '"
-                style="border: 0; width:896px; height:504px; display: block; margin: 0 auto;"></iframe>';   
+        echo '<iframe ' . $style . ' src="http://' . $realm['url'] . '"></iframe>';   
     }
     ?>
     

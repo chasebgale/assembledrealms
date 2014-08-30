@@ -33,13 +33,19 @@ $(document).ready(function () {
       if (data.funding == null) {
          fetchFundingTemplate();
       } else {
-      
+         __editorFunding.setValue(data.funding);
+         __existingState.markdown_funding = data.funding;
+         __currentState.markdown_funding = data.funding;
+         fundingMarkdown(data.funding);
       }
       
       if (data.description == null) {
          fetchDescriptionTemplate();
       } else {
-      
+         __editorReadme.setValue(data.description);
+         __existingState.markdown_readme = data.description;
+         __currentState.markdown_readme = data.description;
+         descriptionMarkdown(data.description);
       }
       
       if (data.realm_id) {
@@ -116,7 +122,9 @@ $(document).ready(function () {
                    realm_id: __realmID,
                    markdown_funding: __editorFunding.getValue(),
                    markdown_description: __editorReadme.getValue(),
-                   markdown_create: __markdownCreateNewDB}
+                   markdown_create: __markdownCreateNewDB,
+                   funding: $("#chkFunding").is(":checked")
+                   }
       })
       .done(function (data) {
          console.log(data);
