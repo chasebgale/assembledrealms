@@ -73,7 +73,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     if ($realm['status'] == 0) {
         // TODO: Alert realm owner someone tried to play when offline,
         //       (add messages/alerts to profile!)
-        $alert = "<h3><i class='fa fa-power-off'></i> OFFLINE</h3>";
+        $alert = "<h3 style='font-size: 52px; color: white; font-weight: bold;'><i class='fa fa-power-off'></i> OFFLINE</h3>";
     }
     
 } else {
@@ -133,66 +133,78 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     </div>
     
     <?php
-    $style = 'style="border: 0; width:896px; height:504px; display: block; margin: 0 auto;"';
+    $style = 'border: 0; width:896px; height:504px; display: block; margin: 0 auto;';
     if ($alert) {
-        echo '<div class="bg-danger" ' . $style . '><div class="absoluteCenter text-danger" style="margin-top: 215px; text-align: center; width: 400px;">' . $alert . '</div></div>';
+        echo '<div style="background-color: #eee; ' . $style . '"><div class="absoluteCenter text-danger" style="margin-top: 215px; text-align: center; width: 400px;">' . $alert . '</div></div>';
     } else {
-        echo '<iframe ' . $style . ' src="http://' . $realm['url'] . '"></iframe>';   
+        echo '<iframe style="' . $style . '" src="http://' . $realm['url'] . '"></iframe>';   
     }
     ?>
     
     <div>
+        
+    <ul id="tabs" class="nav nav-tabs" role="tablist" style="margin-top: 60px;">
+<?php if ($realm['show_funding']) { ?>
+        <li class="active"><a href="#tab_funding" role="tab" data-toggle="tab">Funding</a></li>
+        <li><a href="#tab_readme" role="tab" data-toggle="tab">Readme</a></li>
+<?php } else { ?>
+        <li class="active"><a href="#tab_readme" role="tab" data-toggle="tab">Readme</a></li>
+<?php } ?>
+        <li><a href="#tab_comments" role="tab" data-toggle="tab">Comments</a></li>
+        <li><a href="#tab_credits" role="tab" data-toggle="tab">Credits</a></li>
+    </ul>
+    
+    <!-- Tab panes -->
+    <div class="tab-content">
     
     <?php if ($realm['show_funding']) { ?>
-        <div class="panel panel-success" style="margin-top: 48px;">
-            <div class="panel-heading"><strong>FUNDING</strong></div>
-            <div class="panel-body" class="clearfix">
-                <div id="funding" style="float: left; width: 500px; height: 400px; overflow: hidden;"></div>
-                <div id="realmFundingDonate" style="float: right;">
-                    <form class="form-horizontal" role="form">
-                        <div class="form-group">
-                            <label class="col-sm-6 control-label">
-                                <img src="/img/profiles/<?=$loggedInUser->user_id . ".jpg?" . time() ?>" />
-                            </label>
-                            <div class="col-sm-6">
-                                <p class="form-control-static"><?=$loggedInUser->displayname?></p>
-                            </div>
+        <div id="tab_funding" class="tab-pane active clearfix" style="margin-top: 32px;">
+            <div id="funding" style="float: left; width: 500px; height: 400px; overflow: hidden;"></div>
+            <div id="realmFundingDonate" style="float: right;">
+                <form class="form-horizontal" role="form">
+                    <div class="form-group">
+                        <label class="col-sm-6 control-label">
+                            <img src="/img/profiles/<?=$loggedInUser->user_id . ".jpg?" . time() ?>" />
+                        </label>
+                        <div class="col-sm-6">
+                            <p class="form-control-static"><?=$loggedInUser->displayname?></p>
                         </div>
-                        <div class="form-group">
-                            <label class="col-sm-6 control-label">Account Balance</label>
-                            <div class="col-sm-6">
-                                <p class="form-control-static">$ 04.12</p>
-                            </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-6 control-label">Account Balance</label>
+                        <div class="col-sm-6">
+                            <p class="form-control-static">$ 04.12</p>
                         </div>
-                        <div class="form-group">
-                            <label class="col-sm-6 control-label" for="donationAmount">Donation Amount</label>
-                            <div class="col-sm-6 left-inner-addon">
-                                <span>$</span>
-                                <input id="donationAmount" type="text" class="form-control" style="display: inline; width: 92%;" />
-                            </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-6 control-label" for="donationAmount">Donation Amount</label>
+                        <div class="col-sm-6 left-inner-addon">
+                            <span>$</span>
+                            <input id="donationAmount" type="text" class="form-control" style="display: inline; width: 92%;" />
                         </div>
-                        <button type="button" class="btn btn-default pull-right">Donate</button>
-                    </form>
-                </div>
+                    </div>
+                    <button type="button" class="btn btn-default pull-right">Donate</button>
+                </form>
             </div>
         </div>
     <?php } ?>
     
-        <div id="description"></div>
+        <div id="tab_readme" style="margin-top: 32px;" class="tab-pane<?php if ($realm['show_funding'] == false) echo ' active' ?>"></div>
     
-    </div>
+        <div id="tab_comments" class="tab-pane" style="margin-top: 32px;">
+            <div id="comment" style="margin-top: 0px;" class="clearfix">
+                <textarea class="form-control" rows="5" cols="100" id="commentContent" placeholder="Add your voice to the conversation..."></textarea>
+                <button id="btnAddComment" style="margin-top: 10px;" class="btn btn-default pull-right">Add Comment</button>
+            </div>
+            
+            <div>
+                <ul id="comments" class="media-list">
+                </ul>
+            </div>    
+        </div>
+        
+        <div id="tab_credits" class="tab-pane"></div>
     
-    <h4 class="text-muted" style="padding-top: 24px;">Comments</h4>
-    <hr />
-    <button id="btnLoadComments" type="button" class="btn btn-default"><i class="fa fa-comments-o"></i> Load Comments</button>
-    <div id="comment" style="display: none;" class="clearfix">
-        <textarea class="form-control" rows="5" cols="100" id="commentContent" placeholder="Add your voice to the conversation..."></textarea>
-        <button id="btnAddComment" style="margin-top: 10px;" class="btn btn-default pull-right">Add Comment</button>
-    </div>
-    
-    <div>
-        <ul id="comments" class="media-list" style="display:none;">
-        </ul>
     </div>
     
 </div>
@@ -290,7 +302,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                 data = JSON.parse( data );
                 
                 if (data.description) {
-                    $("#description").html( marked(data.description) );
+                    $("#tab_readme").html( marked(data.description) );
                 }
                 
                 if (data.funding) {
@@ -300,64 +312,55 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
             }
         });
         
+        $.post( "realm.php", { directive: "comment", realmID: "<?=$realmID?>" })
+        .done(function( data ) {
+            if (data !== "null") {
+                data = JSON.parse( data );
+                $("#comments").html(templateFn({ 'comments': data }));
+                
+                for (var i =0; i < data.length; i++) {
+                    if (data[i].parent_id) {
+                        var target = $('#comments').find('[data-id="' + data[i].parent_id + '"]');
+                        target.append(templateReplyFn({'comment': data[i]}));
+                    }
+                }
+            } 
+        });
         
         
-       $('#btnLove').on('click', function (e) {
         
+        $('#btnLove').on('click', function (e) {
+
             e.preventDefault();
             
             var button = $(this);
             
             $.post( "realm.php", { directive: "love", realmID: "<?=$realmID?>" })
-                .done(function( data ) {
-                    if (data !== "null") {
-                        
-                        button.html('<i class="fa fa-heart"></i>  Loved!');
-                        button.prop("disabled",true);
-                        
-                        var loveCountSpan = $("#loveCount");
-                        var loveCount = parseInt(loveCountSpan.text()) + 1;
-                        
-                        loveCountSpan.text(loveCount);
+            .done(function( data ) {
+                if (data !== "null") {
+                    
+                    button.html('<i class="fa fa-heart"></i>  Loved!');
+                    button.prop("disabled",true);
+                    
+                    var loveCountSpan = $("#loveCount");
+                    var loveCount = parseInt(loveCountSpan.text()) + 1;
+                    
+                    loveCountSpan.text(loveCount);
 
-                    }
-                });
+                }
+            });
             
-            
-            
-       });
+        });
        
-       $('#btnComment').on('click', function (e) {
+        $('#btnComment').on('click', function (e) {
             e.preventDefault();
             
-            var button = $(this);
+            $('#tabs a[href="#tab_comments"]').tab('show');
             
-            button.attr('disabled', true);
-            button.html('<i class="fa fa-cog fa-spin"></i> Comment');
-            
-            var loadButton = $('#loadComments');
-            
-            loadButton.attr('disabled', true);
-            loadButton.html('<i class="fa fa-cog fa-spin"></i> Load Comments');
-            
-            loadComments();
+            $('html, body').animate({
+                scrollTop: $("#comment").offset().top - 100
+            }, 400);
                 
-       });
-       
-       $('#btnLoadComments').on('click', function (e) {
-            e.preventDefault();
-            
-            var button = $(this);
-            
-            button.attr('disabled', true);
-            button.html('<i class="fa fa-cog fa-spin"></i> Load Comments');
-            
-            var topButton = $('#btnComment');
-            
-            topButton.attr('disabled', true);
-            topButton.html('<i class="fa fa-cog fa-spin"></i> Comment');
-            
-            loadComments();
        });
        
        $('#btnAddComment').on('click', function (e) {
@@ -434,35 +437,6 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                     }
                 });
        });
-       
-       function loadComments() {
-            $.post( "realm.php", { directive: "comment", realmID: "<?=$realmID?>" })
-            .done(function( data ) {
-                if (data !== "null") {
-                    data = JSON.parse( data );
-                    $("#comments").html(templateFn({ 'comments': data }));
-                    
-                    for (var i =0; i < data.length; i++) {
-                        if (data[i].parent_id) {
-                            var target = $('#comments').find('[data-id="' + data[i].parent_id + '"]');
-                            target.append(templateReplyFn({'comment': data[i]}));
-                        }
-                    }
-                } 
-                
-                $('#btnLoadComments').hide();
-                $('#comments').fadeIn();
-                $("#comment").fadeIn(400, function() {
-                    // Scroll page to comments section:
-                    $('html, body').animate({
-                        scrollTop: $("#comment").offset().top - 100
-                    }, 400);
-                });
-                
-                $('#btnComment').html('<i class="fa fa-comments-o"></i> Comment');
-                
-            });
-        }
        
     });
     
