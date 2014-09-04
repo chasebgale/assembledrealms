@@ -57,6 +57,9 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 	    <button id="btnNewFile" type="button" class="btn btn-default">
 		<span class="glyphicon glyphicon-plus"></span> New File
 	    </button>
+	    <button id="btnUploadResource" type="button" class="btn btn-default">
+		<span class="fa fa-upload"></span> Add Media
+	    </button>
         </div>
         <div id="tabs">
             <ul class="nav nav-tabs" id="mapTabs">
@@ -184,6 +187,35 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 		<div class="modal-footer">
 		    <span id="commitProgressMessage"></span>
 			<button id="commitStart" type="button" class="btn btn-default">Commit</button>
+		</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="modalUploadResource" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+		    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Add Media</h4>
+                </div>
+                <div class="modal-body">
+		    <input type="file" id="inputFile">
+                </div>
+		<div class="modal-footer">
+		    <p class="text-justify">
+			<strong>Please support the hard work of others.</strong>
+			By clicking the "Upload!" button below you are certifying that the media you are
+			adding is either your own work, the work of another that is under a license which
+			allows distribution or belongs to the public domain. 
+		    </p>
+		    <div class="clear-fix">
+			<div id="uploadProgressbar" class="progress progress-striped"
+			     style="width: 85%; float: left; margin-top: 6px;">
+			    <div class="progress-bar"  role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 100%;"></div>
+			</div>
+			<button id="uploadStart" type="button" class="btn btn-default">Upload!</button>
+		    </div>
 		</div>
             </div>
         </div>

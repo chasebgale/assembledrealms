@@ -110,6 +110,10 @@ function initialize(projectID, projectDomain) {
         $('#modalNewFile').modal('show');
     });
     
+    $("#btnUploadResource").on("click", function () {
+        $('#modalUploadResource').modal('show');
+    });
+    
     $("#newfileLocation").on("click", "a", function (e) {
         e.preventDefault();
         
