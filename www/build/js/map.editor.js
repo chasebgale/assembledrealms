@@ -37,6 +37,7 @@ var Map = {
    brush: {},
    tile: 0,
    moveOriginPoint: {},
+   moveOriginOffset: {},
 
    init: function (div, map) {
 
@@ -436,22 +437,29 @@ var Map = {
          case Map.MODE_MOVE:
             
             Map.stage.mousedown = function (data) {
-               Map.moveOriginPoint = data.global;
+               Map.moveOriginPoint = _.cloneDeep( data.global );
+               Map.moveOriginOffset = _.cloneDeep( Map.offset );
+               Map.moveOriginPlayer = _.cloneDeep( Map.playerPos );
             };
       
             Map.stage.mousemove = function (data) {
                
                if ((data.target.__isDown) && (Map.moveOriginPoint)) {
                   
-                  Map.offsetTracker.x -= (Map.moveOriginPoint.x - data.global.x);
-                  Map.offsetTracker.y -= (Map.moveOriginPoint.y - data.global.y);
+                  var xDiff = data.global.x - Map.moveOriginPoint.x;
+                  var yDiff = Map.moveOriginPoint.y - data.global.y;
+                  
+                  Map.offset.x = (Map.moveOriginOffset.x + xDiff );
+                  Map.offset.y = (Map.moveOriginOffset.y - yDiff );
 
-                  Map.draw();
+                  Map.playerPos.x = (Map.moveOriginPlayer.x - xDiff);
+                  Map.playerPos.y = (Map.moveOriginPlayer.y + yDiff);
+                  
+//                  Map.draw();
+                  Map.invalidate = true;
                   Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
                   
                   Map.updateSource();
-                  
-                  Map.moveOriginPoint = data.global;
                    
                }
       
