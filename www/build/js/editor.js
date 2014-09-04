@@ -22,7 +22,7 @@ function initialize(projectID, projectDomain) {
     if (sessionStorage[__trackedStorageId]) {
         __trackedFiles = JSON.parse(sessionStorage[__trackedStorageId]);
     }
-
+    
     // Fetch file:
     $("#explorer").on("click", ".file", function () {
 
@@ -62,6 +62,7 @@ function initialize(projectID, projectDomain) {
     $("#terrain").on("click", ".terrain", function () {
         var tileKey = $(this).attr('data-id');
         Map.setBrush(Map.terrain, tileKey);
+        Map.setMode(Map.MODE_PAINT);
 
         var offset = parseInt($(this).attr('data-offset'));
         offset = offset / -2;
@@ -76,6 +77,7 @@ function initialize(projectID, projectDomain) {
     $("#objects").on("click", ".objects", function () {
         var objectKey = $(this).attr('data-id');
         Map.setBrush(Map.objects, objectKey);
+        Map.setMode(Map.MODE_PAINT);
 
         var offset = parseInt($(this).attr('data-offset'));
         offset = offset / -2;
@@ -89,7 +91,11 @@ function initialize(projectID, projectDomain) {
 
     $("#moveButton").on("click", function () {
         //$("#mapMain").css('cursor', 'move');
-        Map.moveMode();
+        Map.setMode(Map.MODE_MOVE);
+    });
+    
+    $("#eraserButton").on("click", function () {
+       Map.setMode(Map.MODE_DELETE);
     });
 
     $("#btnCommit").on("click", function () {

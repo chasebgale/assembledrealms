@@ -27,6 +27,9 @@ var Map = {
    TILE_HEIGHT: 32,
    TILE_HEIGHT_HALF: 16,
    TILE_Y_OFFSET: 14,
+   MODE_PAINT: 0,
+   MODE_MOVE: 1,
+   MODE_DELETE: 2,
    playerPos: { x: 0, y: 0 },
    offsetTracker: { x: 0, y: 0 },
    terrain: {},
@@ -201,44 +204,6 @@ var Map = {
       Map.stage.addChild(Map.layer_actors);
 
       Map.renderer.render(Map.stage);
-
-      Map.stage.mousedown = function (data) {
-
-         var result = Map.indexFromScreen(data.global);
-         
-         if (Map.brush.source[result.row] === undefined) {
-            Map.brush.source[result.row] = {};
-         }
-
-         Map.brush.source[result.row][result.col] = Map.brush.index;
-         Map.draw();
-         Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
-         
-         Map.updateSource();
-
-      };
-
-      Map.stage.mousemove = function (data) {
-         
-         if (data.target.__isDown) {
-            var result = Map.indexFromScreen(data.global);
-
-            if (Map.brush.source[result.row] === undefined) {
-               Map.brush.source[result.row] = {};
-            }
-
-            Map.brush.source[result.row][result.col] = Map.brush.index;
-            Map.draw();
-            Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
-            
-            Map.updateSource();
-             
-         }
-
-         if (Map.brush.sprite)
-            Map.brush.sprite.position = data.global;
-
-      };
        
    },
 
@@ -353,48 +318,118 @@ var Map = {
       return map;
    },
    
-   moveMode: function () {
-        Map.stage.mousedown = function (data) {
-
-           console.log(data.global);
-
-           var result = Map.indexFromScreen(data.global);
-
-           console.log(result.row + ', ' + result.col);
-           
-           if (Map.brush.source[result.row] === undefined) {
-               Map.brush.source[result.row] = {};
-           }
-
-           Map.brush.source[result.row][result.col] = Map.brush.index;
-           Map.draw();
-           Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
-           
-           Map.updateSource();
-
-       };
-
-       Map.stage.mousemove = function (data) {
-
-           if (data.target.__isDown) {
+   setMode: function (mode, options) {
+      switch (mode) {
+         case Map.MODE_DELETE:
+            
+            Map.stage.mousedown = function (data) {
                var result = Map.indexFromScreen(data.global);
-
-               if (Map.brush.source[result.row] === undefined) {
-                   Map.brush.source[result.row] = {};
+               
+               /*
+               var source;
+               
+               switch (layer) {
+                  case 0:
+                     source = Map.terrain;
+                     break;
+                  case 1:
+                     source = Map.objects;
+                     break;
                }
+               
+               delete source[result.row][result.col];
+               */
+               
+               
+               if (Map.terrain[result.row]) {
+                  if (Map.terrain[result.row][result.col]) {
+                     delete Map.terrain[result.row][result.col];
+                  }
+               }
+               
+               if (Map.objects[result.row]) {
+                  if (Map.objects[result.row][result.col]) {
+                     delete Map.objects[result.row][result.col];
+                  }
+               }
+               
+               Map.draw();
+               Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
+               Map.updateSource();
+            };
+            
+            Map.stage.mousemove = function (data) {
+               
+               if (data.target.__isDown) {
+                  var result = Map.indexFromScreen(data.global);
+      
+                  if (Map.terrain[result.row]) {
+                     if (Map.terrain[result.row][result.col]) {
+                        delete Map.terrain[result.row][result.col];
+                     }
+                  }
+                  
+                  if (Map.objects[result.row]) {
+                     if (Map.objects[result.row][result.col]) {
+                        delete Map.objects[result.row][result.col];
+                     }
+                  }
+                   
+                  Map.draw();
+                  Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
+                  Map.updateSource();
+               }
+               
+            };
+            
+            break;
+         case Map.MODE_PAINT:
+            
+            Map.stage.mousedown = function (data) {
 
+               var result = Map.indexFromScreen(data.global);
+               
+               if (Map.brush.source[result.row] === undefined) {
+                  Map.brush.source[result.row] = {};
+               }
+      
                Map.brush.source[result.row][result.col] = Map.brush.index;
                Map.draw();
                Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
                
                Map.updateSource();
+      
+            };
+      
+            Map.stage.mousemove = function (data) {
                
-           }
-
-           if (Map.brush.sprite)
-               Map.brush.sprite.position = data.global;
-
-       };
+               if (data.target.__isDown) {
+                  var result = Map.indexFromScreen(data.global);
+      
+                  if (Map.brush.source[result.row] === undefined) {
+                     Map.brush.source[result.row] = {};
+                  }
+      
+                  Map.brush.source[result.row][result.col] = Map.brush.index;
+                  Map.draw();
+                  Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
+                  
+                  Map.updateSource();
+                   
+               }
+      
+               if (Map.brush.sprite)
+                  Map.brush.sprite.position = data.global;
+      
+            };
+            
+            break;
+         case Map.MODE_MOVE:
+            
+            
+            
+            break;
+      }
    }
    
 };
