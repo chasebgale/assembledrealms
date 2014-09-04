@@ -36,6 +36,7 @@ var Map = {
    objects: {},
    brush: {},
    tile: 0,
+   moveOriginPoint: {},
 
    init: function (div, map) {
 
@@ -382,6 +383,10 @@ var Map = {
                
             };
             
+            Map.stage.mouseup = function (data) {
+               
+            };
+            
             break;
          case Map.MODE_PAINT:
             
@@ -423,10 +428,38 @@ var Map = {
       
             };
             
+            Map.stage.mouseup = function (data) {
+               
+            };
+            
             break;
          case Map.MODE_MOVE:
             
+            Map.stage.mousedown = function (data) {
+               Map.moveOriginPoint = data.global;
+            };
+      
+            Map.stage.mousemove = function (data) {
+               
+               if ((data.target.__isDown) && (Map.moveOriginPoint)) {
+                  
+                  Map.offsetTracker.x -= (Map.moveOriginPoint.x - data.global.x);
+                  Map.offsetTracker.y -= (Map.moveOriginPoint.y - data.global.y);
+
+                  Map.draw();
+                  Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
+                  
+                  Map.updateSource();
+                  
+                  Map.moveOriginPoint = data.global;
+                   
+               }
+      
+            };
             
+            Map.stage.mouseup = function (data) {
+               Map.moveOriginPoint = null;
+            };
             
             break;
       }
