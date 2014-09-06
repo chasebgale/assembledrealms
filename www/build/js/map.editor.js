@@ -344,13 +344,13 @@ var Map = {
                
                
                if (Map.terrain[result.row]) {
-                  if (Map.terrain[result.row][result.col]) {
+                  if (result.col in Map.terrain[result.row]) {
                      delete Map.terrain[result.row][result.col];
                   }
                }
                
                if (Map.objects[result.row]) {
-                  if (Map.objects[result.row][result.col]) {
+                  if (result.col in Map.objects[result.row]) {
                      delete Map.objects[result.row][result.col];
                   }
                }
@@ -366,13 +366,13 @@ var Map = {
                   var result = Map.indexFromScreen(data.global);
       
                   if (Map.terrain[result.row]) {
-                     if (Map.terrain[result.row][result.col]) {
+                     if (result.col in Map.terrain[result.row]) {
                         delete Map.terrain[result.row][result.col];
                      }
                   }
                   
                   if (Map.objects[result.row]) {
-                     if (Map.objects[result.row][result.col]) {
+                     if (result.col in Map.objects[result.row]) {
                         delete Map.objects[result.row][result.col];
                      }
                   }
@@ -455,7 +455,6 @@ var Map = {
                   Map.playerPos.x = (Map.moveOriginPlayer.x - xDiff);
                   Map.playerPos.y = (Map.moveOriginPlayer.y + yDiff);
                   
-//                  Map.draw();
                   Map.invalidate = true;
                   Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
                   
