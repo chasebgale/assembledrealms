@@ -313,7 +313,7 @@ function commit(filesToCommit) {
                 
                 _.each(filesToCommit, function (file) {
                     // Update sessionStorage with new MD5
-                    sessionStorage[file.sha + '-commit-md5'] = md5(sessionStorage[file.sha]);
+                    sessionStorage[__projectId + '-' + file.sha + '-commit-md5'] = md5(sessionStorage[__projectId + '-' + file.sha]);
                 });
                 
                 // Update DOM to reflect we completed ok:
@@ -338,9 +338,6 @@ function commit(filesToCommit) {
         
     }
 }
-
-
-var __waitTime = 500;
 
 function loadRealmRoot() {
             
@@ -370,8 +367,8 @@ function loadRealmRoot() {
     if ((resp.responseText === null) || (resp.responseText === undefined)) {
         // Retry:
         
-        __waitTime = __waitTime * 2;
-        setTimeout(loadRealmRoot, __waitTime);
+        // __waitTime = __waitTime * 2;
+        // setTimeout(loadRealmRoot, __waitTime);
         
     } else {
         
@@ -431,7 +428,7 @@ function loadRealmFile(id, path, name) {
 
     var ext = name.split('.').pop();
     
-    var tracking_id = __projectId + '-' + id;
+    var tracking_id = __projectId + '-' + path;
     
     if (ext === 'png') {
         var img = $('#' + id);
