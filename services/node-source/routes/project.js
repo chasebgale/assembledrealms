@@ -275,58 +275,12 @@ exports.save = function(req, res, next){
   });
 }
 
-exports.save_old = function(req, res){
-  
-  git.Repo.open(__dirname + "/../projects/" + req.params.id, function(error, repo) {
-    if (error) throw error;
-  
-    repo.getMaster(function(error, branch) {
-      if (error) throw error;
-  
-      branch.getTree(function(error, tree) {
-        if (error) throw error;
-          
-        var builder = tree.builder();
-        var buffer;
-        
-        req.body.forEach(function (entry) {
-          buffer = new Buffer(entry.content);
-          builder.insertBlob(entry.path, buffer, false)
-        });
-      
-        builder.write(function(error, treeId) {
-          if (error) throw error;
-          
-          var author = git.Signature.now("Chase Gale", "chase.b.gale@gmail.com");
-          var committer = git.Signature.now("Chase Gale", "chase.b.gale@gmail.com");
-  
-          repo.createCommit('HEAD', author, committer, "message", treeId, [tree], function(error, commitId) {
-            
-            if (error) throw error;
-            
-            utilities.logMessage('Commit (' + commitId.sha() + ') to REPO: ' + __dirname + "/../projects/" + req.params.id);
-            
-            var formatted = {};
-            formatted.commit = commitId.sha();
-            formatted.message = "OK";
-            
-            res.json(formatted);
-            
-          });
-          
-        });
-        
-      });
-      
-    });
-  
-  });
-}
-
 exports.destroy = function(req, res, next){
   
   rimraf(__dirname + "/../projects/" + req.params.id, function(error) {
     if (error) return next(error);
+    
+    utilities.logMessage('DESTROYED repo: ' + req.params.id);
     
     var formatted = {};
     formatted.message = "OK";
