@@ -87,6 +87,14 @@ if ($method == 'POST') {
 	
     }
     
+    if ($directive == 'destroy') {
+	if (isset($_POST['realm_id'])) {
+	    $loggedInUser->destroyRealm($_POST['realm_id']);
+	    echo json_encode( (object) ['message' => 'OK'] );
+	    die();
+	}	
+    }
+    
 }
 
 require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");

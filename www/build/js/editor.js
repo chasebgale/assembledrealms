@@ -502,16 +502,8 @@ function loadRealmFile(id, path, name) {
 }
 
 function realmResourceURL(path) {
-    // /projects//id/repository/blobs//sha
-    // http://source-01.assembledrealms.com/api/v3/projects/12/repository/blobs/master?id=12&filepath=client%2Fsprites%2Fzombie_0.png&private_token=o4sq1j9WsQXqhxuyis5Z
 
-    // Crawl our file tree looking for the SHA of the given path:
-    var sha = $('#explorer').find('span[data-path~="' + path + '"]').attr('data-id');
-    
-    //var token = getGitlabSession();
-    var ref = "master"; // For now hit master, in the future, pull from working branch (master is the current production copy of the realm)
-    
-    var req = '/file/open/' + sha;
+    var req = '/file/open/' + encodeURIComponent(path);
     
     return __projectURL + req;
     

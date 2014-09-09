@@ -79,32 +79,28 @@ $(document).ready(function () {
    
    $("#button-destroy-realm").on("click", function (e) {
     
-        e.preventDefault();
+         e.preventDefault();
+         var id = $(this).attr('data-id');
 
-        var token = getGitlabSession();
-        var id = $(this).attr('data-id');
-
-        $.ajax({
-            url: 'http://debug-01.assembledrealms.com/api/project/' + id,
-            type: 'DELETE',
+         $.ajax({
+            url: 'http://source-01.assembledrealms.com/api/project/' + id + '/destroy',
+            type: 'GET',
             dataType: 'json',
             success: function (data) {
                 
-                var payload = {};
-                payload.gitlab_id = gitlab_id;
+               var parameters = {};
+               parameters.directive = "destroy";
+               parameters.realm_id = id;
 
-                var parameters = {};
-                parameters.directive = "destroy";
-                parameters.payload = JSON.stringify(payload);
-
-                $.post("api.php", parameters, function (data) {
-                    if (data == "OK") {
-                        window.location = "http://www.assembledrealms.com/build";
-                    }
-                });
+               $.post("manager.php", parameters, function (data) {
+                  data = JSON.parse(data);
+                  if (data.message == "OK") {
+                      window.location = "http://www.assembledrealms.com/build";
+                  }
+               });
 
             }
-        });
+         });
         
    });
    
