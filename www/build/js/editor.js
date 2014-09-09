@@ -461,7 +461,7 @@ function loadRealmFile(id, path, name) {
         //                                      '&private_token=' + token;
 
         $.ajax({
-            url: __projectURL + '/file/open/' + id,
+            url: __projectURL + '/file/open/' + encodeURIComponent(path),
             type: 'get',
             dataType: 'json'
         })
