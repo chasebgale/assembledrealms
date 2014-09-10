@@ -80,8 +80,12 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
                             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                                 <ul class="nav navbar-nav" id="mapToolbar">
                                     <!--<button id="tileButton" type="button" class="btn btn-default navbar-btn" data-toggle="modal" data-target=".tiles-modal-lg"></button>-->
-                                    <button type="button" class="btn btn-default navbar-btn" id="moveButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Navigate the map"><i class="fa fa-arrows"></i></button>
-                                    <button type="button" class="btn btn-default navbar-btn" id="eraserButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Erase tiles"><i class="fa fa-eraser"></i></button>
+                                    <button type="button" class="btn btn-default navbar-btn btn-map-tool" id="moveButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Navigate the map">
+					<div style="background-image: url('/build/img/cursors.png'); width: 20px; height: 20px; background-position:-39px -8px"></div>
+				    </button>
+                                    <button type="button" class="btn btn-default navbar-btn btn-map-tool" id="eraserButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Erase tiles">
+					<div style="background-image: url('/build/img/cursors.png'); width: 20px; height: 20px; background-position:-216px -8px"></div>
+				    </button>
                                     <div class="btn-group">
                                         <button type="button" class="btn btn-default navbar-btn" id="tileButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Place terrain"></button>
                                         <button type="button" class="btn btn-default dropdown-toggle navbar-btn" data-toggle="modal" data-target=".tiles-modal-lg">

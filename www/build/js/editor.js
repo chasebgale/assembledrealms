@@ -90,12 +90,17 @@ function initialize(projectID, projectDomain) {
     });
 
     $("#moveButton").on("click", function () {
-        //$("#mapMain").css('cursor', 'move');
+        
+        Map.setCursor('cursor_hand');
         Map.setMode(Map.MODE_MOVE);
+    
     });
     
     $("#eraserButton").on("click", function () {
+       
+       Map.setCursor('cursor_eraser');
        Map.setMode(Map.MODE_DELETE);
+       
     });
 
     $("#btnCommit").on("click", function () {

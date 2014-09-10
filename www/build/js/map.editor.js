@@ -50,7 +50,7 @@ var Map = {
       var target = document.getElementById(div);
 
       var canvas = document.createElement('div');
-      canvas.setAttribute("style", "padding: 2px; display: inline-block;");
+      canvas.setAttribute("style", "padding: 2px; display: inline-block; cursor: none;");
       canvas.id = 'mapMain';
       target.appendChild(canvas);
 
@@ -146,6 +146,42 @@ var Map = {
              
       });
        
+      var image = new Image();
+      image.onload = function() {
+         var baseTexture = new PIXI.BaseTexture(image);
+         var texture = new PIXI.Texture(baseTexture);
+         
+         // Open hand:
+         var frameTexture = new PIXI.Texture(texture, {
+            x: 39,
+            y: 8,
+            width: 20,
+            height: 20
+         });
+         PIXI.Texture.addTextureToCache(frameTexture, 'cursor_hand');
+         
+         // Closed hand:
+         frameTexture = new PIXI.Texture(texture, {
+            x: 70,
+            y: 8,
+            width: 20,
+            height: 20
+         });
+         PIXI.Texture.addTextureToCache(frameTexture, 'cursor_hand_closed');
+         
+         // Eraser:
+         frameTexture = new PIXI.Texture(texture, {
+            x: 214,
+            y: 6,
+            width: 20,
+            height: 22
+         });
+         PIXI.Texture.addTextureToCache(frameTexture, 'cursor_eraser');
+         
+         
+      };
+      image.src = 'img/cursors.png';
+      
        
    },
 
@@ -191,6 +227,22 @@ var Map = {
 
    },
 
+   setCursor: function (key) {
+      if (Map.brush.sprite === undefined) {
+         Map.brush.sprite = new PIXI.Sprite(PIXI.Texture.fromFrame(key));
+         Map.stage.addChild(Map.brush.sprite);
+      } else {
+         Map.brush.sprite.setTexture(PIXI.Texture.fromFrame(key));
+      }
+
+      if (key === "cursor_eraser") {
+         Map.brush.sprite.anchor.y = 0.9;
+         Map.brush.sprite.anchor.x = 0.2;
+      }
+      //Map.brush.sprite.anchor.y = (Map.brush.sprite.height - 32) / Map.brush.sprite.height;
+      //Map.brush.sprite.anchor.x = (Map.brush.sprite.width / 2) / Map.brush.sprite.width;
+   },
+   
    load: function () {
 
       Map.draw();
@@ -382,6 +434,9 @@ var Map = {
                   Map.updateSource();
                }
                
+               if (Map.brush.sprite)
+                  Map.brush.sprite.position = data.global;
+               
             };
             
             Map.stage.mouseup = function (data) {
@@ -440,6 +495,7 @@ var Map = {
                Map.moveOriginPoint = _.cloneDeep( data.global );
                Map.moveOriginOffset = _.cloneDeep( Map.offset );
                Map.moveOriginPlayer = _.cloneDeep( Map.playerPos );
+               Map.setCursor('cursor_hand_closed');
             };
       
             Map.stage.mousemove = function (data) {
@@ -461,11 +517,15 @@ var Map = {
                   Map.updateSource();
                    
                }
+               
+               if (Map.brush.sprite)
+                  Map.brush.sprite.position = data.global;
       
             };
             
             Map.stage.mouseup = function (data) {
                Map.moveOriginPoint = null;
+               Map.setCursor('cursor_hand');
             };
             
             break;
