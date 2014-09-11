@@ -194,6 +194,8 @@ var Map = {
             indexFromKey = parseInt(index);
             return false;
          }
+         
+         return true;
       });
 
       if (indexFromKey > -1) {
