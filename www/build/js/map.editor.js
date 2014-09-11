@@ -38,6 +38,7 @@ var Map = {
    tile: 0,
    moveOriginPoint: {},
    moveOriginOffset: {},
+   frames: {},
 
    init: function (div, map) {
 
@@ -101,23 +102,11 @@ var Map = {
             url: realmResourceURL(asset),
             type: 'get',
             dataType: 'json',
-            success: function (data) {
-              
-               var json = JSON.parse(data.content); 
+            success: function (json) {
        
                if (json.frames) {
-                
-                  var resp = $.ajax({
-                     url: realmResourceURL(assetPath + json.meta.image),
-                     type: 'get',
-                     dataType: 'json',
-                     async: false
-                  }).responseJSON;
                
-                  var img = new Image();
-                  img.src = 'data:image/png;base64,' + resp.content;
-                  
-                  var baseTexture = new PIXI.BaseTexture(img);
+                  var baseTexture = new PIXI.BaseTexture.fromImage(realmResourceURL(assetPath + json.meta.image), true, PIXI.scaleModes.DEFAULT);
                   var texture = new PIXI.Texture(baseTexture);
                   
                   _.each(json.frames, function(frame, frameName) {
@@ -133,13 +122,17 @@ var Map = {
                         
                   });
                   
-                  Map.onResourceLoaded(json, img.src);
-                  
+                  Map.onResourceLoaded(json, realmResourceURL(assetPath + json.meta.image));
+               
                   Map.assetLoadCount--;
                   
                   if (Map.assetLoadCount === 0) {
                      Map.load();
                   }
+                  
+                  // Persist to look up tile settings, like offset and whatnot, later
+                  $.extend(frames, json.frames);
+                  
                }
             }
          });
@@ -281,6 +274,8 @@ var Map = {
    draw: function () {
       var sprite;
       var count = 0;
+      var index = 0;
+      var frame = "";
 
       Map.buffer.children = []; //= new PIXI.SpriteBatch(); <-- Leaks memory :-/
 
@@ -317,9 +312,21 @@ var Map = {
 
             if (Map.terrain[row] === undefined) continue;
             if (Map.terrain[row][col] === undefined) continue;
-
-            sprite = new PIXI.Sprite(PIXI.Texture.fromFrame(Map.terrain.index[Map.terrain[row][col]]));
-            sprite.anchor.y = (sprite.height - 32) / sprite.height;
+            
+            index = Map.terrain[row][col];
+            frame = Map.terrain.index[index];
+            
+            sprite = new PIXI.Sprite(PIXI.Texture.fromFrame(frame));
+            
+            
+            if (frames[frame].anchor === undefined) {
+               // Assume default y anchor:
+               sprite.anchor.y = (sprite.height - 32) / sprite.height;
+            } else {
+               sprite.anchor.y = frames[frame].anchor / sprite.height;
+            }
+            
+            
             sprite.anchor.x = ((sprite.width / 2) - 32) / sprite.width;
             sprite.position.x = (a * Map.TILE_WIDTH_HALF);
             sprite.position.y = (b * Map.TILE_HEIGHT_HALF);

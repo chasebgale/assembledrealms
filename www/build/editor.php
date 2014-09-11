@@ -311,7 +311,14 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
             <div class="row">
                 <% if (model.frames) { %>
                     <% _.each(model.frames, function(frame, key) { %>
-                        <div class="col-md-1 <%- model.meta.category %>" data-id="<%- key %>" data-offset="<%- frame.frame.x %>" style="background-image: url(<%- source %>); background-position-x: <%- (frame.frame.x * -1) + 'px' %>; width: <%- frame.frame.w + 'px' %>; height: <%- frame.frame.h + 'px' %>; "></div>
+                        <div class="col-md-1 <%- model.meta.category %>"
+			     data-id="<%- key %>"
+			     data-offset="<%- frame.frame.x %>"
+			     style="background-image: url(<%- source %>);
+				    background-position-x: <%- (frame.frame.x * -1) + 'px' %>;
+				    background-position-y: <%- (frame.frame.y * -1) + 'px' %>;
+				    width: <%- frame.frame.w + 'px' %>;
+				    height: <%- frame.frame.h + 'px' %>; "></div>
                     <% }); %>
                 <% } %>
             </div>

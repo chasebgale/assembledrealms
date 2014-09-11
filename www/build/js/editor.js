@@ -216,11 +216,11 @@ function initialize(projectID, projectDomain) {
         
     });
     
-    Map.onResourceLoaded = function (json, base64Image) {
+    Map.onResourceLoaded = function (json, source) {
         var template = $('#resource_template').html();
         var target = $('#' + json.meta.category);
         
-        target.append(_.template(template, { model: json, source: base64Image }));
+        target.append(_.template(template, { model: json, source: source }));
     };
 
     loadRealmRoot();
@@ -508,7 +508,7 @@ function loadRealmFile(id, path, name) {
 
 function realmResourceURL(path) {
 
-    var req = '/file/open/' + encodeURIComponent(path);
+    var req = '/file/raw/' + encodeURIComponent(path);
     
     return __projectURL + req;
     

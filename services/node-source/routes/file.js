@@ -7,6 +7,25 @@ var git = require('nodegit'),
 
 var EOL = require('os').EOL;
 
+exports.raw = function(req, res, next){
+  var path_decode = decodeURIComponent(req.params.path);
+  
+  var options = {
+    root: __dirname + "/../projects/" + req.params.id + "/",
+    dotfiles: 'deny',
+    headers: {
+        'x-timestamp': Date.now(),
+        'x-sent': true
+    }
+  };
+  
+  res.sendfile(path_decode, options, function (error) {
+    if (error) return next(error);
+    
+    utilities.logMessage('RAW FILE REQUEST FILLED: ' + path_decode);
+  });
+}
+
 exports.open = function(req, res, next){
   
   var path_decode = decodeURIComponent(req.params.path);
