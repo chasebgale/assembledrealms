@@ -35,6 +35,7 @@ var Map = {
    terrain: {},
    objects: {},
    brush: {},
+   mouseTile: {},
    tile: 0,
    moveOriginPoint: {},
    moveOriginOffset: {},
@@ -131,7 +132,7 @@ var Map = {
                   }
                   
                   // Persist to look up tile settings, like offset and whatnot, later
-                  $.extend(frames, json.frames);
+                  $.extend(Map.frames, json.frames);
                   
                }
             }
@@ -171,6 +172,15 @@ var Map = {
          });
          PIXI.Texture.addTextureToCache(frameTexture, 'cursor_eraser');
          
+         // Pencil:
+         frameTexture = new PIXI.Texture(texture, {
+            x: 2,
+            y: 6,
+            width: 26,
+            height: 24
+         });
+         PIXI.Texture.addTextureToCache(frameTexture, 'cursor_pencil');
+         
          
       };
       image.src = 'img/cursors.png';
@@ -209,7 +219,8 @@ var Map = {
       }
 
       Map.brush.source = source;
-
+   
+      /*
       if (Map.brush.sprite === undefined) {
          Map.brush.sprite = new PIXI.Sprite(PIXI.Texture.fromFrame(textureKey));
          Map.stage.addChild(Map.brush.sprite);
@@ -219,7 +230,9 @@ var Map = {
 
       Map.brush.sprite.anchor.y = (Map.brush.sprite.height - 32) / Map.brush.sprite.height;
       Map.brush.sprite.anchor.x = (Map.brush.sprite.width / 2) / Map.brush.sprite.width;
-
+      */
+      
+      Map.setCursor('cursor_pencil');
    },
 
    setCursor: function (key) {
@@ -234,6 +247,12 @@ var Map = {
          Map.brush.sprite.anchor.y = 0.9;
          Map.brush.sprite.anchor.x = 0.2;
       }
+      
+      if (key === "cursor_pencil") {
+         Map.brush.sprite.anchor.y = 0.9;
+         Map.brush.sprite.anchor.x = 0.2;
+      }
+      
       //Map.brush.sprite.anchor.y = (Map.brush.sprite.height - 32) / Map.brush.sprite.height;
       //Map.brush.sprite.anchor.x = (Map.brush.sprite.width / 2) / Map.brush.sprite.width;
    },
@@ -309,21 +328,33 @@ var Map = {
 
             row = (a + b) / 2;
             col = (a - b) / 2;
-
-            if (Map.terrain[row] === undefined) continue;
-            if (Map.terrain[row][col] === undefined) continue;
             
-            index = Map.terrain[row][col];
+            index = -1;
+            
+            if (Map.mouseTile) {
+               if ((Map.mouseTile.row === row) && (Map.mouseTile.col === col)) {
+                  index = Map.brush.index;
+               }
+            }
+            
+            if (index === -1) {
+
+               if (Map.terrain[row] === undefined) continue;
+               if (Map.terrain[row][col] === undefined) continue;
+            
+               index = Map.terrain[row][col];
+            }
+            
             frame = Map.terrain.index[index];
             
             sprite = new PIXI.Sprite(PIXI.Texture.fromFrame(frame));
             
             
-            if (frames[frame].anchor === undefined) {
+            if (Map.frames[frame].anchor === undefined) {
                // Assume default y anchor:
                sprite.anchor.y = (sprite.height - 32) / sprite.height;
             } else {
-               sprite.anchor.y = frames[frame].anchor / sprite.height;
+               sprite.anchor.y = Map.frames[frame].anchor / sprite.height;
             }
             
             
@@ -367,7 +398,6 @@ var Map = {
    indexFromScreen: function (point) {
 
       var map = {};
-
       var screen = {};
       screen.x = point.x - Map.offset.x;
       screen.y = point.y - Map.offset.y;
@@ -387,22 +417,6 @@ var Map = {
             
             Map.stage.mousedown = function (data) {
                var result = Map.indexFromScreen(data.global);
-               
-               /*
-               var source;
-               
-               switch (layer) {
-                  case 0:
-                     source = Map.terrain;
-                     break;
-                  case 1:
-                     source = Map.objects;
-                     break;
-               }
-               
-               delete source[result.row][result.col];
-               */
-               
                
                if (Map.terrain[result.row]) {
                   if (result.col in Map.terrain[result.row]) {
@@ -473,16 +487,16 @@ var Map = {
       
             Map.stage.mousemove = function (data) {
                
+               var result = Map.indexFromScreen(data.global);
+               
                if (data.target.__isDown) {
-                  var result = Map.indexFromScreen(data.global);
       
                   if (Map.brush.source[result.row] === undefined) {
                      Map.brush.source[result.row] = {};
                   }
       
                   Map.brush.source[result.row][result.col] = Map.brush.index;
-                  Map.draw();
-                  Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
+                  
                   
                   Map.updateSource();
                    
@@ -490,6 +504,11 @@ var Map = {
       
                if (Map.brush.sprite)
                   Map.brush.sprite.position = data.global;
+               
+               Map.mouseTile = result;
+               
+               Map.draw();
+               Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
       
             };
             
