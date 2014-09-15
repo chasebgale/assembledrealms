@@ -133,6 +133,16 @@ function initialize(projectID, projectDomain) {
         
     });
     
+    $("#uploadStart").on("click", function (e) {
+        e.preventDefault();
+    
+        var button = $(this);
+        button.attr('disabled', true);
+        button.html('<i class="fa fa-cog fa-spin"></i> Upload!');
+        
+        
+    });
+    
     $("#btnNewFileCreate").on("click", function (e) {
         e.preventDefault();
     
