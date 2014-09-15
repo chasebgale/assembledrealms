@@ -35,7 +35,6 @@ var Map = {
    terrain: {},
    objects: {},
    brush: {},
-   mouseTile: {},
    tile: 0,
    moveOriginPoint: {},
    moveOriginOffset: {},
@@ -219,18 +218,22 @@ var Map = {
       }
 
       Map.brush.source = source;
-   
-      /*
-      if (Map.brush.sprite === undefined) {
-         Map.brush.sprite = new PIXI.Sprite(PIXI.Texture.fromFrame(textureKey));
-         Map.stage.addChild(Map.brush.sprite);
+      
+      if (Map.brush.tile === undefined) {
+         Map.brush.tile = new PIXI.Sprite(PIXI.Texture.fromFrame(textureKey));
+         Map.stage.addChild(Map.brush.tile);
       } else {
-         Map.brush.sprite.setTexture(PIXI.Texture.fromFrame(textureKey));
+         Map.brush.tile.setTexture(PIXI.Texture.fromFrame(textureKey));
       }
-
-      Map.brush.sprite.anchor.y = (Map.brush.sprite.height - 32) / Map.brush.sprite.height;
-      Map.brush.sprite.anchor.x = (Map.brush.sprite.width / 2) / Map.brush.sprite.width;
-      */
+      
+      if (Map.frames[textureKey].anchor === undefined) {
+         // Assume default y anchor:
+         Map.brush.tile.anchor.y = (Map.brush.tile.height - 32) / Map.brush.tile.height;
+      } else {
+         Map.brush.tile.anchor.y = Map.frames[textureKey].anchor / Map.brush.tile.height;
+      }
+      
+      Map.brush.tile.anchor.x = ((Map.brush.tile.width / 2) - 32) / Map.brush.tile.width;
       
       Map.setCursor('cursor_pencil');
    },
@@ -330,23 +333,12 @@ var Map = {
             col = (a - b) / 2;
             
             index = -1;
-            
-            if (Map.mouseTile) {
-               if ((Map.mouseTile.row === row) && (Map.mouseTile.col === col)) {
-                  index = Map.brush.index;
-               }
-            }
-            
-            if (index === -1) {
 
-               if (Map.terrain[row] === undefined) continue;
-               if (Map.terrain[row][col] === undefined) continue;
-            
-               index = Map.terrain[row][col];
-            }
-            
+            if (Map.terrain[row] === undefined) continue;
+            if (Map.terrain[row][col] === undefined) continue;
+         
+            index = Map.terrain[row][col];
             frame = Map.terrain.index[index];
-            
             sprite = new PIXI.Sprite(PIXI.Texture.fromFrame(frame));
             
             
@@ -409,6 +401,13 @@ var Map = {
       map.col = Math.floor(map.col);
 
       return map;
+   },
+   
+   coordFromScreen: function (index) {
+      var b = ((index.row * 2) - (index.col * 2)) / 2;
+      var a = (index.row * 2) - b;
+      
+      return {"a" : a, "b": b};
    },
    
    setMode: function (mode, options) {
@@ -488,6 +487,9 @@ var Map = {
             Map.stage.mousemove = function (data) {
                
                var result = Map.indexFromScreen(data.global);
+               var loc = Map.coordFromScreen(result);
+               loc.x = (loc.a * Map.TILE_WIDTH_HALF) + Map.offset.x;
+               loc.y = (loc.b * Map.TILE_HEIGHT_HALF) + Map.offset.y;
                
                if (data.target.__isDown) {
       
@@ -496,7 +498,8 @@ var Map = {
                   }
       
                   Map.brush.source[result.row][result.col] = Map.brush.index;
-                  
+                  Map.draw();
+                  Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
                   
                   Map.updateSource();
                    
@@ -504,11 +507,12 @@ var Map = {
       
                if (Map.brush.sprite)
                   Map.brush.sprite.position = data.global;
+                  
+               if (Map.brush.tile)
+                  Map.brush.tile.position = loc;
                
-               Map.mouseTile = result;
                
-               Map.draw();
-               Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
+               
       
             };
             
