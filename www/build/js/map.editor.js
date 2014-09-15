@@ -260,6 +260,167 @@ var Map = {
       //Map.brush.sprite.anchor.x = (Map.brush.sprite.width / 2) / Map.brush.sprite.width;
    },
    
+   setMode: function (mode, options) {
+      
+      if (Map.brush.tile)
+         Map.brush.tile.visible = false;
+      
+      switch (mode) {
+         case Map.MODE_DELETE:
+            
+            Map.stage.mousedown = function (data) {
+               var result = Map.indexFromScreen(data.global);
+               
+               if (Map.terrain[result.row]) {
+                  if (result.col in Map.terrain[result.row]) {
+                     delete Map.terrain[result.row][result.col];
+                  }
+               }
+               
+               if (Map.objects[result.row]) {
+                  if (result.col in Map.objects[result.row]) {
+                     delete Map.objects[result.row][result.col];
+                  }
+               }
+               
+               Map.draw();
+               Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
+               Map.updateSource();
+            };
+            
+            Map.stage.mousemove = function (data) {
+               
+               if (data.target.__isDown) {
+                  var result = Map.indexFromScreen(data.global);
+      
+                  if (Map.terrain[result.row]) {
+                     if (result.col in Map.terrain[result.row]) {
+                        delete Map.terrain[result.row][result.col];
+                     }
+                  }
+                  
+                  if (Map.objects[result.row]) {
+                     if (result.col in Map.objects[result.row]) {
+                        delete Map.objects[result.row][result.col];
+                     }
+                  }
+                   
+                  Map.draw();
+                  Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
+                  Map.updateSource();
+               }
+               
+               if (Map.brush.sprite)
+                  Map.brush.sprite.position = data.global;
+               
+            };
+            
+            Map.stage.mouseup = function (data) {
+               
+            };
+            
+            break;
+         case Map.MODE_PAINT:
+            
+            if (Map.brush.tile)
+               Map.brush.tile.visible = true;
+            
+            Map.stage.mousedown = function (data) {
+
+               var result = Map.indexFromScreen(data.global);
+               
+               if (Map.brush.source[result.row] === undefined) {
+                  Map.brush.source[result.row] = {};
+               }
+      
+               Map.brush.source[result.row][result.col] = Map.brush.index;
+               Map.draw();
+               Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
+               
+               Map.updateSource();
+      
+            };
+      
+            Map.stage.mousemove = function (data) {
+               
+               var result = Map.indexFromScreen(data.global);
+               var loc = Map.coordFromScreen(result);
+               loc.x = (loc.a * Map.TILE_WIDTH_HALF) + Map.offset.x;
+               loc.y = (loc.b * Map.TILE_HEIGHT_HALF) + Map.offset.y;
+               
+               if (data.target.__isDown) {
+      
+                  if (Map.brush.source[result.row] === undefined) {
+                     Map.brush.source[result.row] = {};
+                  }
+      
+                  Map.brush.source[result.row][result.col] = Map.brush.index;
+                  Map.draw();
+                  Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
+                  
+                  Map.updateSource();
+                   
+               }
+      
+               if (Map.brush.sprite)
+                  Map.brush.sprite.position = data.global;
+                  
+               if (Map.brush.tile)
+                  Map.brush.tile.position = loc;
+               
+               
+               
+      
+            };
+            
+            Map.stage.mouseup = function (data) {
+               
+            };
+            
+            break;
+         case Map.MODE_MOVE:
+            
+            Map.stage.mousedown = function (data) {
+               Map.moveOriginPoint = _.cloneDeep( data.global );
+               Map.moveOriginOffset = _.cloneDeep( Map.offset );
+               Map.moveOriginPlayer = _.cloneDeep( Map.playerPos );
+               Map.setCursor('cursor_hand_closed');
+            };
+      
+            Map.stage.mousemove = function (data) {
+               
+               if ((data.target.__isDown) && (Map.moveOriginPoint)) {
+                  
+                  var xDiff = data.global.x - Map.moveOriginPoint.x;
+                  var yDiff = Map.moveOriginPoint.y - data.global.y;
+                  
+                  Map.offset.x = (Map.moveOriginOffset.x + xDiff );
+                  Map.offset.y = (Map.moveOriginOffset.y - yDiff );
+
+                  Map.playerPos.x = (Map.moveOriginPlayer.x - xDiff);
+                  Map.playerPos.y = (Map.moveOriginPlayer.y + yDiff);
+                  
+                  Map.invalidate = true;
+                  Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
+                  
+                  Map.updateSource();
+                   
+               }
+               
+               if (Map.brush.sprite)
+                  Map.brush.sprite.position = data.global;
+      
+            };
+            
+            Map.stage.mouseup = function (data) {
+               Map.moveOriginPoint = null;
+               Map.setCursor('cursor_hand');
+            };
+            
+            break;
+      }
+   },
+   
    load: function () {
 
       Map.draw();
@@ -273,6 +434,8 @@ var Map = {
 
       Map.stage.addChild(Map.layer_terrain);
       Map.stage.addChild(Map.layer_actors);
+      
+      
 
       Map.renderer.render(Map.stage);
        
@@ -408,160 +571,6 @@ var Map = {
       var a = (index.row * 2) - b;
       
       return {"a" : a, "b": b};
-   },
-   
-   setMode: function (mode, options) {
-      switch (mode) {
-         case Map.MODE_DELETE:
-            
-            Map.stage.mousedown = function (data) {
-               var result = Map.indexFromScreen(data.global);
-               
-               if (Map.terrain[result.row]) {
-                  if (result.col in Map.terrain[result.row]) {
-                     delete Map.terrain[result.row][result.col];
-                  }
-               }
-               
-               if (Map.objects[result.row]) {
-                  if (result.col in Map.objects[result.row]) {
-                     delete Map.objects[result.row][result.col];
-                  }
-               }
-               
-               Map.draw();
-               Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
-               Map.updateSource();
-            };
-            
-            Map.stage.mousemove = function (data) {
-               
-               if (data.target.__isDown) {
-                  var result = Map.indexFromScreen(data.global);
-      
-                  if (Map.terrain[result.row]) {
-                     if (result.col in Map.terrain[result.row]) {
-                        delete Map.terrain[result.row][result.col];
-                     }
-                  }
-                  
-                  if (Map.objects[result.row]) {
-                     if (result.col in Map.objects[result.row]) {
-                        delete Map.objects[result.row][result.col];
-                     }
-                  }
-                   
-                  Map.draw();
-                  Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
-                  Map.updateSource();
-               }
-               
-               if (Map.brush.sprite)
-                  Map.brush.sprite.position = data.global;
-               
-            };
-            
-            Map.stage.mouseup = function (data) {
-               
-            };
-            
-            break;
-         case Map.MODE_PAINT:
-            
-            Map.stage.mousedown = function (data) {
-
-               var result = Map.indexFromScreen(data.global);
-               
-               if (Map.brush.source[result.row] === undefined) {
-                  Map.brush.source[result.row] = {};
-               }
-      
-               Map.brush.source[result.row][result.col] = Map.brush.index;
-               Map.draw();
-               Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
-               
-               Map.updateSource();
-      
-            };
-      
-            Map.stage.mousemove = function (data) {
-               
-               var result = Map.indexFromScreen(data.global);
-               var loc = Map.coordFromScreen(result);
-               loc.x = (loc.a * Map.TILE_WIDTH_HALF) + Map.offset.x;
-               loc.y = (loc.b * Map.TILE_HEIGHT_HALF) + Map.offset.y;
-               
-               if (data.target.__isDown) {
-      
-                  if (Map.brush.source[result.row] === undefined) {
-                     Map.brush.source[result.row] = {};
-                  }
-      
-                  Map.brush.source[result.row][result.col] = Map.brush.index;
-                  Map.draw();
-                  Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
-                  
-                  Map.updateSource();
-                   
-               }
-      
-               if (Map.brush.sprite)
-                  Map.brush.sprite.position = data.global;
-                  
-               if (Map.brush.tile)
-                  Map.brush.tile.position = loc;
-               
-               
-               
-      
-            };
-            
-            Map.stage.mouseup = function (data) {
-               
-            };
-            
-            break;
-         case Map.MODE_MOVE:
-            
-            Map.stage.mousedown = function (data) {
-               Map.moveOriginPoint = _.cloneDeep( data.global );
-               Map.moveOriginOffset = _.cloneDeep( Map.offset );
-               Map.moveOriginPlayer = _.cloneDeep( Map.playerPos );
-               Map.setCursor('cursor_hand_closed');
-            };
-      
-            Map.stage.mousemove = function (data) {
-               
-               if ((data.target.__isDown) && (Map.moveOriginPoint)) {
-                  
-                  var xDiff = data.global.x - Map.moveOriginPoint.x;
-                  var yDiff = Map.moveOriginPoint.y - data.global.y;
-                  
-                  Map.offset.x = (Map.moveOriginOffset.x + xDiff );
-                  Map.offset.y = (Map.moveOriginOffset.y - yDiff );
-
-                  Map.playerPos.x = (Map.moveOriginPlayer.x - xDiff);
-                  Map.playerPos.y = (Map.moveOriginPlayer.y + yDiff);
-                  
-                  Map.invalidate = true;
-                  Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
-                  
-                  Map.updateSource();
-                   
-               }
-               
-               if (Map.brush.sprite)
-                  Map.brush.sprite.position = data.global;
-      
-            };
-            
-            Map.stage.mouseup = function (data) {
-               Map.moveOriginPoint = null;
-               Map.setCursor('cursor_hand');
-            };
-            
-            break;
-      }
    }
    
 };
