@@ -6,7 +6,8 @@
 var express = require('express')
   , bodyParser =  require('body-parser')
   , project =     require('./routes/project')
-  , file =        require('./routes/file');
+  , file =        require('./routes/file')
+  , busboy =      require('connect-busboy');
 
 var app = express();
 
@@ -15,26 +16,34 @@ var app = express();
 var allowCrossDomain = function(req, res, next) {
     res.header('Access-Control-Allow-Origin', 'http://www.assembledrealms.com');
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    res.header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type');
 
+    if ('OPTIONS' == req.method) return res.send(200);
+    
     next();
 }
 
 // Configuration
 
-app.set('views', __dirname + '/views');
-app.set('view engine', 'jade');
+//app.set('views', __dirname + '/views');
+//app.set('view engine', 'jade');
+
+app.use(allowCrossDomain);
+
+app.use(busboy({
+  highWaterMark: 2 * 1024 * 1024,
+  limits: {
+    fileSize: 10 * 1024 * 1024
+  }
+}));
 
 // parse application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({
-  extended: true
-}));
+//app.use(bodyParser.urlencoded({
+//  extended: true
+//}));
 
 // parse application/json
 app.use(bodyParser.json())
-
-app.use(allowCrossDomain);
-app.use(express.static(__dirname + '/public'));
 
 // Routes
 
@@ -50,6 +59,7 @@ app.post('/api/project/:id/save', project.save);
 app.get('/api/project/:id/file/open/:path', file.open);
 app.get('/api/project/:id/file/raw/:path', file.raw);
 app.post('/api/project/:id/file/create', file.create);
+app.post('/api/project/:id/file/upload', file.upload);
 
 app.use(function(err, req, res, next){
     console.error(err.message);

@@ -11,5 +11,6 @@
     , "ncp": "*"
     , "async": "*"
     , "node-dir": "*"
+    , "connect-busboy" : "*"
   }
 }

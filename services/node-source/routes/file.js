@@ -1,7 +1,8 @@
 var git = require('nodegit'),
     path = require('path'),
     utilities = require('../utilities'),
-    fs = require('fs');
+    fs = require('fs'),
+    busboy = require('connect-busboy');
 
 // https://github.com/nodegit/nodegit/tree/master/example
 
@@ -90,51 +91,52 @@ exports.open = function(req, res, next){
   });
 }
 
-exports.create = function(req, res) {
+exports.create = function(req, res, next) {
   git.Repo.open(__dirname + "/../projects/" + req.params.id, function(error, repo) {
-    if (error) throw error;
+    if (error) return next(error);
     
     var fileName = req.body.fullpath;
     var fileContent = "// Auto generated: " + new Date().getTime();
     
     //create the file in the repo's workdir
-    fs.writeFile(path.join(repo.workdir(), fileName), fileContent, function(writeError) {
-      if (writeError) throw writeError;
+    fs.writeFile(path.join(repo.workdir(), fileName), fileContent, function(error) {
+      if (error) return next(error);
   
       //add the file to the index...
-      repo.openIndex(function(openIndexError, index) {
-        if (openIndexError) throw openIndexError;
+      repo.openIndex(function(error, index) {
+        if (error) return next(error);
   
-        index.read(function(readError) {
-          if (readError) throw readError;
+        index.read(function(error) {
+          if (error) return next(error);
   
-          index.addByPath(fileName, function(addByPathError) {
-            if (addByPathError) throw addByPathError;
+          index.addByPath(fileName, function(error) {
+            if (error) return next(error);
   
-            index.write(function(writeError) {
-              if (writeError) throw writeError;
+            index.write(function(error) {
+              if (error) return next(error);
   
-              index.writeTree(function(writeTreeError, oid) {
-                if (writeTreeError) throw writeTreeError;
+              index.writeTree(function(error, oid) {
+                if (error) return next(error);
   
                 //get HEAD
-                git.Reference.oidForName(repo, 'HEAD', function(oidForName, head) {
-                  if (oidForName) throw oidForName;
+                git.Reference.oidForName(repo, 'HEAD', function(error, head) {
+                  if (error) return next(error);
   
                   //get latest commit (will be the parent commit)
-                  repo.getCommit(head, function(getCommitError, parent) {
-                    if (getCommitError) throw getCommitError;
+                  repo.getCommit(head, function(error, parent) {
+                    if (error) return next(error);
                     var author = git.Signature.now("Chase Gale", "chase.b.gale@gmail.com");
                     var committer = git.Signature.now("Chase Gale", "chase.b.gale@gmail.com");
   
                     //commit
                     repo.createCommit('HEAD', author, committer, 'message', oid, [parent], function(error, commitId) {
+                      if (error) return next(error);
                       
-                      repo.getCommit(commitId, function(getCommitError, latest) {
-                        if (getCommitError) throw getCommitError;
+                      repo.getCommit(commitId, function(error, latest) {
+                        if (error) return next(error);
                         
                         latest.getEntry(fileName, function(error, entry) {
-                          if (error) throw error;
+                          if (error) return next(error);
                           
                           utilities.logMessage('Created FILE: ' + entry.oid().sha() + ' (' + fileName + ')');
                           
@@ -159,5 +161,25 @@ exports.create = function(req, res) {
       });
     });
     
+  });
+}
+
+exports.upload = function(req, res, next) {
+  var fstream;
+  req.pipe(req.busboy);
+  req.busboy.on('file', function (fieldname, file, filename) {
+      console.log("Uploading: " + filename);
+
+      //Path where image will be uploaded
+      fstream = fs.createWriteStream(__dirname + "/../projects/" + req.params.id + '/client/resource/' + filename);
+      file.pipe(fstream);
+      fstream.on('close', function () {    
+          console.log("Upload Finished of " + filename);              
+          
+          var formatted = {};
+          formatted.message = "OK";
+          
+          res.json(formatted);
+      });
   });
 }

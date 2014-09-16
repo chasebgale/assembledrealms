@@ -15,7 +15,7 @@
 <link rel='stylesheet' href='/css/root.css' />
 
 <link rel='stylesheet' href='//netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.css' />
-<link rel='stylesheet' href='//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css'>
+<link rel='stylesheet' href='//netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css'>
 <link rel='stylesheet' href='/css/bootstrap-theme.css' />
 
 <script src='/models/funcs.js' type='text/javascript'></script>

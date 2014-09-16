@@ -122,6 +122,16 @@ function initialize(projectID, projectDomain) {
     });
     
     $("#btnUploadResource").on("click", function () {
+        
+        var bar =       $('#uploadProgressbarFill');
+        var alert =     $('#uploadAlert');
+        
+        bar.width("0%");
+        bar.text("");
+        alert.hide();
+        alert.removeClass('alert-success alert-danger');
+        alert.text("");
+        
         $('#modalUploadResource').modal('show');
     });
     
@@ -136,10 +146,50 @@ function initialize(projectID, projectDomain) {
     $("#uploadStart").on("click", function (e) {
         e.preventDefault();
     
-        var button = $(this);
-        button.attr('disabled', true);
-        button.html('<i class="fa fa-cog fa-spin"></i> Upload!');
+        var button =    $(this);
+        var progress =  $('#uploadProgressbar');
+        var bar =       $('#uploadProgressbarFill');
+        var alert =     $('#uploadAlert');
         
+        bar.width("0%");
+        alert.hide();
+        alert.removeClass('alert-success alert-danger');
+        alert.text("");
+        
+        button.attr('disabled', true);
+        
+        var upload = document.getElementById('inputFile').files[0];
+        var uri = __projectURL + "/file/upload";
+        var xhr = new XMLHttpRequest();
+        var fd = new FormData();
+        
+        xhr.open("POST", uri, true);
+        xhr.upload.onprogress = function (event) {
+            if (event.lengthComputable) {
+                //evt.loaded the bytes browser receive
+                //evt.total the total bytes seted by the header
+                var percentComplete = Math.round((event.loaded / event.total) * 100) + "%";  
+                bar.width(percentComplete);
+                bar.text(percentComplete);
+            } 
+        };
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                
+                var json = JSON.parse(xhr.responseText);
+                if (json.message == "OK") {
+                    button.attr('disabled', false);
+                    alert.addClass('alert-success');
+                    alert.html("<strong>" + upload.name + "</strong> was successfully added to your resource folder!");
+                    alert.fadeIn();
+                    $('#uploadForm').trigger('reset');
+                }
+            } else {
+                
+            }
+        };
+        fd.append('file', upload);
+        xhr.send(fd);
         
     });
     

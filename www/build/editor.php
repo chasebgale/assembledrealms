@@ -204,7 +204,11 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
                     <h4 class="modal-title">Add Media</h4>
                 </div>
                 <div class="modal-body">
-		    <input type="file" id="inputFile">
+		    <div id="uploadAlert" class="alert" role="alert" style="display: none;">
+		    </div>
+		    <form id="uploadForm" method="post" action="upload" enctype="multipart/form-data">
+			<input type="file" id="inputFile">
+		    </form>
                 </div>
 		<div class="modal-footer">
 		    <p class="text-justify">
@@ -216,7 +220,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 		    <div class="clear-fix">
 			<div id="uploadProgressbar" class="progress progress-striped"
 			     style="width: 85%; float: left; margin-top: 6px;">
-			    <div class="progress-bar"  role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 100%;"></div>
+			    <div id="uploadProgressbarFill" class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 0%;"></div>
 			</div>
 			<button id="uploadStart" type="button" class="btn btn-default">Upload!</button>
 		    </div>
