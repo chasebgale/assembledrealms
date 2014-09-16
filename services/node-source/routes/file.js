@@ -176,6 +176,9 @@ exports.upload = function(req, res, next) {
       fstream.on('close', function () {    
           console.log("Upload Finished of " + filename);              
           
+          // TODO: Add to git tracking by adding to the index and committing, see
+          // 'create' above!
+          
           var formatted = {};
           formatted.message = "OK";
           
