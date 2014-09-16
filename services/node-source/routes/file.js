@@ -9,7 +9,8 @@ var git = require('nodegit'),
 var EOL = require('os').EOL;
 
 exports.raw = function(req, res, next){
-  var path_decode = decodeURIComponent(req.params.path);
+  
+  utilities.logMessage('RAW FILE REQUEST: ' + req.params[0]);
   
   var options = {
     root: __dirname + "/../projects/" + req.params.id + "/",
@@ -20,10 +21,10 @@ exports.raw = function(req, res, next){
     }
   };
   
-  res.sendfile(path_decode, options, function (error) {
+  res.sendfile(req.params[0], options, function (error) {
     if (error) return next(error);
     
-    utilities.logMessage('RAW FILE REQUEST FILLED: ' + path_decode);
+    utilities.logMessage('RAW FILE REQUEST FILLED: ' + req.params[0]);
   });
 }
 

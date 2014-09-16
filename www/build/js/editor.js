@@ -568,7 +568,7 @@ function loadRealmFile(id, path, name) {
 
 function realmResourceURL(path) {
 
-    var req = '/file/raw/' + encodeURIComponent(path);
+    var req = '/file/raw/' + path;
     
     return __projectURL + req;
     

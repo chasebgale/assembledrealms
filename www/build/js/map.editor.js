@@ -87,57 +87,11 @@ var Map = {
       Map.actors  = map.actors;
       
       Map.buffer = new PIXI.SpriteBatch();
+      //Map.buffer.cacheAsBitmap = true;
       
       var assets = _.union(map.terrain.source, map.objects.source, map.actors.source);
       Map.assetLoadCount = assets.length;
-      
-      _.each(assets, function (asset) {
-         
-         asset = 'client' + asset;
-        
-         // Load the json file, then load the image file, then parse. Wohoo!
-         var assetPath = asset.substring(0, asset.lastIndexOf("/") + 1);
-         
-         $.ajax({
-            url: realmResourceURL(asset),
-            type: 'get',
-            dataType: 'json',
-            success: function (json) {
-       
-               if (json.frames) {
-               
-                  var baseTexture = new PIXI.BaseTexture.fromImage(realmResourceURL(assetPath + json.meta.image), true, PIXI.scaleModes.DEFAULT);
-                  var texture = new PIXI.Texture(baseTexture);
-                  
-                  _.each(json.frames, function(frame, frameName) {
-                     
-                     var frameTexture = new PIXI.Texture(texture, {
-                        x: parseInt(frame.frame.x),
-                        y: parseInt(frame.frame.y),
-                        width: parseInt(frame.frame.w),
-                        height: parseInt(frame.frame.h)
-                     });
-                     
-                     PIXI.Texture.addTextureToCache(frameTexture, frameName);
-                        
-                  });
-                  
-                  Map.onResourceLoaded(json, realmResourceURL(assetPath + json.meta.image));
-               
-                  Map.assetLoadCount--;
-                  
-                  if (Map.assetLoadCount === 0) {
-                     Map.load();
-                  }
-                  
-                  // Persist to look up tile settings, like offset and whatnot, later
-                  $.extend(Map.frames, json.frames);
-                  
-               }
-            }
-         });
-             
-      });
+      Map.loadResources(assets);
        
       var image = new Image();
       image.onload = function() {
@@ -429,6 +383,7 @@ var Map = {
 
       Map.layer_actors = new PIXI.DisplayObjectContainer();
       Map.layer_terrain = new PIXI.Sprite(Map.texture);
+      Map.layer_terrain.cacheAsBitmap = true;
 
       Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
 
@@ -441,6 +396,86 @@ var Map = {
        
    },
 
+   loadResources: function (assets) {
+      
+      var worker = [];
+      
+      _.each(assets, function (asset) {
+         
+         asset = 'client' + asset;
+         asset = realmResourceURL(asset);
+
+         worker.push(asset);
+         
+      });
+      
+      var loader = new PIXI.AssetLoader(worker, true);
+      loader.onProgress = function (event) {
+         $.extend(Map.frames, event.json.frames);
+         Map.onResourceLoaded(event.json, realmResourceURL('client/resource/' + event.json.meta.image));
+      };
+      loader.onComplete = function (event) {
+         Map.load();
+      };
+      loader.load();
+      
+      /*
+      _.each(assets, function (asset) {
+         
+         asset = 'client' + asset;
+        
+         // Load the json file, then load the image file, then parse. Wohoo!
+         var assetPath = asset.substring(0, asset.lastIndexOf("/") + 1);
+         
+         $.ajax({
+            url: realmResourceURL(asset),
+            type: 'get',
+            dataType: 'json',
+            success: function (json) {
+       
+               if (json.frames) {
+               
+                  var image = new Image();
+                  image.onload = function() {
+                     var baseTexture = new PIXI.BaseTexture(image);
+                     var texture = new PIXI.Texture(baseTexture);
+                     
+                     _.each(json.frames, function(frame, frameName) {
+                     
+                        var frameTexture = new PIXI.Texture(texture, {
+                           x: parseInt(frame.frame.x),
+                           y: parseInt(frame.frame.y),
+                           width: parseInt(frame.frame.w),
+                           height: parseInt(frame.frame.h)
+                        });
+                        
+                        PIXI.Texture.addTextureToCache(frameTexture, frameName);
+                           
+                     });
+                  
+                     Map.onResourceLoaded(json, realmResourceURL(assetPath + json.meta.image));
+                  
+                     Map.assetLoadCount--;
+                     
+                     if (Map.assetLoadCount === 0) {
+                        Map.load();
+                     }
+                  };
+                  image.src = realmResourceURL(assetPath + json.meta.image);
+                  
+                  
+                  
+                  // Persist to look up tile settings, like offset and whatnot, later
+                  $.extend(Map.frames, json.frames);
+                  
+               }
+            }
+         });
+             
+      });
+      */
+   },
+   
    update: function () {
       Map.draw();
    },

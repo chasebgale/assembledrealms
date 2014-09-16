@@ -57,7 +57,7 @@ app.get('/api/project/:id/destroy', project.destroy);
 app.post('/api/project/:id/save', project.save);
 
 app.get('/api/project/:id/file/open/:path', file.open);
-app.get('/api/project/:id/file/raw/:path', file.raw);
+app.get('/api/project/:id/file/raw/*', file.raw);
 app.post('/api/project/:id/file/create', file.create);
 app.post('/api/project/:id/file/upload', file.upload);
 
