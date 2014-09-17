@@ -157,6 +157,7 @@ var Map = {
       if (indexFromKey > -1) {
          
          Map.brush.index = indexFromKey;
+         Map.brush.frame = textureKey;
       
       } else {
 
@@ -165,6 +166,7 @@ var Map = {
             if (source.index[i] === undefined) {
                source.index[i] = textureKey;
                Map.brush.index = i;
+               Map.brush.frame = textureKey;
                break;
             }
          }
@@ -283,11 +285,24 @@ var Map = {
 
                var result = Map.indexFromScreen(data.global);
                
-               if (Map.brush.source[result.row] === undefined) {
-                  Map.brush.source[result.row] = {};
+               if (Map.frames[Map.brush.frame].decoration) {
+                  
+                  if (Map.brush.source.decoration[result.row] === undefined) {
+                     Map.brush.source.decoration[result.row] = {};
+                  }
+                  
+                  Map.brush.source.decoration[result.row][result.col] = Map.brush.index;
+                  
+               } else {
+                  
+                  if (Map.brush.source[result.row] === undefined) {
+                     Map.brush.source[result.row] = {};
+                  }
+                  
+                  Map.brush.source[result.row][result.col] = Map.brush.index;
+                  
                }
-      
-               Map.brush.source[result.row][result.col] = Map.brush.index;
+               
                Map.draw();
                Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
                
@@ -304,11 +319,24 @@ var Map = {
                
                if (data.target.__isDown) {
       
-                  if (Map.brush.source[result.row] === undefined) {
-                     Map.brush.source[result.row] = {};
+                  if (Map.frames[Map.brush.frame].decoration) {
+                  
+                     if (Map.brush.source.decoration[result.row] === undefined) {
+                        Map.brush.source.decoration[result.row] = {};
+                     }
+                     
+                     Map.brush.source.decoration[result.row][result.col] = Map.brush.index;
+                     
+                  } else {
+                     
+                     if (Map.brush.source[result.row] === undefined) {
+                        Map.brush.source[result.row] = {};
+                     }
+                     
+                     Map.brush.source[result.row][result.col] = Map.brush.index;
+                     
                   }
-      
-                  Map.brush.source[result.row][result.col] = Map.brush.index;
+                  
                   Map.draw();
                   Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
                   
@@ -321,9 +349,6 @@ var Map = {
                   
                if (Map.brush.tile)
                   Map.brush.tile.position = loc;
-               
-               
-               
       
             };
             
@@ -496,6 +521,7 @@ var Map = {
       var count = 0;
       var index = 0;
       var frame = "";
+      var drawLast = [];
 
       Map.buffer.children = []; //= new PIXI.SpriteBatch(); <-- Leaks memory :-/
 
@@ -552,7 +578,14 @@ var Map = {
             sprite.position.x = (a * Map.TILE_WIDTH_HALF);
             sprite.position.y = (b * Map.TILE_HEIGHT_HALF);
             Map.buffer.addChild(sprite);
+            
+            if (Map.terrain.decoration[row] !== undefined) {
+               if (Map.terrain.decoration[row][col] !== undefined) {
+                  drawLast.push({ "row": row, "col": col, "a": a, "b": b, "index": Map.terrain.decoration[row][col] })
+               }
+            }
 
+            /*
             if (Map.objects[row] !== undefined) {
                if (Map.objects[row][col] !== undefined) {
                   sprite = new PIXI.Sprite(PIXI.Texture.fromFrame(Map.objects.index[Map.objects[row][col]]));
@@ -563,11 +596,36 @@ var Map = {
                   Map.buffer.addChild(sprite);
                }
             }
-
+            */
+            
             count++;
              
          }
       }
+      
+      var ceiling = drawLast.length;
+      var obj;
+      
+      for (var i = 0; i < ceiling; i++) {
+         
+         obj = drawLast[i];
+         frame = Map.terrain.index[obj.index];
+         
+         sprite = new PIXI.Sprite(PIXI.Texture.fromFrame(frame));
+         
+         if (Map.frames[frame].anchor === undefined) {
+            // Assume default y anchor:
+            sprite.anchor.y = (sprite.height - 32) / sprite.height;
+         } else {
+            sprite.anchor.y = Map.frames[frame].anchor / sprite.height;
+         }
+         
+         sprite.anchor.x = ((sprite.width / 2) - 32) / sprite.width;
+         sprite.position.x = (obj.a * Map.TILE_WIDTH_HALF);
+         sprite.position.y = (obj.b * Map.TILE_HEIGHT_HALF);
+         Map.buffer.addChild(sprite);
+      }
+      
    },
 
    render: function () {

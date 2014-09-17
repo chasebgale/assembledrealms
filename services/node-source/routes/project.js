@@ -33,7 +33,6 @@ exports.create = function(req, res, next){
 var copyDirAsync = function (dir, done) {
   ncp(dir[0], dir[1], function (err) {
     if (err) return done(err);
-    console.log('done: ' + dir[1]);
     done();
   });
 }
