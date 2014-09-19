@@ -7,7 +7,8 @@ var express = require('express')
   , bodyParser =  require('body-parser')
   , project =     require('./routes/project')
   , file =        require('./routes/file')
-  , busboy =      require('connect-busboy');
+  , busboy =      require('connect-busboy')
+  , util =        require('util');
 
 var app = express();
 
@@ -60,6 +61,14 @@ app.get('/api/project/:id/file/open/:path', file.open);
 app.get('/api/project/:id/file/raw/*', file.raw);
 app.post('/api/project/:id/file/create', file.create);
 app.post('/api/project/:id/file/upload', file.upload);
+
+// Monitor:
+app.get('/api/stats', function (req, res, next) {
+    var memory = process.memoryUsage();
+    memory.uptime = process.uptime();
+    
+    res.json(memory);
+});
 
 app.use(function(err, req, res, next){
     console.error(err.message);
