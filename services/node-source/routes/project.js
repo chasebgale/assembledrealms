@@ -5,30 +5,13 @@ var ncp = require('ncp').ncp
   , path = require('path')
   , utilities = require('../utilities')
   , dir = require('node-dir')
-  , rimraf = require('rimraf');
-
-/*
- * GET home page.
- */
+  , rimraf = require('rimraf')
+  , ssh2 = require("ssh2")
+  , archiver = require('archiver');
 
 // This should be a parameter when we have more than one engine, duh!
 var import_url = "https://github.com/chasebgale/assembledrealms-isometric.git";
 var import_local = __dirname + "/../projects/assembledrealms-isometric";
-
-// https://github.com/nodegit/nodegit/tree/master/example
-
-/*
-exports.create = function(req, res, next){
-  git.Repo.clone(import_url, "projects/" + req.params.id, null, function(error, repo) {
-    if (error) return next(error);
-    
-    var formatted = {};
-    formatted.message = "OK";
-    
-    res.json(formatted);
-  });
-};
-*/
 
 var copyDirAsync = function (dir, done) {
   ncp(dir[0], dir[1], function (err) {
@@ -288,4 +271,66 @@ exports.destroy = function(req, res, next){
     
   });
   
+}
+
+exports.debug = function(req, res, next) {
+  
+  // FOR NOW USING HARD-CODED INTERNAL IP ADDY.
+  // TODO: IN THE FUTURE, MAYBE LOOK UP THIS INTERNAL
+  // IP ADDRESS USING THE DIGITAL OCEAN API? MAYBE DO IT
+  // EVERY HOUR AND UPDATE A VARIABLE SO IT'S NOT HIT FOR
+  // EVERY REQUEST? MAYBE IT ONLY CHECKS THE D/O API IF IT
+  // FAILS? THINK ABOUT ALL THIS STUFF.
+  
+  utilities.logMessage('PUSHING TO DEBUG, repo: ' + req.params.id);
+  
+  var conn  = new ssh2();
+  var project   = __dirname + "/../projects/" + req.params.id + "/";
+  var zip = __dirname + "/../archive/" + req.params.id + ".zip";
+  var destination = "/var/www/realms/"+ req.params.id + ".zip";
+  var files = [];
+  
+  var output = fs.createWriteStream(zip);
+  var archive = archiver('zip');
+  
+  output.on('close', function() {
+    console.log(archive.pointer() + ' total bytes');
+    console.log('archiver has been finalized and the output file descriptor has closed.');
+    
+    conn.on('ready', function() {
+      console.log('Connection :: ready');
+      conn.sftp(function(error, sftp) {
+        if (error) return next(error);
+        
+        sftp.fastPut(zip, destination, function (error) {
+          if (error) return next(error);
+          
+          console.log('Connection :: complete');
+          res.send('OK');
+          
+        });
+        
+      });
+    }).connect({
+      host: '104.131.114.6',
+      port: 22,
+      username: 'web',
+      password: '87141eeda7861e0b41801ad48ff19904'
+    });
+    
+  });
+  
+  archive.on('error', function(error) {
+    if (error) return next(error);
+  });
+  
+  archive.pipe(output);
+  
+  //, '!*.git'
+  archive.bulk([
+    { expand: true, cwd: project, src: ['**', '!.git']}
+  ]);
+  
+  archive.finalize();
+
 }

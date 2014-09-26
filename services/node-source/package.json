@@ -12,5 +12,7 @@
     , "async": "*"
     , "node-dir": "*"
     , "connect-busboy" : "*"
+    , "ssh2" : "*"
+    , "archiver" : "*"
   }
 }
