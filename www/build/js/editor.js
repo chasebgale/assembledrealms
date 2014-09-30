@@ -110,6 +110,10 @@ function initialize(projectID, projectDomain) {
         
     });
     
+    $("#btnDebug").on("click", function () {
+        
+    });
+    
     $('#commitStart').on('click', function () {
         $(this).attr('disabled', true);
         $(this).html('<i class="fa fa-cog fa-spin"></i> Commit');

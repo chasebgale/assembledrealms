@@ -47,7 +47,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
             <button id="btnCommit" type="button" class="btn btn-default">
 		<span class="glyphicon glyphicon-open"></span> Commit
 	    </button>
-	    <button type="button" class="btn btn-default">
+	    <button id="btnDebug" type="button" class="btn btn-default">
 		<span class="glyphicon glyphicon-play"></span> Debug
 	    </button>
             <div id="tree" class="panel panel-default">
@@ -176,7 +176,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
             <div class="modal-content">
                 <div class="modal-header">
 		    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title">Commit</h4>
+                    <h4 class="modal-title">Committing Changes to GIT</h4>
                 </div>
                 <div class="modal-body">
 		    <!--
@@ -190,7 +190,29 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
                 </div>
 		<div class="modal-footer">
 		    <span id="commitProgressMessage"></span>
-			<button id="commitStart" type="button" class="btn btn-default">Commit</button>
+		    <button id="commitStart" type="button" class="btn btn-default">Commit</button>
+		</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="modalDebug" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+		    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Publishing to Debug Server...</h4>
+                </div>
+                <div class="modal-body">
+		    <div id="debugProgressbar" class="progress progress-striped active">
+			    <div class="progress-bar"  role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%;">
+			</div>
+		    </div>
+		    
+                </div>
+		<div class="modal-footer">
+		    <span id="debugProgressMessage"></span>
+		    <button id="debugStart" type="button" class="btn btn-default">Commit</button>
 		</div>
             </div>
         </div>

@@ -304,9 +304,22 @@ exports.debug = function(req, res, next) {
         
         sftp.fastPut(zip, destination, function (error) {
           if (error) return next(error);
+          console.log('fastPut :: complete');
           
-          console.log('Connection :: complete');
-          res.send('OK');
+          conn.exec('unzip /var/www/realms/' + req.params.id + ' -d /var/www/realms/' + req.params.id, function(error, stream) {
+            if (error) return next(error);
+            
+            stream.on('exit', function(code, signal) {
+              console.log('UNZIP :: exit :: code: ' + code + ', signal: ' + signal);
+              res.send('OK');
+            }).on('close', function() {
+              console.log('UNZIP :: close');
+              conn.end();
+            }).stderr.on('data', function(data) {
+              console.log('STDERR: ' + data);
+            });
+            
+          });
           
         });
         
@@ -326,7 +339,6 @@ exports.debug = function(req, res, next) {
   
   archive.pipe(output);
   
-  //, '!*.git'
   archive.bulk([
     { expand: true, cwd: project, src: ['**', '!.git']}
   ]);
