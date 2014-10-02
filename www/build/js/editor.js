@@ -104,31 +104,67 @@ function initialize(projectID, projectDomain) {
     });
 
     $("#objects").on("click", ".objects", function () {
-        var objectKey = $(this).attr('data-id');
-        Map.setBrush(Map.objects, objectKey);
+        var tileKey = $(this).attr('data-id');
+        Map.setBrush(Map.objects, tileKey);
         Map.setMode(Map.MODE_PAINT);
 
-        var offset = parseInt($(this).attr('data-offset'));
-        offset = offset / -2;
+        var offset_x = parseInt($(this).attr('data-offset-x'));
+        var offset_y = parseInt($(this).attr('data-offset-y'));
+        var frame = Map.frames[tileKey];
+        
+        var canvas = document.getElementById('brush');
+        var context = canvas.getContext('2d');
 
-        $('#objectButton').css('background-image', $(this).css('background-image'));
-        $('#objectButton').css('background-position-x', offset + 'px');
-        setToolbarFocus($('#objectButton'));
+        var imageObj = new Image();
+        imageObj.onload = function() {
+            
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // draw cropped image
+            var sourceX = offset_x;
+            var sourceY = offset_y;
+            var sourceWidth = frame.frame.w;
+            var sourceHeight = frame.frame.h;
+            var destWidth = 0;
+            var destHeight = 0;
+            
+            if (sourceWidth >= sourceHeight) {
+                destWidth = canvas.width;
+                destHeight = sourceHeight * (canvas.width / sourceWidth);
+            } else {
+                destHeight = canvas.height;
+                destWidth = sourceWidth * (canvas.height / sourceHeight);
+            }
+            
+            var destX = canvas.width / 2 - destWidth / 2;
+            var destY = canvas.height / 2 - destHeight / 2;
+    
+            context.drawImage(imageObj, sourceX, sourceY, sourceWidth, sourceHeight, destX, destY, destWidth, destHeight);
+        };
+        imageObj.src = $(this).css('background-image').slice(4, -1);
 
-        $('#modalObjects').modal('hide');
+        $('#modalTerrain').modal('hide');
+        $('#addBrush').fadeIn().css("display","inline-block");
     });
 
     $("#moveButton").on("click", function () {
         
+        
         Map.setCursor('cursor_hand');
         Map.setMode(Map.MODE_MOVE);
+        
+        resetToolBar();
+        $(this).addClass('active');
     
     });
     
     $("#eraserButton").on("click", function () {
        
-       Map.setCursor('cursor_eraser');
-       Map.setMode(Map.MODE_DELETE);
+        Map.setCursor('cursor_eraser');
+        Map.setMode(Map.MODE_DELETE);
+       
+        resetToolBar();
+        $(this).addClass('active');
        
     });
     
@@ -137,9 +173,25 @@ function initialize(projectID, projectDomain) {
         Map.setCursor('cursor_pencil');
         Map.setMode(Map.MODE_PAINT);
         
+        resetToolBar();
+        $(this).addClass('active');
+        
         if (Map.brush.tile === undefined) {
             $("#modalTerrain").modal("show");
+        } else {
+            if ($("#addBrush").is(':hidden')) {
+                $("#addBrush").fadeIn();
+            }
         }
+        
+    });
+    
+    $("#categorySelection").on('change', function () {
+       var category = '#' + $(this).find(":selected").attr('data-id');
+       
+        $('#modalTerrain .tileContainer').fadeOut(function () {
+            $(category).fadeIn();
+        });
        
     });
     
@@ -224,6 +276,9 @@ function initialize(projectID, projectDomain) {
                 var json = JSON.parse(xhr.responseText);
                 if (json.message == "OK") {
                     button.attr('disabled', false);
+                    
+                    addToExplorer('client/resource', upload.name, '');
+                    
                     alert.addClass('alert-success');
                     alert.html("<strong>" + upload.name + "</strong> was successfully added to your resource folder!");
                     alert.fadeIn();
@@ -330,6 +385,14 @@ function initialize(projectID, projectDomain) {
 
     loadRealmRoot();
     
+}
+
+function resetToolBar() {
+    $("#mapToolbar .navbar-btn").removeClass('active');
+    
+    if ($("#addBrush").is(':visible')) {
+        $("#addBrush").fadeOut();
+    }
 }
 
 function addToExplorer(path, name, sha) {
@@ -539,22 +602,6 @@ function loadRealmFile(id, path, name) {
     var ext = name.split('.').pop();
     
     var tracking_id = __projectId + '-' + path;
-    
-    if (ext === 'png') {
-        var img = $('#' + id);
-        if (img.length) {
-            
-            $('#image').children('img').each(function(i) { 
-                $(this).hide();
-            });
-            
-            img.show();
-            
-            displayImage();
-            
-            return;
-        }
-    }
 
     if (sessionStorage[tracking_id + '-name']) {
 
@@ -570,43 +617,44 @@ function loadRealmFile(id, path, name) {
         //                                      '&ref=' + ref +
         //                                      '&private_token=' + token;
 
-        $.ajax({
-            url: __projectURL + '/file/open/' + encodeURIComponent(path),
-            type: 'get',
-            dataType: 'json'
-        })
-        .done(function (data) {
-            if (ext === 'png') {
+        if (ext.match(/\.(jpg|jpeg|png|gif)$/)) {
                     
-                $('#image').children('img').each(function(i) { 
-                    $(this).hide();
-                });
+            $('#image').children('img').each(function(i) { 
+                $(this).hide();
+            });
+            
+            $("#image").append("<img src='" + __projectURL + '/file/raw/' + encodeURIComponent(path) + "' id='" + id + "' style='background-image: url(img/transparent_display.gif);' />");
+            
+            displayImage();
+            
+        } else {
+            $.ajax({
+                url: __projectURL + '/file/raw/' + encodeURIComponent(path),
+                type: 'get',
+                dataType: 'text'
+            })
+            .done(function (data) {
                 
-                $("#image").append("<img src='data:image/png;base64," + data.content + "' id='" + id + "' style='background-image: url(img/transparent_display.gif);' />");
-                
-                displayImage();
-                
-            } else {
-                sessionStorage[tracking_id] = data.content;
+                sessionStorage[tracking_id] = data;
                 sessionStorage[tracking_id + '-name'] = name;
                 sessionStorage[tracking_id + '-path'] = path;
-                sessionStorage[tracking_id + '-commit-md5'] = md5(data.content);
-
+                sessionStorage[tracking_id + '-commit-md5'] = md5(data);
+    
                 __trackedFiles.push(tracking_id);
                 sessionStorage[__trackedStorageId] = JSON.stringify(__trackedFiles);
-
-                loadEditor(name, data.content);
+    
+                loadEditor(name, data);
                 __fileId = tracking_id;
-            }
-        })
-        .fail(function(data) {
-            console.log(data);
-                // Update DOM to reflect we messed up:
-                //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
-        })
-        .always(function () {
-            
-        });
+                
+            })
+            .fail(function(data, param1, param2) {
+                console.log(data);
+                    // Update DOM to reflect we messed up:
+                    //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
+            });
+        }
+        
+        
 
     }
 }

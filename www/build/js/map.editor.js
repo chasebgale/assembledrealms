@@ -584,19 +584,28 @@ var Map = {
                   drawLast.push({ "row": row, "col": col, "a": a, "b": b, "index": Map.terrain.decoration[row][col] })
                }
             }
-
-            /*
+            
+            
             if (Map.objects[row] !== undefined) {
                if (Map.objects[row][col] !== undefined) {
-                  sprite = new PIXI.Sprite(PIXI.Texture.fromFrame(Map.objects.index[Map.objects[row][col]]));
-                  sprite.anchor.y = (sprite.height - 32) / sprite.height;
+                  
+                  frame = Map.objects.index[Map.objects[row][col]];
+                  sprite = new PIXI.Sprite(PIXI.Texture.fromFrame(frame));
+                    
+                  if (Map.frames[frame].anchor === undefined) {
+                     // Assume default y anchor:
+                     sprite.anchor.y = (sprite.height - 32) / sprite.height;
+                  } else {
+                     sprite.anchor.y = Map.frames[frame].anchor / sprite.height;
+                  }
+                  
                   sprite.anchor.x = ((sprite.width / 2) - 32) / sprite.width;
                   sprite.position.x = (a * Map.TILE_WIDTH_HALF);
                   sprite.position.y = (b * Map.TILE_HEIGHT_HALF);
+                  
                   Map.buffer.addChild(sprite);
                }
             }
-            */
             
             count++;
              

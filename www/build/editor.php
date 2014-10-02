@@ -134,24 +134,19 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
     <div class="modal fade tiles-modal-lg" id="modalTerrain" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header">
+                <div class="modal-header clearfix">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title">Select a tile...</h4>
+                    <h4 class="modal-title pull-left" style="width: 230px;">Select a tile from category: </h4>
+		    <select id="categorySelection" class="form-control pull-left" style="display: inline-block; width: 125px; margin-top: -4px;">
+			<option data-id="terrain">Terrain</option>
+			<option data-id="objects">Objects</option>
+		    </select>
                 </div>
-                <div class="modal-body" id="terrain">
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade objects-modal-lg" id="modalObjects" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title">Select an object...</h4>
-                </div>
-                <div class="modal-body" id="objects">
+                <div class="modal-body">
+		    <div class="tileContainer" id="terrain">
+		    </div>
+		    <div class="tileContainer" id="objects" style="display: none;">
+		    </div>
                 </div>
             </div>
         </div>
