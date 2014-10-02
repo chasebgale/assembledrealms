@@ -75,6 +75,14 @@ div#funding {
     margin: 0 auto;
 }
 
+.vertical-spacer {
+    width: 1px;
+    height: 100%;
+    background-color: #777;
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
 .absoluteCenter {
     position:absolute;
     left:0;

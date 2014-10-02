@@ -64,14 +64,43 @@ function initialize(projectID, projectDomain) {
         Map.setBrush(Map.terrain, tileKey);
         Map.setMode(Map.MODE_PAINT);
 
-        var offset = parseInt($(this).attr('data-offset'));
-        offset = offset / -2;
+        var offset_x = parseInt($(this).attr('data-offset-x'));
+        var offset_y = parseInt($(this).attr('data-offset-y'));
+        var frame = Map.frames[tileKey];
+        
+        var canvas = document.getElementById('brush');
+        var context = canvas.getContext('2d');
 
-        $('#tileButton').css('background-image', $(this).css('background-image'));
-        $('#tileButton').css('background-position-x', offset + 'px');
-        setToolbarFocus($('#tileButton'));
+        var imageObj = new Image();
+        imageObj.onload = function() {
+            
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // draw cropped image
+            var sourceX = offset_x;
+            var sourceY = offset_y;
+            var sourceWidth = frame.frame.w;
+            var sourceHeight = frame.frame.h;
+            var destWidth = 0;
+            var destHeight = 0;
+            
+            if (sourceWidth >= sourceHeight) {
+                destWidth = canvas.width;
+                destHeight = sourceHeight * (canvas.width / sourceWidth);
+            } else {
+                destHeight = canvas.height;
+                destWidth = sourceWidth * (canvas.height / sourceHeight);
+            }
+            
+            var destX = canvas.width / 2 - destWidth / 2;
+            var destY = canvas.height / 2 - destHeight / 2;
+    
+            context.drawImage(imageObj, sourceX, sourceY, sourceWidth, sourceHeight, destX, destY, destWidth, destHeight);
+        };
+        imageObj.src = $(this).css('background-image').slice(4, -1);
 
         $('#modalTerrain').modal('hide');
+        $('#addBrush').fadeIn().css("display","inline-block");
     });
 
     $("#objects").on("click", ".objects", function () {
@@ -102,6 +131,18 @@ function initialize(projectID, projectDomain) {
        Map.setMode(Map.MODE_DELETE);
        
     });
+    
+    $("#addButton").on("click", function () {
+       
+        Map.setCursor('cursor_pencil');
+        Map.setMode(Map.MODE_PAINT);
+        
+        if (Map.brush.tile === undefined) {
+            $("#modalTerrain").modal("show");
+        }
+       
+    });
+    
 
     $("#btnCommit").on("click", function () {
         //$('#commitProgressbar').addClass('active');

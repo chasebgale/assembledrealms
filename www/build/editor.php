@@ -50,7 +50,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 	    <button id="btnDebug" type="button" class="btn btn-default">
 		<span class="glyphicon glyphicon-play"></span> Debug
 	    </button>
-            <div id="tree" class="panel panel-default">
+            <div id="tree" class="panel panel-default" style="height: 562px; overflow-y: scroll;">
                 <ul id="explorer" class="filetree treeview">
                 </ul>
             </div>
@@ -84,8 +84,22 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 					<div style="background-image: url('/build/img/cursors.png'); width: 20px; height: 20px; background-position:-39px -8px"></div>
 				    </button>
                                     <button type="button" class="btn btn-default navbar-btn btn-map-tool" id="eraserButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Erase tiles">
-					<div style="background-image: url('/build/img/cursors.png'); width: 20px; height: 20px; background-position:-216px -8px"></div>
+					<div style="background-image: url('/build/img/cursors.png'); width: 22px; height: 22px; background-position:-216px -6px"></div>
 				    </button>
+				    <button type="button" class="btn btn-default navbar-btn btn-map-tool" id="addButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Add tiles">
+					<div style="background-image: url('/build/img/cursors.png'); width: 22px; height: 22px; background-position:-6px -6px"></div>
+				    </button>
+				    
+				    <div id="addBrush" style="display: none;">
+					
+					<canvas id="brush" width="48" height="48" style="vertical-align: middle; display: inline-block;"></canvas>
+					
+					<button type="button" class="btn btn-default btn-sm navbar-btn" data-toggle="modal" data-target=".tiles-modal-lg">
+					    <span>Change Brush</span>
+					</button>
+				    </div>
+				    
+				    <!--
                                     <div class="btn-group">
                                         <button type="button" class="btn btn-default navbar-btn" id="tileButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Place terrain"></button>
                                         <button type="button" class="btn btn-default dropdown-toggle navbar-btn" data-toggle="modal" data-target=".tiles-modal-lg">
@@ -102,6 +116,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
                                             <span class="sr-only">Toggle Dropdown</span>
                                         </button>
                                     </div>
+				    -->
                                 </ul>
                             </div>
                         </div>
@@ -339,7 +354,8 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
                     <% _.each(model.frames, function(frame, key) { %>
                         <div class="col-md-1 <%- model.meta.category %>"
 			     data-id="<%- key %>"
-			     data-offset="<%- frame.frame.x %>"
+			     data-offset-x="<%- frame.frame.x %>"
+			     data-offset-y="<%- frame.frame.y %>"
 			     style="background-image: url(<%- source %>);
 				    background-position-x: <%- (frame.frame.x * -1) + 'px' %>;
 				    background-position-y: <%- (frame.frame.y * -1) + 'px' %>;
