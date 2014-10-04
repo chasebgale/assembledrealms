@@ -21,8 +21,7 @@
             echo "<li><a href='/account/logout.php' class='header-link'><i class='fa fa-sign-out fa-2x' style='display: block;'></i>Logout</a></li>";
             echo "<li><a href='/account' class='header-link'><i class='fa fa-user fa-2x' style='display: block; text-align: center;'></i>Profile</a></li>";
         } else {
-            echo "<li><a href='/account/login.php' class='header-link'><i class='fa fa-sign-in fa-2x' style='display: block;'></i>Login</a></li>";
-            echo "<li><a href='/account/register.php' class='header-link'><i class='fa fa-lightbulb-o fa-2x' style='display: block;'></i>Join</a></li>";
+            echo "<li><a href='/account/register.php' class='header-link'><i class='fa fa-sign-in fa-2x' style='display: block;'></i>Login / Join</a></li>";
         }
         ?>
         <li class="dropdown">
