@@ -1,16 +1,15 @@
-var ncp = require('ncp').ncp
-  , async = require('async')
-  , git = require('nodegit')
-  , fs = require('fs')
-  , path = require('path')
-  , utilities = require('../utilities')
-  , dir = require('node-dir')
-  , rimraf = require('rimraf')
-  , ssh2 = require("ssh2")
-  , archiver = require('archiver');
+var ncp 		= require('ncp').ncp
+  , async 		= require('async')
+  , git 		= require('nodegit')
+  , fs 			= require('fs')
+  , path 		= require('path')
+  , utilities 	= require('../utilities')
+  , dir 		= require('node-dir')
+  , rimraf 		= require('rimraf')
+  , ssh2 		= require("ssh2")
+  , archiver 	= require('archiver');
 
 // This should be a parameter when we have more than one engine, duh!
-var import_url = "https://github.com/chasebgale/assembledrealms-isometric.git";
 var import_local = __dirname + "/../projects/assembledrealms-isometric";
 
 var copyDirAsync = function (dir, done) {
@@ -306,15 +305,30 @@ exports.debug = function(req, res, next) {
           if (error) return next(error);
           console.log('fastPut :: complete');
           
-          conn.exec('unzip /var/www/realms/' + req.params.id + ' -d /var/www/realms/' + req.params.id, function(error, stream) {
+          conn.exec('unzip -o /var/www/realms/' + req.params.id + ' -d /var/www/realms/' + req.params.id, function(error, stream) {
             if (error) return next(error);
             
             stream.on('exit', function(code, signal) {
               console.log('UNZIP :: exit :: code: ' + code + ', signal: ' + signal);
+			  
+			  conn.exec('rm -f /var/www/realms/' + req.params.id + '.zip', function(error, stream) {
+			    if (error) return next(error);
+				
+				stream.on('exit', function(code, signal) {
+				  console.log('DELETE :: exit');
+				}).on('close', function() {
+				  console.log('DELETE :: close');
+				  conn.end();
+				}).stderr.on('data', function(data) {
+				  console.log('DELETE STDERR: ' + data);
+				});
+				
+			  });
+			  
               res.send('OK');
             }).on('close', function() {
               console.log('UNZIP :: close');
-              conn.end();
+              //conn.end();
             }).stderr.on('data', function(data) {
               console.log('STDERR: ' + data);
             });
