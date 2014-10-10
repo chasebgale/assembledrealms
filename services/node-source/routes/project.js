@@ -1,13 +1,13 @@
-var ncp 		= require('ncp').ncp
-  , async 		= require('async')
-  , git 		= require('nodegit')
-  , fs 			= require('fs')
-  , path 		= require('path')
-  , utilities 	= require('../utilities')
-  , dir 		= require('node-dir')
-  , rimraf 		= require('rimraf')
-  , ssh2 		= require("ssh2")
-  , archiver 	= require('archiver');
+var ncp 		= require('ncp').ncp,
+    async 		= require('async'),
+    git 		= require('nodegit'),
+    fs 			= require('fs'),
+    path 		= require('path'),
+    utilities 	= require('../utilities'),
+    dir 		= require('node-dir'),
+    rimraf 		= require('rimraf'),
+    ssh2 		= require("ssh2"),
+    archiver 	= require('archiver');
 
 // This should be a parameter when we have more than one engine, duh!
 var import_local = __dirname + "/../projects/assembledrealms-isometric";
@@ -281,7 +281,7 @@ exports.debug = function(req, res, next) {
   // EVERY REQUEST? MAYBE IT ONLY CHECKS THE D/O API IF IT
   // FAILS? THINK ABOUT ALL THIS STUFF.
   
-  utilities.logMessage('PUSHING TO DEBUG, repo: ' + req.params.id);
+  utilities.logMessage('PUSHING TO DEBUG - ' + req.params.id);
   
   var conn  = new ssh2();
   var project   = __dirname + "/../projects/" + req.params.id + "/";
@@ -293,31 +293,29 @@ exports.debug = function(req, res, next) {
   var archive = archiver('zip');
   
   output.on('close', function() {
-    console.log(archive.pointer() + ' total bytes');
-    console.log('archiver has been finalized and the output file descriptor has closed.');
+    console.log('ZIP :: ' + archive.pointer() + ' total bytes after compression.');
     
     conn.on('ready', function() {
-      console.log('Connection :: ready');
+      console.log('SSH2 :: Connection established.');
       conn.sftp(function(error, sftp) {
         if (error) return next(error);
         
         sftp.fastPut(zip, destination, function (error) {
           if (error) return next(error);
-          console.log('fastPut :: complete');
+          console.log('SSH2 :: Zip upload complete.');
           
           conn.exec('unzip -o /var/www/realms/' + req.params.id + ' -d /var/www/realms/' + req.params.id, function(error, stream) {
             if (error) return next(error);
             
             stream.on('exit', function(code, signal) {
-              console.log('UNZIP :: exit :: code: ' + code + ', signal: ' + signal);
-			  
+              
 			  conn.exec('rm -f /var/www/realms/' + req.params.id + '.zip', function(error, stream) {
 			    if (error) return next(error);
 				
 				stream.on('exit', function(code, signal) {
-				  console.log('DELETE :: exit');
+				  // Hmm
 				}).on('close', function() {
-				  console.log('DELETE :: close');
+				  console.log('SSH2 - DELETE :: Success.');
 				  conn.end();
 				}).stderr.on('data', function(data) {
 				  console.log('DELETE STDERR: ' + data);
@@ -327,8 +325,7 @@ exports.debug = function(req, res, next) {
 			  
               res.send('OK');
             }).on('close', function() {
-              console.log('UNZIP :: close');
-              //conn.end();
+              console.log('SSH2 - UNZIP :: Decompressed successfully.');
             }).stderr.on('data', function(data) {
               console.log('STDERR: ' + data);
             });
