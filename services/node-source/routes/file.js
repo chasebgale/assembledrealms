@@ -24,7 +24,7 @@ exports.raw = function(req, res, next){
   res.sendfile(req.params[0], options, function (error) {
     if (error) return next(error);
     
-    utilities.logMessage('RAW FILE REQUEST FILLED: ' + req.params[0]);
+    console.log('RAW FILE REQUEST FILLED');
   });
 }
 

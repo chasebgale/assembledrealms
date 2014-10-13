@@ -44,79 +44,57 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
     
     <section id="mapEdit" style="display: none;">
         <div id="leftBar">
-            <button id="btnCommit" type="button" class="btn btn-default">
-		<span class="glyphicon glyphicon-open"></span> Commit
-	    </button>
-	    <button id="btnDebug" type="button" class="btn btn-default">
-		<span class="glyphicon glyphicon-play"></span> Debug
-	    </button>
-            <div id="tree" class="panel panel-default" style="height: 562px; overflow-y: scroll;">
-                <ul id="explorer" class="filetree treeview">
-                </ul>
-            </div>
-	    <button id="btnNewFile" type="button" class="btn btn-default">
-		<span class="glyphicon glyphicon-plus"></span> New File
-	    </button>
-	    <button id="btnUploadResource" type="button" class="btn btn-default">
-		<span class="fa fa-upload"></span> Add Media
-	    </button>
+			<button id="btnCommit" type="button" class="btn btn-default">
+				<span class="glyphicon glyphicon-open"></span> Commit
+			</button>
+			<button id="btnDebug" type="button" class="btn btn-default">
+				<span class="glyphicon glyphicon-play"></span> Debug
+			</button>
+			<div id="tree" class="panel panel-default" style="height: 562px; overflow-y: scroll;">
+				<ul id="explorer" class="filetree treeview">
+				</ul>
+			</div>
+			<button id="btnNewFile" type="button" class="btn btn-default">
+				<span class="glyphicon glyphicon-plus"></span> New File
+			</button>
+			<button id="btnUploadResource" type="button" class="btn btn-default">
+				<span class="fa fa-upload"></span> Add Media
+			</button>
         </div>
+		
         <div id="tabs">
             <ul class="nav nav-tabs" id="mapTabs">
                 <li id="tab-nav-editor" class="active"><a href="#editor" data-toggle="tab">Raw Text</a></li>
-		<li id="tab-nav-image" style="display: none;"><a href="#image" data-toggle="tab">Raw Image</a></li>
+				<li id="tab-nav-image" style="display: none;"><a href="#image" data-toggle="tab">Raw Image</a></li>
                 <li id="tab-nav-map" style="display: none;"><a href="#map" data-toggle="tab">Map Editor</a></li>
                 <li id="tab-nav-markdown" style="display: none;"><a href="#markdown" data-toggle="tab">Rendered Markdown</a></li>
-		<li id="tab-nav-file" style="display: none;"><a href="#file" data-toggle="tab">File Tools</a></li>
+				<li id="tab-nav-file" style="display: none;"><a href="#file" data-toggle="tab">File Tools</a></li>
             </ul>
 
             <div class="tab-content" style="border: 1px solid #ddd; border-top-width: 0; border-radius: 0 0 4px 4px;">
 
                 <div class="tab-pane active" id="editor"></div>
-		<div class="tab-pane" id="image"></div>
+				<div class="tab-pane" id="image"></div>
                 <div class="tab-pane" id="map">
                     <nav class="navbar navbar-light" role="navigation">
                         <div class="container-fluid">
                             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                                 <ul class="nav navbar-nav" id="mapToolbar">
-                                    <!--<button id="tileButton" type="button" class="btn btn-default navbar-btn" data-toggle="modal" data-target=".tiles-modal-lg"></button>-->
                                     <button type="button" class="btn btn-default navbar-btn btn-map-tool" id="moveButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Navigate the map">
-					<div style="background-image: url('/build/img/cursors.png'); width: 20px; height: 20px; background-position:-39px -8px"></div>
-				    </button>
+										<div style="background-image: url('/build/img/cursors.png'); width: 20px; height: 20px; background-position:-39px -8px"></div>
+									</button>
                                     <button type="button" class="btn btn-default navbar-btn btn-map-tool" id="eraserButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Erase tiles">
-					<div style="background-image: url('/build/img/cursors.png'); width: 22px; height: 22px; background-position:-216px -6px"></div>
-				    </button>
-				    <button type="button" class="btn btn-default navbar-btn btn-map-tool" id="addButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Add tiles">
-					<div style="background-image: url('/build/img/cursors.png'); width: 22px; height: 22px; background-position:-6px -6px"></div>
-				    </button>
-				    
-				    <div id="addBrush" style="display: none;">
-					
-					<canvas id="brush" width="48" height="48" style="vertical-align: middle; display: inline-block;"></canvas>
-					
-					<button type="button" class="btn btn-default btn-sm navbar-btn" data-toggle="modal" data-target=".tiles-modal-lg">
-					    <span>Change Brush</span>
-					</button>
-				    </div>
-				    
-				    <!--
-                                    <div class="btn-group">
-                                        <button type="button" class="btn btn-default navbar-btn" id="tileButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Place terrain"></button>
-                                        <button type="button" class="btn btn-default dropdown-toggle navbar-btn" data-toggle="modal" data-target=".tiles-modal-lg">
-                                            <span class="caret"></span>
-                                            <span class="sr-only">Toggle Dropdown</span>
-                                        </button>
-                                    </div>
-										
-										
-                                    <div class="btn-group">
-                                        <button type="button" class="btn btn-default navbar-btn" id="objectButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Place objects over terrain"></button>
-                                        <button type="button" class="btn btn-default dropdown-toggle navbar-btn" data-toggle="modal" data-target=".objects-modal-lg">
-                                            <span class="caret"></span>
-                                            <span class="sr-only">Toggle Dropdown</span>
-                                        </button>
-                                    </div>
-				    -->
+										<div style="background-image: url('/build/img/cursors.png'); width: 22px; height: 22px; background-position:-216px -6px"></div>
+									</button>
+									<button type="button" class="btn btn-default navbar-btn btn-map-tool" id="addButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Add tiles">
+										<div style="background-image: url('/build/img/cursors.png'); width: 22px; height: 22px; background-position:-6px -6px"></div>
+									</button>
+									<div id="addBrush" style="display: none;">
+										<canvas id="brush" width="48" height="48" style="vertical-align: middle; display: inline-block;"></canvas>
+										<button type="button" class="btn btn-default btn-sm navbar-btn" data-toggle="modal" data-target=".tiles-modal-lg">
+											<span>Change Brush</span>
+										</button>
+									</div>
                                 </ul>
                             </div>
                         </div>
@@ -124,7 +102,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
                 </div>
 
                 <div class="tab-pane" id="markdown"></div>
-		<div class="tab-pane" id="file"></div>
+				<div class="tab-pane" id="file"></div>
             </div>
         </div>
 
@@ -185,23 +163,17 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-		    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                     <h4 class="modal-title">Committing Changes to GIT</h4>
                 </div>
-                <div class="modal-body">
-		    <!--
-			<div id="commitProgressbar" class="progress progress-striped">
-				<div class="progress-bar"  role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%;">
-			    </div>
-			</div>
-		    -->
-		    <ul id="commitProgressList"></ul>
-		    <textarea id="commitMessage" rows="6" cols="120" placeholder="(Optional) Add a short message describing the changes you have made. Useful if you need to look up this work later!"></textarea>
+				<div class="modal-body">
+					<ul id="commitProgressList"></ul>
+					<textarea id="commitMessage" rows="6" cols="120" placeholder="(Optional) Add a short message describing the changes you have made. Useful if you need to look up this work later!"></textarea>
                 </div>
-		<div class="modal-footer">
-		    <span id="commitProgressMessage"></span>
-		    <button id="commitStart" type="button" class="btn btn-default">Commit</button>
-		</div>
+				<div class="modal-footer">
+					<span id="commitProgressMessage"></span>
+					<button id="commitStart" type="button" class="btn btn-default">Commit</button>
+				</div>
             </div>
         </div>
     </div>
@@ -210,23 +182,22 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-		    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                     <h4 class="modal-title">Publishing to Debug Server...</h4>
                 </div>
                 <div class="modal-body">
-		    <div id="debugProgressbar" class="progress progress-striped active">
-			    <div class="progress-bar"  role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%;">
-			</div>
-		    </div>
-		    
-                </div>
-		<div class="modal-footer">
-		    <span id="debugProgressMessage"></span>
-		    <button id="debugStart" type="button" class="btn btn-default">Commit</button>
+					<div id="debugProgressbar" class="progress progress-striped active">
+						<div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%;"></div>
+					</div>
+					<ul id="debugProgressList"></ul>
+				</div>
+				<div class="modal-footer">
+					<div id="debugAlert" class="alert alert-danger" style="display: none;"></div>
+					<button id="debugClose" type="button" class="btn btn-default" disabled="disabled">Close</button>
+				</div>
+			</div>			
 		</div>
-            </div>
-        </div>
-    </div>
+	</div>
     
     <div class="modal fade" id="modalUploadResource" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog">

@@ -204,7 +204,36 @@ function initialize(projectID, projectDomain) {
     });
     
     $("#btnDebug").on("click", function () {
-        
+        $('#modalDebug').modal('show');
+		$('#debugProgressList').append('<li>Establishing a connection to your debug server...</li>');
+		var debugURL = 'http://debug-01.assembledrealms.com/' + __projectId;
+		
+		//debugProgressList
+		$.ajax({
+            url: __projectURL + '/debug',
+            type: 'post',
+            dataType: 'text'
+        })
+        .done(function (data) {
+            if (data === "OK") {
+				$('#debugProgressbar').removeClass('active');
+				$('#debugProgressList').append('<li>Published to debug server successfully!</li>');
+				$('#debugProgressList').append('<li>Your debug URL is <a href="' + debugURL + '">' + debugURL + '</a>!</li>');
+			}
+        })
+        .fail(function(data) {
+            console.log(data);
+            $('#debugAlert').text('Network Error: ' + data.statusText);
+            $('#debugAlert').fadeIn();
+                // Update DOM to reflect we messed up:
+                //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
+        })
+        .always(function () {
+            $('#debugClose').attr('disabled', false);
+        });
+		
+		$('#debugProgressList').append('<li>Compressing source package and delivering it...</li>');
+		
     });
     
     $('#commitStart').on('click', function () {
