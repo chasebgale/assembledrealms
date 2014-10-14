@@ -1,0 +1,343 @@
+{
+"frames": {
+	"cliff_to_water_01.png": {
+		"frame": {"x":0,"y":476,"w":64,"h":68},
+		"rotated": false,
+		"anchor": 20,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"cliff_to_water_02.png": {
+		"frame": {"x":64,"y":476,"w":64,"h":68},
+		"rotated": false,
+		"anchor": 20,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"cliff_to_water_03.png": {
+		"frame": {"x":128,"y":476,"w":64,"h":68},
+		"rotated": false,
+		"anchor": 20,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"cliff_to_water_04.png": {
+		"frame": {"x":192,"y":476,"w":64,"h":68},
+		"rotated": false,
+		"anchor": 20,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"cliff_to_water_05.png": {
+		"frame": {"x":256,"y":476,"w":64,"h":68},
+		"rotated": false,
+		"anchor": 20,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"cliff_to_water_06.png": {
+		"frame": {"x":320,"y":476,"w":64,"h":68},
+		"rotated": false,
+		"anchor": 20,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"cliff_to_water_07.png": {
+		"frame": {"x":384,"y":476,"w":64,"h":68},
+		"rotated": false,
+		"anchor": 20,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"cliff_to_water_08.png": {
+		"frame": {"x":448,"y":476,"w":64,"h":68},
+		"rotated": false,
+		"anchor": 20,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"cliff_to_water_09.png": {
+		"frame": {"x":512,"y":476,"w":64,"h":68},
+		"rotated": false,
+		"anchor": 20,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"cliff_to_water_10.png": {
+		"frame": {"x":576,"y":476,"w":64,"h":68},
+		"rotated": false,
+		"anchor": 20,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"cliff_to_water_11.png": {
+		"frame": {"x":640,"y":476,"w":64,"h":68},
+		"rotated": false,
+		"anchor": 20,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"cliff_to_water_12.png": {
+		"frame": {"x":704,"y":476,"w":64,"h":68},
+		"rotated": false,
+		"anchor": 16,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"cliff_to_water_13.png": {
+		"frame": {"x":768,"y":476,"w":64,"h":68},
+		"rotated": false,
+		"anchor": 16,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"cliff_to_water_14.png": {
+		"frame": {"x":832,"y":476,"w":64,"h":68},
+		"rotated": false,
+		"anchor": 16,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"cliff_to_water_15.png": {
+		"frame": {"x":896,"y":476,"w":64,"h":68},
+		"rotated": false,
+		"anchor": 16,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"cliff_to_water_16.png": {
+		"frame": {"x":960,"y":476,"w":64,"h":68},
+		"rotated": false,
+		"anchor": 16,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"cliff_to_water_17.png": {
+		"frame": {"x":0,"y":544,"w":64,"h":64},
+		"rotated": false,
+		"anchor": 16,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"cliff_to_water_18.png": {
+		"frame": {"x":64,"y":544,"w":64,"h":64},
+		"rotated": false,
+		"anchor": 16,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"cliff_to_water_19.png": {
+		"frame": {"x":128,"y":544,"w":64,"h":64},
+		"rotated": false,
+		"anchor": 16,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"cliff_to_water_20.png": {
+		"frame": {"x":192,"y":544,"w":64,"h":64},
+		"rotated": false,
+		"anchor": 16,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"cliff_to_water_21.png": {
+		"frame": {"x":256,"y":544,"w":64,"h":64},
+		"rotated": false,
+		"anchor": 16,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"cliff_to_water_22.png": {
+		"frame": {"x":320,"y":544,"w":64,"h":64},
+		"rotated": false,
+		"anchor": 16,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"cliff_to_water_23.png": {
+		"frame": {"x":384,"y":544,"w":64,"h":64},
+		"rotated": false,
+		"anchor": 16,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"cliff_to_water_24.png": {
+		"frame": {"x":448,"y":544,"w":64,"h":64},
+		"rotated": false,
+		"anchor": 16,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"shrubbery_01.png": {
+		"frame": {"x":0,"y":322,"w":64,"h":64},
+		"decoration": true,
+		"anchor": 42,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"shrubbery_02.png": {
+		"frame": {"x":64,"y":322,"w":64,"h":64},
+		"decoration": true,
+		"anchor": 42,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"shrubbery_03.png": {
+		"frame": {"x":128,"y":322,"w":64,"h":64},
+		"decoration": true,
+		"anchor": 42,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"shrubbery_04.png": {
+		"frame": {"x":192,"y":322,"w":64,"h":64},
+		"decoration": true,
+		"anchor": 42,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"shrubbery_05.png": {
+		"frame": {"x":256,"y":322,"w":64,"h":64},
+		"decoration": true,
+		"anchor": 42,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"shrubbery_06.png": {
+		"frame": {"x":320,"y":322,"w":64,"h":64},
+		"decoration": true,
+		"anchor": 42,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"shrubbery_07.png": {
+		"frame": {"x":384,"y":322,"w":64,"h":64},
+		"decoration": true,
+		"anchor": 42,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"shrubbery_08.png": {
+		"frame": {"x":448,"y":322,"w":64,"h":64},
+		"decoration": true,
+		"anchor": 42,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"shrubbery_09.png": {
+		"frame": {"x":512,"y":322,"w":64,"h":64},
+		"decoration": true,
+		"anchor": 42,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"shrubbery_10.png": {
+		"frame": {"x":576,"y":322,"w":64,"h":64},
+		"decoration": true,
+		"anchor": 42,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"shrubbery_11.png": {
+		"frame": {"x":640,"y":322,"w":64,"h":64},
+		"decoration": true,
+		"anchor": 42,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"shrubbery_12.png": {
+		"frame": {"x":704,"y":322,"w":64,"h":64},
+		"decoration": true,
+		"anchor": 42,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"shrubbery_13.png": {
+		"frame": {"x":768,"y":322,"w":64,"h":64},
+		"decoration": true,
+		"anchor": 42,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"shrubbery_14.png": {
+		"frame": {"x":832,"y":322,"w":64,"h":64},
+		"decoration": true,
+		"anchor": 42,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"shrubbery_15.png": {
+		"frame": {"x":896,"y":322,"w":64,"h":64},
+		"decoration": true,
+		"anchor": 42,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"shrubbery_16.png": {
+		"frame": {"x":960,"y":322,"w":64,"h":64},
+		"decoration": true,
+		"anchor": 42,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"water_01.png": {
+		"frame": {"x":0,"y":608,"w":64,"h":32},
+		"rotated": false,
+		"anchor": 20,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"water_02.png": {
+		"frame": {"x":64,"y":608,"w":64,"h":32},
+		"rotated": false,
+		"anchor": 20,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"water_03.png": {
+		"frame": {"x":128,"y":608,"w":64,"h":32},
+		"rotated": false,
+		"anchor": 20,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"water_04.png": {
+		"frame": {"x":192,"y":608,"w":64,"h":32},
+		"rotated": false,
+		"anchor": 20,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"water_05.png": {
+		"frame": {"x":256,"y":608,"w":64,"h":32},
+		"rotated": false,
+		"anchor": 20,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"water_06.png": {
+		"frame": {"x":320,"y":608,"w":64,"h":32},
+		"rotated": false,
+		"anchor": 20,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"water_07.png": {
+		"frame": {"x":384,"y":608,"w":64,"h":32},
+		"rotated": false,
+		"anchor": 20,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"water_08.png": {
+		"frame": {"x":448,"y":608,"w":64,"h":32},
+		"rotated": false,
+		"anchor": 20,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"water_09.png": {
+		"frame": {"x":512,"y":608,"w":64,"h":32},
+		"rotated": false,
+		"anchor": 20,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"water_10.png": {
+		"frame": {"x":576,"y":608,"w":64,"h":32},
+		"rotated": false,
+		"anchor": 20,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"water_11.png": {
+		"frame": {"x":640,"y":608,"w":64,"h":32},
+		"rotated": false,
+		"anchor": 20,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"water_12.png": {
+		"frame": {"x":704,"y":608,"w":64,"h":32},
+		"rotated": false,
+		"anchor": 20,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"water_13.png": {
+		"frame": {"x":768,"y":608,"w":64,"h":32},
+		"rotated": false,
+		"anchor": 20,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"water_14.png": {
+		"frame": {"x":832,"y":608,"w":64,"h":32},
+		"rotated": false,
+		"anchor": 20,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"water_15.png": {
+		"frame": {"x":896,"y":608,"w":64,"h":32},
+		"rotated": false,
+		"anchor": 20,
+		"dominantColor": "rgb(125, 189, 255)"
+	},
+	"water_16.png": {
+		"frame": {"x":960,"y":608,"w":64,"h":32},
+		"rotated": false,
+		"anchor": 20,
+		"dominantColor": "rgb(125, 189, 255)"
+	}
+},
+"meta": {
+	"image": "grassland_tiles.png",
+	"category": "terrain"
+}}
