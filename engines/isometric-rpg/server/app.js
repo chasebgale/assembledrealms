@@ -1,12 +1,36 @@
 var express = require('express');
 var app = express();
-var io = require('socket.io').listen(app);
+var server = require('http').Server(app);
+var io = require('socket.io').listen(server);
+var morgan		= require('morgan');
+
+var debug = false;
+
+
+if (process.argv[2]) {
+	debug = true;
+}
+
+var allowCrossDomain = function(req, res, next) {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+    res.header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type');
+
+    if ('OPTIONS' == req.method) return res.send(200);
+    
+    next();
+}
+app.use(allowCrossDomain);
 
 io.sockets.on('connection', function (client) {
+
+	client.emit('status', 'CONNECTED!');
+	console.log('CLIENT CONNECTED');
 
 	client.on('auth', processAuthorization);
 	client.on('message', processMessage);
 	client.on('update', processUpdate);
+	client.on('error', processError);
 	
 	function processAuthorization(data) {
 		// data.id === user ID
@@ -46,9 +70,41 @@ io.sockets.on('connection', function (client) {
 			}
 		});
 	}
+	
+	function processUpdate(data) {
+		client.get('userID', function(error, userID) {
+			if(userID !== undefined) {
+				client.broadcast.emit('player-update', {
+					userID: userID,
+					update: data
+				});
+			}
+		});
+	}
 
+	function processError(data) {
+		console.log("ERROR: " + data);
+	}
+	
 });
 
-app.listen(3000, function(){
-  console.log("Express server listening on port 3000, request to port 80 are redirected to 3000 by Fedora.");
-});
+console.log('Attempting to static-ify: ' + __dirname + '/../client');
+
+// Serve up the realm files, when requested:
+app.use(express.static(__dirname + '/../client'));
+//app.use(express.static('/var/www/realms/83/client'));
+
+// Log to console
+app.use(morgan('dev')); 	
+
+if (debug) {
+	// Hey, listen on random port (because lots (hopefully) of other nodes are running too)!
+	server.listen(0, function(){
+	  console.log("Express server listening on port: " + server.address().port);
+	});
+} else {
+	// Hey!! Listen!
+	server.listen(3000, function(){
+	  console.log("Express server listening on port 3000, request to port 80 are redirected to 3000 by Fedora.");
+	});
+}
