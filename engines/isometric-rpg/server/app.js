@@ -88,21 +88,20 @@ io.sockets.on('connection', function (client) {
 	
 });
 
-console.log('Attempting to static-ify: ' + __dirname + '/../client');
-
-// Serve up the realm files, when requested:
-app.use(express.static(__dirname + '/../client'));
-//app.use(express.static('/var/www/realms/83/client'));
-
 // Log to console
 app.use(morgan('dev')); 	
 
 if (debug) {
-	// Hey, listen on random port (because lots (hopefully) of other nodes are running too)!
+	// Listen on random port because lots (hopefully) of other nodes are running too!
 	server.listen(0, function(){
 	  console.log("Express server listening on port: " + server.address().port);
 	});
 } else {
+
+	// In production, the realm instance serves up all it's own files:
+	console.log('Attempting to static-ify: ' + __dirname + '/../client');
+	app.use(express.static(__dirname + '/../client'));
+
 	// Hey!! Listen!
 	server.listen(3000, function(){
 	  console.log("Express server listening on port 3000, request to port 80 are redirected to 3000 by Fedora.");
