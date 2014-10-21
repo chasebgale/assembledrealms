@@ -94,7 +94,7 @@ app.use(morgan('dev'));
 if (debug) {
 	// Listen on random port because lots (hopefully) of other nodes are running too!
 	server.listen(0, function(){
-	  console.log("Express server listening on port: " + server.address().port);
+	  console.log("port: " + server.address().port);
 	});
 } else {
 
