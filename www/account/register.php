@@ -171,7 +171,7 @@ echo "<div id='content'>";
 $wrapper = '<div class="panel panel-warning" style="width: 500px; margin: 0 auto; margin-bottom: 50px;">
                 <div class="panel-body">
                     <h2 style="text-align: center; margin-top: 0;"><small>
-                        %message% Please take a moment to register or <a href="/account/login.php?%target%">login</a>.
+                        %message% Please take a moment to register or login.
                     </small></h2>
                 </div>
            </div>';
@@ -193,9 +193,16 @@ switch ($_SERVER['QUERY_STRING']) {
 	<div class="col-md-5">
 		<form id="form-signin" role="form" action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
 		    <h2 class="form-signin-heading">Please sign in...</h2>
+			
+			<div class="form-group">
 		    <input name="email" type="email" class="form-control" placeholder="contact@domain.com" required="true" autofocus="">
-		    <input name="password" type="password" class="form-control" placeholder="Password" required="true">
-		    <button id="loginSubmit" class="btn btn-lg btn-default btn-block" type="submit">Sign in</button>
+		    </div>
+			
+			<div class="form-group">
+			<input name="password" type="password" class="form-control" placeholder="Password" required="true">
+		    </div>
+			
+			<button id="loginSubmit" class="btn btn-lg btn-default btn-block" type="submit">Sign in</button>
 		</form>
 	</div>
 	
