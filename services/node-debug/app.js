@@ -1,17 +1,15 @@
 var express 		= require('express');
-var bodyParser 	= require('body-parser');
+var bodyParser 		= require('body-parser');
 var app 			= express();
-var morgan		= require('morgan');
+var morgan			= require('morgan');
 var forever 		= require('forever-monitor');
 
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
 app.use( bodyParser.urlencoded() ); // to support URL-encoded bodies
 
-// Serve up the realm files, when requested:
-app.use('/realms', express.static(__dirname + '/realms'));
-
 // Log to console
 app.use(morgan('dev')); 	
+app.set('view engine', 'jade'); // set up jade for templating
 
 app.post('/launch', function (req, res, next) {
 
@@ -40,6 +38,13 @@ app.post('/launch', function (req, res, next) {
 
 	child.start();
 });
+
+app.get('/realms/:id', function (req, res, next) {
+	res.render('realm.jade');
+});
+
+// Serve up the realm files, when requested:
+app.use('/realms', express.static(__dirname + '/realms'));
 
 // Hey!! Listen!
 app.listen(3000, function(){

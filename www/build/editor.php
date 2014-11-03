@@ -350,6 +350,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
     <script src="js/marked.js"></script>
     
     <script src="/../js/pixi.dev.js"></script>
+	<script src="/../js/bigscreen.min.js"></script>
     <script src="/../js/lodash.min.js"></script>
     <script src="/../js/ace/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
 

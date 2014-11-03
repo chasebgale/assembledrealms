@@ -69,7 +69,12 @@ var Map = {
       miniMapDiv.appendChild(miniMapCanvas);
 
       // Initialize PIXI:
-      Map.renderer = PIXI.autoDetectRenderer(Map.width, Map.height, undefined, undefined, true); //new PIXI.WebGLRenderer(Map.width, Map.height);
+	  var rendererOptions = {
+		antialiasing:false,
+		transparent:false,
+		resolution:1
+	  }
+      Map.renderer = PIXI.autoDetectRenderer(Map.width, Map.height, rendererOptions); //new PIXI.WebGLRenderer(Map.width, Map.height);
 
       Map.stage = new PIXI.Stage(0x000000, true);
 
@@ -239,9 +244,7 @@ var Map = {
                   }
                }
                
-               Map.draw();
-               Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
-               Map.updateSource();
+               Map.invalidate = true;
             };
             
             Map.stage.mousemove = function (data) {
@@ -261,9 +264,7 @@ var Map = {
                      }
                   }
                    
-                  Map.draw();
-                  Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
-                  Map.updateSource();
+                  Map.invalidate = true;
                }
                
                if (Map.brush.sprite)
@@ -272,7 +273,7 @@ var Map = {
             };
             
             Map.stage.mouseup = function (data) {
-               
+               Map.updateSource();
             };
             
             break;
@@ -303,10 +304,7 @@ var Map = {
                   
                }
                
-               Map.draw();
-               Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
-               
-               Map.updateSource();
+               Map.invalidate = true;
       
             };
       
@@ -337,10 +335,7 @@ var Map = {
                      
                   }
                   
-                  Map.draw();
-                  Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
-                  
-                  Map.updateSource();
+                  Map.invalidate = true;
                    
                }
       
@@ -353,7 +348,7 @@ var Map = {
             };
             
             Map.stage.mouseup = function (data) {
-               
+               Map.updateSource();
             };
             
             break;
@@ -380,9 +375,6 @@ var Map = {
                   Map.playerPos.y = (Map.moveOriginPlayer.y + yDiff);
                   
                   Map.invalidate = true;
-                  Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
-                  
-                  Map.updateSource();
                    
                }
                
@@ -394,6 +386,7 @@ var Map = {
             Map.stage.mouseup = function (data) {
                Map.moveOriginPoint = null;
                Map.setCursor('cursor_hand');
+			   Map.updateSource();
             };
             
             break;
@@ -410,12 +403,13 @@ var Map = {
       Map.layer_terrain = new PIXI.Sprite(Map.texture);
       Map.layer_terrain.cacheAsBitmap = true;
 
-      Map.texture.render(Map.buffer, new PIXI.Point(Map.offset.x, Map.offset.y), true);
+	  var matrix = new PIXI.Matrix();
+	  matrix.translate(Map.offset.x, Map.offset.y);
+	  
+      Map.texture.render(Map.buffer, matrix);
 
       Map.stage.addChild(Map.layer_terrain);
       Map.stage.addChild(Map.layer_actors);
-      
-      
 
       Map.renderer.render(Map.stage);
        
@@ -516,6 +510,13 @@ var Map = {
       sessionStorage[__fileId] = __editor.getValue();
    },
 
+   updateTexture: function () {
+	  var matrix = new PIXI.Matrix();
+	  matrix.translate(Map.offset.x, Map.offset.y);
+	  
+      Map.texture.render(Map.buffer, matrix, true);
+   },
+   
    draw: function () {
       var sprite;
       var count = 0;
@@ -643,6 +644,7 @@ var Map = {
 
       if (Map.invalidate) {
          Map.draw();
+		 Map.updateTexture();
          Map.invalidate = false;
       }
 
