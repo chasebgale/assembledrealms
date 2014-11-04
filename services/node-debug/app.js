@@ -3,6 +3,8 @@ var bodyParser 		= require('body-parser');
 var app 			= express();
 var morgan			= require('morgan');
 var forever 		= require('forever-monitor');
+var redis 			= require("redis");
+var redisClient 	= redis.createClient();
 
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
 app.use( bodyParser.urlencoded() ); // to support URL-encoded bodies
@@ -30,9 +32,11 @@ app.post('/launch', function (req, res, next) {
 		console.log('Realm ' + realmID + ' stdout: ' + data);
 		var split = data.toString().split(' ');
 		if (split[0] == 'port:') {
-			// Send the port back to the client
 			console.log('Realm ' + realmApp + ' has started on port ' + split[1]);
-			res.send(split[1]);
+			
+			// Remember the port, using the id as the key:
+			redisClient.set(realmID, split[1]);
+			res.send('OK');
 		}
 	});
 
@@ -40,7 +44,17 @@ app.post('/launch', function (req, res, next) {
 });
 
 app.get('/realms/:id', function (req, res, next) {
-	res.render('realm.jade');
+
+	redisClient.get(req.params.id, function (error, reply) {
+        console.log(reply.toString()); // Will print `OK`
+		
+		if (error) next(error);
+		
+		res.render('realm.jade', {port: reply.toString()});
+		
+    });
+
+	
 });
 
 // Serve up the realm files, when requested:

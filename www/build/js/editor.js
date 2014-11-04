@@ -206,7 +206,8 @@ function initialize(projectID, projectDomain) {
     $("#btnDebug").on("click", function () {
         $('#modalDebug').modal('show');
 		$('#debugProgressList').append('<li>Establishing a connection to your debug server...</li>');
-		var debugURL = 'http://debug-01.assembledrealms.com/' + __projectId;
+		var debugURL = 'http://debug-01.assembledrealms.com/realms/' + __projectId;
+		var launchURL = 'http://debug-01.assembledrealms.com/launch';
 		
 		//debugProgressList
 		$.ajax({
@@ -216,20 +217,36 @@ function initialize(projectID, projectDomain) {
         })
         .done(function (data) {
             if (data === "OK") {
-				$('#debugProgressbar').removeClass('active');
+				// $('#debugProgressbar').removeClass('active');
 				$('#debugProgressList').append('<li>Published to debug server successfully!</li>');
-				$('#debugProgressList').append('<li>Your debug URL is <a href="' + debugURL + '">' + debugURL + '</a>!</li>');
-			}
+				$('#debugProgressList').append('<li>Launching realm on your debug server...</li>');
+				// $('#debugProgressList').append('<li>Your debug URL is <a href="' + debugURL + '">' + debugURL + '</a>!</li>');
+				
+				$.ajax({
+					url: launchURL,
+					type: 'post',
+					dataType: 'text',
+					data: {id: __projectId}
+				})
+				.done(function (data) {
+					if (data.substr(0, 2) === "OK") {
+						var port = data.substr(3);
+					}
+				})
+				.always(function() {
+					$('#debugClose').attr('disabled', false);
+				});
         })
         .fail(function(data) {
             console.log(data);
             $('#debugAlert').text('Network Error: ' + data.statusText);
             $('#debugAlert').fadeIn();
+			$('#debugClose').attr('disabled', false);
                 // Update DOM to reflect we messed up:
                 //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
         })
         .always(function () {
-            $('#debugClose').attr('disabled', false);
+            // $('#debugClose').attr('disabled', false);
         });
 		
 		$('#debugProgressList').append('<li>Compressing source package and delivering it...</li>');
