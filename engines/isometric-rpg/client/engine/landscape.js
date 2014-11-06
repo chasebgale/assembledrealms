@@ -1,109 +1,102 @@
 var Landscape = {
 
     // Called on player login and when changing maps
-    init: function (map, pxWidth, pxHeight) {
+    draw: function () {
 
-        Landscape.width = pxWidth;
-        Landscape.height = pxHeight;
+        var sprite;
+		var count = 0;
+		var index = 0;
+		var frame = "";
+		var drawLast = [];
 
-        var assetsLoader = new PIXI.AssetLoader(map.tileSource);
+		Map.buffer.children = []; //= new PIXI.SpriteBatch(); <-- Leaks memory :-/
 
-        // use callback
-        assetsLoader.onComplete = Landscape.assetsLoaded;
+		var startPoint = {};
 
-        //begin load
-        assetsLoader.load();
+		startPoint.row = (Map.playerPos.x / TILE_WIDTH_HALF + Map.playerPos.y / TILE_HEIGHT_HALF) / 2;
+		startPoint.col = (Map.playerPos.y / TILE_HEIGHT_HALF - Map.playerPos.x / TILE_WIDTH_HALF) / -2;
+		startPoint.row = Math.floor(startPoint.row);
+		startPoint.col = Math.floor(startPoint.col);
+
+		var aStart = (startPoint.row + startPoint.col) - Map.VIEWPORT_WIDTH_TILES_HALF;
+		var aEnd = aStart + Map.VIEWPORT_WIDTH_TILES + 2;
+
+		var bStart = (startPoint.row - startPoint.col) - Map.VIEWPORT_HEIGHT_TILES_HALF;
+		var bEnd = bStart + Map.VIEWPORT_HEIGHT_TILES + 1;
+
+		if (!Map.offset) {
+			var xOffset = (-1 * aStart * 32) - TILE_WIDTH_HALF - 32;
+			var yOffset = (-1 * bStart * 16) - TILE_Y_OFFSET;
+
+			Map.offset = { x: xOffset, y: yOffset };
+		}
+
+		for (var b = bStart; b < bEnd + 1; b++) {
+
+			for (var a = aStart; a < aEnd; a++) {
+
+				if ((b & 1) != (a & 1)) {
+					continue;
+				}
+
+				row = (a + b) / 2;
+				col = (a - b) / 2;
+
+				index = -1;
+
+				if (Map.terrain[row] === undefined) continue;
+				if (Map.terrain[row][col] === undefined) continue;
+
+				index = Map.terrain[row][col];
+				frame = Map.terrain.index[index];
+				sprite = new PIXI.Sprite(PIXI.Texture.fromFrame(frame));
 
 
-    },
+				if (Map.frames[frame].anchor === undefined) {
+					// Assume default y anchor:
+					sprite.anchor.y = (sprite.height - 32) / sprite.height;
+				} else {
+					sprite.anchor.y = Map.frames[frame].anchor / sprite.height;
+				}
 
-    assetsLoaded: function () {
-        var roughRows = Math.round((Landscape.height / 16)) + 1;
-        var roughCols = Math.round((Landscape.width / 64));
 
-        // Testing fps hit with larger area
-        roughRows = roughRows * 2;
-        roughCols = roughCols * 2;
+				sprite.anchor.x = ((sprite.width / 2) - 32) / sprite.width;
+				sprite.position.x = (a * Map.TILE_WIDTH_HALF);
+				sprite.position.y = (b * Map.TILE_HEIGHT_HALF);
+				Map.buffer.addChild(sprite);
 
-        var rowOffset = 0;
+				if (Map.terrain.decoration[row] !== undefined) {
+					if (Map.terrain.decoration[row][col] !== undefined) {
+						drawLast.push({ "row": row, "col": col, "a": a, "b": b, "index": Map.terrain.decoration[row][col] })
+					}
+				}
 
-        var count = 0;
 
-        var texture_name;
+				if (Map.objects[row] !== undefined) {
+					if (Map.objects[row][col] !== undefined) {
 
-        var sprites = [];
+						frame = Map.objects.index[Map.objects[row][col]];
+						sprite = new PIXI.Sprite(PIXI.Texture.fromFrame(frame));
 
-        Landscape.buffer = new PIXI.DisplayObjectContainer();
+						if (Map.frames[frame].anchor === undefined) {
+							// Assume default y anchor:
+							sprite.anchor.y = (sprite.height - 32) / sprite.height;
+						} else {
+							sprite.anchor.y = Map.frames[frame].anchor / sprite.height;
+						}
 
-        // TODO: In the future this will be a map parsed
-        for (row = 0; row < roughRows; row++) {
-            for (col = 0; col < roughCols; col++) {
-                texture_name = "grass_and_water_" + getRandomInt(0, 3) + ".png";
-                sprites[count] = new PIXI.Sprite(PIXI.Texture.fromFrame(texture_name)); //textures[getRandomInt(0, 3)]);
+						sprite.anchor.x = ((sprite.width / 2) - 32) / sprite.width;
+						sprite.position.x = (a * Map.TILE_WIDTH_HALF);
+						sprite.position.y = (b * Map.TILE_HEIGHT_HALF);
 
-                if ((row % 2) === 0) {
-                    rowOffset = 32;
-                } else {
-                    rowOffset = 0;
-                }
+						Map.buffer.addChild(sprite);
+					}
+				}
 
-                sprites[count].position.x = (col * 64) + rowOffset - 32;
-                sprites[count].position.y = (row * 16) - 32;
+				count++;
 
-                Landscape.buffer.addChild(sprites[count]);
-
-                count++;
-            }
-        }
-
-        Landscape.texture = new PIXI.RenderTexture(1600, 1200);
-
-        Landscape.view = new PIXI.Sprite(Landscape.texture);
-
-        Landscape.view.position.x = 0;
-        Landscape.view.position.y = 0;
-
-        Landscape.texture.render(Landscape.buffer, new PIXI.Point(0,0), true);
-
-        Landscape.onComplete(Landscape.view);
-    },
-
-    move: function (offset) {
-        this.x += offset.x;
-        this.y += offset.y;
+			}
+		}
     }
 
 };
-
-    /*
-function Landscape(e) {
-	var buffer, view, textures, self, callback;
-	
-	self = this;
-	self.callback = e;
-	
-	var jqxhr = $.getJSON( "map.json", function() {
-	  console.log( "success" );
-	})
-	.done(function(payload) {
-		console.log( "--done loading map.json" );
-		
-		source = payload;
-		
-		// create a new loader
-		var landscapeLoader = new PIXI.AssetLoader(payload.tileSource);
-
-		// use callback
-		landscapeLoader.onComplete = self.init;
-
-		//begin load
-		landscapeLoader.load();
-	})
-	.fail(function() {
-		console.log( "error" );
-	})
-	.always(function() {
-		console.log( "complete" );
-	});
-}
-*/

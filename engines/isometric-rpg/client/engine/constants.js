@@ -12,3 +12,16 @@ var RENDER_STACK_AVATAR = 1;
 
 // sin(45degrees) ~= .707 and cos(45degrees) ~= .707
 var MOVEMENT_ANGLE = 0.707;
+
+var CANVAS_WIDTH: 896,
+var CANVAS_HEIGHT: 504,
+
+var TILE_WIDTH: 64,
+var TILE_WIDTH_HALF: 32,
+var TILE_HEIGHT: 32,
+var TILE_HEIGHT_HALF: 16,
+var TILE_Y_OFFSET: 14,
+
+var MODE_PAINT: 0,
+var MODE_MOVE: 1,
+var MODE_DELETE: 2,

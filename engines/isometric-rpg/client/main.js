@@ -5,7 +5,7 @@ define(function (require) {
 	var constants 	= require('constants');
 	var engine 		= require('engine');
 	var landscape 	= require('landscape');
-	var utilities 	= require('utilities');
+	var utilities 		= require('utilities');
 
 	engine.init();
 	
