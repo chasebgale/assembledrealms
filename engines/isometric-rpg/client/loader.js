@@ -2,11 +2,21 @@
 // our engine files simpler, we can require('actors') rather than
 // 									require('./engine/actors')
 requirejs.config({
-    baseUrl: 'engine',
+    baseUrl: 'client/engine',
 	paths: {
-		jquery: "//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min"
-    }
+		jquery: "//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min",
+		pixi: "//www.assembledrealms.com/js/pixi",
+		lodash: "//www.assembledrealms.com/js/lodash.min"
+    },
+	shim: {
+		'pixi': {
+			exports: 'PIXI'
+		},
+		'lodash': {
+			exports: '_'
+		}
+	}
 });
 
 // This call will start loading all of our required files:
-requirejs(['jquery', './main']);
+requirejs(['jquery', 'lodash', 'pixi', '../main']);

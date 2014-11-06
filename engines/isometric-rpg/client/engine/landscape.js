@@ -8,9 +8,6 @@ var Landscape = {
 		var index = 0;
 		var frame = "";
 		var drawLast = [];
-
-		Map.buffer.children = []; //= new PIXI.SpriteBatch(); <-- Leaks memory :-/
-
 		var startPoint = {};
 
 		startPoint.row = (Map.playerPos.x / TILE_WIDTH_HALF + Map.playerPos.y / TILE_HEIGHT_HALF) / 2;

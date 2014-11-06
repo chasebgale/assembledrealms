@@ -1,22 +1,5 @@
 var Avatar = {
 
-    init: function (assets) {
-
-        // TODO: Do this elsewhere... actually, the idea should be that each actor will have a required list of effects
-        // and at start we'll compile a list after loading actors and then in a single place load all required effects.
-        assets.push("effects.json");
-
-
-        var assetsLoader = new PIXI.AssetLoader(assets);
-
-        // use callback
-        assetsLoader.onComplete = Avatar.assetsLoaded;
-
-        //begin load
-        assetsLoader.load();
-
-    },
-
     assetsLoaded: function () {
 
         // create an array to store the textures
