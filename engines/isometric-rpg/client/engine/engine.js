@@ -21,6 +21,7 @@ define(function (require) {
 		moveOriginPoint: {},
 		moveOriginOffset: {},
 		frames: {},
+		offset: {},
 		buffer: undefined,
 
 		initialize: function (target) {
@@ -176,7 +177,7 @@ define(function (require) {
 		
 			buffer.children = []; //= new PIXI.SpriteBatch(); <-- Leaks memory :-/
 		
-			landscape.draw();
+			landscape.draw(this);
 		
 		},
 

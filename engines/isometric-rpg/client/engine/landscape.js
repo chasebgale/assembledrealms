@@ -1,99 +1,102 @@
-var Landscape = {
+define(function (require) {
 
-    // Called on player login and when changing maps
-    draw: function () {
+	return {
 
-        var sprite;
-		var count = 0;
-		var index = 0;
-		var frame = "";
-		var drawLast = [];
-		var startPoint = {};
+		// Called on player login and when changing maps
+		draw: function () {
 
-		startPoint.row = (Map.playerPos.x / TILE_WIDTH_HALF + Map.playerPos.y / TILE_HEIGHT_HALF) / 2;
-		startPoint.col = (Map.playerPos.y / TILE_HEIGHT_HALF - Map.playerPos.x / TILE_WIDTH_HALF) / -2;
-		startPoint.row = Math.floor(startPoint.row);
-		startPoint.col = Math.floor(startPoint.col);
+			var sprite;
+			var count = 0;
+			var index = 0;
+			var frame = "";
+			var drawLast = [];
+			var startPoint = {};
 
-		var aStart = (startPoint.row + startPoint.col) - Map.VIEWPORT_WIDTH_TILES_HALF;
-		var aEnd = aStart + Map.VIEWPORT_WIDTH_TILES + 2;
+			startPoint.row = (Map.playerPos.x / TILE_WIDTH_HALF + Map.playerPos.y / TILE_HEIGHT_HALF) / 2;
+			startPoint.col = (Map.playerPos.y / TILE_HEIGHT_HALF - Map.playerPos.x / TILE_WIDTH_HALF) / -2;
+			startPoint.row = Math.floor(startPoint.row);
+			startPoint.col = Math.floor(startPoint.col);
 
-		var bStart = (startPoint.row - startPoint.col) - Map.VIEWPORT_HEIGHT_TILES_HALF;
-		var bEnd = bStart + Map.VIEWPORT_HEIGHT_TILES + 1;
+			var aStart = (startPoint.row + startPoint.col) - Map.VIEWPORT_WIDTH_TILES_HALF;
+			var aEnd = aStart + Map.VIEWPORT_WIDTH_TILES + 2;
 
-		if (!Map.offset) {
-			var xOffset = (-1 * aStart * 32) - TILE_WIDTH_HALF - 32;
-			var yOffset = (-1 * bStart * 16) - TILE_Y_OFFSET;
+			var bStart = (startPoint.row - startPoint.col) - Map.VIEWPORT_HEIGHT_TILES_HALF;
+			var bEnd = bStart + Map.VIEWPORT_HEIGHT_TILES + 1;
 
-			Map.offset = { x: xOffset, y: yOffset };
-		}
+			if (!Map.offset) {
+				var xOffset = (-1 * aStart * 32) - TILE_WIDTH_HALF - 32;
+				var yOffset = (-1 * bStart * 16) - TILE_Y_OFFSET;
 
-		for (var b = bStart; b < bEnd + 1; b++) {
+				Map.offset = { x: xOffset, y: yOffset };
+			}
 
-			for (var a = aStart; a < aEnd; a++) {
+			for (var b = bStart; b < bEnd + 1; b++) {
 
-				if ((b & 1) != (a & 1)) {
-					continue;
-				}
+				for (var a = aStart; a < aEnd; a++) {
 
-				row = (a + b) / 2;
-				col = (a - b) / 2;
-
-				index = -1;
-
-				if (Map.terrain[row] === undefined) continue;
-				if (Map.terrain[row][col] === undefined) continue;
-
-				index = Map.terrain[row][col];
-				frame = Map.terrain.index[index];
-				sprite = new PIXI.Sprite(PIXI.Texture.fromFrame(frame));
-
-
-				if (Map.frames[frame].anchor === undefined) {
-					// Assume default y anchor:
-					sprite.anchor.y = (sprite.height - 32) / sprite.height;
-				} else {
-					sprite.anchor.y = Map.frames[frame].anchor / sprite.height;
-				}
-
-
-				sprite.anchor.x = ((sprite.width / 2) - 32) / sprite.width;
-				sprite.position.x = (a * Map.TILE_WIDTH_HALF);
-				sprite.position.y = (b * Map.TILE_HEIGHT_HALF);
-				Map.buffer.addChild(sprite);
-
-				if (Map.terrain.decoration[row] !== undefined) {
-					if (Map.terrain.decoration[row][col] !== undefined) {
-						drawLast.push({ "row": row, "col": col, "a": a, "b": b, "index": Map.terrain.decoration[row][col] })
+					if ((b & 1) != (a & 1)) {
+						continue;
 					}
-				}
+
+					row = (a + b) / 2;
+					col = (a - b) / 2;
+
+					index = -1;
+
+					if (Map.terrain[row] === undefined) continue;
+					if (Map.terrain[row][col] === undefined) continue;
+
+					index = Map.terrain[row][col];
+					frame = Map.terrain.index[index];
+					sprite = new PIXI.Sprite(PIXI.Texture.fromFrame(frame));
 
 
-				if (Map.objects[row] !== undefined) {
-					if (Map.objects[row][col] !== undefined) {
+					if (Map.frames[frame].anchor === undefined) {
+						// Assume default y anchor:
+						sprite.anchor.y = (sprite.height - 32) / sprite.height;
+					} else {
+						sprite.anchor.y = Map.frames[frame].anchor / sprite.height;
+					}
 
-						frame = Map.objects.index[Map.objects[row][col]];
-						sprite = new PIXI.Sprite(PIXI.Texture.fromFrame(frame));
 
-						if (Map.frames[frame].anchor === undefined) {
-							// Assume default y anchor:
-							sprite.anchor.y = (sprite.height - 32) / sprite.height;
-						} else {
-							sprite.anchor.y = Map.frames[frame].anchor / sprite.height;
+					sprite.anchor.x = ((sprite.width / 2) - 32) / sprite.width;
+					sprite.position.x = (a * Map.TILE_WIDTH_HALF);
+					sprite.position.y = (b * Map.TILE_HEIGHT_HALF);
+					Map.buffer.addChild(sprite);
+
+					if (Map.terrain.decoration[row] !== undefined) {
+						if (Map.terrain.decoration[row][col] !== undefined) {
+							drawLast.push({ "row": row, "col": col, "a": a, "b": b, "index": Map.terrain.decoration[row][col] })
 						}
-
-						sprite.anchor.x = ((sprite.width / 2) - 32) / sprite.width;
-						sprite.position.x = (a * Map.TILE_WIDTH_HALF);
-						sprite.position.y = (b * Map.TILE_HEIGHT_HALF);
-
-						Map.buffer.addChild(sprite);
 					}
+
+
+					if (Map.objects[row] !== undefined) {
+						if (Map.objects[row][col] !== undefined) {
+
+							frame = Map.objects.index[Map.objects[row][col]];
+							sprite = new PIXI.Sprite(PIXI.Texture.fromFrame(frame));
+
+							if (Map.frames[frame].anchor === undefined) {
+								// Assume default y anchor:
+								sprite.anchor.y = (sprite.height - 32) / sprite.height;
+							} else {
+								sprite.anchor.y = Map.frames[frame].anchor / sprite.height;
+							}
+
+							sprite.anchor.x = ((sprite.width / 2) - 32) / sprite.width;
+							sprite.position.x = (a * Map.TILE_WIDTH_HALF);
+							sprite.position.y = (b * Map.TILE_HEIGHT_HALF);
+
+							Map.buffer.addChild(sprite);
+						}
+					}
+
+					count++;
+
 				}
-
-				count++;
-
 			}
 		}
-    }
 
+	}
 };
