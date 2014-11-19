@@ -1,12 +1,14 @@
-define(function (require) {
+define(["actors", "avatar", "constants", "landscape", "utilities", "pixi"], 
+function(actors, avatar, constants, landscape, utilities, PIXI) {
 
-	var actors 		= require('actors');
+/*
 	var avatar 		= require('avatar');
 	var constants 	= require('constants');
 	var landscape 	= require('landscape');
 	var utilities	= require('utilities');
 	var PIXI		= require('pixi');
 	var _			= require('lodash');
+*/
 	
 	return {
 
@@ -110,14 +112,14 @@ define(function (require) {
 	   
 		load: function (map) {
 		
-			terrain = map.terrain;
-			objects = map.objects;
-			actors  = map.actors;
+			this.terrain = map.terrain;
+			this.objects = map.objects;
+			this.actors  = map.actors;
 
-			buffer = new PIXI.SpriteBatch();
+			this.buffer = new PIXI.SpriteBatch();
 
-			var assets = _.union(terrain.source, objects.source, actors.source);
-			assetLoadCount = assets.length;
+			var assets = _.union(this.terrain.source, this.objects.source, this.actors.source);
+			this.assetLoadCount = assets.length;
 			this.loadResources(assets);
 
 		},
@@ -175,9 +177,9 @@ define(function (require) {
 	   
 		draw: function () {
 		
-			buffer.children = []; //= new PIXI.SpriteBatch(); <-- Leaks memory :-/
+			this.buffer.children = []; //= new PIXI.SpriteBatch(); <-- Leaks memory :-/
 		
-			landscape.draw(this);
+			landscape.draw(this, PIXI);
 		
 		},
 

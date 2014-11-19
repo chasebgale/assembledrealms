@@ -1,9 +1,9 @@
-define(function (require) {
+define(function () {
 
 	return {
 
 		// Called on player login and when changing maps
-		draw: function () {
+		draw: function (engine, PIXI) {
 
 			var sprite;
 			var count = 0;
@@ -12,22 +12,22 @@ define(function (require) {
 			var drawLast = [];
 			var startPoint = {};
 
-			startPoint.row = (Map.playerPos.x / TILE_WIDTH_HALF + Map.playerPos.y / TILE_HEIGHT_HALF) / 2;
-			startPoint.col = (Map.playerPos.y / TILE_HEIGHT_HALF - Map.playerPos.x / TILE_WIDTH_HALF) / -2;
+			startPoint.row = (engine.playerPos.x / TILE_WIDTH_HALF + engine.playerPos.y / TILE_HEIGHT_HALF) / 2;
+			startPoint.col = (engine.playerPos.y / TILE_HEIGHT_HALF - engine.playerPos.x / TILE_WIDTH_HALF) / -2;
 			startPoint.row = Math.floor(startPoint.row);
 			startPoint.col = Math.floor(startPoint.col);
 
-			var aStart = (startPoint.row + startPoint.col) - Map.VIEWPORT_WIDTH_TILES_HALF;
-			var aEnd = aStart + Map.VIEWPORT_WIDTH_TILES + 2;
+			var aStart = (startPoint.row + startPoint.col) - VIEWPORT_WIDTH_TILES_HALF;
+			var aEnd = aStart + VIEWPORT_WIDTH_TILES + 2;
 
-			var bStart = (startPoint.row - startPoint.col) - Map.VIEWPORT_HEIGHT_TILES_HALF;
-			var bEnd = bStart + Map.VIEWPORT_HEIGHT_TILES + 1;
+			var bStart = (startPoint.row - startPoint.col) - VIEWPORT_HEIGHT_TILES_HALF;
+			var bEnd = bStart + VIEWPORT_HEIGHT_TILES + 1;
 
-			if (!Map.offset) {
+			if (engine.offset.x === undefined) {
 				var xOffset = (-1 * aStart * 32) - TILE_WIDTH_HALF - 32;
 				var yOffset = (-1 * bStart * 16) - TILE_Y_OFFSET;
 
-				Map.offset = { x: xOffset, y: yOffset };
+				engine.offset = { x: xOffset, y: yOffset };
 			}
 
 			for (var b = bStart; b < bEnd + 1; b++) {
@@ -43,52 +43,52 @@ define(function (require) {
 
 					index = -1;
 
-					if (Map.terrain[row] === undefined) continue;
-					if (Map.terrain[row][col] === undefined) continue;
+					if (engine.terrain[row] === undefined) continue;
+					if (engine.terrain[row][col] === undefined) continue;
 
-					index = Map.terrain[row][col];
-					frame = Map.terrain.index[index];
+					index = engine.terrain[row][col];
+					frame = engine.terrain.index[index];
 					sprite = new PIXI.Sprite(PIXI.Texture.fromFrame(frame));
 
 
-					if (Map.frames[frame].anchor === undefined) {
+					if (engine.frames[frame].anchor === undefined) {
 						// Assume default y anchor:
 						sprite.anchor.y = (sprite.height - 32) / sprite.height;
 					} else {
-						sprite.anchor.y = Map.frames[frame].anchor / sprite.height;
+						sprite.anchor.y = engine.frames[frame].anchor / sprite.height;
 					}
 
 
 					sprite.anchor.x = ((sprite.width / 2) - 32) / sprite.width;
-					sprite.position.x = (a * Map.TILE_WIDTH_HALF);
-					sprite.position.y = (b * Map.TILE_HEIGHT_HALF);
-					Map.buffer.addChild(sprite);
+					sprite.position.x = (a * TILE_WIDTH_HALF);
+					sprite.position.y = (b * TILE_HEIGHT_HALF);
+					engine.buffer.addChild(sprite);
 
-					if (Map.terrain.decoration[row] !== undefined) {
-						if (Map.terrain.decoration[row][col] !== undefined) {
-							drawLast.push({ "row": row, "col": col, "a": a, "b": b, "index": Map.terrain.decoration[row][col] })
+					if (engine.terrain.decoration[row] !== undefined) {
+						if (engine.terrain.decoration[row][col] !== undefined) {
+							drawLast.push({ "row": row, "col": col, "a": a, "b": b, "index": engine.terrain.decoration[row][col] })
 						}
 					}
 
 
-					if (Map.objects[row] !== undefined) {
-						if (Map.objects[row][col] !== undefined) {
+					if (engine.objects[row] !== undefined) {
+						if (engine.objects[row][col] !== undefined) {
 
-							frame = Map.objects.index[Map.objects[row][col]];
+							frame = engine.objects.index[engine.objects[row][col]];
 							sprite = new PIXI.Sprite(PIXI.Texture.fromFrame(frame));
 
-							if (Map.frames[frame].anchor === undefined) {
+							if (engine.frames[frame].anchor === undefined) {
 								// Assume default y anchor:
 								sprite.anchor.y = (sprite.height - 32) / sprite.height;
 							} else {
-								sprite.anchor.y = Map.frames[frame].anchor / sprite.height;
+								sprite.anchor.y = engine.frames[frame].anchor / sprite.height;
 							}
 
 							sprite.anchor.x = ((sprite.width / 2) - 32) / sprite.width;
-							sprite.position.x = (a * Map.TILE_WIDTH_HALF);
-							sprite.position.y = (b * Map.TILE_HEIGHT_HALF);
+							sprite.position.x = (a * TILE_WIDTH_HALF);
+							sprite.position.y = (b * TILE_HEIGHT_HALF);
 
-							Map.buffer.addChild(sprite);
+							engine.buffer.addChild(sprite);
 						}
 					}
 
@@ -99,4 +99,4 @@ define(function (require) {
 		}
 
 	}
-};
+});
