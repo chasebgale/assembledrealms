@@ -1,15 +1,6 @@
 define(["actors", "avatar", "constants", "landscape", "utilities", "pixi"], 
 function(actors, avatar, constants, landscape, utilities, PIXI) {
 
-/*
-	var avatar 		= require('avatar');
-	var constants 	= require('constants');
-	var landscape 	= require('landscape');
-	var utilities	= require('utilities');
-	var PIXI		= require('pixi');
-	var _			= require('lodash');
-*/
-	
 	return {
 
 		stage: null,
@@ -25,10 +16,13 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 		frames: {},
 		offset: {},
 		buffer: undefined,
+		keyboard: undefined,
 
 		initialize: function (target) {
 
 			var self = this;
+			
+			self.initializeKeys();
 			
 			// Initialize PIXI:
 			var rendererOptions = {
@@ -59,55 +53,126 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 			.done(function(json) {
 				self.load(json);
 			});
-
-			/*
-			var image = new Image();
-			image.onload = function() {
-				var baseTexture = new PIXI.BaseTexture(image);
-				var texture = new PIXI.Texture(baseTexture);
-
-				// Open hand:
-				var frameTexture = new PIXI.Texture(texture, {
-					x: 39,
-					y: 8,
-					width: 20,
-					height: 20
-				});
-		
-				PIXI.Texture.addTextureToCache(frameTexture, 'cursor_hand');
-
-				// Closed hand:
-				frameTexture = new PIXI.Texture(texture, {
-				x: 70,
-				y: 8,
-				width: 20,
-				height: 20
-				});
-				PIXI.Texture.addTextureToCache(frameTexture, 'cursor_hand_closed');
-
-				// Eraser:
-				frameTexture = new PIXI.Texture(texture, {
-				x: 214,
-				y: 6,
-				width: 20,
-				height: 22
-				});
-				PIXI.Texture.addTextureToCache(frameTexture, 'cursor_eraser');
-
-				// Pencil:
-				frameTexture = new PIXI.Texture(texture, {
-				x: 2,
-				y: 6,
-				width: 26,
-				height: 24
-				});
-				PIXI.Texture.addTextureToCache(frameTexture, 'cursor_pencil');
-
-
-			};
-			image.src = 'img/cursors.png';
-			*/
 			
+		},
+		
+		initializeKeys: function () {
+			var self = this;
+			var amount = 2;
+			var amount_angle = 2 * MOVEMENT_ANGLE;
+			
+			self.keyboard = require("keyboard");
+			
+			// Character moves north
+			self.keyboard.on('s', function() {
+				self.offset.y -= amount;
+				self.offsetTracker.y -= amount;
+				self.playerPos.y += amount;
+				self.invalidate = true;
+				
+			});
+			
+			// South
+			self.keyboard.on('w', function () {
+				self.offset.y += amount;
+				self.offsetTracker.y += amount;
+				self.playerPos.y -= amount;
+				self.invalidate = true;
+			});
+			
+			// West
+			self.keyboard.on('d', function () {
+				self.offset.x -= amount;
+				self.offsetTracker.x -= amount;
+				self.playerPos.x += amount;
+				self.invalidate = true;
+			});
+			
+			// East
+			self.keyboard.on('a', function () {
+				self.offset.x += amount;
+				self.offsetTracker.x += amount;
+				self.playerPos.x -= amount;
+				self.invalidate = true;
+			});
+			
+			// North-East
+			self.keyboard.on('w + d', function () {
+				self.offset.x -= amount_angle;
+				self.offsetTracker.x -= amount_angle;
+				
+				self.offset.y += amount_angle;
+				self.offsetTracker.y += amount_angle;
+				
+				self.playerPos.x += amount_angle;
+				self.playerPos.y -= amount_angle;
+				self.invalidate = true;
+			});
+			
+			// South-East
+			self.keyboard.on('s + d', function () {
+				self.offset.x -= amount_angle;
+				self.offsetTracker.x -= amount_angle;
+				
+				self.offset.y -= amount_angle;
+				self.offsetTracker.y -= amount_angle;
+				
+				self.playerPos.x += amount_angle;
+				self.playerPos.y += amount_angle;
+				self.invalidate = true;
+			});
+			
+			// South-West
+			self.keyboard.on('s + a', function () {
+				self.offset.x += amount_angle;
+				self.offsetTracker.x += amount_angle;
+				
+				self.offset.y -= amount_angle;
+				self.offsetTracker.y -= amount_angle;
+				
+				self.playerPos.x -= amount_angle;
+				self.playerPos.y += amount_angle;
+				self.invalidate = true;
+			});
+			
+			// North-West
+			self.keyboard.on('w + a', function () {
+				self.offset.x += amount_angle;
+				self.offsetTracker.x += amount_angle;
+				
+				self.offset.y += amount_angle;
+				self.offsetTracker.y += amount_angle;
+				
+				self.playerPos.x -= amount_angle;
+				self.playerPos.y -= amount_angle;
+				self.invalidate = true;
+			});
+			
+		},
+		
+		checkBounds: function () {
+
+			var self = this;
+		
+			if (self.offsetTracker.x >= 32 ) {
+				self.offsetTracker.x = 0;
+				self.invalidate = true;
+			}
+
+			if (self.offsetTracker.x <= -32) {
+				self.offsetTracker.x = 0;
+				self.invalidate = true;
+			}
+			
+			if (self.offsetTracker.y >= 16) {
+				self.offsetTracker.y = 0;
+				self.invalidate = true;
+			}
+
+			if (self.offsetTracker.y <= -16) {
+				self.offsetTracker.y = 0;
+				self.invalidate = true;
+			}
 		},
 	   
 		load: function (map) {
@@ -170,9 +235,9 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 	   
 		updateTexture: function () {
 			var matrix = new PIXI.Matrix();
-			matrix.translate(Map.offset.x, Map.offset.y);
+			matrix.translate(this.offset.x, this.offset.y);
 
-			Map.texture.render(Map.buffer, matrix, true);
+			this.texture.render(this.buffer, matrix, true);
 		},
 	   
 		draw: function () {
@@ -186,15 +251,19 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 		render: function () {
 
 		  // Map.stats.begin();
-
-		  if (Map.invalidate) {
-			 Map.draw();
-			 Map.updateTexture();
-			 Map.invalidate = false;
+		  
+		  if (this.keyboard.activeKeys().length > 0) {
+			console.log(this.keyboard.activeKeys());
 		  }
 
-		  if (Map.texture)
-			 Map.renderer.render(Map.stage);
+		  if (this.invalidate) {
+			 this.draw();
+			 this.updateTexture();
+			 this.invalidate = false;
+		  }
+
+		  if (this.texture)
+			 this.renderer.render(this.stage);
 
 		  // Map.stats.end();
 	   },

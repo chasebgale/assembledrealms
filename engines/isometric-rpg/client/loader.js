@@ -6,7 +6,8 @@ requirejs.config({
 	paths: {
 		jquery: "//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min",
 		pixi: "//www.assembledrealms.com/js/pixi",
-		lodash: "//www.assembledrealms.com/js/lodash.min"
+		lodash: "//www.assembledrealms.com/js/lodash.min",
+		keyboard: "//www.assembledrealms.com/js/keyboard"
     },
 	shim: {
 		'pixi': {
@@ -19,4 +20,4 @@ requirejs.config({
 });
 
 // This call will start loading all of our required files:
-requirejs(['jquery', 'lodash', 'pixi', '../main']);
+requirejs(['jquery', 'lodash', 'pixi', 'keyboard', '../main']);
