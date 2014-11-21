@@ -22,7 +22,8 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 
 			var self = this;
 			
-			self.initializeKeys();
+			// Initialize keyboard:
+			self.keyboard = require("keyboard");
 			
 			// Initialize PIXI:
 			var rendererOptions = {
@@ -33,7 +34,6 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 			
 			self.renderer = PIXI.autoDetectRenderer(CANVAS_WIDTH, CANVAS_HEIGHT, rendererOptions);
 			target.appendChild(self.renderer.view);
-			
 			self.stage = new PIXI.Stage(0x000000, true);
 			
 			
@@ -56,98 +56,103 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 			
 		},
 		
-		initializeKeys: function () {
+		checkKeys: function () {
 			var self = this;
 			var amount = 2;
 			var amount_angle = 2 * MOVEMENT_ANGLE;
 			
-			self.keyboard = require("keyboard");
+			var keys = self.keyboard.activeKeys();
 			
-			// Character moves north
-			self.keyboard.on('s', function() {
-				self.offset.y -= amount;
-				self.offsetTracker.y -= amount;
-				self.playerPos.y += amount;
-				self.invalidate = true;
-				
-			});
+			if (_.contains(keys, 'shift')) {
+				amount *= 2;
+				amount_angle *= 2;
+			}
 			
-			// South
-			self.keyboard.on('w', function () {
-				self.offset.y += amount;
-				self.offsetTracker.y += amount;
-				self.playerPos.y -= amount;
-				self.invalidate = true;
-			});
+			if (_.contains(keys, 'w')) {
+				if (_.contains(keys, 'a')) {
+					// North-West
+					self.offset.x += amount_angle;
+					self.offsetTracker.x += amount_angle;
+					
+					self.offset.y += amount_angle;
+					self.offsetTracker.y += amount_angle;
+					
+					self.playerPos.x -= amount_angle;
+					self.playerPos.y -= amount_angle;
+					self.invalidate = true;
+					return;
+				} else if (_.contains(keys, 'd')) {
+					// North-East
+					self.offset.x -= amount_angle;
+					self.offsetTracker.x -= amount_angle;
+					
+					self.offset.y += amount_angle;
+					self.offsetTracker.y += amount_angle;
+					
+					self.playerPos.x += amount_angle;
+					self.playerPos.y -= amount_angle;
+					self.invalidate = true;
+					return;
+				} else {
+					// North
+					self.offset.y += amount;
+					self.offsetTracker.y += amount;
+					self.playerPos.y -= amount;
+					self.invalidate = true;
+					return;
+				}
+			}
 			
-			// West
-			self.keyboard.on('d', function () {
+			if (_.contains(keys, 's')) {
+				if (_.contains(keys, 'a')) {
+					// South-West
+					self.offset.x += amount_angle;
+					self.offsetTracker.x += amount_angle;
+					
+					self.offset.y -= amount_angle;
+					self.offsetTracker.y -= amount_angle;
+					
+					self.playerPos.x -= amount_angle;
+					self.playerPos.y += amount_angle;
+					self.invalidate = true;
+					return;
+				} else if (_.contains(keys, 'd')) {
+					// South-East
+					self.offset.x -= amount_angle;
+					self.offsetTracker.x -= amount_angle;
+					
+					self.offset.y -= amount_angle;
+					self.offsetTracker.y -= amount_angle;
+					
+					self.playerPos.x += amount_angle;
+					self.playerPos.y += amount_angle;
+					self.invalidate = true;
+					return;
+				} else {
+					// South
+					self.offset.y -= amount;
+					self.offsetTracker.y -= amount;
+					self.playerPos.y += amount;
+					self.invalidate = true;
+					return;
+				}
+			}
+			
+			if (_.contains(keys, 'd')) {
 				self.offset.x -= amount;
 				self.offsetTracker.x -= amount;
 				self.playerPos.x += amount;
 				self.invalidate = true;
-			});
+				return;
+			}
 			
-			// East
-			self.keyboard.on('a', function () {
+			if (_.contains(keys, 'a')) {
 				self.offset.x += amount;
 				self.offsetTracker.x += amount;
 				self.playerPos.x -= amount;
 				self.invalidate = true;
-			});
-			
-			// North-East
-			self.keyboard.on('w + d', function () {
-				self.offset.x -= amount_angle;
-				self.offsetTracker.x -= amount_angle;
-				
-				self.offset.y += amount_angle;
-				self.offsetTracker.y += amount_angle;
-				
-				self.playerPos.x += amount_angle;
-				self.playerPos.y -= amount_angle;
-				self.invalidate = true;
-			});
-			
-			// South-East
-			self.keyboard.on('s + d', function () {
-				self.offset.x -= amount_angle;
-				self.offsetTracker.x -= amount_angle;
-				
-				self.offset.y -= amount_angle;
-				self.offsetTracker.y -= amount_angle;
-				
-				self.playerPos.x += amount_angle;
-				self.playerPos.y += amount_angle;
-				self.invalidate = true;
-			});
-			
-			// South-West
-			self.keyboard.on('s + a', function () {
-				self.offset.x += amount_angle;
-				self.offsetTracker.x += amount_angle;
-				
-				self.offset.y -= amount_angle;
-				self.offsetTracker.y -= amount_angle;
-				
-				self.playerPos.x -= amount_angle;
-				self.playerPos.y += amount_angle;
-				self.invalidate = true;
-			});
-			
-			// North-West
-			self.keyboard.on('w + a', function () {
-				self.offset.x += amount_angle;
-				self.offsetTracker.x += amount_angle;
-				
-				self.offset.y += amount_angle;
-				self.offsetTracker.y += amount_angle;
-				
-				self.playerPos.x -= amount_angle;
-				self.playerPos.y -= amount_angle;
-				self.invalidate = true;
-			});
-			
+				return;
+			}
 		},
 		
 		checkBounds: function () {
@@ -252,9 +257,7 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 
 		  // Map.stats.begin();
 		  
-		  if (this.keyboard.activeKeys().length > 0) {
-			console.log(this.keyboard.activeKeys());
-		  }
+		  this.checkKeys();
 
 		  if (this.invalidate) {
 			 this.draw();
