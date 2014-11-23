@@ -189,6 +189,10 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 			this.buffer = new PIXI.SpriteBatch();
 
 			var assets = _.union(this.terrain.source, this.objects.source, this.actors.source);
+			
+			// TODO: Actor json injected more gracefully?
+			assets.push('/resource/zombie.json', '/resource/effects.json');
+			
 			this.assetLoadCount = assets.length;
 			this.loadResources(assets);
 
@@ -214,11 +218,16 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 			
 			loader.onComplete = function (event) {
 				
+				avatar.initialize(self, PIXI);
+				avatar.sprite.position.x = (CANVAS_WIDTH / 2) - 64;
+				avatar.sprite.position.y = (CANVAS_HEIGHT / 2) - 64;
+				
 				self.draw();
 
 				self.texture = new PIXI.RenderTexture(self.renderer.width, self.renderer.height);
 
 				self.layer_actors = new PIXI.DisplayObjectContainer();
+				self.layer_actors.addChild(avatar.sprite);
 				self.layer_terrain = new PIXI.Sprite(self.texture);
 				self.layer_terrain.cacheAsBitmap = true;
 
@@ -260,7 +269,7 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 		  this.checkKeys();
 
 		  if (this.invalidate) {
-			 this.draw();
+			 //this.draw();
 			 this.updateTexture();
 			 this.invalidate = false;
 		  }
@@ -292,6 +301,10 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 			var a = (index.row * 2) - b;
 
 			return {"a" : a, "b": b};
+		},
+		
+		isNumber: function (o) {
+			return ! isNaN (o-0) && o !== null && o !== "" && o !== false;
 		}
 	   
 	};

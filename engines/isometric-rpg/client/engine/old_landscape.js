@@ -11,31 +11,17 @@ define(function () {
 			var frame = "";
 			var drawLast = [];
 			var startPoint = {};
-			var endPoint = {};
-			
+
 			startPoint.row = (engine.playerPos.x / TILE_WIDTH_HALF + engine.playerPos.y / TILE_HEIGHT_HALF) / 2;
 			startPoint.col = (engine.playerPos.y / TILE_HEIGHT_HALF - engine.playerPos.x / TILE_WIDTH_HALF) / -2;
 			startPoint.row = Math.floor(startPoint.row);
 			startPoint.col = Math.floor(startPoint.col);
 
-			endPoint.row = _.max(_.keys(engine.terrain), function(obj) { 
-				if (engine.isNumber(obj)) { 
-					return parseInt(obj); 
-				} 
-			});
-			
-			endPoint.col = _.max(_.keys(engine.terrain[endPoint.row]));
-			
-			var end = engine.coordFromScreen({
-				row: endPoint.row,
-				col: endPoint.col
-			});
-			
 			var aStart = (startPoint.row + startPoint.col) - VIEWPORT_WIDTH_TILES_HALF;
-			var aEnd = end.a; //aStart + VIEWPORT_WIDTH_TILES + 2;
+			var aEnd = aStart + VIEWPORT_WIDTH_TILES + 2;
 
 			var bStart = (startPoint.row - startPoint.col) - VIEWPORT_HEIGHT_TILES_HALF;
-			var bEnd = end.b; //bStart + VIEWPORT_HEIGHT_TILES + 1;
+			var bEnd = bStart + VIEWPORT_HEIGHT_TILES + 1;
 
 			if (engine.offset.x === undefined) {
 				var xOffset = (-1 * aStart * 32) - TILE_WIDTH_HALF - 32;

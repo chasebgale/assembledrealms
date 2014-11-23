@@ -37,7 +37,7 @@
 	{
 		"app":"http://www.texturepacker.com",
 		"version":"1.0",
-		"image":"sprites/sparks.png",
+		"image":"sparks.png",
 		"format":"RGBA8888",
 		"size":{"w":1345,"h":299},
 		"scale":"1",

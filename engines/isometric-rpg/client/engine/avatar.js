@@ -1,98 +1,104 @@
-var Avatar = {
+define(function () {
 
-    assetsLoaded: function () {
+	return {
+	
+		sprite: {},
 
-        // create an array to store the textures
-        var zombieTextures = [];
-        var zombieMovieClip;
-        var texture;
-        var texture_name;
-        var directions = 8;
-        var i = 0;
+		initialize: function (engine, PIXI) {
 
-        zombie = [];
+			// create an array to store the textures
+			var zombieTextures = [];
+			var zombieMovieClip;
+			var texture;
+			var texture_name;
+			var directions = 8;
+			var i = 0;
+			var prefix = "zombie_row";
+			var self = this;
 
-        for (rows = 0; rows < 8; rows++) {
-            zombieTextures[rows] = [];
-            for (cols = 0; cols < 36; cols++) {
-                texture_name = prefix + rows + "_" + "col" + cols + ".png";
-                texture = PIXI.Texture.fromFrame(texture_name);
-                zombieTextures[rows][cols] = texture;
-            }
-        }
+			zombie = [];
 
-        Avatar.sprite = new PIXI.DisplayObjectContainer();
+			for (rows = 0; rows < 8; rows++) {
+				zombieTextures[rows] = [];
+				for (cols = 0; cols < 36; cols++) {
+					texture_name = prefix + rows + "_" + "col" + cols + ".png";
+					texture = PIXI.Texture.fromFrame(texture_name);
+					zombieTextures[rows][cols] = texture;
+				}
+			}
 
-        // Walking clips:
-        for (i = 0; i < directions; i++) {
-            zombieMovieClip = new PIXI.MovieClip(zombieTextures[i].splice(4, 8));
+			self.sprite = new PIXI.DisplayObjectContainer();
 
-            zombieMovieClip.position.x = 0;
-            zombieMovieClip.position.y = 0;
-            zombieMovieClip.animationSpeed = .1;
-            zombieMovieClip.visible = false;
+			// Walking clips:
+			for (i = 0; i < directions; i++) {
+				zombieMovieClip = new PIXI.MovieClip(zombieTextures[i].splice(4, 8));
 
-            Avatar.sprite.addChild(zombieMovieClip);
-        }
+				zombieMovieClip.position.x = 0;
+				zombieMovieClip.position.y = 0;
+				zombieMovieClip.animationSpeed = .1;
+				zombieMovieClip.visible = false;
 
-        // Standing clips:
-        var workerClipArray = [];
+				self.sprite.addChild(zombieMovieClip);
+			}
 
-        for (i = 0; i < directions; i++) {
+			// Standing clips:
+			var workerClipArray = [];
 
-            workerClipArray = zombieTextures[i].splice(0, 4);
+			for (i = 0; i < directions; i++) {
 
-            texture_name = prefix + i + "_" + "col2.png";
-            workerClipArray.push(PIXI.Texture.fromFrame(texture_name));
+				workerClipArray = zombieTextures[i].splice(0, 4);
 
-            texture_name = prefix + i + "_" + "col1.png";
-            workerClipArray.push(PIXI.Texture.fromFrame(texture_name));
+				texture_name = prefix + i + "_" + "col2.png";
+				workerClipArray.push(PIXI.Texture.fromFrame(texture_name));
 
-            texture_name = prefix + i + "_" + "col0.png";
-            workerClipArray.push(PIXI.Texture.fromFrame(texture_name));
+				texture_name = prefix + i + "_" + "col1.png";
+				workerClipArray.push(PIXI.Texture.fromFrame(texture_name));
 
-            zombieMovieClip = new PIXI.MovieClip(workerClipArray);
+				texture_name = prefix + i + "_" + "col0.png";
+				workerClipArray.push(PIXI.Texture.fromFrame(texture_name));
 
-            zombieMovieClip.position.x = 0;
-            zombieMovieClip.position.y = 0;
-            zombieMovieClip.animationSpeed = .05;
-            zombieMovieClip.visible = false;
+				zombieMovieClip = new PIXI.MovieClip(workerClipArray);
 
-            Avatar.sprite.addChild(zombieMovieClip);
-        }
+				zombieMovieClip.position.x = 0;
+				zombieMovieClip.position.y = 0;
+				zombieMovieClip.animationSpeed = .05;
+				zombieMovieClip.visible = false;
 
-        // Effects clips:
-        workerClipArray = [];
+				self.sprite.addChild(zombieMovieClip);
+			}
+			
+			// TODO: Load visible direction from characters last position, last logout.
+			zombieMovieClip.visible = true;
 
-        for (i = 0; i < 4; i++) {
+			// Effects clips:
+			workerClipArray = [];
 
-            texture_name = "blood0_frame" + i + ".png";
-            workerClipArray.push(PIXI.Texture.fromFrame(texture_name));
+			for (i = 0; i < 4; i++) {
 
-        }
-        zombieMovieClip = new PIXI.MovieClip(workerClipArray);
+				texture_name = "blood0_frame" + i + ".png";
+				workerClipArray.push(PIXI.Texture.fromFrame(texture_name));
 
-        zombieMovieClip.position.x = 32;
-        zombieMovieClip.position.y = 32;
-        zombieMovieClip.animationSpeed = .25;
-        zombieMovieClip.visible = false;
-        zombieMovieClip.loop = false;
-        zombieMovieClip.onComplete = Avatar.onEffectFinished;
+			}
+			zombieMovieClip = new PIXI.MovieClip(workerClipArray);
 
-        Avatar.sprite.addChild(zombieMovieClip);
+			zombieMovieClip.position.x = 32;
+			zombieMovieClip.position.y = 32;
+			zombieMovieClip.animationSpeed = .25;
+			zombieMovieClip.visible = false;
+			zombieMovieClip.loop = false;
+			zombieMovieClip.onComplete = self.onEffectFinished;
 
+			self.sprite.addChild(zombieMovieClip);
+		},
 
-        Avatar.onComplete(Avatar.sprite);
-    },
+		move: function (offset) {
+			this.x += offset.x;
+			this.y += offset.y;
+		},
 
-    move: function (offset) {
-        this.x += offset.x;
-        this.y += offset.y;
-    },
-
-    onEffectFinished: function () {
-        Avatar.sprite.children[16].visible = false;
-        Avatar.sprite.children[16].gotoAndStop(0);
-    }
-
-};
+		onEffectFinished: function () {
+			this.sprite.children[16].visible = false;
+			this.sprite.children[16].gotoAndStop(0);
+		}
+	}
+});
