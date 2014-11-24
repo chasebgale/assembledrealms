@@ -14,8 +14,8 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 		moveOriginPoint: {},
 		moveOriginOffset: {},
 		frames: {},
-		offset: {},
 		buffer: undefined,
+		path: undefined,
 		keyboard: undefined,
 
 		initialize: function (target) {
@@ -56,105 +56,6 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 			
 		},
 		
-		checkKeys: function () {
-			var self = this;
-			var amount = 2;
-			var amount_angle = 2 * MOVEMENT_ANGLE;
-			
-			var keys = self.keyboard.activeKeys();
-			
-			if (_.contains(keys, 'shift')) {
-				amount *= 2;
-				amount_angle *= 2;
-			}
-			
-			if (_.contains(keys, 'w')) {
-				if (_.contains(keys, 'a')) {
-					// North-West
-					self.offset.x += amount_angle;
-					self.offsetTracker.x += amount_angle;
-					
-					self.offset.y += amount_angle;
-					self.offsetTracker.y += amount_angle;
-					
-					self.playerPos.x -= amount_angle;
-					self.playerPos.y -= amount_angle;
-					self.invalidate = true;
-					return;
-				} else if (_.contains(keys, 'd')) {
-					// North-East
-					self.offset.x -= amount_angle;
-					self.offsetTracker.x -= amount_angle;
-					
-					self.offset.y += amount_angle;
-					self.offsetTracker.y += amount_angle;
-					
-					self.playerPos.x += amount_angle;
-					self.playerPos.y -= amount_angle;
-					self.invalidate = true;
-					return;
-				} else {
-					// North
-					self.offset.y += amount;
-					self.offsetTracker.y += amount;
-					self.playerPos.y -= amount;
-					self.invalidate = true;
-					return;
-				}
-			}
-			
-			if (_.contains(keys, 's')) {
-				if (_.contains(keys, 'a')) {
-					// South-West
-					self.offset.x += amount_angle;
-					self.offsetTracker.x += amount_angle;
-					
-					self.offset.y -= amount_angle;
-					self.offsetTracker.y -= amount_angle;
-					
-					self.playerPos.x -= amount_angle;
-					self.playerPos.y += amount_angle;
-					self.invalidate = true;
-					return;
-				} else if (_.contains(keys, 'd')) {
-					// South-East
-					self.offset.x -= amount_angle;
-					self.offsetTracker.x -= amount_angle;
-					
-					self.offset.y -= amount_angle;
-					self.offsetTracker.y -= amount_angle;
-					
-					self.playerPos.x += amount_angle;
-					self.playerPos.y += amount_angle;
-					self.invalidate = true;
-					return;
-				} else {
-					// South
-					self.offset.y -= amount;
-					self.offsetTracker.y -= amount;
-					self.playerPos.y += amount;
-					self.invalidate = true;
-					return;
-				}
-			}
-			
-			if (_.contains(keys, 'd')) {
-				self.offset.x -= amount;
-				self.offsetTracker.x -= amount;
-				self.playerPos.x += amount;
-				self.invalidate = true;
-				return;
-			}
-			
-			if (_.contains(keys, 'a')) {
-				self.offset.x += amount;
-				self.offsetTracker.x += amount;
-				self.playerPos.x -= amount;
-				self.invalidate = true;
-				return;
-			}
-		},
-		
 		checkBounds: function () {
 
 			var self = this;
@@ -187,6 +88,7 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 			this.actors  = map.actors;
 
 			this.buffer = new PIXI.SpriteBatch();
+			this.path = new PIXI.SpriteBatch();
 
 			var assets = _.union(this.terrain.source, this.objects.source, this.actors.source);
 			
@@ -222,7 +124,7 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 				avatar.sprite.position.x = (CANVAS_WIDTH / 2) - 64;
 				avatar.sprite.position.y = (CANVAS_HEIGHT / 2) - 64;
 				
-				self.draw();
+				avatar.offset = self.draw();
 
 				self.texture = new PIXI.RenderTexture(self.renderer.width, self.renderer.height);
 
@@ -232,14 +134,16 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 				self.layer_terrain.cacheAsBitmap = true;
 
 				var matrix = new PIXI.Matrix();
-				matrix.translate(self.offset.x, self.offset.y);
+				matrix.translate(avatar.offset.x, avatar.offset.y);
 
-				self.texture.render(self.buffer, matrix);
+				self.texture.render(self.path, matrix);
 
 				self.stage.addChild(self.layer_terrain);
 				self.stage.addChild(self.layer_actors);
 
 				self.renderer.render(self.stage);
+				
+				self.loaded();
 				
 			};
 			
@@ -249,16 +153,18 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 	   
 		updateTexture: function () {
 			var matrix = new PIXI.Matrix();
-			matrix.translate(this.offset.x, this.offset.y);
+			matrix.translate(avatar.offset.x, avatar.offset.y);
 
-			this.texture.render(this.buffer, matrix, true);
+			this.texture.render(this.path, matrix, true);
 		},
 	   
 		draw: function () {
 		
 			this.buffer.children = []; //= new PIXI.SpriteBatch(); <-- Leaks memory :-/
 		
-			landscape.draw(this, PIXI);
+			var offset = landscape.draw(this, PIXI);
+			
+			return offset;
 		
 		},
 
@@ -266,13 +172,13 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 
 		  // Map.stats.begin();
 		  
-		  this.checkKeys();
+		  avatar.tick(this, PIXI);
 
-		  if (this.invalidate) {
+		  //if (this.invalidate) {
 			 //this.draw();
 			 this.updateTexture();
 			 this.invalidate = false;
-		  }
+		  //}
 
 		  if (this.texture)
 			 this.renderer.render(this.stage);
@@ -284,11 +190,11 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 
 			var map = {};
 			var screen = {};
-			screen.x = point.x - Map.offset.x;
-			screen.y = point.y - Map.offset.y;
+			screen.x = point.x - avatar.offset.x;
+			screen.y = point.y - avatar.offset.y;
 
-			map.row = (screen.x / Map.TILE_WIDTH_HALF + screen.y / Map.TILE_HEIGHT_HALF) / 2;
-			map.col = (screen.y / Map.TILE_HEIGHT_HALF - screen.x / Map.TILE_WIDTH_HALF) / -2;
+			map.row = (screen.x / TILE_WIDTH_HALF + screen.y / TILE_HEIGHT_HALF) / 2;
+			map.col = (screen.y / TILE_HEIGHT_HALF - screen.x / TILE_WIDTH_HALF) / -2;
 
 			map.row = Math.floor(map.row);
 			map.col = Math.floor(map.col);
@@ -301,6 +207,10 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 			var a = (index.row * 2) - b;
 
 			return {"a" : a, "b": b};
+		},
+		
+		validPixel: function (point) {
+			return this.buffer.hitTest(point);
 		},
 		
 		isNumber: function (o) {

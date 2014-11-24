@@ -14,7 +14,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":116,"w":64,"h":36},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_03.png":
 {
@@ -22,7 +23,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":14,"y":43,"w":50,"h":130},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_04.png":
 {
@@ -30,7 +32,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":14,"y":53,"w":50,"h":128},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_05.png":
 {
@@ -38,7 +41,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":53,"w":50,"h":128},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_06.png":
 {
@@ -46,7 +50,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":43,"w":50,"h":130},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_07.png":
 {
@@ -54,7 +59,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":43,"w":64,"h":138},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_08.png":
 {
@@ -62,7 +68,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":53,"w":64,"h":128},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_09.png":
 {
@@ -70,7 +77,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":53,"w":64,"h":128},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_10.png":
 {
@@ -78,7 +86,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":43,"w":64,"h":138},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_11.png":
 {
@@ -86,7 +95,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":43,"w":64,"h":138},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_12.png":
 {
@@ -94,7 +104,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":43,"w":64,"h":138},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_13.png":
 {
@@ -102,7 +113,8 @@
 	"rotated": false,
 	"anchor": 118,
 	"spriteSourceSize": {"x":0,"y":15,"w":64,"h":166},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_14.png":
 {
@@ -110,7 +122,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":15,"w":64,"h":166},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_15.png":
 {
@@ -118,7 +131,8 @@
 	"rotated": false,
 	"anchor": 118,
 	"spriteSourceSize": {"x":0,"y":15,"w":64,"h":166},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_16.png":
 {
@@ -126,7 +140,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":15,"w":64,"h":166},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_17.png":
 {
@@ -134,7 +149,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":97,"w":64,"h":84},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_18.png":
 {
@@ -142,7 +158,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":92,"w":64,"h":90},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_19.png":
 {
@@ -150,7 +167,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":100,"w":64,"h":82},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_20.png":
 {
@@ -158,7 +176,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":94,"w":64,"h":88},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_21.png":
 {
@@ -166,7 +185,8 @@
 	"rotated": false,
 	"anchor": 42,
 	"spriteSourceSize": {"x":0,"y":91,"w":64,"h":90},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_22.png":
 {
@@ -174,7 +194,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":99,"w":64,"h":82},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_23.png":
 {
@@ -182,7 +203,8 @@
 	"rotated": false,
 	"anchor": 34,
 	"spriteSourceSize": {"x":0,"y":99,"w":64,"h":82},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_24.png":
 {
@@ -190,7 +212,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":91,"w":64,"h":90},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_25.png":
 {
@@ -198,7 +221,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":93,"w":64,"h":88},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_26.png":
 {
@@ -206,7 +230,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":101,"w":64,"h":80},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_27.png":
 {
@@ -214,7 +239,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":113,"w":64,"h":68},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_28.png":
 {
@@ -222,7 +248,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":101,"w":64,"h":80},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_29.png":
 {
@@ -230,7 +257,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":99,"w":64,"h":82},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_30.png":
 {
@@ -238,7 +266,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":91,"w":64,"h":90},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_31.png":
 {
@@ -246,7 +275,8 @@
 	"rotated": false,
 	"anchor": 42,
 	"spriteSourceSize": {"x":0,"y":91,"w":64,"h":78},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_32.png":
 {
@@ -254,7 +284,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":100,"w":64,"h":70},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_33.png":
 {
@@ -262,7 +293,8 @@
 	"rotated": false,
 	"anchor": 42,
 	"spriteSourceSize": {"x":0,"y":91,"w":64,"h":90},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_34.png":
 {
@@ -270,7 +302,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":99,"w":64,"h":82},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_35.png":
 {
@@ -278,7 +311,8 @@
 	"rotated": false,
 	"anchor": 33,
 	"spriteSourceSize": {"x":0,"y":100,"w":64,"h":70},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_36.png":
 {
@@ -286,7 +320,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":91,"w":64,"h":78},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_37.png":
 {
@@ -294,7 +329,8 @@
 	"rotated": false,
 	"anchor": 17,
 	"spriteSourceSize": {"x":0,"y":116,"w":64,"h":66},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_38.png":
 {
@@ -302,7 +338,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":116,"w":64,"h":66},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_39.png":
 {
@@ -310,7 +347,8 @@
 	"rotated": false,
 	"anchor": 18,
 	"spriteSourceSize": {"x":0,"y":115,"w":64,"h":62},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_40.png":
 {
@@ -318,7 +356,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":115,"w":64,"h":62},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_41.png":
 {
@@ -326,7 +365,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":99,"w":64,"h":82},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_42.png":
 {
@@ -334,7 +374,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":91,"w":64,"h":90},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_43.png":
 {
@@ -342,7 +383,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":97,"w":64,"h":84},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_44.png":
 {
@@ -350,7 +392,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":105,"w":64,"h":76},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_45.png":
 {
@@ -358,7 +401,8 @@
 	"rotated": false,
 	"anchor": 42,
 	"spriteSourceSize": {"x":0,"y":91,"w":64,"h":90},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_46.png":
 {
@@ -366,7 +410,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":99,"w":64,"h":82},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_47.png":
 {
@@ -374,7 +419,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":105,"w":64,"h":76},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_48.png":
 {
@@ -382,7 +428,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":97,"w":64,"h":84},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_49.png":
 {
@@ -390,7 +437,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":115,"w":64,"h":66},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_50.png":
 {
@@ -398,7 +446,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":115,"w":64,"h":66},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_51.png":
 {
@@ -406,7 +455,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":121,"w":64,"h":60},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_52.png":
 {
@@ -414,7 +464,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":121,"w":64,"h":60},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_53.png":
 {
@@ -422,7 +473,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":115,"w":64,"h":66},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_54.png":
 {
@@ -430,7 +482,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":115,"w":64,"h":66},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_55.png":
 {
@@ -438,7 +491,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":121,"w":64,"h":60},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_56.png":
 {
@@ -446,7 +500,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":121,"w":64,"h":60},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_57.png":
 {
@@ -454,7 +509,8 @@
 	"rotated": false,
 	"anchor": 57,
 	"spriteSourceSize": {"x":0,"y":92,"w":64,"h":100},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_58.png":
 {
@@ -462,7 +518,8 @@
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":92,"w":64,"h":100},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 },
 "fancy_bridge_59.png":
 {
@@ -470,7 +527,8 @@
 	"rotated": false,
 	"anchor": 57,
 	"spriteSourceSize": {"x":0,"y":92,"w":64,"h":100},
-	"sourceSize": {"w":64,"h":192}
+	"sourceSize": {"w":64,"h":192},
+	"walkable": false
 }},
 "meta": {
 	"category": "terrain",

@@ -3,6 +3,12 @@ define(function () {
 	return {
 	
 		sprite: {},
+		active: 0,
+		offset: {x: 0, y: 0},
+		position: {x: 0, y: 0},
+		direction: 0,
+		moving: false,
+		engine: undefined,
 
 		initialize: function (engine, PIXI) {
 
@@ -15,6 +21,8 @@ define(function () {
 			var i = 0;
 			var prefix = "zombie_row";
 			var self = this;
+			
+			self.engine = engine;
 
 			zombie = [];
 
@@ -66,9 +74,6 @@ define(function () {
 
 				self.sprite.addChild(zombieMovieClip);
 			}
-			
-			// TODO: Load visible direction from characters last position, last logout.
-			zombieMovieClip.visible = true;
 
 			// Effects clips:
 			workerClipArray = [];
@@ -89,13 +94,176 @@ define(function () {
 			zombieMovieClip.onComplete = self.onEffectFinished;
 
 			self.sprite.addChild(zombieMovieClip);
+			
+			// TODO: Load position from last logout postion
+			self.direction = DIRECTION_S;
+			self.sprite.children[self.direction + 8].visible = true;
+			self.sprite.children[self.direction + 8].play();
 		},
 
 		move: function (offset) {
 			this.x += offset.x;
 			this.y += offset.y;
 		},
+		
+		tick: function () {
+			var self = this;
+			var amount = 2;
+			var amount_angle_sin = 2 * MOVEMENT_ANGLE_SIN;
+			var amount_angle_cos = 2 * MOVEMENT_ANGLE_COS;
+			
+			var oldDirection = self.direction;
+			var wasMoving = self.moving;
+			var oldOffset = _.clone(self.offset, true);
+			
+			var keys = self.engine.keyboard.activeKeys();
+			
+			if (_.contains(keys, 'shift')) {
+				amount *= 2;
+				amount_angle_sin *= 2;
+				amount_angle_cos *= 2;
+			}
+			
+			if (_.contains(keys, 'w')) {
+				if (_.contains(keys, 'a')) {
+					// North-West
+					self.offset.x += amount_angle_cos;
+					self.offset.y += amount_angle_sin;
+					
+					self.position.x -= amount_angle_cos;
+					self.position.y -= amount_angle_sin;
+					
+					self.moving = true;
+					self.direction = DIRECTION_NW;
+					self.checkDirection(wasMoving, oldDirection, oldOffset);
+					return;
+				} else if (_.contains(keys, 'd')) {
+					// North-East
+					self.offset.x -= amount_angle_cos;
+					self.offset.y += amount_angle_sin;
+					
+					self.position.x += amount_angle_cos;
+					self.position.y -= amount_angle_sin;
+					
+					self.moving = true;
+					self.direction = DIRECTION_NE;
+					self.checkDirection(wasMoving, oldDirection, oldOffset);
+					return;
+				} else {
+					// North
+					self.offset.y += amount;
+					self.position.y -= amount;
+					
+					self.moving = true;
+					self.direction = DIRECTION_N;
+					self.checkDirection(wasMoving, oldDirection, oldOffset);
+					return;
+				}
+			}
+			
+			if (_.contains(keys, 's')) {
+				if (_.contains(keys, 'a')) {
+					// South-West
+					self.offset.x += amount_angle_cos;
+					self.offset.y -= amount_angle_sin;
+					
+					self.position.x -= amount_angle_cos;
+					self.position.y += amount_angle_sin;
+					
+					self.moving = true;
+					self.direction = DIRECTION_SW;
+					self.checkDirection(wasMoving, oldDirection, oldOffset);
+					return;
+				} else if (_.contains(keys, 'd')) {
+					// South-East
+					self.offset.x -= amount_angle_cos;
+					self.offset.y -= amount_angle_sin;
+					
+					self.position.x += amount_angle_cos;
+					self.position.y += amount_angle_sin;
+					
+					self.moving = true;
+					self.direction = DIRECTION_SE;
+					self.checkDirection(wasMoving, oldDirection, oldOffset);
+					return;
+				} else {
+					// South
+					self.offset.y -= amount;
+					self.position.y += amount;
+					
+					self.moving = true;
+					self.direction = DIRECTION_S;
+					self.checkDirection(wasMoving, oldDirection, oldOffset);
+					return;
+				}
+			}
+			
+			if (_.contains(keys, 'd')) {
+				self.offset.x -= amount;
+				self.position.x += amount;
+				self.moving = true;
+				self.direction = DIRECTION_E;
+				self.checkDirection(wasMoving, oldDirection, oldOffset);
+				return;
+			}
+			
+			if (_.contains(keys, 'a')) {
+				self.offset.x += amount;
+				self.position.x -= amount;
+				self.moving = true;
+				self.direction = DIRECTION_W;
+				self.checkDirection(wasMoving, oldDirection, oldOffset);
+				return;
+			}
+			
+			// If we've gotten this far, no movement keys are pressed... so if our movement flag is true, we know
+			// the player has stopped moving
+			if (self.moving) {
+				self.moving = false;
+				this.sprite.children[this.direction].visible = false;
+				this.sprite.children[this.direction].stop();
+				
+				this.sprite.children[this.direction + 8].visible = true;
+				this.sprite.children[this.direction + 8].play();
+			}
+		},
 
+		checkDirection: function(wasMoving, oldDirection, oldOffset) {
+		
+			// Ensure valid destination tile
+			
+			
+			var map = this.engine.indexFromScreen(this.sprite.position);
+			
+			if (this.engine.terrain[map.row] === undefined) {
+				this.offset = oldOffset;
+			} else {
+				if (this.engine.terrain[map.row][map.col] === undefined) {
+					this.offset = oldOffset;
+				}
+			}
+		
+		
+			// Update sprites
+			var flag = false;
+			
+			if (!wasMoving && this.moving) {
+				this.sprite.children[oldDirection + 8].visible = false;
+				this.sprite.children[oldDirection + 8].stop();
+				flag = true;
+			}
+		
+			if ((oldDirection !== this.direction) || (flag)) {
+		
+				this.sprite.children[oldDirection].visible = false;
+				this.sprite.children[oldDirection].stop();
+
+				this.sprite.children[this.direction].visible = true;
+				this.sprite.children[this.direction].play();
+			
+			}
+		},
+		
 		onEffectFinished: function () {
 			this.sprite.children[16].visible = false;
 			this.sprite.children[16].gotoAndStop(0);
