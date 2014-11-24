@@ -9,10 +9,9 @@ define(function (require) {
 	engine.initialize( document.body );
 	
 	// Debugging:
-	var debug = true;
-	if (debug) {
+	if (DEBUG) {
 		var stats = new Stats();
-		stats.setMode(1); // 0: fps, 1: ms
+		stats.setMode(0); // 0: fps, 1: ms
 
 		// align top-left
 		stats.domElement.style.position = 'absolute';
