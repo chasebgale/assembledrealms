@@ -43,7 +43,7 @@ define(function () {
 
 				zombieMovieClip.position.x = 0;
 				zombieMovieClip.position.y = 0;
-				zombieMovieClip.animationSpeed = .1;
+				zombieMovieClip.animationSpeed = .2;
 				zombieMovieClip.visible = false;
 
 				self.sprite.addChild(zombieMovieClip);
@@ -111,10 +111,13 @@ define(function () {
 			var amount = 2;
 			var amount_angle_sin = 2 * MOVEMENT_ANGLE_SIN;
 			var amount_angle_cos = 2 * MOVEMENT_ANGLE_COS;
+			var animationSpeed = .2;
 			
 			var oldDirection = self.direction;
 			var wasMoving = self.moving;
-			var oldOffset = _.clone(self.offset, true);
+			var oldOffset = _.clone(self.position, true);
+			
+			
 			
 			var keys = self.engine.keyboard.activeKeys();
 			
@@ -122,6 +125,7 @@ define(function () {
 				amount *= 2;
 				amount_angle_sin *= 2;
 				amount_angle_cos *= 2;
+				animationSpeed *= 2;
 			}
 			
 			if (_.contains(keys, 'w')) {
@@ -135,7 +139,7 @@ define(function () {
 					
 					self.moving = true;
 					self.direction = DIRECTION_NW;
-					self.checkDirection(wasMoving, oldDirection, oldOffset);
+					self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);
 					return;
 				} else if (_.contains(keys, 'd')) {
 					// North-East
@@ -147,7 +151,7 @@ define(function () {
 					
 					self.moving = true;
 					self.direction = DIRECTION_NE;
-					self.checkDirection(wasMoving, oldDirection, oldOffset);
+					self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);
 					return;
 				} else {
 					// North
@@ -156,7 +160,7 @@ define(function () {
 					
 					self.moving = true;
 					self.direction = DIRECTION_N;
-					self.checkDirection(wasMoving, oldDirection, oldOffset);
+					self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);
 					return;
 				}
 			}
@@ -172,7 +176,7 @@ define(function () {
 					
 					self.moving = true;
 					self.direction = DIRECTION_SW;
-					self.checkDirection(wasMoving, oldDirection, oldOffset);
+					self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);
 					return;
 				} else if (_.contains(keys, 'd')) {
 					// South-East
@@ -184,7 +188,7 @@ define(function () {
 					
 					self.moving = true;
 					self.direction = DIRECTION_SE;
-					self.checkDirection(wasMoving, oldDirection, oldOffset);
+					self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);
 					return;
 				} else {
 					// South
@@ -193,7 +197,7 @@ define(function () {
 					
 					self.moving = true;
 					self.direction = DIRECTION_S;
-					self.checkDirection(wasMoving, oldDirection, oldOffset);
+					self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);
 					return;
 				}
 			}
@@ -203,7 +207,7 @@ define(function () {
 				self.position.x += amount;
 				self.moving = true;
 				self.direction = DIRECTION_E;
-				self.checkDirection(wasMoving, oldDirection, oldOffset);
+				self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);
 				return;
 			}
 			
@@ -212,7 +216,7 @@ define(function () {
 				self.position.x -= amount;
 				self.moving = true;
 				self.direction = DIRECTION_W;
-				self.checkDirection(wasMoving, oldDirection, oldOffset);
+				self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);
 				return;
 			}
 			
@@ -228,11 +232,11 @@ define(function () {
 			}
 		},
 
-		checkDirection: function(wasMoving, oldDirection, oldOffset) {
+		checkDirection: function(wasMoving, oldDirection, oldOffset, animationSpeed) {
 		
 			// Ensure valid destination tile
 			
-			
+			/*
 			var map = this.engine.indexFromScreen(this.sprite.position);
 			
 			if (this.engine.terrain[map.row] === undefined) {
@@ -242,7 +246,11 @@ define(function () {
 					this.offset = oldOffset;
 				}
 			}
-		
+			*/
+			
+			if (!this.engine.isWalkable(this.position)) {
+				this.position = oldOffset;
+			}
 		
 			// Update sprites
 			var flag = false;
@@ -262,6 +270,8 @@ define(function () {
 				this.sprite.children[this.direction].play();
 			
 			}
+			
+			this.sprite.children[this.direction].animationSpeed = animationSpeed;
 		},
 		
 		onEffectFinished: function () {

@@ -15,7 +15,6 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 		moveOriginOffset: {},
 		frames: {},
 		buffer: undefined,
-		path: undefined,
 		keyboard: undefined,
 
 		initialize: function (target) {
@@ -88,7 +87,7 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 			this.actors  = map.actors;
 
 			this.buffer = new PIXI.SpriteBatch();
-			this.path = new PIXI.SpriteBatch();
+			this.buffer.cacheAsBitmap = true;
 
 			var assets = _.union(this.terrain.source, this.objects.source, this.actors.source);
 			
@@ -125,18 +124,24 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 				avatar.sprite.position.y = (CANVAS_HEIGHT / 2) - 64;
 				
 				avatar.offset = self.draw();
+				
+				avatar.position.x = avatar.sprite.position.x + 64;
+				avatar.position.y = avatar.sprite.position.y + 64;
 
 				self.texture = new PIXI.RenderTexture(self.renderer.width, self.renderer.height);
+				
+				self.bufferTexture = new PIXI.RenderTexture(self.buffer.width + (CANVAS_WIDTH / 2), self.buffer.height + (CANVAS_HEIGHT / 2));
+				self.bufferTexture.render(self.buffer);
 
 				self.layer_actors = new PIXI.DisplayObjectContainer();
 				self.layer_actors.addChild(avatar.sprite);
-				self.layer_terrain = new PIXI.Sprite(self.texture);
+				self.layer_terrain = new PIXI.Sprite(self.bufferTexture); //self.texture);
 				self.layer_terrain.cacheAsBitmap = true;
 
-				var matrix = new PIXI.Matrix();
-				matrix.translate(avatar.offset.x, avatar.offset.y);
+				//var matrix = new PIXI.Matrix();
+				//matrix.translate(avatar.offset.x, avatar.offset.y);
 
-				self.texture.render(self.path, matrix);
+				//self.texture.render(self.buffer, matrix);
 
 				self.stage.addChild(self.layer_terrain);
 				self.stage.addChild(self.layer_actors);
@@ -152,15 +157,17 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 		},
 	   
 		updateTexture: function () {
-			var matrix = new PIXI.Matrix();
-			matrix.translate(avatar.offset.x, avatar.offset.y);
+			//var matrix = new PIXI.Matrix();
+			//matrix.translate(avatar.offset.x, avatar.offset.y);
 
-			this.texture.render(this.path, matrix, true);
+			//this.texture.render(this.bufferTexture, matrix, true);
+			this.layer_terrain.position.x = -avatar.position.x + avatar.sprite.position.x; //offset
+			this.layer_terrain.position.y = -avatar.position.y + avatar.sprite.position.y + 32;
 		},
 	   
 		draw: function () {
 		
-			this.buffer.children = []; //= new PIXI.SpriteBatch(); <-- Leaks memory :-/
+			//this.buffer.children = []; //= new PIXI.SpriteBatch(); <-- Leaks memory :-/
 		
 			var offset = landscape.draw(this, PIXI);
 			
@@ -169,22 +176,18 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 		},
 
 		render: function () {
-
-		  // Map.stats.begin();
 		  
-		  avatar.tick(this, PIXI);
+			avatar.tick(this, PIXI);
+		  
+			landscape.context.fillStyle = "rgb(255,0,0)";
+			landscape.context.fillRect(avatar.position.x + 32, avatar.position.y + 64, 2, 2);
 
-		  //if (this.invalidate) {
-			 //this.draw();
-			 this.updateTexture();
-			 this.invalidate = false;
-		  //}
+			this.updateTexture();
 
-		  if (this.texture)
-			 this.renderer.render(this.stage);
+			if (this.texture)
+				this.renderer.render(this.stage);
 
-		  // Map.stats.end();
-	   },
+		},
 
 		indexFromScreen: function (point) {
 
@@ -209,12 +212,28 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 			return {"a" : a, "b": b};
 		},
 		
-		validPixel: function (point) {
-			return this.buffer.hitTest(point);
-		},
-		
 		isNumber: function (o) {
 			return ! isNaN (o-0) && o !== null && o !== "" && o !== false;
+		},
+		
+		setPixel: function (imageData, x, y, r, g, b, a) {
+			var index = (parseInt(x) + parseInt(y) * imageData.width) * 4;
+			imageData.data[index+0] = r;
+			imageData.data[index+1] = g;
+			imageData.data[index+2] = b;
+			imageData.data[index+3] = a;
+		},
+		
+		getPixel: function (imageData, x, y) {
+			var index = (parseInt(x) + parseInt(y) * imageData.width) * 4;
+			return {r: imageData.data[index+0],
+					g: imageData.data[index+1],
+					b: imageData.data[index+2],
+					a: imageData.data[index+3]};
+		},
+		
+		isWalkable: function(point) {
+			return landscape.isWalkable(this, {x: point.x + 32, y: point.y + 64});
 		}
 	   
 	};

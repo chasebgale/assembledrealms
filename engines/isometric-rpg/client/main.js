@@ -8,10 +8,30 @@ define(function (require) {
 	
 	engine.initialize( document.body );
 	
-	function animate() {
+	// Debugging:
+	var debug = true;
+	if (debug) {
+		var stats = new Stats();
+		stats.setMode(1); // 0: fps, 1: ms
 
-		requestAnimationFrame(animate);
+		// align top-left
+		stats.domElement.style.position = 'absolute';
+		stats.domElement.style.left = '32px';
+		stats.domElement.style.top = '564px';
+
+		document.body.appendChild( stats.domElement );
+	}
+	
+	function animate() {
+		
+		stats.begin();
+		
 		engine.render();
+		
+		stats.end();
+		
+		requestAnimationFrame(animate);
+		
 
 	}
 	
