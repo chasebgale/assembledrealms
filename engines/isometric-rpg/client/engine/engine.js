@@ -15,6 +15,7 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 		moveOriginOffset: {},
 		frames: {},
 		buffer: undefined,
+		over: undefined,
 		keyboard: undefined,
 
 		initialize: function (target) {
@@ -88,6 +89,9 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 
 			this.buffer = new PIXI.SpriteBatch();
 			this.buffer.cacheAsBitmap = true;
+			
+			this.over = new PIXI.SpriteBatch();
+			this.over.cacheAsBitmap = true;
 
 			var assets = _.union(this.terrain.source, this.objects.source, this.actors.source);
 			
@@ -132,19 +136,29 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 				
 				self.bufferTexture = new PIXI.RenderTexture(self.buffer.width + (CANVAS_WIDTH / 2), self.buffer.height + (CANVAS_HEIGHT / 2));
 				self.bufferTexture.render(self.buffer);
+				
+				self.overTexture = new PIXI.RenderTexture(self.buffer.width + (CANVAS_WIDTH / 2), self.buffer.height + (CANVAS_HEIGHT / 2));
+				self.overTexture.render(self.over);
 
 				self.layer_actors = new PIXI.DisplayObjectContainer();
 				self.layer_actors.addChild(avatar.sprite);
 				self.layer_terrain = new PIXI.Sprite(self.bufferTexture); //self.texture);
 				self.layer_terrain.cacheAsBitmap = true;
-
-				//var matrix = new PIXI.Matrix();
-				//matrix.translate(avatar.offset.x, avatar.offset.y);
-
-				//self.texture.render(self.buffer, matrix);
+				self.layer_over = new PIXI.Sprite(self.overTexture); 
+				self.layer_over.cacheAsBitmap = true;
 
 				self.stage.addChild(self.layer_terrain);
 				self.stage.addChild(self.layer_actors);
+				self.stage.addChild(self.layer_over);
+				
+				var mask = new PIXI.Graphics();
+				self.stage.addChild(mask);
+				mask.position.x = 0;
+				mask.position.y = 0;
+				mask.beginFill(0xFFFFFF, 1.0);
+				mask.drawRect((CANVAS_WIDTH / 2) - 32, (CANVAS_HEIGHT / 2) - 32, 64, 80);
+				mask.endFill();
+				self.layer_over.mask = mask;
 
 				self.renderer.render(self.stage);
 				
@@ -163,6 +177,9 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 			//this.texture.render(this.bufferTexture, matrix, true);
 			this.layer_terrain.position.x = -avatar.position.x + avatar.sprite.position.x; //offset
 			this.layer_terrain.position.y = -avatar.position.y + avatar.sprite.position.y + 32;
+			
+			this.layer_over.position.x = -avatar.position.x + avatar.sprite.position.x; //offset
+			this.layer_over.position.y = -avatar.position.y + avatar.sprite.position.y + 32;
 		},
 	   
 		draw: function () {

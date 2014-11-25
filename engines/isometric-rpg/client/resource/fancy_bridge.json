@@ -186,7 +186,8 @@
 	"anchor": 42,
 	"spriteSourceSize": {"x":0,"y":91,"w":64,"h":90},
 	"sourceSize": {"w":64,"h":192},
-	"walkable": false
+	"walkable": false,
+	"over": true
 },
 "fancy_bridge_22.png":
 {
@@ -258,7 +259,8 @@
 	"trimmed": true,
 	"spriteSourceSize": {"x":0,"y":99,"w":64,"h":82},
 	"sourceSize": {"w":64,"h":192},
-	"walkable": false
+	"walkable": false,
+	"over": true
 },
 "fancy_bridge_30.png":
 {
@@ -276,7 +278,8 @@
 	"anchor": 42,
 	"spriteSourceSize": {"x":0,"y":91,"w":64,"h":78},
 	"sourceSize": {"w":64,"h":192},
-	"walkable": false
+	"walkable": false,
+	"over": true
 },
 "fancy_bridge_32.png":
 {
@@ -294,7 +297,8 @@
 	"anchor": 42,
 	"spriteSourceSize": {"x":0,"y":91,"w":64,"h":90},
 	"sourceSize": {"w":64,"h":192},
-	"walkable": false
+	"walkable": false,
+	"over": true
 },
 "fancy_bridge_34.png":
 {
@@ -402,7 +406,8 @@
 	"anchor": 42,
 	"spriteSourceSize": {"x":0,"y":91,"w":64,"h":90},
 	"sourceSize": {"w":64,"h":192},
-	"walkable": false
+	"walkable": false,
+	"over": true
 },
 "fancy_bridge_46.png":
 {
@@ -528,7 +533,8 @@
 	"anchor": 57,
 	"spriteSourceSize": {"x":0,"y":92,"w":64,"h":100},
 	"sourceSize": {"w":64,"h":192},
-	"walkable": false
+	"walkable": false,
+	"over": true
 }},
 "meta": {
 	"category": "terrain",

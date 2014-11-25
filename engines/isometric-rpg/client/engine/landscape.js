@@ -9,6 +9,7 @@ define(function () {
 		draw: function (engine, PIXI) {
 
 			var sprite;
+			var spriteOver;
 			var count = 0;
 			var index = 0;
 			var frame = "";
@@ -79,8 +80,32 @@ define(function () {
 					sprite.anchor.x = ((sprite.width / 2) - 32) / sprite.width;
 					sprite.position.x = xOffset + (a * TILE_WIDTH_HALF);
 					sprite.position.y = yOffset + (b * TILE_HEIGHT_HALF);
+					
 					engine.buffer.addChild(sprite);
+					
+					if (engine.frames[frame].over == true) {
+						
+						spriteOver = new PIXI.Sprite(PIXI.Texture.fromFrame(frame));
 
+
+						if (engine.frames[frame].anchor === undefined) {
+							// Assume default y anchor:
+							spriteOver.anchor.y = (spriteOver.height - 32) / spriteOver.height;
+						} else {
+							spriteOver.anchor.y = engine.frames[frame].anchor / spriteOver.height;
+						}
+
+
+						spriteOver.anchor.x = ((spriteOver.width / 2) - 32) / spriteOver.width;
+						spriteOver.position.x = xOffset + (a * TILE_WIDTH_HALF);
+						spriteOver.position.y = yOffset + (b * TILE_HEIGHT_HALF);
+					
+						engine.over.addChild(spriteOver);
+					}
+					
+					
+					
+					
 					if (engine.terrain.decoration[row] !== undefined) {
 						if (engine.terrain.decoration[row][col] !== undefined) {
 							drawLast.push({ "row": row, "col": col, "a": a, "b": b, "index": engine.terrain.decoration[row][col] })
