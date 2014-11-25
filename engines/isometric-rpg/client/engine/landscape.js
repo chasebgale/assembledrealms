@@ -80,42 +80,6 @@ define(function () {
 					sprite.position.x = xOffset + (a * TILE_WIDTH_HALF);
 					sprite.position.y = yOffset + (b * TILE_HEIGHT_HALF);
 					engine.buffer.addChild(sprite);
-					
-					// PATH
-					if (false) { //engine.frames[frame].walkable === undefined) {
-					
-						// TODO: Instead of creating a pixi rendertexture/spritebatch, create a pixel array
-						// as big as the map in pixels, then set the pixels in the array to white when walkable,
-						// so essentially clone a tile of white pixels... then later hit test for null pixels...
-						// var data = new Uint8Array(texture.image.width * texture.image.height * 4);
-						//
-						// after all drawing is done, then do the hitmap, using: this.buffer.width for pixel array dimensions
-						//
-						// HAVE MULTIPLE COLORS in the pixel array to do different stuff, for instance, a red pixel would be a
-						// "draw over" pixel... for example the bridge, on the south side, actors should have the walls rendered over
-						// them.... so, in the pixel array, the wall would be rendered red, and after drawing the avatar and actors, 
-						// re-draw in a higher layer anything red... or maybe we'll have to keep that draw-over data in a new array,
-						// as the best way may be to use a mask and a layer that renders the same as the background, just only in the 
-						// mask of pixels to get the desired effect
-						
-						// NEW IDEA... have a layer composed of tiles labeled 'over' in the json... draw only the layer composited through
-						// a mask, the mask being the actors layer, including the avatar, that way all actors are rendered properly
-					
-						pathSprite = new PIXI.Sprite(PIXI.Texture.fromFrame('grass_0.png'));
-					
-						if (engine.frames['grass_0.png'].anchor === undefined) {
-							// Assume default y anchor:
-							pathSprite.anchor.y = (pathSprite.height - 32) / pathSprite.height;
-						} else {
-							pathSprite.anchor.y = engine.frames['grass_0.png'].anchor / pathSprite.height;
-						}
-
-						pathSprite.anchor.x = ((pathSprite.width / 2) - 32) / pathSprite.width;
-						pathSprite.position.x = (a * TILE_WIDTH_HALF);
-						pathSprite.position.y = (b * TILE_HEIGHT_HALF);
-
-						engine.path.addChild(pathSprite);
-					}
 
 					if (engine.terrain.decoration[row] !== undefined) {
 						if (engine.terrain.decoration[row][col] !== undefined) {
@@ -150,6 +114,23 @@ define(function () {
 				}
 			}
 			
+			
+			// TODO: Instead of creating a pixi rendertexture/spritebatch, create a pixel array
+			// as big as the map in pixels, then set the pixels in the array to white when walkable,
+			// so essentially clone a tile of white pixels... then later hit test for null pixels...
+			// var data = new Uint8Array(texture.image.width * texture.image.height * 4);
+			//
+			// after all drawing is done, then do the hitmap, using: this.buffer.width for pixel array dimensions
+			//
+			// HAVE MULTIPLE COLORS in the pixel array to do different stuff, for instance, a red pixel would be a
+			// "draw over" pixel... for example the bridge, on the south side, actors should have the walls rendered over
+			// them.... so, in the pixel array, the wall would be rendered red, and after drawing the avatar and actors, 
+			// re-draw in a higher layer anything red... or maybe we'll have to keep that draw-over data in a new array,
+			// as the best way may be to use a mask and a layer that renders the same as the background, just only in the 
+			// mask of pixels to get the desired effect
+			
+			// NEW IDEA... have a layer composed of tiles labeled 'over' in the json... draw only the layer composited through
+			// a mask, the mask being the actors layer, including the avatar, that way all actors are rendered properly
 			
 			// Path:
 			var canvas = document.createElement('canvas');
