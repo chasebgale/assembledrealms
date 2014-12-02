@@ -53,6 +53,26 @@ function lineDistanceManhattan(p1, p2) {
     return Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y);
 }
 
+function isNumber (o) {
+	return ! isNaN (o-0) && o !== null && o !== "" && o !== false;
+}
+		
+function setPixel (imageData, x, y, r, g, b, a) {
+	var index = (parseInt(x) + parseInt(y) * imageData.width) * 4;
+	imageData.data[index+0] = r;
+	imageData.data[index+1] = g;
+	imageData.data[index+2] = b;
+	imageData.data[index+3] = a;
+}
+
+function getPixel (imageData, x, y) {
+	var index = (parseInt(x) + parseInt(y) * imageData.width) * 4;
+	return {r: imageData.data[index+0],
+			g: imageData.data[index+1],
+			b: imageData.data[index+2],
+			a: imageData.data[index+3]};
+}
+
 
 
 

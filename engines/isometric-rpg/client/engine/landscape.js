@@ -4,6 +4,9 @@ define(function () {
 
 		path: undefined,
 		context: undefined,
+		texture: undefined,
+		buffer: undefined,
+		sprite: undefined,
 	
 		// Called on player login and when changing maps
 		draw: function (engine, PIXI) {
@@ -19,13 +22,16 @@ define(function () {
 			
 			var self = this;
 			
-			startPoint.row = (engine.playerPos.x / TILE_WIDTH_HALF + engine.playerPos.y / TILE_HEIGHT_HALF) / 2;
-			startPoint.col = (engine.playerPos.y / TILE_HEIGHT_HALF - engine.playerPos.x / TILE_WIDTH_HALF) / -2;
-			startPoint.row = Math.floor(startPoint.row);
-			startPoint.col = Math.floor(startPoint.col);
+			self.buffer = new PIXI.SpriteBatch();
+			self.buffer.cacheAsBitmap = true;
+			
+			// startPoint.row = (engine.playerPos.x / TILE_WIDTH_HALF + engine.playerPos.y / TILE_HEIGHT_HALF) / 2;
+			// startPoint.col = (engine.playerPos.y / TILE_HEIGHT_HALF - engine.playerPos.x / TILE_WIDTH_HALF) / -2;
+			startPoint.row = 0; // Math.floor(startPoint.row);
+			startPoint.col = 0; // Math.floor(startPoint.col);
 
 			endPoint.row = _.max(_.keys(engine.terrain), function(obj) { 
-				if (engine.isNumber(obj)) { 
+				if (isNumber(obj)) { 
 					return parseInt(obj); 
 				} 
 			});
@@ -81,60 +87,14 @@ define(function () {
 					sprite.position.x = xOffset + (a * TILE_WIDTH_HALF);
 					sprite.position.y = yOffset + (b * TILE_HEIGHT_HALF);
 					
-					engine.buffer.addChild(sprite);
-					
-					if (engine.frames[frame].over == true) {
-						
-						spriteOver = new PIXI.Sprite(PIXI.Texture.fromFrame(frame));
+					self.buffer.addChild(sprite);
 
-
-						if (engine.frames[frame].anchor === undefined) {
-							// Assume default y anchor:
-							spriteOver.anchor.y = (spriteOver.height - 32) / spriteOver.height;
-						} else {
-							spriteOver.anchor.y = engine.frames[frame].anchor / spriteOver.height;
-						}
-
-
-						spriteOver.anchor.x = ((spriteOver.width / 2) - 32) / spriteOver.width;
-						spriteOver.position.x = xOffset + (a * TILE_WIDTH_HALF);
-						spriteOver.position.y = yOffset + (b * TILE_HEIGHT_HALF);
-					
-						engine.over.addChild(spriteOver);
-					}
-					
-					
-					
-					
 					if (engine.terrain.decoration[row] !== undefined) {
 						if (engine.terrain.decoration[row][col] !== undefined) {
 							drawLast.push({ "row": row, "col": col, "a": a, "b": b, "index": engine.terrain.decoration[row][col] })
 						}
 					}
-
-					if (engine.objects[row] !== undefined) {
-						if (engine.objects[row][col] !== undefined) {
-							
-							// Actual display buffer:
-							frame = engine.objects.index[engine.objects[row][col]];
-							sprite = new PIXI.Sprite(PIXI.Texture.fromFrame(frame));
-
-							if (engine.frames[frame].anchor === undefined) {
-								// Assume default y anchor:
-								sprite.anchor.y = (sprite.height - 32) / sprite.height;
-							} else {
-								sprite.anchor.y = engine.frames[frame].anchor / sprite.height;
-							}
-
-							sprite.anchor.x = ((sprite.width / 2) - 32) / sprite.width;
-							sprite.position.x = (a * TILE_WIDTH_HALF);
-							sprite.position.y = (b * TILE_HEIGHT_HALF);
-
-							engine.buffer.addChild(sprite);
-							
-						}
-					}
-
+					
 					count++;
 				}
 			}
@@ -161,12 +121,12 @@ define(function () {
 			var canvas = document.createElement('canvas');
 			canvas.setAttribute('id', 'canvasPath');
 			canvas.setAttribute('style', 'background-color: black;');
-			canvas.width = engine.buffer.width;
-			canvas.height = engine.buffer.height;
+			canvas.width = self.buffer.width;
+			canvas.height = self.buffer.height;
 			document.body.appendChild(canvas);
 			this.context = canvas.getContext('2d');
 			
-			self.path = this.context.createImageData(engine.buffer.width, engine.buffer.height);
+			self.path = this.context.createImageData(self.buffer.width, self.buffer.height);
 			
 			var yCenter = 0;
 			var xLeft = 0;
@@ -207,7 +167,7 @@ define(function () {
 						// Draw tile in pixel array:
 						for (var y = 0; y < 16; y++) {
 							for (var x = y * 2; x < width; x++) {
-								engine.setPixel(this.path, xLeft + x, yCenter - y, color, color, color, 0xFF);
+								setPixel(this.path, xLeft + x, yCenter - y, color, color, color, 0xFF);
 							}
 							width -= 2;
 						}
@@ -215,7 +175,7 @@ define(function () {
 						width = 64;
 						for (var y = 0; y < 16; y++) {
 							for (var x = y * 2; x < width; x++) {
-								engine.setPixel(this.path, xLeft + x, yCenter + y, color, color, color, 0xFF);
+								setPixel(this.path, xLeft + x, yCenter + y, color, color, color, 0xFF);
 							}
 							width -= 2;
 						}
@@ -228,13 +188,18 @@ define(function () {
 			
 			this.context.putImageData(self.path, 0, 0);
 			
+			self.texture = new PIXI.RenderTexture(self.buffer.width + (CANVAS_WIDTH / 2), self.buffer.height + (CANVAS_HEIGHT / 2));
+			self.texture.render(self.buffer);
+			
+			self.sprite = new PIXI.Sprite(self.texture); 
+			self.sprite.cacheAsBitmap = true;
 			
 			return offset;
 		},
 		
 		isWalkable: function (engine, point) {
 		
-			if (engine.getPixel(this.path, point.x, point.y).r !== 255) {
+			if (getPixel(this.path, point.x, point.y).r !== 255) {
 				return false;
 			}
 			

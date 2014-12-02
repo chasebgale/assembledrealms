@@ -1,5 +1,5 @@
-define(["actors", "avatar", "constants", "landscape", "utilities", "pixi"], 
-function(actors, avatar, constants, landscape, utilities, PIXI) {
+define(["actors", "avatar", "constants", "landscape", "objects", "utilities", "pixi"], 
+function(actors, avatar, constants, landscape, objects, utilities, PIXI) {
 
 	return {
 
@@ -14,8 +14,6 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 		moveOriginPoint: {},
 		moveOriginOffset: {},
 		frames: {},
-		buffer: undefined,
-		over: undefined,
 		keyboard: undefined,
 
 		initialize: function (target) {
@@ -87,11 +85,8 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 			this.objects = map.objects;
 			this.actors  = map.actors;
 
-			this.buffer = new PIXI.SpriteBatch();
-			this.buffer.cacheAsBitmap = true;
-			
-			this.over = new PIXI.SpriteBatch();
-			this.over.cacheAsBitmap = true;
+			//this.over = new PIXI.SpriteBatch();
+			//this.over.cacheAsBitmap = true;
 
 			var assets = _.union(this.terrain.source, this.objects.source, this.actors.source);
 			
@@ -127,30 +122,34 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 				avatar.sprite.position.x = (CANVAS_WIDTH / 2) - 64;
 				avatar.sprite.position.y = (CANVAS_HEIGHT / 2) - 64;
 				
+				objects.initialize(self, PIXI);
+				
 				avatar.offset = self.draw();
 				
 				avatar.position.x = avatar.sprite.position.x + 64;
 				avatar.position.y = avatar.sprite.position.y + 64;
 
-				self.texture = new PIXI.RenderTexture(self.renderer.width, self.renderer.height);
+				//self.texture = new PIXI.RenderTexture(self.renderer.width, self.renderer.height);
 				
-				self.bufferTexture = new PIXI.RenderTexture(self.buffer.width + (CANVAS_WIDTH / 2), self.buffer.height + (CANVAS_HEIGHT / 2));
-				self.bufferTexture.render(self.buffer);
 				
-				self.overTexture = new PIXI.RenderTexture(self.buffer.width + (CANVAS_WIDTH / 2), self.buffer.height + (CANVAS_HEIGHT / 2));
-				self.overTexture.render(self.over);
+				
+				//self.overTexture = new PIXI.RenderTexture(self.buffer.width + (CANVAS_WIDTH / 2), self.buffer.height + (CANVAS_HEIGHT / 2));
+				//self.overTexture.render(self.over);
 
-				self.layer_actors = new PIXI.DisplayObjectContainer();
-				self.layer_actors.addChild(avatar.sprite);
-				self.layer_terrain = new PIXI.Sprite(self.bufferTexture); //self.texture);
-				self.layer_terrain.cacheAsBitmap = true;
-				self.layer_over = new PIXI.Sprite(self.overTexture); 
-				self.layer_over.cacheAsBitmap = true;
+				// self.layer_actors = new PIXI.DisplayObjectContainer();
+				// self.layer_actors.addChild(avatar.sprite);
+				//self.layer_terrain = new PIXI.Sprite(self.bufferTexture); //self.texture);
+				//self.layer_terrain.cacheAsBitmap = true;
+				//self.layer_over = new PIXI.Sprite(self.overTexture); 
+				//self.layer_over.cacheAsBitmap = true;
 
-				self.stage.addChild(self.layer_terrain);
-				self.stage.addChild(self.layer_actors);
-				self.stage.addChild(self.layer_over);
+				self.stage.addChild(landscape.sprite);
+				self.stage.addChild(objects.sprite);
 				
+				//self.stage.addChild(self.layer_actors);
+				//self.stage.addChild(self.layer_over);
+				
+				/*
 				var mask = new PIXI.Graphics();
 				self.stage.addChild(mask);
 				mask.position.x = 0;
@@ -159,7 +158,7 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 				mask.drawRect((CANVAS_WIDTH / 2) - 32, (CANVAS_HEIGHT / 2) - 32, 64, 80);
 				mask.endFill();
 				self.layer_over.mask = mask;
-
+				*/
 				self.renderer.render(self.stage);
 				
 				self.loaded();
@@ -170,23 +169,30 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 				 
 		},
 	   
+		position: function () {
+			return avatar.position;
+		},
+	   
 		updateTexture: function () {
 			//var matrix = new PIXI.Matrix();
 			//matrix.translate(avatar.offset.x, avatar.offset.y);
 
 			//this.texture.render(this.bufferTexture, matrix, true);
-			this.layer_terrain.position.x = -avatar.position.x + avatar.sprite.position.x; //offset
-			this.layer_terrain.position.y = -avatar.position.y + avatar.sprite.position.y + 32;
+			//this.layer_terrain.position.x = -avatar.position.x + avatar.sprite.position.x; //offset
+			//this.layer_terrain.position.y = -avatar.position.y + avatar.sprite.position.y + 32;
 			
-			this.layer_over.position.x = -avatar.position.x + avatar.sprite.position.x; //offset
-			this.layer_over.position.y = -avatar.position.y + avatar.sprite.position.y + 32;
+			landscape.sprite.position.x = -avatar.position.x + avatar.sprite.position.x; //offset
+			landscape.sprite.position.y = -avatar.position.y + avatar.sprite.position.y + 32;
+			
+			//this.layer_over.position.x = -avatar.position.x + avatar.sprite.position.x; //offset
+			//this.layer_over.position.y = -avatar.position.y + avatar.sprite.position.y + 32;
 		},
 	   
 		draw: function () {
 		
-			//this.buffer.children = []; //= new PIXI.SpriteBatch(); <-- Leaks memory :-/
-		
 			var offset = landscape.draw(this, PIXI);
+			
+			
 			
 			return offset;
 		
@@ -196,13 +202,13 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 		  
 			avatar.tick(this, PIXI);
 		  
+			objects.tick(this, PIXI);
+		  
 			landscape.context.fillStyle = "rgb(255,0,0)";
 			landscape.context.fillRect(avatar.position.x + 32, avatar.position.y + 64, 2, 2);
 
 			this.updateTexture();
-
-			if (this.texture)
-				this.renderer.render(this.stage);
+			this.renderer.render(this.stage);
 
 		},
 
@@ -227,26 +233,6 @@ function(actors, avatar, constants, landscape, utilities, PIXI) {
 			var a = (index.row * 2) - b;
 
 			return {"a" : a, "b": b};
-		},
-		
-		isNumber: function (o) {
-			return ! isNaN (o-0) && o !== null && o !== "" && o !== false;
-		},
-		
-		setPixel: function (imageData, x, y, r, g, b, a) {
-			var index = (parseInt(x) + parseInt(y) * imageData.width) * 4;
-			imageData.data[index+0] = r;
-			imageData.data[index+1] = g;
-			imageData.data[index+2] = b;
-			imageData.data[index+3] = a;
-		},
-		
-		getPixel: function (imageData, x, y) {
-			var index = (parseInt(x) + parseInt(y) * imageData.width) * 4;
-			return {r: imageData.data[index+0],
-					g: imageData.data[index+1],
-					b: imageData.data[index+2],
-					a: imageData.data[index+3]};
 		},
 		
 		isWalkable: function(point) {
