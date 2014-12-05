@@ -34,7 +34,9 @@ function(actors, avatar, constants, landscape, objects, utilities, PIXI) {
 			target.appendChild(self.renderer.view);
 			self.stage = new PIXI.Stage(0x000000, true);
 			
-			
+			self.stage.mousedown = function (data) {
+				console.log(self.indexFromScreen(data.global));
+			};
 			
 			// TODO: Right here I should be handshaking with the server and receiving a 
 			// response object with player position, stats, etc - then the map he/she is
@@ -131,8 +133,6 @@ function(actors, avatar, constants, landscape, objects, utilities, PIXI) {
 
 				//self.texture = new PIXI.RenderTexture(self.renderer.width, self.renderer.height);
 				
-				
-				
 				//self.overTexture = new PIXI.RenderTexture(self.buffer.width + (CANVAS_WIDTH / 2), self.buffer.height + (CANVAS_HEIGHT / 2));
 				//self.overTexture.render(self.over);
 
@@ -221,9 +221,13 @@ function(actors, avatar, constants, landscape, objects, utilities, PIXI) {
 
 			map.row = (screen.x / TILE_WIDTH_HALF + screen.y / TILE_HEIGHT_HALF) / 2;
 			map.col = (screen.y / TILE_HEIGHT_HALF - screen.x / TILE_WIDTH_HALF) / -2;
+			
+			console.log("Coords pre-rounding: " + map.row + ", " + map.col);
 
 			map.row = Math.floor(map.row);
 			map.col = Math.floor(map.col);
+			
+			console.log("Coords post-rounding: " + map.row + ", " + map.col);
 
 			return map;
 	   },

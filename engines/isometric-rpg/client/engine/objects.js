@@ -89,6 +89,8 @@ define(function () {
 						self.buffer.addChild(sprite);
 					}
 					
+					/*
+					
 					if (engine.objects[row] !== undefined) {
 						if (engine.objects[row][col] !== undefined) {
 							
@@ -111,6 +113,8 @@ define(function () {
 							
 						}
 					}
+					
+					*/
 
 					count++;
 				}
