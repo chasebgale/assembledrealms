@@ -122,10 +122,10 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
         <div class="panel-body">
             <div class="row">
                 <div class="col-md-3">
-                    <button class="btn btn-default pull-right">Take Realm Offline</button>
+                    <button class="btn btn-default pull-right" data-toggle="modal" data-target="#modalTakeRealmOnline">Take Realm Online</button>
                 </div>
                 <div class="col-md-9">
-                    <p class="text-justify">This is a description of what the button does. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed augue nisl, pretium at sapien nec, commodo venenatis augue. Nulla aliquet et mi et iaculis. Aliquam auctor felis quis euismod bibendum. Duis vel libero cursus, varius sem quis, malesuada leo.</p>
+                    <p class="text-justify">Your realm is currently <strong>offline</strong>. Click this button to allow other users to connect to your realm and enjoy the fruits of your hard work!</p>
                 </div>
             </div>
             <div class="row">
@@ -182,6 +182,36 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 		<div class="panel-footer">
 			<button id="savebutton" class="btn btn-default pull-right">Save Changes!</button>
 		</div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalTakeRealmOnline" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Deposit $2.50</h4>
+            </div>
+            <div class="modal-body" id="modalDepositFundsContent">
+                <ol>
+					<li>
+						<span>Select a server:</span>
+						<div class="dropdown">
+							<button class="btn btn-default dropdown-toggle" type="button" id="dropdownServerType" data-toggle="dropdown" aria-expanded="true">
+							Free, 
+							<span class="caret"></span>
+							</button>
+							<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownServerType">
+								<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Action</a></li>
+								<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Another action</a></li>
+								<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Something else here</a></li>
+								<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Separated link</a></li>
+							</ul>
+						</div>
+					</li>
+				</ol>
+            </div>
+        </div>
     </div>
 </div>
 

@@ -19,26 +19,31 @@ var allowCrossDomain = function(req, res, next) {
 app.use(allowCrossDomain);
 
 io.sockets.on('connection', function (client) {
-	// Handshake with client:
+	
 	console.log('CLIENT CONNECTED, HANDSHAKING.....');
 
-	client.emit('auth-handshake', 'handshake');
+	// Wire up events:
 	client.on('auth', processAuthorization);
 	client.on('message', processMessage);
 	client.on('update', processUpdate);
 	client.on('error', processError);
+	
+	// Ask client to authenticate:
+	client.emit('auth-handshake', 'handshake');
 	
 	function processAuthorization(data) {
 		// data.id === user ID
 		// data.auth === validated session key
 		
 		// The idea here is to only AUTH and allow access to registered, logged in clients
-		// I'm thinking I'll have to write an API call on assembledrealms.com to validate, so:
+		// I'm thinking I'll have to write an API call on assembledrealms.com / realm to validate, so:
 		
-		// 1. User logs in on website
-		// 2. User navigates to realm page, which in turn serves HTML from [this server] in an iframe
-		// 3. HTML served back is blank black page, sends handshake (userID and sessionKey) after load
-		// 4. [this server] receives handshake and calls main site API to validate session
+		// 1. User logs in on assembledrealms.com
+		// 2. User navigates to realm page container, hosted on assembledrealms.com
+		// 3. assebledrealms.com calls API on realm server to create an entry in memoryDB, I'm thinking IP address of client, userid and session key
+		// 4. assembledrealms.com serves back container. Container has an iframe hosted by this realm		
+		// 4. HTML content of iframe served back is blank black page, uses socket.io client library to handshake (userID and sessionKey) after load
+		// 4. [this server] receives handshake and checks memoryDB to auth session
 		
 		// This prevents someone loading this page outside of assembledrealms.com and handing in whatever
 		// user ID they want to trash someones characters or whatnot.

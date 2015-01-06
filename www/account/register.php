@@ -193,13 +193,16 @@ switch ($_SERVER['QUERY_STRING']) {
 	<div class="col-md-5">
 		<form id="form-signin" role="form" action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
 		    <h2 class="form-signin-heading">Please sign in...</h2>
+			<p>&nbsp;</p>
 			
 			<div class="form-group">
-		    <input name="email" type="email" class="form-control" placeholder="contact@domain.com" required="true" autofocus="">
+			<label for="loginEmail">Email address</label>
+		    <input name="email" id="loginEmail" type="email" class="form-control" placeholder="contact@domain.com" required="true" autofocus="">
 		    </div>
 			
 			<div class="form-group">
-			<input name="password" type="password" class="form-control" placeholder="Password" required="true">
+			<label for="loginPassword">Password</label>
+			<input name="password" id="loginPassword" type="password" class="form-control" placeholder="Password" required="true">
 		    </div>
 			
 			<button id="loginSubmit" class="btn btn-lg btn-default btn-block" type="submit">Sign in</button>
