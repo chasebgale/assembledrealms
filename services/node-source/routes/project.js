@@ -43,9 +43,9 @@ exports.create = function(req, res, next){
       var items = files.filter(function (file) {
         
         // TODO: Don't use SYNC file operations!
-        if (fs.statSync(import_local + '/' + file).isFile()) {
-          return false;
-        }
+        //if (fs.statSync(import_local + '/' + file).isFile()) {
+        //  return false;
+        //}
         
         if (file == '.git') {
           return false;
