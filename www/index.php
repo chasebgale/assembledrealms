@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Assembled Realms</title>
+	<title>Assembled Realms</title>
     <style>
         body {
             padding-top: 200px;
