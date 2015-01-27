@@ -27,10 +27,48 @@ if (($realmID < 0) || ($sourceURL == '')) {
     die();
 }
     
-require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
-    
 ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
 
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Assembled Realms IDE</title>
+
+    <link rel='shortcut icon' href='/img/favicon.png')'>
+
+    <link rel='stylesheet' href="/css/jquery.treeview.css" />
+    <link rel='stylesheet' href='/css/root.css' />
+    <link rel='stylesheet' href='/build/css/style.css' />
+
+    <link rel='stylesheet' href='//netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.css' />
+    <link rel='stylesheet' href='//netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css'>
+    <link rel='stylesheet' href='/css/bootstrap-theme.css' />
+
+    <script src='/models/funcs.js' type='text/javascript'></script>
+    <script src='/js/lodash.min.js'></script>
+    
+    <style>
+        html, body {
+            height:100%;
+        }
+
+        #commandBar {
+            height: 24px;
+            background-color: #777;
+        }
+    </style>
+
+</head>
+
+<body style="padding: 0;">
+<div id="commandBar">
+    <a href="http://www.assembledrealms.com" style="float: right;"><img src="/build/img/logo.png"></img></a>
+</div>
+<div id='wrapper'>
     <div style="width: 500px; display: none; margin: 0 auto; margin-top: 100px;" class="alert alert-danger" id="errorMessage"></div>
 
     <div id="loading" style="width: 500px; margin: 0 auto; margin-top: 100px;">
@@ -43,24 +81,28 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
     </div>
     
     <section id="mapEdit" style="display: none;">
-        <div id="leftBar">
+        <!--<div id="leftBar">
 			<button id="btnCommit" type="button" class="btn btn-default">
 				<span class="glyphicon glyphicon-open"></span> Commit
 			</button>
 			<button id="btnDebug" type="button" class="btn btn-default">
 				<span class="glyphicon glyphicon-play"></span> Debug
 			</button>
-			<div id="tree" class="panel panel-default" style="height: 562px; overflow-y: scroll;">
-				<ul id="explorer" class="filetree treeview">
-				</ul>
-			</div>
+        -->
+        <div id="tree" class="panel panel-default">
+            <ul id="explorer" class="filetree treeview">
+            </ul>
+        </div>
+        <!--
 			<button id="btnNewFile" type="button" class="btn btn-default">
 				<span class="glyphicon glyphicon-plus"></span> New File
 			</button>
 			<button id="btnUploadResource" type="button" class="btn btn-default">
 				<span class="fa fa-upload"></span> Add Media
 			</button>
+        
         </div>
+        -->
 		
         <div id="tabs">
             <ul class="nav nav-tabs" id="mapTabs">
@@ -333,12 +375,13 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
         </div>
     </script>
     
-    <?php require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php"); ?>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
     
     <script type="text/javascript">
-	$(document).ready(function () {
-	    initialize(<?php echo $realmID; ?>, "<?php echo $sourceURL; ?>");
-	});
+        $(document).ready(function () {
+            initialize(<?php echo $realmID; ?>, "<?php echo $sourceURL; ?>");
+        });
     </script>
 
     <script src="js/utilities.js"></script>

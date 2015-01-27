@@ -1,75 +1,4 @@
-var __editorReadme;
-var __editorFunding;
-var __renderer;
-
 $(document).ready(function () {
-   
-   __renderer = new marked.Renderer();
-   
-   __renderer.table = function(header, body) {
-      return '<table class="table table-striped"><thead>' + header + '</thead><tbody>' + body + '</tbody></table>';
-   }
-   
-   marked.setOptions({
-      sanitize: true,
-      renderer: __renderer
-   });
-   
-   __editorReadme = ace.edit("realmReadmeSource");
-   __editorReadme.getSession().setMode("ace/mode/markdown");
-   
-   __editorFunding = ace.edit("realmFundingSource");
-   __editorFunding.getSession().setMode("ace/mode/markdown");
-   
-   $.ajax({
-            url: 'http://www.assembledrealms.com/build/manager.php',
-            type: 'post',
-            dataType: 'json',
-            data: {directive: 'fetch', realm_id: __realmID}
-   })
-   .done(function (data) {
-      console.log(data);
-      
-      if (data.funding == null) {
-         fetchFundingTemplate();
-      } else {
-         __editorFunding.setValue(data.funding);
-         __existingState.markdown_funding = data.funding;
-         __currentState.markdown_funding = data.funding;
-         fundingMarkdown(data.funding);
-      }
-      
-      if (data.description == null) {
-         fetchDescriptionTemplate();
-      } else {
-         __editorReadme.setValue(data.description);
-         __existingState.markdown_readme = data.description;
-         __currentState.markdown_readme = data.description;
-         descriptionMarkdown(data.description);
-      }
-      
-      if (data.realm_id) {
-         // If a realm_id came down, we need to update a record in the DB,
-         // not create a new one...
-         __markdownCreateNewDB = false;
-      }
-
-   })
-   .fail(function(data) {
-       console.log(data);
-   });
-   
-   __editorFunding.getSession().on("change", function (e) {
-      
-      fundingMarkdown( __editorFunding.getValue() );
-      
-   });
-   
-   __editorReadme.getSession().on("change", function (e) {
-      
-      descriptionMarkdown( __editorReadme.getValue() );
-      
-   });
    
    $('.monitored').on('change', function (e) {
       var prop = $(this).attr('data-id');
@@ -137,26 +66,6 @@ $(document).ready(function () {
       
       
    });
-   
-   $('#chkFunding').on("change", function (e) {
-      
-      var container = $('#realmFundingSource').closest('.panel-body');
-      
-      if ($(this).is(':checked') == false) {
-         __editorFunding.setReadOnly(true);
-         container.css('user-select', 'none');
-         container.css('opacity', '0.3');
-      } else {
-         __editorFunding.setReadOnly(false);
-         container.css('user-select', 'text');
-         container.css('opacity', '1.0');
-      }
-   });
-   
-   if ($('#chkFunding').is(':checked') == false) {
-      __editorFunding.setReadOnly(true);
-      $('#realmFundingSource').closest('.panel-body').css('user-select', 'none');
-   }
    
 });
 

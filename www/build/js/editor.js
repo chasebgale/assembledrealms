@@ -1,29 +1,50 @@
 ﻿var __editor;
 var __fileId;
+var __renderer;
 var __projectId;
-var __trackedFiles = [];
-var __trackedStorageId;
-
-// TODO: In the future this will be part of the user's profile, as when the user
-// is created it is assigned the lowest-load server...
 var __projectURL;
-
 var __checkInMsg;
+var __trackedStorageId;
+var __processingFiles   = [];
+var __trackedFiles      = [];
+var __commitFiles       = [];
 
-var __processingFiles = [];
-var __commitFiles = [];
+function resize() {
+    var workAreaHeight = $("#tree").height();
+    var tabsHeight = $("#mapTabs").height();
+    
+    $("#editor").height(workAreaHeight - tabsHeight);
+}
 
 function initialize(projectID, projectDomain) {
     
     __projectId = projectID;
     __projectURL = 'http://' + projectDomain + '.assembledrealms.com/api/project/' + __projectId;
     __trackedStorageId = __projectId + "-tracking";
+    
+    __editor = ace.edit("editor");
+    __editor.setShowPrintMargin(false);
+    
+    __renderer = new marked.Renderer();
+    __renderer.table = function(header, body) {
+        return '<table class="table table-striped"><thead>' + header + '</thead><tbody>' + body + '</tbody></table>';
+    }
+
+    marked.setOptions({
+        sanitize: true,
+        renderer: __renderer
+    });
 
     if (sessionStorage[__trackedStorageId]) {
         __trackedFiles = JSON.parse(sessionStorage[__trackedStorageId]);
     }
     
-    // Fetch file:
+    
+    
+    $( window ).resize(function() {
+        resize();
+    });
+    
     $("#explorer").on("click", ".file", function () {
 
         var root = $(this);
@@ -41,9 +62,7 @@ function initialize(projectID, projectDomain) {
 
     });
 
-    __editor = ace.edit("editor");
-
-    $('#mapTabs a').click(function (e) {
+    $('#mapTabs a').on("click", function (e) {
         e.preventDefault();
         $(this).tab('show');
     });
@@ -53,11 +72,6 @@ function initialize(projectID, projectDomain) {
         //e.relatedTarget // previous tab
         $("#markdown").html(marked(__editor.getValue()));
     });
-
-    
-
-    // TOOLTIPS:
-    $("#mapToolbar [data-toggle='tooltip']").tooltip();
 
     $("#terrain").on("click", ".terrain", function () {
         var tileKey = $(this).attr('data-id');
@@ -194,7 +208,6 @@ function initialize(projectID, projectDomain) {
         });
        
     });
-    
 
     $("#btnCommit").on("click", function () {
         //$('#commitProgressbar').addClass('active');
@@ -236,6 +249,7 @@ function initialize(projectID, projectDomain) {
 				.always(function() {
 					$('#debugClose').attr('disabled', false);
 				});
+            }
         })
         .fail(function(data) {
             console.log(data);
@@ -421,6 +435,8 @@ function initialize(projectID, projectDomain) {
         
         
     });
+    
+    $("#mapToolbar [data-toggle='tooltip']").tooltip();
     
     Map.onResourceLoaded = function (json, source) {
         var template = $('#resource_template').html();
@@ -615,35 +631,25 @@ function loadRealmRoot() {
             }
         });
         
-        /*
-        var folderListOptions = $("#newfileLocation option");
-
-        folderListOptions.sort(function(a,b) {
-            if (a.text > b.text) return 1;
-            else if (a.text < b.text) return -1;
-            else return 0
-        })
-
-        folderList.empty().append( folderListOptions );
-        */
+        // Initial file display
+        var welcomeDOM = $('#explorer [data-path="WELCOME.md"');
+        if (welcomeDOM) {
+            welcomeDOM.addClass('activefile');
         
-        /*
-        var readmeDOM = $('#explorer [data-path="README.md"');
-        readmeDOM.addClass('activefile');
-    
-        loadRealmFile(readmeDOM.attr('data-id'), 'README.md', 'README.md');
-        */
-        
-        $('#tab-nav-markdown a:first').tab('show');
+            loadRealmFile(welcomeDOM.attr('data-id'), 'WELCOME.md', 'WELCOME.md', true);
+            
+            $('#tab-nav-markdown a:first').tab('show');
+        }
         
         $("#loading").fadeOut(500, function () {
             $("#mapEdit").fadeIn();
+            resize();
         });
         
     }
 }
 
-function loadRealmFile(id, path, name) {
+function loadRealmFile(id, path, name, rendered) {
 
     var ext = name.split('.').pop();
     
@@ -651,7 +657,7 @@ function loadRealmFile(id, path, name) {
 
     if (sessionStorage[tracking_id + '-name']) {
 
-        loadEditor(name, sessionStorage[tracking_id]);
+        loadEditor(name, sessionStorage[tracking_id], rendered);
         __fileId = tracking_id;
                 
     } else {
@@ -689,7 +695,7 @@ function loadRealmFile(id, path, name) {
                 __trackedFiles.push(tracking_id);
                 sessionStorage[__trackedStorageId] = JSON.stringify(__trackedFiles);
     
-                loadEditor(name, data);
+                loadEditor(name, data, rendered);
                 __fileId = tracking_id;
                 
             })
@@ -719,7 +725,7 @@ function displayImage() {
     $('#tab-nav-image a:first').tab('show');
 }
 
-function loadEditor(filename, content) {
+function loadEditor(filename, content, displayRendered) {
 
     __editor.off("change", editor_onChange);
     var ext = filename.split('.').pop();
@@ -779,7 +785,12 @@ function loadEditor(filename, content) {
         __editor.clearSelection();
         __editor.moveCursorTo(0, 0);
         
-        $('#tab-nav-editor a:first').tab('show');
+        if (displayRendered) {
+            // TODO: Switch between rendered things. 
+            $('#tab-nav-markdown a:first').tab('show');
+        } else {
+            $('#tab-nav-editor a:first').tab('show');
+        }
     } else {
         $('#tab-nav-image a:first').tab('show');
     }
