@@ -234,3 +234,7 @@ div#funding {
 .ekko-lightbox .modal-footer {
   text-align: left;
 }
+
+.caption-background {
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0.5) 30%,rgba(0,0,0,0) 75%);
+}

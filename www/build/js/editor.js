@@ -13,7 +13,9 @@ function resize() {
     var workAreaHeight = $("#tree").height();
     var tabsHeight = $("#mapTabs").height();
     
-    $("#editor").height(workAreaHeight - tabsHeight);
+    var calculatedHeight = workAreaHeight - tabsHeight;
+    
+    $("#editor").height(calculatedHeight);
 }
 
 function initialize(projectID, projectDomain) {

@@ -41,30 +41,22 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
                     <ol class="carousel-indicators">
                         <li data-target="#realm-engine-carousel" data-slide-to="0" class="active"></li>
                         <li data-target="#realm-engine-carousel" data-slide-to="1"></li>
-                        <li data-target="#realm-engine-carousel" data-slide-to="2"></li>
                     </ol>
 
                     <!-- Wrapper for slides -->
                     <div class="carousel-inner">
                         <div class="item active">
-                            <img src="../img/isometric.jpg" alt="Isometric Engine">
-                            <div class="carousel-caption">
-                                <h3>Isometric Engine</h3>
-                                <p>Classic style used in many popular games from Diablo to Age of Empires to Bastion.</p>
+                            <img src="/build/img/topdown.jpg" alt="Top-down Engine">
+                            <div class="carousel-caption caption-background">
+                                <h3>Top-down Engine</h3>
+                                <p>Iconic style used in legends of gaming, from Zelda on the SNES and NES to Grand Theft Auto II on the PC. Simple and powerful, this is a great place to start if you're new.</p>
                             </div>
                         </div>
                         <div class="item">
-                            <img src="../img/isometric.jpg" alt="Isometric Engine">
-                            <div class="carousel-caption">
+                            <img src="/build/img/isometric.jpg" alt="Isometric Engine">
+                            <div class="carousel-caption caption-background">
                                 <h3>Isometric Engine</h3>
-                                <p>Classic style used in many popular games from Diablo to Age of Empires to Bastion.</p>
-                            </div>
-                        </div>
-                        <div class="item">
-                            <img src="../img/isometric.jpg" alt="Isometric Engine">
-                            <div class="carousel-caption">
-                                <h3>Isometric Engine</h3>
-                                <p>Classic style used in many popular games from Diablo to Age of Empires to Bastion.</p>
+                                <p>RPG-centric style used in many popular games from Diablo to Age of Empires to Bastion. Much more complex than the top-down style, this  technique can take some time to wrap your brain around.</p>
                             </div>
                         </div>
                     </div>
