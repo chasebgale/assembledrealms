@@ -57,18 +57,45 @@ if (($realmID < 0) || ($sourceURL == '')) {
         }
 
         #commandBar {
-            height: 24px;
+            height: 26px;
             background-color: #777;
+        }
+        
+        #commandBarButtons {
+            float: left;
+            margin-top: 2px;
+            margin-left: 6px;
+        }
+        
+        #commandBarButtons button {
+            background: #777;
+            color: #e0e0e0;
+            border-color: #666;
+            text-shadow: none;
+        }
+        
+        #commandBarButtons button:hover {
+            background: #555;
+        }
+        
+        #commandBarButtons .spacer {
+            display: inline-block;
+            vertical-align: middle;
+            background: #666;
+            width: 2px;
+            border-left: #888 1px solid;
+            height: 18px;
+            margin-left: 6px;
+            margin-right: 6px;
         }
     </style>
 
 </head>
 
 <body style="padding: 0;">
-<div id="commandBar">
-    <a href="http://www.assembledrealms.com" style="float: right;"><img src="/build/img/logo.png"></img></a>
-</div>
+
 <div id='wrapper'>
+    
     <div style="width: 500px; display: none; margin: 0 auto; margin-top: 100px;" class="alert alert-danger" id="errorMessage"></div>
 
     <div id="loading" style="width: 500px; margin: 0 auto; margin-top: 100px;">
@@ -80,7 +107,20 @@ if (($realmID < 0) || ($sourceURL == '')) {
         <p style="text-align: center;">Your realm is loading, please wait...</p>
     </div>
     
-    <section id="mapEdit" style="display: none;">
+    <section id="workspace" style="display: none;">
+    
+        <div id="commandBar">
+            <div id="commandBarButtons">
+                <button type="button" id="btnNewFile" class="btn btn-default btn-xs"><i class="fa fa-file-text-o fa-fw"></i> New File</button>
+                <button type="button" id="btnNewFolder" class="btn btn-default btn-xs"><i class="fa fa-folder-o fa-fw"></i> New Folder</button>
+                <button type="button" id="btnUploadResource" class="btn btn-default btn-xs"><i class="fa fa-upload fa-fw"></i> Upload File</button>
+                <div class="spacer"></div>
+                <button type="button" id="btnDebug" class="btn btn-default btn-xs"><i class="fa fa-caret-square-o-right fa-fw"></i> Debug</button>
+                <button type="button" id="btnCommit" class="btn btn-default btn-xs"><i class="fa fa-check fa-fw"></i> Commit</button>
+            </div>
+            <a href="http://www.assembledrealms.com" style="float: right;"><img src="/build/img/logo.png"></img></a>
+        </div>
+    
         <!--<div id="leftBar">
 			<button id="btnCommit" type="button" class="btn btn-default">
 				<span class="glyphicon glyphicon-open"></span> Commit
@@ -235,7 +275,7 @@ if (($realmID < 0) || ($sourceURL == '')) {
 				</div>
 				<div class="modal-footer">
 					<div id="debugAlert" class="alert alert-danger" style="display: none;"></div>
-					<button id="debugClose" type="button" class="btn btn-default" disabled="disabled">Close</button>
+					<button id="debugClose" type="button" data-dismiss="modal" class="btn btn-default" disabled="disabled">Close</button>
 				</div>
 			</div>			
 		</div>

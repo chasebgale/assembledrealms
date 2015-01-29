@@ -219,6 +219,13 @@ function initialize(projectID, projectDomain) {
     });
     
     $("#btnDebug").on("click", function () {
+        
+        if ($('#debugProgressbar').hasClass('active') == false) {
+            $('#debugProgressbar').addClass('active');
+        }
+        
+        $('#debugProgressList').empty();
+        
         $('#modalDebug').modal('show');
 		$('#debugProgressList').append('<li>Establishing a connection to your debug server...</li>');
 		var debugURL = 'http://debug-01.assembledrealms.com/realms/' + __projectId;
@@ -232,8 +239,8 @@ function initialize(projectID, projectDomain) {
         })
         .done(function (data) {
             if (data === "OK") {
-				// $('#debugProgressbar').removeClass('active');
-				$('#debugProgressList').append('<li>Published to debug server successfully!</li>');
+           
+                $('#debugProgressList').append('<li>Published to debug server successfully!</li>');
 				$('#debugProgressList').append('<li>Launching realm on your debug server...</li>');
 				// $('#debugProgressList').append('<li>Your debug URL is <a href="' + debugURL + '">' + debugURL + '</a>!</li>');
 				
@@ -248,21 +255,22 @@ function initialize(projectID, projectDomain) {
 						var port = data.substr(3);
 					}
 				})
+                .fail(function(data) {
+                    $('#debugProgressList').append('<li class="text-danger"><strong><i class="fa fa-exclamation-triangle"></i> Fatal Error!</strong> Please try again in a few minutes, monkeys are furiously typing away to fix this problem.</li>');
+                })
 				.always(function() {
 					$('#debugClose').attr('disabled', false);
+                    $('#debugProgressbar').removeClass('active');
 				});
             }
         })
         .fail(function(data) {
             console.log(data);
-            $('#debugAlert').text('Network Error: ' + data.statusText);
+            $('#debugAlert').text('<li class="text-danger"><strong><i class="fa fa-exclamation-triangle"></i> Error:</strong> ' + data.statusText);
             $('#debugAlert').fadeIn();
 			$('#debugClose').attr('disabled', false);
                 // Update DOM to reflect we messed up:
                 //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
-        })
-        .always(function () {
-            // $('#debugClose').attr('disabled', false);
         });
 		
 		$('#debugProgressList').append('<li>Compressing source package and delivering it...</li>');
@@ -644,7 +652,7 @@ function loadRealmRoot() {
         }
         
         $("#loading").fadeOut(500, function () {
-            $("#mapEdit").fadeIn();
+            $("#workspace").fadeIn();
             resize();
         });
         
