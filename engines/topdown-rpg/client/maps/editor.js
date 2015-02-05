@@ -2,6 +2,7 @@ var Map = {
 	
 	stage: null,
 	renderer: null,
+    invalidate: false,
 	width: 896,
 	height: 504,
 	half_width: 448,
@@ -13,6 +14,11 @@ var Map = {
 	
 	// Center global coordinates of viewport in relation to the map: 
 	coordinates: {x: 0, y: 0},
+    
+    offset: {x: 0, y: 0},
+    
+    // Used for random tile generation: TODO: REMOVE
+    tile_count: 0,
 	
 	init: function (element, map) {
 		
@@ -35,7 +41,13 @@ var Map = {
 
 		Map.stage = new PIXI.Stage(0x000000, true);
 
-		target.appendChild(Map.renderer.view);
+		var canvas = target.appendChild(Map.renderer.view);
+        
+        canvas.onmousedown = function (event) {
+            console.log(event);
+            Map.setTile({x: event.layerX, y: event.layerY}, Math.floor(Math.random() * Map.tile_count + 1));
+        }
+        
 
 		Map.VIEWPORT_WIDTH_TILES = Math.ceil(Map.width / Map.TILE_WIDTH) + 1;
 		Map.VIEWPORT_HEIGHT_TILES = Math.ceil(Map.height / Map.TILE_HEIGHT) + 1;
@@ -71,8 +83,10 @@ var Map = {
 					index++;
 				}
 			}
+            
+            Map.tile_count = index;
 		};
-		tiles.src = 'resource/terrain_atlas.png';
+		tiles.src = 'client/resource/terrain_atlas.png';
 
 		var cursors = new Image();
 		cursors.onload = function() {
@@ -117,15 +131,29 @@ var Map = {
 
 
 		};
-		cursors.src = 'resource/cursors.png';
+		cursors.src = 'client/resource/cursors.png';
+        
+        Map.texture = new PIXI.RenderTexture(Map.renderer.width, Map.renderer.height);
+
+        Map.layer_terrain = new PIXI.Sprite(Map.texture);
+        Map.layer_terrain.cacheAsBitmap = true;
+        
+        Map.stage.addChild(Map.layer_terrain);
+        
+        requestAnimationFrame(Map.render);
 	},
 	
 	setTile: function (screen_coordinates, tile_index) {
-		var col = Math.floor((Map.coordinates.x - half_width + screen_coordinates.x) / TILE_WIDTH);
-		var row = Math.floor((Map.coordianres.y - half_height + screen_coordinates.y) / TILE_HEIGHT);
+		var col = Math.floor((Map.coordinates.x - Map.offset.x - Map.half_width + screen_coordinates.x) / Map.TILE_WIDTH);
+		var row = Math.floor((Map.coordinates.y - Map.offset.y - Map.half_height + screen_coordinates.y) / Map.TILE_HEIGHT);
+        
+        if (Map.terrain[row] === undefined) {
+            Map.terrain[row] = {};
+        }
+        //if (Map.terrain[row][col] === undefined) continue;
 		
 		Map.terrain[row][col] = tile_index;
-		Map.draw(true);
+		Map.invalidate = true;
 	},
 	
 	draw: function (full) {
@@ -133,14 +161,14 @@ var Map = {
 		var sprite = undefined;
 		
 		
-		var start_col = Math.floor((Map.coordinates.x - half_width) / TILE_WIDTH);
-		var start_row = Math.floor((Map.coordianres.y - half_height) / TILE_HEIGHT);
+		var start_col = Math.floor((Map.coordinates.x - Map.half_width) / Map.TILE_WIDTH);
+		var start_row = Math.floor((Map.coordinates.y - Map.half_height) / Map.TILE_HEIGHT);
 		
-		var offset_x = (Map.coordinates.x - half_width) % TILE_WIDTH;
-		var offset_y = (Map.coordianres.y - half_height) % TILE_HEIGHT;
+		var offset_x = (Map.coordinates.x - Map.half_width) % Map.TILE_WIDTH;
+		var offset_y = (Map.coordinates.y - Map.half_height) % Map.TILE_HEIGHT;
 		
-		for (var row = start_row; row < VIEWPORT_HEIGHT_TILES; row++) {
-			for (var col = start_col; col < VIEWPORT_WIDTH_TILES; col++) {
+		for (var row = start_row; row < Map.VIEWPORT_HEIGHT_TILES; row++) {
+			for (var col = start_col; col < Map.VIEWPORT_WIDTH_TILES; col++) {
 				if (Map.terrain[row] === undefined) continue;
 				if (Map.terrain[row][col] === undefined) continue;
 				
@@ -152,35 +180,29 @@ var Map = {
 				Map.buffer.addChild(sprite);
 			}
 		}
+        
+        Map.offset = {x: offset_x, y: offset_y};
 		
 		if (full) {
-			Map.texture = new PIXI.RenderTexture(Map.renderer.width, Map.renderer.height);
-
-			Map.layer_terrain = new PIXI.Sprite(Map.texture);
-			Map.layer_terrain.cacheAsBitmap = true;
-
 			var matrix = new PIXI.Matrix();
-			matrix.translate(Map.offset.x, Map.offset.y);
+			matrix.translate(0, 0);
 
 			Map.texture.render(Map.buffer, matrix);
-
-			Map.stage.addChild(Map.layer_terrain);
-
-			//Map.renderer.render(Map.stage);
 		}
 	},
 	
 	render: function () {
 		
       if (Map.invalidate) {
-         Map.draw();
-		 Map.updateTexture();
+         Map.draw(true);
          Map.invalidate = false;
       }
 
       if (Map.texture) {
          Map.renderer.render(Map.stage);
 	  }
+      
+      requestAnimationFrame(Map.render);
 	 
    }
 	

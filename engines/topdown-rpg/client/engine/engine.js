@@ -10,6 +10,8 @@ function(actors, avatar, constants, landscape, objects, utilities, PIXI) {
 		Packing would be a spell like initiating a howl or anything else... when a player wants
 	to join a pack, they use the command and the wolf sits down, another wolf from the existing
 	pack gets in the adjacent tile and presses the same command, thereby adding the wolf to the pack.
+    
+    EXAMPLE: http://www.seveibar.com/liberated-pixel-cup/
 	
 	*/
 

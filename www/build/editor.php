@@ -426,7 +426,7 @@ if (($realmID < 0) || ($sourceURL == '')) {
 
     <script src="js/utilities.js"></script>
     <script src="js/stats.min.js"></script>
-    <script src="js/map.editor.js"></script>
+    <script src="<?php echo 'http://' + $sourceURL + '.assembledrealms.com/api/project/' + $realmID + '/file/raw/client/maps/editor.js'; ?>"></script>
     <script src="js/editor.js"></script>
     <script src="js/jquery.treeview.js"></script>
     <script src="js/md5.js"></script>
