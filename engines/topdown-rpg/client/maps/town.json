@@ -1,0 +1,16 @@
+{
+  "settings": {
+    "name": "Starting Area",
+    "description": "Initial starting area for new players..."
+  },
+  "terrain": {
+  },
+  "objects": {
+    "2": {},
+    "3": {}
+  },
+  "actors": {
+    "source": [],
+    "index": {}
+  }
+}
