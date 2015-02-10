@@ -89,7 +89,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 <div id="content">
 
     <div class="panel panel-default">
-        <div class="panel-heading">General</div>
+        <div class="panel-heading">Profile</div>
         <div class="panel-body">
             <div>
                 <img src="/img/profiles/<?=$loggedInUser->user_id . ".jpg?" . time() ?>" />
@@ -152,7 +152,37 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
                 <!-- Tab panes -->
                 <div class="tab-content">
                     <div class="tab-pane active" id="google"></div>
-                    <div class="tab-pane" id="paypal"></div>
+                    <div class="tab-pane" id="paypal">
+						<div class="alert alert-info" style="margin-top: 20px;" role="alert">
+							<p>If this website becomes profitable enough I will pay $30.00 a month for PayPal premium and start accepting user configurable amounts. For now, it has to be fixed prices.</p>
+						</div>
+						<div>
+							<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top" style="display: inline-block;">
+								<input type="hidden" name="cmd" value="_s-xclick">
+								<input type="hidden" name="hosted_button_id" value="MG5YX75N4LFAW">
+								<table>
+								<tr><td><input type="hidden" name="on0" value="Account Deposit">Account Deposit</td></tr><tr><td><select name="os0">
+									<option value="Ye Of Little Faith">Ye Of Little Faith $1.00 USD</option>
+									<option value="Big Spender">Big Spender $5.00 USD</option>
+									<option value="King of the Cash">King of the Cash $10.00 USD</option>
+									<option value="Making it Rain">Making it Rain $15.00 USD</option>
+									<option value="Literal Billionaire">Literal Billionaire $20.00 USD</option>
+								</select> </td></tr>
+								</table>
+								<input type="hidden" name="currency_code" value="USD">
+								<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_paynowCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+								<img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
+							</form>
+							<div style="display: inline-block;">
+								<ul>
+									<li>$1.00</li>
+									<li>-2.9%</li>
+									<li>-$0.30</li>
+									<li></li>
+								</ul>
+							</div>
+						</div>
+					</div>
                     <div class="tab-pane" id="bitcoin"></div>
                 </div>
             </div>
