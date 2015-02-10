@@ -4,6 +4,7 @@
     "description": "Initial starting area for new players..."
   },
   "terrain": {
+    "source": ["client/resource/terrain_atlas.png"]
   },
   "objects": {
     "2": {},

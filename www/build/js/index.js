@@ -24,19 +24,14 @@ $(document).ready(function () {
         button.attr('disabled', 'disabled');
         button.html('<i class="fa fa-cog fa-spin"></i> Create');
 
-        /*
-        var payload = {};
-        payload.title = $("#realmName").val();
-        payload.description = $("#realmDescription").val();
-        payload.import_url = "https://github.com/chasebgale/assembledrealms-isometric.git";
-*/
         var parameters = {};
         parameters.directive = "create";
         parameters.title = $("#realmName").val();
         parameters.description = $("#realmDescription").val();
+        parameters.engine = $("#realm-engine-carousel .carousel-indicators .active").index();
 
         $.post("http://www.assembledrealms.com/build/index.php", parameters, function ( response ) {
-            var jqxhr = $.get( "http://source-01.assembledrealms.com/api/project/" + response.project_id + "/create", function( sourceResponse ) {
+            var jqxhr = $.get( "http://source-01.assembledrealms.com/api/project/" + response.project_id + "/create/" + parameters.engine, function( sourceResponse ) {
                 if (sourceResponse.message === "OK") {
                     window.location = "http://www.assembledrealms.com/build/editor.php?id=" + response.project_id + "&source=source-01";
                 }

@@ -61,32 +61,46 @@ var Map = {
 		Map.actors  = map.actors;
 
 		Map.buffer = new PIXI.SpriteBatch();
-		//Map.buffer.cacheAsBitmap = true;
+        
+        var frameTexture;
+        var index = 0;
+        var row = 0;
+        var col = 0;
+        var worker = [];
+        
+        _.each(map.terrain.source, function (asset) {
+         
+            asset = realmResourceURL(asset);
+            worker.push(asset);
 
-		var tiles = new Image();
-		tiles.onload = function() {
-			var baseTexture = new PIXI.BaseTexture(tiles);
-			var texture = new PIXI.Texture(baseTexture);
-			var frameTexture = undefined;
-			var index = 0;
-			
-			// Once we have the tile image loaded, break it up into textures:
-			for (var row = 0; row < tiles.height; row += 32) {
-				for (var col = 0; col < tiles.width; col += 32) {
-					frameTexture = new PIXI.Texture(texture, {
-						x: col,
-						y: row,
-						width: 32,
-						height: 32
-					});
-					PIXI.Texture.addTextureToCache(frameTexture, 'tile_' + index);
-					index++;
-				}
-			}
+        });
+        
+        var loader = new PIXI.AssetLoader(worker, true);
+        loader.onProgress = function (event) {
             
+            // Once we have the tile image loaded, break it up into textures:
+            for (row = 0; row < event.texture.height; row += 32) {
+                for (col = 0; col < event.texture.width; col += 32) {
+                    frameTexture = new PIXI.Texture(event.texture, {
+                        x: col,
+                        y: row,
+                        width: 32,
+                        height: 32
+                    });
+                    PIXI.Texture.addTextureToCache(frameTexture, 'tile_' + index);
+                    index++;
+                }
+            }
+            
+            
+            //Map.onResourceLoaded(event.json, realmResourceURL('client/resource/' + event.json.meta.image));
+        };
+        loader.onComplete = function (event) {
             Map.tile_count = index;
-		};
-		tiles.src = 'client/resource/terrain_atlas.png';
+            requestAnimationFrame(Map.render);
+        };
+        loader.load();
+        
 
 		var cursors = new Image();
 		cursors.onload = function() {
@@ -140,7 +154,7 @@ var Map = {
         
         Map.stage.addChild(Map.layer_terrain);
         
-        requestAnimationFrame(Map.render);
+        
 	},
 	
 	setTile: function (screen_coordinates, tile_index) {
@@ -159,7 +173,6 @@ var Map = {
 	draw: function (full) {
 
 		var sprite = undefined;
-		
 		
 		var start_col = Math.floor((Map.coordinates.x - Map.half_width) / Map.TILE_WIDTH);
 		var start_row = Math.floor((Map.coordinates.y - Map.half_height) / Map.TILE_HEIGHT);
@@ -183,26 +196,28 @@ var Map = {
         
         Map.offset = {x: offset_x, y: offset_y};
 		
+        
 		if (full) {
 			var matrix = new PIXI.Matrix();
 			matrix.translate(0, 0);
 
 			Map.texture.render(Map.buffer, matrix);
 		}
+        
 	},
 	
 	render: function () {
 		
-      if (Map.invalidate) {
-         Map.draw(true);
-         Map.invalidate = false;
-      }
+        if (Map.invalidate) {
+            Map.draw(true);
+            Map.invalidate = false;
+        }
 
-      if (Map.texture) {
-         Map.renderer.render(Map.stage);
-	  }
+        if (Map.texture) {
+            Map.renderer.render(Map.stage);
+        }
       
-      requestAnimationFrame(Map.render);
+        requestAnimationFrame(Map.render);
 	 
    }
 	

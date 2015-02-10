@@ -18,6 +18,7 @@ var allowCrossDomain = function(req, res, next) {
     res.header('Access-Control-Allow-Origin', 'http://www.assembledrealms.com');
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
     res.header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type');
+    res.header('Access-Control-Allow-Credentials', 'true');
 
     if ('OPTIONS' == req.method) return res.send(200);
     
@@ -52,7 +53,7 @@ app.get('/', function(req, res){
   res.send("assembledrealms api 0.1");  
 });
 
-app.get('/api/project/:id/create', project.create);
+app.get('/api/project/:id/create/:engine', project.create);
 app.get('/api/project/:id/open', project.open);
 app.get('/api/project/:id/destroy', project.destroy);
 app.post('/api/project/:id/save', project.save);

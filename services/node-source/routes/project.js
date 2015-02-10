@@ -9,8 +9,8 @@ var ncp 		= require('ncp').ncp,
     ssh2 		= require("ssh2"),
     archiver 	= require('archiver');
 
-// This should be a parameter when we have more than one engine, duh!
-var import_local = __dirname + "/../projects/assembledrealms-isometric";
+var engines = [__dirname + "/../projects/assembledrealms-topdown",
+               __dirname + "/../projects/assembledrealms-isometric"];
 
 var copyDirAsync = function (dir, done) {
   ncp(dir[0], dir[1], function (err) {
@@ -29,14 +29,16 @@ var writeFileAsync = function (file, done) {
 exports.create = function(req, res, next){
   
   var dirs = [];
+  
   var destination = __dirname + '/../projects/' + req.params.id;
+  var source = engines[req.params.engine];
   
   
   fs.mkdir(destination, 0777, function (error) {
 
     if (error) return next(error);
     
-    fs.readdir(import_local, function (error, files) {
+    fs.readdir(source, function (error, files) {
       
       if (error) return next(error);
   
@@ -55,7 +57,7 @@ exports.create = function(req, res, next){
         
       }).forEach(function (file) {
           dirs.push([
-                    import_local + '/' + file,
+                    source + '/' + file,
                     destination + '/' + file
                     ]);
       });

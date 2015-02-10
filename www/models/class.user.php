@@ -87,19 +87,21 @@ class loggedInUser {
 		$stmt->close();	
 	}
     
-	public function createRealm($title, $description)
+	public function createRealm($title, $description, $engine)
 	{
 		global $mysqli,$db_table_prefix;
 		$stmt = $mysqli->prepare("INSERT INTO realms (
 			user_id,
 			title,
-			description
+			description,
+            engine
 			)
 			VALUES (
 			?,
 			?,
-			?)");
-		$stmt->bind_param("iss", $this->user_id, $title, $description);
+			?,
+            ?)");
+		$stmt->bind_param("issi", $this->user_id, $title, $description, $engine);
 		$stmt->execute();
 		$inserted_id = $mysqli->insert_id;
 		$stmt->close();
@@ -203,6 +205,7 @@ class loggedInUser {
 				   $user_id,
 				   $title,
 				   $description,
+                   $engine,
 				   $status,
 				   $players,
 				   $funds,
@@ -219,6 +222,7 @@ class loggedInUser {
 				   'user_id' => $user_id,
 				   'title' => $title,
 				   'description' => $description,
+                   'engine' => $engine,
 				   'status' => $status,
 				   'players' => $players,
 				   'funds' => $funds,

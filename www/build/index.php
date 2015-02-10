@@ -14,7 +14,7 @@ if ($method == 'POST') {
     $directive = $_POST['directive'];
     
     if ($directive == 'create') {
-        $project_id = $loggedInUser->createRealm($_POST['title'], $_POST['description']);
+        $project_id = $loggedInUser->createRealm($_POST['title'], $_POST['description'], $_POST['engine']);
         echo json_encode(array ('project_id' => $project_id));
     }
     
