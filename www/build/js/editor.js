@@ -763,9 +763,8 @@ function loadEditor(filename, content, displayRendered) {
                 var parsed = JSON.parse(content);
                 
                 if (parsed.terrain) {
-                    Map.init("map", parsed);
+                    Map.init("mapContainer", parsed);
                     $("#tab-nav-map").css('display', 'block');
-                    requestAnimationFrame(animate);
                 }
             } catch (e) {
                 console.log(e);
@@ -817,14 +816,6 @@ function setToolbarFocus(target) {
     $("#objectButton").removeClass('active');
 
     target.button('toggle');
-}
-
-function animate() {
-
-    requestAnimationFrame(animate);
-
-    Map.render();
-
 }
 
 function encode_utf8(s) {

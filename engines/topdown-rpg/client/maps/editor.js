@@ -75,6 +75,7 @@ var Map = {
 
         });
         
+        
         var loader = new PIXI.AssetLoader(worker, true);
         loader.onProgress = function (event) {
             
@@ -91,15 +92,60 @@ var Map = {
                     index++;
                 }
             }
-            
-            
             //Map.onResourceLoaded(event.json, realmResourceURL('client/resource/' + event.json.meta.image));
         };
         loader.onComplete = function (event) {
-            Map.tile_count = index;
+            Map.tile_count = index - 1;
+            
+            Map.texture = new PIXI.RenderTexture(Map.renderer.width, Map.renderer.height);
+
+            Map.layer_terrain = new PIXI.Sprite(Map.texture);
+            Map.layer_terrain.cacheAsBitmap = true;
+            
+            Map.stage.addChild(Map.layer_terrain);
+            
             requestAnimationFrame(Map.render);
         };
         loader.load();
+        
+        
+        /*
+        var tiles = new Image();
+        tiles.crossOrigin = "anonymous";
+		tiles.onload = function() {
+			var baseTexture = new PIXI.BaseTexture(tiles);
+			var texture = new PIXI.Texture(baseTexture);
+			var frameTexture;
+			var index = 0;
+			
+			// Once we have the tile image loaded, break it up into textures:
+			for (var row = 0; row < tiles.height; row += 32) {
+				for (var col = 0; col < tiles.width; col += 32) {
+					frameTexture = new PIXI.Texture(texture, {
+						x: col,
+						y: row,
+						width: 32,
+						height: 32
+					});
+					PIXI.Texture.addTextureToCache(frameTexture, 'tile_' + index);
+					index++;
+				}
+			}
+            
+            Map.tile_count = index;
+            
+            Map.texture = new PIXI.RenderTexture(Map.renderer.width, Map.renderer.height);
+
+            Map.layer_terrain = new PIXI.Sprite(Map.texture);
+            Map.layer_terrain.cacheAsBitmap = true;
+            
+            Map.stage.addChild(Map.layer_terrain);
+            
+            requestAnimationFrame(Map.render);
+            
+		};
+		tiles.src = worker[0];
+        */
         
 
 		var cursors = new Image();
@@ -146,13 +192,6 @@ var Map = {
 
 		};
 		cursors.src = 'client/resource/cursors.png';
-        
-        Map.texture = new PIXI.RenderTexture(Map.renderer.width, Map.renderer.height);
-
-        Map.layer_terrain = new PIXI.Sprite(Map.texture);
-        Map.layer_terrain.cacheAsBitmap = true;
-        
-        Map.stage.addChild(Map.layer_terrain);
         
         
 	},

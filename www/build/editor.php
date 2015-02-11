@@ -181,6 +181,9 @@ if (($realmID < 0) || ($sourceURL == '')) {
                             </div>
                         </div>
                     </nav>
+                    <div id="mapContainer">
+                    
+                    </div>
                 </div>
 
                 <div class="tab-pane" id="markdown"></div>
