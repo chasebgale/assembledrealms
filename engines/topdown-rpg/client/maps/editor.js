@@ -29,6 +29,11 @@ var Map = {
 		while (target.firstChild) {
 			target.removeChild(target.firstChild);
 		}
+        
+        // If we haven't already, let's get our toolbar in place:
+        if (!document.getElementById('mapToolbar').firstChild.hasChildNodes()) {
+            Map.createToolbar();
+        }
 		
 		// Initialize PIXI:
 		var rendererOptions = {
@@ -107,46 +112,6 @@ var Map = {
             requestAnimationFrame(Map.render);
         };
         loader.load();
-        
-        
-        /*
-        var tiles = new Image();
-        tiles.crossOrigin = "anonymous";
-		tiles.onload = function() {
-			var baseTexture = new PIXI.BaseTexture(tiles);
-			var texture = new PIXI.Texture(baseTexture);
-			var frameTexture;
-			var index = 0;
-			
-			// Once we have the tile image loaded, break it up into textures:
-			for (var row = 0; row < tiles.height; row += 32) {
-				for (var col = 0; col < tiles.width; col += 32) {
-					frameTexture = new PIXI.Texture(texture, {
-						x: col,
-						y: row,
-						width: 32,
-						height: 32
-					});
-					PIXI.Texture.addTextureToCache(frameTexture, 'tile_' + index);
-					index++;
-				}
-			}
-            
-            Map.tile_count = index;
-            
-            Map.texture = new PIXI.RenderTexture(Map.renderer.width, Map.renderer.height);
-
-            Map.layer_terrain = new PIXI.Sprite(Map.texture);
-            Map.layer_terrain.cacheAsBitmap = true;
-            
-            Map.stage.addChild(Map.layer_terrain);
-            
-            requestAnimationFrame(Map.render);
-            
-		};
-		tiles.src = worker[0];
-        */
-        
 
 		var cursors = new Image();
 		cursors.onload = function() {
@@ -258,6 +223,16 @@ var Map = {
       
         requestAnimationFrame(Map.render);
 	 
-   }
+    },
 	
+    createToolbar: function () {
+        var html = '<button type="button" class="btn btn-default navbar-btn btn-map-tool" id="moveButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Navigate the map"><div style="background-image: url(\'/build/img/cursors.png\'); width: 20px; height: 20px; background-position:-39px -8px"></div></button>' +
+            '<button type="button" class="btn btn-default navbar-btn btn-map-tool" id="eraseButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Erase tiles from the map"><div style="background-image: url(\'/build/img/cursors.png\'); width: 20px; height: 20px; background-position:-216px -6px"></div></button>' +
+            '<button type="button" class="btn btn-default navbar-btn btn-map-tool" id="addButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Add tiles"><div style="background-image: url(\'/build/img/cursors.png\'); width: 22px; height: 22px; background-position:-6px -6px"></div></button>' +
+			'<div id="addBrush" style="display: none;"><canvas id="brush" width="48" height="48" style="vertical-align: middle; display: inline-block;"></canvas>' +
+            '<button type="button" class="btn btn-default btn-sm navbar-btn" data-toggle="modal" data-target=".tiles-modal-lg"><span>Change Brush</span></button></div>';
+            
+        document.getElementById('mapToolbar').innerHTML = html;
+    }
+    
 }

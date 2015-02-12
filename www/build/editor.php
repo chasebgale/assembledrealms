@@ -160,8 +160,9 @@ if (($realmID < 0) || ($sourceURL == '')) {
                 <div class="tab-pane" id="map">
                     <nav class="navbar navbar-light" role="navigation">
                         <div class="container-fluid">
-                            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                            <div class="collapse navbar-collapse">
                                 <ul class="nav navbar-nav" id="mapToolbar">
+                                <!--
                                     <button type="button" class="btn btn-default navbar-btn btn-map-tool" id="moveButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Navigate the map">
 										<div style="background-image: url('/build/img/cursors.png'); width: 20px; height: 20px; background-position:-39px -8px"></div>
 									</button>
@@ -177,6 +178,7 @@ if (($realmID < 0) || ($sourceURL == '')) {
 											<span>Change Brush</span>
 										</button>
 									</div>
+                                -->
                                 </ul>
                             </div>
                         </div>
@@ -430,7 +432,7 @@ if (($realmID < 0) || ($sourceURL == '')) {
     <script src="js/utilities.js"></script>
     <script src="js/stats.min.js"></script>
     <script src="<?php echo 'http://' . $sourceURL . '.assembledrealms.com/api/project/' . $realmID . '/file/raw/client/maps/editor.js'; ?>"></script>
-    <script src="js/editor.js"></script>
+    <script src="js/ide.js"></script>
     <script src="js/jquery.treeview.js"></script>
     <script src="js/md5.js"></script>
     <script src="js/marked.js"></script>
