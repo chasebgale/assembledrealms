@@ -16,11 +16,16 @@ var Map = {
 	coordinates: {x: 0, y: 0},
     
     offset: {x: 0, y: 0},
-    
-    // Used for random tile generation: TODO: REMOVE
     tile_count: 0,
+    tile_index: 0,
+    mouse_down: false,
 	
 	init: function (element, map) {
+        
+        Map.settings = map.settings;
+		Map.terrain = map.terrain;
+		Map.objects = map.objects;
+		Map.actors  = map.actors;
 		
 		// Find element:
 		var target = document.getElementById(element);
@@ -32,7 +37,7 @@ var Map = {
         
         // If we haven't already, let's get our toolbar in place:
         if (!document.getElementById('mapToolbar').firstChild.hasChildNodes()) {
-            Map.createToolbar();
+            Map.appendDOM();
         }
 		
 		// Initialize PIXI:
@@ -49,8 +54,18 @@ var Map = {
 		var canvas = target.appendChild(Map.renderer.view);
         
         canvas.onmousedown = function (event) {
-            console.log(event);
-            Map.setTile({x: event.layerX, y: event.layerY}, Math.floor(Math.random() * Map.tile_count + 1));
+            Map.mouse_down = true;
+            Map.setTile({x: event.layerX, y: event.layerY}, Map.tile_index);
+        }
+        
+        canvas.onmouseup = function (event) {
+            Map.mouse_down = false;
+        }
+        
+        canvas.onmousemove = function (event) {
+            if (Map.mouse_down) {
+                Map.setTile({x: event.layerX, y: event.layerY}, Map.tile_index);
+            }
         }
         
 
@@ -59,11 +74,6 @@ var Map = {
 
 		Map.VIEWPORT_WIDTH_TILES_HALF = Math.ceil(Map.VIEWPORT_WIDTH_TILES / 2);
 		Map.VIEWPORT_HEIGHT_TILES_HALF = Math.ceil(Map.VIEWPORT_HEIGHT_TILES / 2);
-
-		Map.settings = map.settings;
-		Map.terrain = map.terrain;
-		Map.objects = map.objects;
-		Map.actors  = map.actors;
 
 		Map.buffer = new PIXI.SpriteBatch();
         
@@ -97,6 +107,9 @@ var Map = {
                     index++;
                 }
             }
+            
+            document.getElementById('modalTilesBody').appendChild(event.texture.baseTexture.source);
+            
             //Map.onResourceLoaded(event.json, realmResourceURL('client/resource/' + event.json.meta.image));
         };
         loader.onComplete = function (event) {
@@ -176,7 +189,11 @@ var Map = {
 	
 	draw: function (full) {
 
-		var sprite = undefined;
+        // Reset some things:
+        Map.buffer.children = [];
+        Map.texture.clear();
+    
+		var sprite;
 		
 		var start_col = Math.floor((Map.coordinates.x - Map.half_width) / Map.TILE_WIDTH);
 		var start_row = Math.floor((Map.coordinates.y - Map.half_height) / Map.TILE_HEIGHT);
@@ -225,14 +242,74 @@ var Map = {
 	 
     },
 	
-    createToolbar: function () {
-        var html = '<button type="button" class="btn btn-default navbar-btn btn-map-tool" id="moveButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Navigate the map"><div style="background-image: url(\'/build/img/cursors.png\'); width: 20px; height: 20px; background-position:-39px -8px"></div></button>' +
-            '<button type="button" class="btn btn-default navbar-btn btn-map-tool" id="eraseButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Erase tiles from the map"><div style="background-image: url(\'/build/img/cursors.png\'); width: 20px; height: 20px; background-position:-216px -6px"></div></button>' +
-            '<button type="button" class="btn btn-default navbar-btn btn-map-tool" id="addButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Add tiles"><div style="background-image: url(\'/build/img/cursors.png\'); width: 22px; height: 22px; background-position:-6px -6px"></div></button>' +
-			'<div id="addBrush" style="display: none;"><canvas id="brush" width="48" height="48" style="vertical-align: middle; display: inline-block;"></canvas>' +
-            '<button type="button" class="btn btn-default btn-sm navbar-btn" data-toggle="modal" data-target=".tiles-modal-lg"><span>Change Brush</span></button></div>';
+    appendDOM: function () {
+        
+        var html = '';
+        
+        // TOOLBAR:
+        html += '<button type="button" class="btn btn-default navbar-btn btn-map-tool" id="moveButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Navigate the map">' +
+                    '<div style="background-image: url(\'/build/img/cursors.png\'); width: 20px; height: 20px; background-position:-39px -8px"></div>' +
+                '</button>' +
+                '<button type="button" class="btn btn-default navbar-btn btn-map-tool" id="eraseButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Erase tiles from the map">' + 
+                    '<div style="background-image: url(\'/build/img/cursors.png\'); width: 20px; height: 20px; background-position:-216px -6px"></div>' +
+                '</button>' +
+                '<button type="button" class="btn btn-default navbar-btn btn-map-tool" id="addButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Add tiles">' + 
+                    '<div style="background-image: url(\'/build/img/cursors.png\'); width: 22px; height: 22px; background-position:-6px -6px"></div>' +
+                '</button>' +
+                '<div id="addBrush" style="display: none;">' + 
+                    '<canvas id="brush" width="48" height="48" style="vertical-align: middle; display: inline-block;"></canvas>' +
+                    '<button type="button" class="btn btn-default btn-sm navbar-btn" data-toggle="modal" data-target=".tiles-modal-lg"><span>Change Brush</span></button>' +
+                '</div>';
             
+        // MODAL DIALOG:
+        html += '<div class="modal fade tiles-modal-lg" id="modalTiles" tabindex="-1" role="dialog" aria-hidden="true">' +
+                    '<div class="modal-dialog modal-lg">' +
+                        '<div class="modal-content">' +
+                            '<div class="modal-header clearfix">' +
+                                '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>' +
+                                '<h4 class="modal-title pull-left" style="width: 230px;">Select a tile from category: </h4>' +
+                                '<select id="categorySelection" class="form-control pull-left" style="display: inline-block; width: 125px; margin-top: -4px;">' +
+                                    '<option data-id="terrain">Terrain</option>' +
+                                    '<option data-id="objects">Objects</option>' + 
+                                '</select>' +
+                            '</div>' +
+                            '<div id="modalTilesBody" class="modal-body" style="overflow-x: scroll;">' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+        
+        // ADD MARKUP TO DOM:
         document.getElementById('mapToolbar').innerHTML = html;
+        
+        // ATTACH LISTENERS TO NEW DOM:
+        $('#modalTilesBody').on('mousedown', 'img', function (e) {
+            var offset = $(this).offset();
+            var width = $(this).width();
+            var point = {x: e.pageX - offset.left, y: e.pageY - offset.top};
+            
+            // Every image is processed row, then each column, row, then each column...
+            // So first we determine how many columns are in this image, then calculate the tile #
+            var row_tile_width = Math.round(width / 32);
+            var rows_to_add = Math.floor(point.y / 32);
+            
+            Map.tile_index = (rows_to_add * row_tile_width) + Math.floor(point.x / 32);
+            $("#modalTiles").modal("hide");
+            
+        });
+        
+        $("#addButton").on("click", function () {
+       
+            //Map.setCursor('cursor_pencil');
+           // Map.setMode(Map.MODE_PAINT);
+            
+            //resetToolBar();
+            $(this).addClass('active');
+            
+            $("#modalTiles").modal("show");
+            
+        });
+        
     }
     
 }

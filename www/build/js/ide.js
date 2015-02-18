@@ -75,6 +75,10 @@ function initialize(projectID, projectDomain) {
         $("#markdown").html(marked(__editor.getValue()));
     });
 
+
+/*
+    
+    
     $("#terrain").on("click", ".terrain", function () {
         var tileKey = $(this).attr('data-id');
         Map.setBrush(Map.terrain, tileKey);
@@ -163,6 +167,10 @@ function initialize(projectID, projectDomain) {
         $('#addBrush').fadeIn().css("display","inline-block");
     });
 
+    
+*/
+
+    
     $("#moveButton").on("click", function () {
         
         
@@ -183,7 +191,7 @@ function initialize(projectID, projectDomain) {
         $(this).addClass('active');
        
     });
-    
+    /*
     $("#addButton").on("click", function () {
        
         Map.setCursor('cursor_pencil');
@@ -201,6 +209,7 @@ function initialize(projectID, projectDomain) {
         }
         
     });
+    */
     
     $("#categorySelection").on('change', function () {
        var category = '#' + $(this).find(":selected").attr('data-id');
