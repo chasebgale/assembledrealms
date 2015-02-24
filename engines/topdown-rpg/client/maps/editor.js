@@ -2,6 +2,7 @@ var Map = {
 	
 	stage: null,
 	renderer: null,
+    canvas: null,
     invalidate: false,
 	width: 896,
 	height: 512, // Slightly larger than 16:9, so we have an even height in tiles
@@ -11,6 +12,14 @@ var Map = {
 	TILE_WIDTH_HALF: 16,
 	TILE_HEIGHT: 32,
 	TILE_HEIGHT_HALF: 16,
+    
+    modes: {
+        MOVE: 0,
+        ADD_TILE: 1,
+        DELETE_TILE: 2
+    },
+    
+    mode: 0,
 	
 	// Top left tile coordinates
 	coordinates: {row: 0, col: 0},
@@ -18,11 +27,20 @@ var Map = {
     offset: {x: 0, y: 0},
     tile_count: 0,
     tile_index: 0,
+    
+    // Mouse tracking:
     mouse_down: false,
+    mouse_origin: {x: 0, y: 0},
+    mouse_origin_coordinates: {row: 0, col: 0},
     
     debug: true,
+    initialized: false,
 	
 	init: function (element, map) {
+        
+        if (Map.initialized) {
+            return;
+        }
         
         Map.settings = map.settings;
 		Map.terrain = map.terrain;
@@ -33,9 +51,9 @@ var Map = {
 		var target = document.getElementById(element);
 		
 		// Empty any contents, including the canvas we created if re-initializing:
-		while (target.firstChild) {
-			target.removeChild(target.firstChild);
-		}
+		// while (target.firstChild) {
+		// 	target.removeChild(target.firstChild);
+		// }
         
         // If we haven't already, let's get our toolbar in place:
         if (!document.getElementById('mapToolbar').firstChild.hasChildNodes()) {
@@ -53,29 +71,7 @@ var Map = {
 
 		Map.stage = new PIXI.Stage(0x000000, true);
 
-		var canvas = target.appendChild(Map.renderer.view);
-        
-        canvas.onmousedown = function (event) {
-            Map.mouse_down = true;
-            Map.setTile({x: event.layerX, y: event.layerY}, Map.tile_index);
-        }
-        
-        canvas.onmouseup = function (event) {
-            Map.mouse_down = false;
-        }
-        
-        canvas.onmousemove = function (event) {
-            if (Map.mouse_down) {
-                Map.setTile({x: event.layerX, y: event.layerY}, Map.tile_index);
-            }
-            
-            var x = event.layerX - (event.layerX % Map.TILE_WIDTH);
-            var y = event.layerY - (event.layerY % Map.TILE_HEIGHT);
-            
-            Map.mouse_sprite.x = x;
-            Map.mouse_sprite.y = y;
-        }
-        
+		Map.canvas = target.appendChild(Map.renderer.view);
 
 		Map.VIEWPORT_WIDTH_TILES = Math.ceil(Map.width / Map.TILE_WIDTH) + 1;
 		Map.VIEWPORT_HEIGHT_TILES = Math.ceil(Map.height / Map.TILE_HEIGHT) + 1;
@@ -121,6 +117,9 @@ var Map = {
             //Map.onResourceLoaded(event.json, realmResourceURL('client/resource/' + event.json.meta.image));
         };
         loader.onComplete = function (event) {
+            
+            Map.initialized = true;
+            
             Map.tile_count = index - 1;
             
             Map.texture = new PIXI.RenderTexture(Map.renderer.width, Map.renderer.height);
@@ -130,13 +129,16 @@ var Map = {
             Map.stage.addChild(Map.layer_terrain);
             
             Map.mouse_sprite = new PIXI.Sprite(PIXI.Texture.fromFrame('tile_0'));
+            Map.mouse_sprite.visible = false;
             Map.stage.addChild(Map.mouse_sprite);
             
+            Map.invalidate = true;
             requestAnimationFrame(Map.render);
         };
         loader.load();
 
 		var cursors = new Image();
+        cursors.crossOrigin = "anonymous";
 		cursors.onload = function() {
 			var baseTexture = new PIXI.BaseTexture(cursors);
 			var texture = new PIXI.Texture(baseTexture);
@@ -179,7 +181,7 @@ var Map = {
 
 
 		};
-		cursors.src = 'client/resource/cursors.png';
+		cursors.src = realmResourceURL('client/resource/cursors.png');
         
         
 	},
@@ -188,12 +190,21 @@ var Map = {
 		var col = Map.coordinates.col + Math.floor(screen_coordinates.x / Map.TILE_WIDTH);
 		var row = Map.coordinates.row + Math.floor(screen_coordinates.y / Map.TILE_HEIGHT);
         
-        if (Map.terrain[row] === undefined) {
-            Map.terrain[row] = {};
+        if (tile_index == null) {
+            // DELETE THIS TILE:
+            if (Map.terrain[row]) {
+                if (col in Map.terrain[row]) {
+                    delete Map.terrain[row][col];
+                }
+            }
+        } else {
+            // ADD OR CHANGE A TILE:
+            if (Map.terrain[row] === undefined) {
+                Map.terrain[row] = {};
+            }
+            Map.terrain[row][col] = tile_index;
         }
-        //if (Map.terrain[row][col] === undefined) continue;
-		
-		Map.terrain[row][col] = tile_index;
+        
 		Map.invalidate = true;
         
         if (Map.debug) {
@@ -201,6 +212,147 @@ var Map = {
         }
 	},
 	
+    setMode: function (mode) {
+        Map.mode = mode;
+        
+        switch (mode) {
+            case Map.modes.MOVE:
+            
+                // ALL MOUSE EVENTS RE-WIRED FOR THE MOVE TOOL:
+                Map.mouse_sprite.setTexture(PIXI.Texture.fromFrame('cursor_hand'));
+                
+                Map.canvas.onmousedown = function (event) {
+                    Map.mouse_down = true;
+                    Map.mouse_origin = {x: event.layerX, y: event.layerY};
+                    Map.mouse_origin_coordinates = {row: Map.coordinates.row, col: Map.coordinates.col};
+                    Map.mouse_sprite.setTexture(PIXI.Texture.fromFrame('cursor_hand_closed'));
+                }
+                
+                Map.canvas.onmouseup = function (event) {
+                    Map.mouse_down = false;
+                    Map.mouse_sprite.setTexture(PIXI.Texture.fromFrame('cursor_hand'));
+                }
+                
+                Map.canvas.onmouseout = function (event) {
+                    Map.mouse_sprite.visible = false;
+                }
+                
+                Map.canvas.onmousemove = function (event) {
+            
+                    if (!Map.mouse_sprite.visible) {
+                        Map.mouse_sprite.visible = true;
+                    }
+                    
+                    if (Map.mouse_down) {
+                        
+                        if (event.which == 0) {
+                            // We've re-entered the canvas w/o the mouse being held down:
+                            Map.mouse_down = false;
+                        } else {                        
+                            var offset_cols = Math.ceil((event.layerX - Map.mouse_origin.x) / Map.TILE_WIDTH_HALF);
+                            var offset_rows = Math.ceil((event.layerY - Map.mouse_origin.y) / Map.TILE_HEIGHT_HALF);
+                            
+                            Map.coordinates.row = Map.mouse_origin_coordinates.row - offset_rows;
+                            Map.coordinates.col = Map.mouse_origin_coordinates.col - offset_cols;
+                            
+                            Map.invalidate = true;
+                        }
+                    }
+                    
+                    var x = event.layerX - 10;// - (event.layerX % Map.TILE_WIDTH);
+                    var y = event.layerY - 10;// - (event.layerY % Map.TILE_HEIGHT);
+                    
+                    Map.mouse_sprite.x = x;
+                    Map.mouse_sprite.y = y;
+                }
+            
+                break;
+            case Map.modes.DELETE_TILE:
+                
+                Map.mouse_sprite.setTexture(PIXI.Texture.fromFrame('cursor_eraser'));
+                
+                Map.canvas.onmousedown = function (event) {
+                    Map.mouse_down = true;
+                    Map.setTile({x: event.layerX, y: event.layerY}, null);
+                }
+                
+                Map.canvas.onmouseup = function (event) {
+                    Map.mouse_down = false;
+                    Map.save();
+                }
+                
+                Map.canvas.onmouseout = function (event) {
+                    Map.mouse_sprite.visible = false;
+                }
+                
+                Map.canvas.onmousemove = function (event) {
+            
+                    if (!Map.mouse_sprite.visible) {
+                        Map.mouse_sprite.visible = true;
+                    }
+                    
+                    if (Map.mouse_down) {
+                        if (event.which == 0) {
+                            // We've re-entered the canvas w/o the mouse being held down:
+                            Map.mouse_down = false;
+                        } else { 
+                            Map.setTile({x: event.layerX, y: event.layerY}, null);
+                        }
+                    }
+                    
+                    var x = event.layerX - (event.layerX % Map.TILE_WIDTH);
+                    var y = event.layerY - (event.layerY % Map.TILE_HEIGHT);
+                    
+                    Map.mouse_sprite.x = x;
+                    Map.mouse_sprite.y = y;
+                }
+                
+                break;
+                
+            case Map.modes.ADD_TILE:
+            
+                Map.canvas.onmousedown = function (event) {
+                    Map.mouse_down = true;
+                    Map.setTile({x: event.layerX, y: event.layerY}, Map.tile_index);
+                }
+                
+                Map.canvas.onmouseup = function (event) {
+                    Map.mouse_down = false;
+                    Map.save();
+                }
+                
+                Map.canvas.onmouseout = function (event) {
+                    Map.mouse_sprite.visible = false;
+                }
+            
+                Map.canvas.onmousemove = function (event) {
+            
+                    if (!Map.mouse_sprite.visible) {
+                        Map.mouse_sprite.visible = true;
+                    }
+                    
+                    if (Map.mouse_down) {
+                        if (event.which == 0) {
+                            // We've re-entered the canvas w/o the mouse being held down:
+                            Map.mouse_down = false;
+                        } else { 
+                            Map.setTile({x: event.layerX, y: event.layerY}, Map.tile_index);
+                        }
+                    }
+                    
+                    var x = event.layerX - (event.layerX % Map.TILE_WIDTH);
+                    var y = event.layerY - (event.layerY % Map.TILE_HEIGHT);
+                    
+                    Map.mouse_sprite.x = x;
+                    Map.mouse_sprite.y = y;
+                }
+            
+            
+                break;
+        }
+        
+    },
+    
 	draw: function (full) {
 
         // Reset some things:
@@ -209,25 +361,20 @@ var Map = {
     
 		var sprite;
 		
-		for (var row = Map.coordinates.row; row < Map.VIEWPORT_HEIGHT_TILES; row++) {
-			for (var col = Map.coordinates.col; col < Map.VIEWPORT_WIDTH_TILES; col++) {
+		for (var row = Map.coordinates.row; row < Map.coordinates.row + Map.VIEWPORT_HEIGHT_TILES; row++) {
+			for (var col = Map.coordinates.col; col < Map.coordinates.col + Map.VIEWPORT_WIDTH_TILES; col++) {
 				if (Map.terrain[row] === undefined) continue;
 				if (Map.terrain[row][col] === undefined) continue;
 				
 				index = Map.terrain[row][col];
 				sprite = new PIXI.Sprite(PIXI.Texture.fromFrame('tile_' + index));
-				
-				//sprite.position.x = offset_x + ((col - start_col) * Map.TILE_WIDTH);
-				//sprite.position.y = offset_y + ((row - start_row) * Map.TILE_HEIGHT);
+                
 				sprite.position.x = ((col - Map.coordinates.col) * Map.TILE_WIDTH);
 				sprite.position.y = ((row - Map.coordinates.row) * Map.TILE_HEIGHT);
                 
                 Map.buffer.addChild(sprite);
 			}
 		}
-        
-        //Map.offset = {x: offset_x, y: offset_y};
-		
         
 		if (full) {
 			var matrix = new PIXI.Matrix();
@@ -239,6 +386,12 @@ var Map = {
 	},
 	
 	render: function () {
+        
+        /*
+        if (!Map.rendering) {
+            return;
+        }
+        */
 		
         if (Map.invalidate) {
             Map.draw(true);
@@ -332,10 +485,30 @@ var Map = {
             $("#tilesHoverIdentifier").hide();
         })
         
+        $("#moveButton").on("click", function () {
+       
+            //Map.setCursor('cursor_pencil');
+            Map.setMode(Map.modes.MOVE);
+            
+            //resetToolBar();
+            $(this).addClass('active');
+            
+        });
+        
+        $("#eraseButton").on("click", function () {
+       
+            //Map.setCursor('cursor_pencil');
+            Map.setMode(Map.modes.DELETE_TILE);
+            
+            //resetToolBar();
+            $(this).addClass('active');
+            
+        });
+        
         $("#addButton").on("click", function () {
        
             //Map.setCursor('cursor_pencil');
-           // Map.setMode(Map.MODE_PAINT);
+            Map.setMode(Map.modes.ADD_TILE);
             
             //resetToolBar();
             $(this).addClass('active');

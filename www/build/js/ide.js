@@ -651,7 +651,7 @@ function loadRealmRoot() {
         });
         
         // Initial file display
-        var welcomeDOM = $('#explorer [data-path="WELCOME.md"');
+        var welcomeDOM = $('#explorer [data-path="WELCOME.md"]');
         if (welcomeDOM) {
             welcomeDOM.addClass('activefile');
         
@@ -773,6 +773,16 @@ function loadEditor(filename, content, displayRendered) {
                 
                 if (parsed.terrain) {
                     Map.init("mapContainer", parsed);
+                    Map.save = function () {
+                        var worker = {};
+                        worker.settings = Map.settings;
+                        worker.terrain = Map.terrain;
+                        worker.objects = Map.objects;
+                        worker.actors = Map.actors;
+
+                        __editor.setValue(JSON.stringify(worker, undefined, 2), -1);
+                        //sessionStorage[__fileId] = __editor.getValue();
+                    };
                     $("#tab-nav-map").css('display', 'block');
                 }
             } catch (e) {

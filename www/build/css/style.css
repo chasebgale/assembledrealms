@@ -39,3 +39,7 @@ div#markdown {
     overflow: auto;
     padding: 10px;
 }
+
+div#mapContainer canvas {
+    cursor: none !important;
+}
