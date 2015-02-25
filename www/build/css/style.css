@@ -43,3 +43,29 @@ div#markdown {
 div#mapContainer canvas {
     cursor: none !important;
 }
+
+#mapToolbar .spacer {
+    display: inline-block;
+    width: 2px;
+    height: 32px;
+    background-color: #ccc;
+    border-left: 1px solid #EDEDED;
+    margin-left: 4px;
+    margin-right: 4px;
+    vertical-align: middle;
+}
+
+#mapToolbar .btn-map-tool {
+    margin-left: 1px;
+    margin-right: 1px;
+}
+
+#mapToolbar .btn-map-tool:focus {
+    outline: none !important;
+}
+
+/*
+#mapTabs li.active a {
+    background-color: #E0E0E0 !important;
+}
+*/

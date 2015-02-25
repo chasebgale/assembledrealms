@@ -27,6 +27,7 @@ var Map = {
     offset: {x: 0, y: 0},
     tile_count: 0,
     tile_index: 0,
+    layer_index: 0,
     
     // Mouse tracking:
     mouse_down: false,
@@ -179,7 +180,8 @@ var Map = {
 			});
 			PIXI.Texture.addTextureToCache(frameTexture, 'cursor_pencil');
 
-
+            Map.setMode(Map.modes.MOVE);
+            
 		};
 		cursors.src = realmResourceURL('client/resource/cursors.png');
         
@@ -194,7 +196,7 @@ var Map = {
             // DELETE THIS TILE:
             if (Map.terrain[row]) {
                 if (col in Map.terrain[row]) {
-                    delete Map.terrain[row][col];
+                    delete Map.terrain[row][col][Map.layer_index];
                 }
             }
         } else {
@@ -202,7 +204,12 @@ var Map = {
             if (Map.terrain[row] === undefined) {
                 Map.terrain[row] = {};
             }
-            Map.terrain[row][col] = tile_index;
+            
+            if (Map.terrain[row][col] === undefined) {
+                Map.terrain[row][col] = [];
+            }
+            
+            Map.terrain[row][col][Map.layer_index] = tile_index;
         }
         
 		Map.invalidate = true;
@@ -311,6 +318,8 @@ var Map = {
                 
             case Map.modes.ADD_TILE:
             
+                Map.mouse_sprite.setTexture(PIXI.Texture.fromFrame('tile_' + Map.tile_index));
+            
                 Map.canvas.onmousedown = function (event) {
                     Map.mouse_down = true;
                     Map.setTile({x: event.layerX, y: event.layerY}, Map.tile_index);
@@ -359,20 +368,38 @@ var Map = {
         Map.buffer.children = [];
         Map.texture.clear();
     
+        var index;
 		var sprite;
+        var layers;
+        var i;
 		
 		for (var row = Map.coordinates.row; row < Map.coordinates.row + Map.VIEWPORT_HEIGHT_TILES; row++) {
 			for (var col = Map.coordinates.col; col < Map.coordinates.col + Map.VIEWPORT_WIDTH_TILES; col++) {
 				if (Map.terrain[row] === undefined) continue;
 				if (Map.terrain[row][col] === undefined) continue;
 				
-				index = Map.terrain[row][col];
-				sprite = new PIXI.Sprite(PIXI.Texture.fromFrame('tile_' + index));
+				layers = Map.terrain[row][col];
                 
-				sprite.position.x = ((col - Map.coordinates.col) * Map.TILE_WIDTH);
-				sprite.position.y = ((row - Map.coordinates.row) * Map.TILE_HEIGHT);
+                if (layers.constructor !== Array) continue;
+				
+                for (i = 0; i < layers.length; i++) {
+                    
+                    index = layers[i];
+                    
+                    if (index != null) {
+                        
+                        sprite = new PIXI.Sprite(PIXI.Texture.fromFrame('tile_' + index));
                 
-                Map.buffer.addChild(sprite);
+                        sprite.position.x = ((col - Map.coordinates.col) * Map.TILE_WIDTH);
+                        sprite.position.y = ((row - Map.coordinates.row) * Map.TILE_HEIGHT);
+                        
+                        Map.buffer.addChild(sprite);
+                        
+                    }
+                    
+                }
+                
+                
 			}
 		}
         
@@ -411,18 +438,31 @@ var Map = {
         var html = '';
         
         // TOOLBAR:
-        html += '<button type="button" class="btn btn-default navbar-btn btn-map-tool" id="moveButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Navigate the map">' +
-                    '<div style="background-image: url(\'/build/img/cursors.png\'); width: 20px; height: 20px; background-position:-39px -8px"></div>' +
+        html += '<button type="button" class="btn btn-default navbar-btn btn-map-tool active" id="moveButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Navigate the map">' +
+                    '<div style="background-image: url(\'/build/img/cursors.png\'); width: 20px; height: 22px; background-position:-39px -8px"></div>' +
                 '</button>' +
                 '<button type="button" class="btn btn-default navbar-btn btn-map-tool" id="eraseButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Erase tiles from the map">' + 
-                    '<div style="background-image: url(\'/build/img/cursors.png\'); width: 20px; height: 20px; background-position:-216px -6px"></div>' +
+                    '<div style="background-image: url(\'/build/img/cursors.png\'); width: 20px; height: 22px; background-position:-216px -6px"></div>' +
                 '</button>' +
                 '<button type="button" class="btn btn-default navbar-btn btn-map-tool" id="addButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Add tiles">' + 
-                    '<div style="background-image: url(\'/build/img/cursors.png\'); width: 22px; height: 22px; background-position:-6px -6px"></div>' +
+                    '<div style="background-image: url(\'/build/img/cursors.png\'); width: 20px; height: 22px; background-position:-6px -6px"></div>' +
                 '</button>' +
-                '<div id="addBrush" style="display: none;">' + 
-                    '<canvas id="brush" width="48" height="48" style="vertical-align: middle; display: inline-block;"></canvas>' +
-                    '<button type="button" class="btn btn-default btn-sm navbar-btn" data-toggle="modal" data-target=".tiles-modal-lg"><span>Change Brush</span></button>' +
+                '<div class="spacer"></div>' + 
+                '<button type="button" class="btn btn-default navbar-btn btn-map-tool" data-toggle="modal" data-target="#modalTiles">' + 
+                    '<div id="brushIndicator" style="width: 20px; height: 20px; background-color: white; vertical-align: middle; display: inline-block;"></div>&nbsp' +
+                    '<span class="caret"></span>' +
+                '</button>' +
+                '<div class="dropdown btn-map-tool" style="display: inline;">' +
+                    '<button class="btn btn-default navbar-btn dropdown-toggle" type="button" id="layersMenu" data-toggle="dropdown" aria-expanded="true">' +
+                        'Editing Layer: 1 ' +
+                        '<span class="caret"></span>' +
+                    '</button>' +
+                    '<ul class="dropdown-menu" role="menu" aria-labelledby="layersMenu" id="layersMenuList">' +
+                        '<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Layer 1, Walkable</a></li>' +
+                        '<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Layer 2, Walkable</a></li>' +
+                        '<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Layer 3, Non-Walkable</a></li>' +
+                        '<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Layer 4, Above Ground</a></li>' +
+                    '</ul>' +
                 '</div>';
             
         // MODAL DIALOG:
@@ -461,7 +501,10 @@ var Map = {
             var rows_to_add = Math.floor(point.y / 32);
             
             Map.tile_index = (rows_to_add * row_tile_width) + Math.floor(point.x / 32);
-            Map.mouse_sprite.setTexture(PIXI.Texture.fromFrame('tile_' + Map.tile_index));
+            
+            if (Map.mode === Map.modes.ADD_TILE) {
+                Map.mouse_sprite.setTexture(PIXI.Texture.fromFrame('tile_' + Map.tile_index));
+            }
             
             $("#modalTiles").modal("hide");
             
@@ -483,37 +526,38 @@ var Map = {
         
         $('#modalTiles').on('hidden.bs.modal', function (e) {
             $("#tilesHoverIdentifier").hide();
-        })
+        });
+        
+        $("#layersMenuList").on('click', 'li', function (e) {
+            var index = $(e.currentTarget).index();
+            Map.layer_index = index;
+            $("#layersMenu").html('Editing Layer: ' + (index + 1) + '&nbsp;<span class="caret"></span>');
+        });
         
         $("#moveButton").on("click", function () {
        
             //Map.setCursor('cursor_pencil');
             Map.setMode(Map.modes.MOVE);
             
-            //resetToolBar();
-            $(this).addClass('active');
+            $(this).addClass('active').siblings().removeClass('active');
             
         });
         
         $("#eraseButton").on("click", function () {
-       
+
             //Map.setCursor('cursor_pencil');
             Map.setMode(Map.modes.DELETE_TILE);
             
-            //resetToolBar();
-            $(this).addClass('active');
+            $(this).addClass('active').siblings().removeClass('active');
             
         });
         
         $("#addButton").on("click", function () {
-       
+           
             //Map.setCursor('cursor_pencil');
             Map.setMode(Map.modes.ADD_TILE);
             
-            //resetToolBar();
-            $(this).addClass('active');
-            
-            $("#modalTiles").modal("show");
+            $(this).addClass('active').siblings().removeClass('active');
             
         });
         
