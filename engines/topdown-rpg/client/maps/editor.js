@@ -33,6 +33,7 @@ var Map = {
     mouse_down: false,
     mouse_origin: {x: 0, y: 0},
     mouse_origin_coordinates: {row: 0, col: 0},
+    mouse_animation_flag: false,
     
     debug: true,
     initialized: false,
@@ -132,6 +133,11 @@ var Map = {
             Map.mouse_sprite = new PIXI.Sprite(PIXI.Texture.fromFrame('tile_0'));
             Map.mouse_sprite.visible = false;
             Map.stage.addChild(Map.mouse_sprite);
+            
+            Map.mouse_sprite_highlight = new PIXI.Graphics();
+            Map.mouse_sprite_highlight.blendMode = PIXI.blendModes.DIFFERENCE;
+            Map.stage.addChild(Map.mouse_sprite_highlight);
+            
             
             Map.invalidate = true;
             requestAnimationFrame(Map.render);
@@ -276,7 +282,16 @@ var Map = {
                 break;
             case Map.modes.DELETE_TILE:
                 
-                Map.mouse_sprite.setTexture(PIXI.Texture.fromFrame('cursor_eraser'));
+                Map.mouse_sprite.visible = false;
+                
+                Map.mouse_sprite_highlight.clear();
+                Map.mouse_sprite_highlight.lineStyle(1, 0xFFFFFF, 1);
+                Map.mouse_sprite_highlight.moveTo(0, 0);
+                Map.mouse_sprite_highlight.lineTo(32, 0);
+                Map.mouse_sprite_highlight.lineTo(32, 32);
+                Map.mouse_sprite_highlight.lineTo(0, 32);
+                Map.mouse_sprite_highlight.lineTo(0, 0);
+                Map.mouse_sprite_highlight.lineTo(32, 32);
                 
                 Map.canvas.onmousedown = function (event) {
                     Map.mouse_down = true;
@@ -290,12 +305,13 @@ var Map = {
                 
                 Map.canvas.onmouseout = function (event) {
                     Map.mouse_sprite.visible = false;
+                    Map.mouse_sprite_highlight.visible = false;
                 }
                 
                 Map.canvas.onmousemove = function (event) {
             
-                    if (!Map.mouse_sprite.visible) {
-                        Map.mouse_sprite.visible = true;
+                    if (!Map.mouse_sprite_highlight.visible) {
+                        Map.mouse_sprite_highlight.visible = true;
                     }
                     
                     if (Map.mouse_down) {
@@ -309,9 +325,9 @@ var Map = {
                     
                     var x = event.layerX - (event.layerX % Map.TILE_WIDTH);
                     var y = event.layerY - (event.layerY % Map.TILE_HEIGHT);
-                    
-                    Map.mouse_sprite.x = x;
-                    Map.mouse_sprite.y = y;
+                  
+                    Map.mouse_sprite_highlight.x = x;
+                    Map.mouse_sprite_highlight.y = y;
                 }
                 
                 break;
@@ -319,6 +335,14 @@ var Map = {
             case Map.modes.ADD_TILE:
             
                 Map.mouse_sprite.setTexture(PIXI.Texture.fromFrame('tile_' + Map.tile_index));
+                
+                Map.mouse_sprite_highlight.clear();
+                Map.mouse_sprite_highlight.lineStyle(1, 0xFFFFFF, 1);
+                Map.mouse_sprite_highlight.moveTo(0, 0);
+                Map.mouse_sprite_highlight.lineTo(32, 0);
+                Map.mouse_sprite_highlight.lineTo(32, 32);
+                Map.mouse_sprite_highlight.lineTo(0, 32);
+                Map.mouse_sprite_highlight.lineTo(0, 0);
             
                 Map.canvas.onmousedown = function (event) {
                     Map.mouse_down = true;
@@ -332,12 +356,14 @@ var Map = {
                 
                 Map.canvas.onmouseout = function (event) {
                     Map.mouse_sprite.visible = false;
+                    Map.mouse_sprite_highlight.visible = false;
                 }
             
                 Map.canvas.onmousemove = function (event) {
             
                     if (!Map.mouse_sprite.visible) {
                         Map.mouse_sprite.visible = true;
+                        Map.mouse_sprite_highlight.visible = true;
                     }
                     
                     if (Map.mouse_down) {
@@ -354,6 +380,9 @@ var Map = {
                     
                     Map.mouse_sprite.x = x;
                     Map.mouse_sprite.y = y;
+                    
+                    Map.mouse_sprite_highlight.x = x;
+                    Map.mouse_sprite_highlight.y = y;
                 }
             
             
@@ -424,7 +453,19 @@ var Map = {
             Map.draw(true);
             Map.invalidate = false;
         }
-
+        
+        if (Map.mouse_sprite_highlight.alpha >= 1) {
+            Map.mouse_animation_flag = true;
+        } else if (Map.mouse_sprite_highlight.alpha <= 0.1) {
+            Map.mouse_animation_flag = false;
+        }
+        
+        if (Map.mouse_animation_flag) {
+            Map.mouse_sprite_highlight.alpha -= 0.05;
+        } else {
+            Map.mouse_sprite_highlight.alpha += 0.05;
+        }
+        
         if (Map.texture) {
             Map.renderer.render(Map.stage);
         }
