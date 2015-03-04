@@ -56,11 +56,13 @@ app.get('/', function(req, res){
 app.get('/api/project/:id/create/:engine', project.create);
 app.get('/api/project/:id/open', project.open);
 app.get('/api/project/:id/destroy', project.destroy);
+
 app.post('/api/project/:id/save', project.save);
 app.post('/api/project/:id/debug', project.debug);
 
 app.get('/api/project/:id/file/open/:path', file.open);
 app.get('/api/project/:id/file/raw/*', file.raw);
+
 app.post('/api/project/:id/file/create', file.create);
 app.post('/api/project/:id/file/upload', file.upload);
 

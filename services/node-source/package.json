@@ -14,5 +14,6 @@
     , "connect-busboy" : "*"
     , "ssh2" : "*"
     , "archiver" : "*"
+    , "lz4" : "*"
   }
 }

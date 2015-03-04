@@ -7,6 +7,8 @@ var ncp 		= require('ncp').ncp,
     dir 		= require('node-dir'),
     rimraf 		= require('rimraf'),
     ssh2 		= require("ssh2"),
+    lz4         = require('lz4'),
+    busboy      = require('connect-busboy'),
     archiver 	= require('archiver');
 
 var engines = [__dirname + "/../projects/assembledrealms-topdown",
@@ -139,10 +141,7 @@ exports.create = function(req, res, next){
     });
     
   });
-  
-  
-  
-};
+}
 
 exports.open = function(req, res, next){
   
@@ -185,6 +184,111 @@ exports.open = function(req, res, next){
   });
 }
 
+
+exports.save = function(req, res, next) {
+    
+    var destination = __dirname + "/../projects/" + req.params.id;
+    var commit_message = '';
+    var files = [];
+
+    req.busboy.on('file', function (fieldname, file, filename, encoding, mimetype) {
+        console.log('File [' + fieldname + ']: filename: ' + filename + ', encoding: ' + encoding + ', mimetype: ' + mimetype);
+        
+        if (mimetype == 'text/plain') {
+            
+            // Text just gets written to disk
+            file.pipe(fs.createWriteStream(path.join(destination, fieldname)));
+            files.push(fieldname);
+            
+        } else {
+            // application/octet-binary means our data is compressed with LZ4
+            
+            // skip file until decode works:
+            file.resume();
+            
+            /*
+            var decoder = lz4.createDecoderStream();
+            
+            var output = fs.createWriteStream(__dirname + "/../projects/" + req.params.id + '/client/resource/' + filename);
+            output.on('close', function () {    
+                console.log("Decode Finished of " + filename);              
+            });
+            
+            file.pipe(decoder).pipe(output);
+            */
+        }
+    });
+    req.busboy.on('field', function(fieldname, val, fieldnameTruncated, valTruncated) {
+        console.log('Field [' + fieldname + ']: value: ' + val);
+        
+        if (fieldname == 'message') {
+            commit_message = val;
+        }
+      
+    });
+    req.busboy.on('finish', function() {
+        console.log('Done parsing form, now committing...');
+        
+        git.Repo.open(__dirname + "/../projects/" + req.params.id, function(error, repo) {
+            if (error) return next(error);
+        
+            repo.openIndex(function(openIndexError, index) {
+                if (openIndexError) return next(openIndexError);
+
+                index.read(function(readError) {
+                    if (readError) return next(readError);
+
+                    files.forEach(function (entry) {
+                        index.addByPath(entry, function(addByPathError) {
+                            if (addByPathError) return next(addByPathError);
+                        });
+                    });
+        
+                    index.write(function(writeError) {
+                        if (writeError) return next(writeError);
+
+                        index.writeTree(function(writeTreeError, oid) {
+                            if (writeTreeError) return next(writeTreeError);
+
+                            //get HEAD
+                            git.Reference.oidForName(repo, 'HEAD', function(oidForName, head) {
+                                if (oidForName) return next(oidForName);
+
+                                //get latest commit (will be the parent commit)
+                                repo.getCommit(head, function(getCommitError, parent) {
+                                    if (getCommitError) return next(getCommitError);
+                                    
+                                    var author = git.Signature.now("Chase Gale", "chase.b.gale@gmail.com");
+                                    var committer = git.Signature.now("Chase Gale", "chase.b.gale@gmail.com");
+
+                                    //commit
+                                    repo.createCommit('HEAD', author, committer, commit_message, oid, [parent], function(error, commitId) {
+                                        if (error) return next(error);
+
+                                        utilities.logMessage('Commit (' + commitId.sha() + ') to REPO: ' + __dirname + "/../projects/" + req.params.id);
+                                        console.log('Files: ' + files.toString());
+
+                                        var formatted = {};
+                                        formatted.commit = commitId.sha();
+                                        formatted.message = "OK";
+
+                                        res.json(formatted);
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        });
+        
+        //res.writeHead(303, { Connection: 'close', Location: '/' });
+        //res.end();
+    });
+    req.pipe(req.busboy);
+}
+
+/*
 exports.save = function(req, res, next){
   
   var files = [];
@@ -257,6 +361,7 @@ exports.save = function(req, res, next){
     
   });
 }
+*/
 
 exports.destroy = function(req, res, next){
   

@@ -64,6 +64,13 @@ div#mapContainer canvas {
     outline: none !important;
 }
 
+#tileModalButton {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 5px !important;
+}
+
 /*
 #mapTabs li.active a {
     background-color: #E0E0E0 !important;

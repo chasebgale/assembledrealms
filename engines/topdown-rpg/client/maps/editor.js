@@ -489,8 +489,8 @@ var Map = {
                     '<div style="background-image: url(\'/build/img/cursors.png\'); width: 20px; height: 22px; background-position:-6px -6px"></div>' +
                 '</button>' +
                 '<div class="spacer"></div>' + 
-                '<button type="button" class="btn btn-default navbar-btn btn-map-tool" data-toggle="modal" data-target="#modalTiles">' + 
-                    '<div id="brushIndicator" style="width: 20px; height: 20px; background-color: white; vertical-align: middle; display: inline-block;"></div>&nbsp' +
+                '<button type="button" id="tileModalButton" class="btn btn-default navbar-btn btn-map-tool" data-toggle="modal" data-target="#modalTiles">' + 
+                    '<div id="brushIndicator" style="width: 32px; height: 32px; vertical-align: middle; display: inline-block;"></div>&nbsp' +
                     '<span class="caret"></span>' +
                 '</button>' +
                 '<div class="dropdown btn-map-tool" style="display: inline;">' +
@@ -546,6 +546,12 @@ var Map = {
             if (Map.mode === Map.modes.ADD_TILE) {
                 Map.mouse_sprite.setTexture(PIXI.Texture.fromFrame('tile_' + Map.tile_index));
             }
+            
+            var background_x = (point.x - (point.x % 32)) * -1;
+            var background_y = (point.y - (point.y % 32)) * -1;
+            
+            $("#brushIndicator").css('background-image', 'url(' + e.currentTarget.src + ')');
+            $("#brushIndicator").css('background-position', background_x + 'px ' + background_y + 'px');
             
             $("#modalTiles").modal("hide");
             

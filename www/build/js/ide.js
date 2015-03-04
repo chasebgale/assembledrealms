@@ -166,10 +166,6 @@ function initialize(projectID, projectDomain) {
         $('#modalTerrain').modal('hide');
         $('#addBrush').fadeIn().css("display","inline-block");
     });
-
-    
-*/
-
     
     $("#moveButton").on("click", function () {
         
@@ -191,7 +187,7 @@ function initialize(projectID, projectDomain) {
         $(this).addClass('active');
        
     });
-    /*
+
     $("#addButton").on("click", function () {
        
         Map.setCursor('cursor_pencil');
@@ -222,6 +218,7 @@ function initialize(projectID, projectDomain) {
 
     $("#btnCommit").on("click", function () {
         //$('#commitProgressbar').addClass('active');
+        
         listCommitFiles();
         $('#modalCommit').modal('show');
         
@@ -468,6 +465,24 @@ function initialize(projectID, projectDomain) {
     
 }
 
+function lz4Compress(data) {
+    var Buffer = require('buffer').Buffer;
+    var LZ4 = require('lz4');
+    var input = new Buffer(data);
+    var maxOutputSize = LZ4.encodeBound(input.length);
+    var output = new Buffer(maxOutputSize);
+    var outputSize = LZ4.encodeBlock( input, output );
+    
+    if (outputSize > 0) {
+        output = output.slice(0, outputSize);
+        //var outputB64 = btoa( encodeURIComponent(output) );
+        
+        //console.log('output (' + output.length + 'bytes un-encoded, ' + outputB64.length + ' bytes encoded): ' + outputB64);
+        
+        return output;
+    }
+}
+
 function resetToolBar() {
     $("#mapToolbar .navbar-btn").removeClass('active');
     
@@ -546,7 +561,7 @@ function listCommitFiles() {
     }
 }
 
-function commit(filesToCommit) {
+function commit() {
     
     __checkInMsg = $('#commitMessage').val();
     
@@ -557,6 +572,52 @@ function commit(filesToCommit) {
     } else {
         $("#commitProgressMessage").text('Uploading source files to git.');
         
+        var formData = new FormData();
+        
+        _.each(__commitFiles, function (file) {
+            formData.append(file.path, new Blob([file.content], {type: 'text/plain'}));
+        });
+        
+        formData.append("message", __checkInMsg);
+        
+        $.ajax({
+            url: __projectURL + '/save',
+            type: "POST",
+            data: formData,
+            processData: false,  // tell jQuery not to process the data
+            contentType: false,   // tell jQuery not to set contentType
+            success: function (response) {
+                
+                _.each(__commitFiles, function (file) {
+                    // Update sessionStorage with new MD5
+                    sessionStorage[file.sha + '-commit-md5'] = md5(sessionStorage[file.sha]);
+                });
+                
+                // Update DOM to reflect we completed ok:
+                //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-up"></i> Success!');
+    
+                //$('#commitProgressbar').removeClass('active');
+                $('#commitStart').removeAttr('disabled');
+                $('#commitStart').html('Commit');
+                $("#commitProgressMessage").text('');
+                
+                $('#modalCommit').modal('hide');
+            },
+            error: function (response) {
+                
+                // Update DOM to reflect we messed up:
+                $('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
+                
+            }
+        });
+        
+        
+        
+        
+        
+        
+        
+        /*
         $.ajax({
             url: __projectURL + '/save',
             type: 'post',
@@ -589,7 +650,7 @@ function commit(filesToCommit) {
             complete: function (response) {
             }
         });
-        
+        */
     }
 }
 
@@ -780,7 +841,7 @@ function loadEditor(filename, content, displayRendered) {
                         worker.objects = Map.objects;
                         worker.actors = Map.actors;
 
-                        __editor.setValue(JSON.stringify(worker, undefined, 2), -1);
+                        __editor.setValue(JSON.stringify(worker));
                         //sessionStorage[__fileId] = __editor.getValue();
                     };
                     $("#tab-nav-map").css('display', 'block');

@@ -437,6 +437,7 @@ if (($realmID < 0) || ($sourceURL == '')) {
     <script src="js/jquery.treeview.js"></script>
     <script src="js/md5.js"></script>
     <script src="js/marked.js"></script>
+    <script src="js/lz4.min.js"></script>
     
     <script src="/../js/pixi.dev.js"></script>
 	<script src="/../js/bigscreen.min.js"></script>
