@@ -8,7 +8,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 if ($method == 'POST') {
     
     $page = 0;
-    $count = 20;
+    $count = 50;
     $sort = "ORDER BY loves DESC";
     $where = [];
     $whereSQL = "";
@@ -78,6 +78,7 @@ if ($method == 'POST') {
                        $user_id,
                        $title,
                        $description,
+                       $engine,
                        $status,
                        $players_online,
                        $funds,
@@ -94,6 +95,7 @@ if ($method == 'POST') {
                        'user_id' => $user_id,
                        'title' => $title,
                        'description' => $description,
+                       'engine' => $engine,
                        'status' => $status,
                        'players_online' => $players_online,
                        'funds' => $funds,
@@ -158,7 +160,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
             <!-- TODO: Realm url should be different if offline, else we are just forwarding them to an 'offline' message -->
             <a href="realm.php?<%- realm.id %>">
             <h3> <%- realm.title %>
-            <div class="pull-right">
+            <div class="pull-right" style="margin-top: -6px;">
             <small>
             
             <!--  Online / Offline + users  -->
