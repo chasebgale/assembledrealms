@@ -33,6 +33,7 @@ if(!empty($_POST))
 		}
 		else
 		{
+            $userdetails = NULL;
 			$userdetails = fetchUserDetails($email);
 			//See if the user's account is activated
 			if($userdetails["active"]==0)
@@ -55,16 +56,23 @@ if(!empty($_POST))
 					
 					//Construct a new logged in user object
 					//Transfer some db data to the session object
+                    $loggedInUser = NULL;
+                    unset($loggedInUser);
+                    $_SESSION["userCakeUser"] = NULL;
+                    
 					$loggedInUser = new loggedInUser();
 					$loggedInUser->email = $userdetails["email"];
 					$loggedInUser->user_id = $userdetails["id"];
 					$loggedInUser->hash_pw = $userdetails["password"];
 					$loggedInUser->title = $userdetails["title"];
 					$loggedInUser->displayname = $userdetails["display_name"];
-					$loggedInUser->gitlab_user = "realmer-" . $userdetails["id"];
-					$loggedInUser->gitlab_id = $userdetails["gitlab_id"];
-					$loggedInUser->gitlab_password = $userdetails["gitlab_password"];
-					
+                    
+                    if ($userdetails["has_image"]==0) {
+                        $loggedInUser->user_image = '/img/anonymous.png';
+                    } else {
+                        $loggedInUser->user_image = '/img/profiles/' . $userdetails["id"] . '.jpg';
+					}
+                    
 					//Update last sign in
 					$loggedInUser->updateLastSignIn();
 					$_SESSION["userCakeUser"] = $loggedInUser;

@@ -11,6 +11,7 @@ if (!securePage($_SERVER['PHP_SELF'])){die();}
 if(isUserLoggedIn())
 {
 	$loggedInUser->userLogOut();
+    $loggedInUser = NULL;
 }
 
 if(!empty($websiteUrl)) 

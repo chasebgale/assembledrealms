@@ -18,9 +18,8 @@ div#comment {
 }
 
 div#funding {
-    float: right;
-    width: 300px;
-    max-height: 400px;
+    float: left;
+    width: 500px;
     margin-left: 12px;
     margin-bottom: 12px;
 }

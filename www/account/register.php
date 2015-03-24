@@ -72,9 +72,7 @@ if(!empty($_POST))
 			$loggedInUser->hash_pw = $userdetails["password"];
 			$loggedInUser->title = $userdetails["title"];
 			$loggedInUser->displayname = $userdetails["display_name"];
-			$loggedInUser->gitlab_user = "realmer-" . $userdetails["id"];
-			$loggedInUser->gitlab_id = $userdetails["gitlab_id"];
-			$loggedInUser->gitlab_password = $userdetails["gitlab_password"];
+            $loggedInUser->user_image = '/img/anonymous.png';
 			
 			//Update last sign in
 			$loggedInUser->updateLastSignIn();
@@ -146,9 +144,12 @@ if(!empty($_POST))
 						$loggedInUser->hash_pw = $userdetails["password"];
 						$loggedInUser->title = $userdetails["title"];
 						$loggedInUser->displayname = $userdetails["display_name"];
-						$loggedInUser->gitlab_user = "realmer-" . $userdetails["id"];
-						$loggedInUser->gitlab_id = $userdetails["gitlab_id"];
-						$loggedInUser->gitlab_password = $userdetails["gitlab_password"];
+                        
+                        if ($userdetails["has_image"]==0) {
+                            $loggedInUser->user_image = '/img/anonymous.png';
+                        } else {
+                            $loggedInUser->user_image = '/img/profiles/' . $userdetails["id"] . '.jpg';
+                        }
 						
 						//Update last sign in
 						$loggedInUser->updateLastSignIn();

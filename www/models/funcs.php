@@ -335,7 +335,8 @@ function fetchUserDetails($email=NULL,$token=NULL, $id=NULL)
 		active,
 		title,
 		sign_up_stamp,
-		last_sign_in_stamp
+		last_sign_in_stamp,
+        has_image 
 		FROM ".$db_table_prefix."users
 		WHERE
 		$column = ?
@@ -343,9 +344,9 @@ function fetchUserDetails($email=NULL,$token=NULL, $id=NULL)
 		$stmt->bind_param("s", $data);
 	
 	$stmt->execute();
-	$stmt->bind_result($id, $display, $password, $email, $token, $activationRequest, $passwordRequest, $active, $title, $signUp, $signIn);
+	$stmt->bind_result($id, $display, $password, $email, $token, $activationRequest, $passwordRequest, $active, $title, $signUp, $signIn, $has_image);
 	while ($stmt->fetch()){
-		$row = array('id' => $id, 'display_name' => $display, 'password' => $password, 'email' => $email, 'activation_token' => $token, 'last_activation_request' => $activationRequest, 'lost_password_request' => $passwordRequest, 'active' => $active, 'title' => $title, 'sign_up_stamp' => $signUp, 'last_sign_in_stamp' => $signIn);
+		$row = array('id' => $id, 'display_name' => $display, 'password' => $password, 'email' => $email, 'activation_token' => $token, 'last_activation_request' => $activationRequest, 'lost_password_request' => $passwordRequest, 'active' => $active, 'title' => $title, 'sign_up_stamp' => $signUp, 'last_sign_in_stamp' => $signIn, 'has_image' => $has_image);
 	}
 	$stmt->close();
 	return ($row);

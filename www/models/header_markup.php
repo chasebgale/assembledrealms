@@ -30,8 +30,16 @@
         </li>
         <?php
         if (isUserLoggedIn()) {
-            echo "<li><a href='/account/logout.php' class='header-link'><i class='fa fa-sign-out fa-2x' style='display: block;'></i>Logout</a></li>";
-            echo "<li><a href='/account' class='header-link'><i class='fa fa-user fa-2x' style='display: block; text-align: center;'></i>Account</a></li>";
+            // echo "<li><a href='/account/logout.php' class='header-link'><i class='fa fa-sign-out fa-2x' style='display: block;'></i>Logout</a></li>";
+            echo "<li><a href='/account' class='header-link'><img src='" . $loggedInUser->user_image . "' width='48'>";
+            
+            $unread = $loggedInUser->unreadMessages();
+            
+            if ($unread > 0) {
+                echo "<span class='badge' style='margin-left: -8px; margin-top: 2px; background-color: #4C4C4C; vertical-align: top;'><i class='fa fa-envelope-o'></i> " . $unread . "</span>";
+            }
+            
+            echo "</a></li>";
         } else {
             echo "<li><a href='/account/register.php' class='header-link'><i class='fa fa-sign-in fa-2x' style='display: block;'></i>Login / Join</a></li>";
         }

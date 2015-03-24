@@ -81,7 +81,6 @@ if(!empty($_POST)) {
     }
 }
 
-
 require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 
 ?>
@@ -92,7 +91,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
         <div class="panel-heading">Profile</div>
         <div class="panel-body">
             <div>
-                <img src="/img/profiles/<?=$loggedInUser->user_id . ".jpg?" . time() ?>" />
+                <img src="<?=$loggedInUser->user_image?>" />
             </div>
             <div>
                 <span><?=$loggedInUser->email?></span>
@@ -189,6 +188,8 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
         </div>
     </div>
 </div>
+
+<?php echo print_r($loggedInUser) ?>
 
 <?php require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php"); ?>
 

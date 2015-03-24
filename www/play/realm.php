@@ -137,7 +137,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     if ($alert) {
         echo '<div style="background-color: #eee; ' . $style . '"><div class="absoluteCenter text-danger" style="margin-top: 215px; text-align: center; width: 400px;">' . $alert . '</div></div>';
     } else {
-        echo '<iframe style="' . $style . '" src="http://' . $realm['url'] . '"></iframe>';   
+        echo '<iframe onerror="alert(\"failed\")" style="' . $style . '" src="http://' . $realm['url'] . '"></iframe>';   
     }
     ?>
     
@@ -159,7 +159,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     
     <?php if ($realm['show_funding']) { ?>
         <div id="tab_funding" class="tab-pane active clearfix" style="margin-top: 32px;">
-            <div id="funding" style="float: left; width: 500px; height: 400px; overflow: hidden;"></div>
+            <div id="funding"></div>
             <div id="realmFundingDonate" style="float: right;">
                 <form class="form-horizontal" role="form">
                     <div class="form-group">

@@ -4,9 +4,7 @@ class loggedInUser {
 	public $email = NULL;
 	public $hash_pw = NULL;
 	public $user_id = NULL;
-	public $gitlab_user = NULL;
-	public $gitlab_password = NULL;
-	public $gitlab_id = 0;
+    public $user_image = NULL;
 	
 	//Simple function to update the last sign in of a user
 	public function updateLastSignIn()
@@ -38,6 +36,36 @@ class loggedInUser {
 		$stmt->close();
 		return ($timestamp);
 	}
+    
+    // Return amount of unread messages:
+    public function unreadMessages()
+	{
+		global $mysqli,$db_table_prefix;
+		
+		$stmt = $mysqli->prepare("SELECT unread_messages
+			FROM ".$db_table_prefix."users
+			WHERE id = ?");
+		$stmt->bind_param("i", $this->user_id);
+		$stmt->execute();
+		$stmt->bind_result($unread);
+		$stmt->fetch();
+		$stmt->close();
+		return ($unread);
+	}
+    
+    public function clearMessages()
+	{
+		global $mysqli,$db_table_prefix;
+		
+		$stmt = $mysqli->prepare("UPDATE ".$db_table_prefix."users 
+            SET
+            unread_messages = 0
+			WHERE id = ?");
+		$stmt->bind_param("i", $this->user_id);
+		$stmt->execute();
+		$stmt->close();
+		return true;
+	}
 	
 	//Update a users password
 	public function updatePassword($pass)
@@ -66,23 +94,6 @@ class loggedInUser {
 			WHERE
 			id = ?");
 		$stmt->bind_param("si", $email, $this->user_id);
-		$stmt->execute();
-		$stmt->close();	
-	}
-    
-	//Update a users email
-	public function updateGitlab($id, $password)
-	{
-		global $mysqli,$db_table_prefix;
-		$this->gitlab_id = $id;
-		$this->gitlab_password = $password;
-		$stmt = $mysqli->prepare("UPDATE ".$db_table_prefix."users
-			SET 
-			gitlab_id = ?,
-			gitlab_password = ?
-			WHERE
-			id = ?");
-		$stmt->bind_param("isi", $id, $password, $this->user_id);
 		$stmt->execute();
 		$stmt->close();	
 	}
@@ -161,6 +172,7 @@ class loggedInUser {
 				   $user_id,
 				   $title,
 				   $description,
+                   $engine,
 				   $status,
 				   $players,
 				   $funds,
@@ -178,6 +190,7 @@ class loggedInUser {
 			     'user_id' => $user_id,
 			     'title' => $title,
 			     'description' => $description,
+                 'engine' => $engine,
 			     'status' => $status,
 			     'players' => $players,
 			     'funds' => $funds,
