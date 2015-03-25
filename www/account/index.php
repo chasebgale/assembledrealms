@@ -81,15 +81,127 @@ if(!empty($_POST)) {
     }
 }
 
+if ($loggedInUser->unreadMessages() > 0) {
+    $loggedInUser->clearMessages();
+}
+
 require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 
 ?>
 
 <div id="content">
 
-    <div class="panel panel-default">
-        <div class="panel-heading">Profile</div>
-        <div class="panel-body">
+    <ul id="tabs" class="nav nav-tabs" role="tablist" style="margin-top: 60px;">
+        <li class="active"><a href="#tab_messages" role="tab" data-toggle="tab">Messages</a></li>
+        <li><a href="#tab_funding" role="tab" data-toggle="tab">Funding</a></li>
+        <li><a href="#tab_settings" role="tab" data-toggle="tab">Settings</a></li>
+    </ul>
+    
+    <!-- Tab panes -->
+    <div class="tab-content">
+  
+        <div id="tab_messages" class="tab-pane active clearfix" style="margin-top: 12px;">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th> </th>
+                        <th>Sender</th>
+                        <th>Timestamp</th>
+                        <th>Preview</th>
+                    </tr>
+                </thead>
+                <tbody id="messages">
+                </tbody>
+            </table>
+        </div>
+        
+        <div id="tab_funding" class="tab-pane" style="margin-top: 12px;">
+            <!--
+            <div class="row">
+                <div class="col-md-4"><h1>$ 12.83</h1></div>
+                
+                <div class="col-md-4 input-group" style="margin-top: 22px;">
+                    <span class="input-group-addon">$</span>
+                    <input type="number" min="0.25" max="1000" step="0.01" value="1.00" class="form-control">
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" type="button" data-toggle="modal" data-target="#modalDepositFunds">
+                            <i class="fa fa-usd"></i> <i class="fa fa-btc"></i>  Deposit Funds
+                        </button>
+                    </span>
+                </div>
+            </div>
+            -->
+            <!-- Nav tabs -->
+            <ul class="nav nav-pills nav-stacked" style="float: left; width: 20%;">
+                <li class="active"><a href="#paypal" data-toggle="tab">Paypal</a></li>
+                <li><a href="#bitcoin" data-toggle="tab">Bitcoin via Coinbase</a></li>
+            </ul>
+            
+            <!-- Tab panes -->
+            <div class="tab-content" style="float: left; width: 80%;">
+                <div class="tab-pane active" id="paypal">
+                    <div style="padding: 20px; height: 400px;">
+                        <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top" style="display: inline-block; width: 200px; margin-left: 20px; vertical-align: top; margin-top: 40px;">
+                            <input type="hidden" name="cmd" value="_s-xclick">
+                            <input type="hidden" name="hosted_button_id" value="MG5YX75N4LFAW">
+                            <table>
+                                <tr>
+                                    <td>
+                                        <input type="hidden" name="on0" value="Account Deposit:">Account Deposit:
+                                    </td>
+                                </tr>
+                                <tr style="margin-top: 12px;">
+                                    <td>
+                                        <select name="os0" id="os0">
+                                            <option value="$2 for" data-fee="- $0.07" data-amt="$2.37">$2 for $2.37 USD</option>
+                                            <option value="$5 for" data-fee="- $0.16" data-amt="$5.46">$5 for $5.46 USD</option>
+                                            <option value="$10 for" data-fee="- $0.31" data-amt="$10.61">$10 for $10.61 USD</option>
+                                            <option value="$15 for" data-fee="- $0.46" data-amt="$15.76">$15 for $15.76 USD</option>
+                                            <option value="$20 for" data-fee="- $0.61" data-amt="$20.91">$20 for $20.91 USD</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                            </table>
+                            <input type="hidden" name="currency_code" value="USD">
+                            <input style="margin-top: 12px;" type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_paynowCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+                            <img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
+                        </form>
+                        <div style="display: inline-block; width: 400px;">
+                            <h2 style="margin-top: 0;">The Math:</h2>
+                            <table class="table">
+                                <tbody>
+                                    <tr>
+                                        <td>Payment Amount:</td>
+                                        <td id="calculator_start">  $2.37</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href="https://www.paypal.com/webapps/mpp/paypal-fees" target="_blank">Paypal Fee (2.9%)</a>:</td>
+                                        <td id="calculator_fee">- $0.07</td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href="https://www.paypal.com/webapps/mpp/paypal-fees" target="_blank">Paypal Transaction Fee</a>:</td>
+                                        <td>- $0.30</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Total Deposit:</td>
+                                        <td id="calculator_finish">  $2.00</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane" id="bitcoin">
+                    <div style="padding: 40px; height: 400px; padding-top: 80px;">
+                        <a class="coinbase-button" data-code="53dc620f9bc6914ac6a5da9c8371e02a" data-custom="customerID" href="https://www.coinbase.com/checkouts/53dc620f9bc6914ac6a5da9c8371e02a" style="margin-left: 20px; margin-top: 40px;">Pay With Bitcoin</a>
+                        <script src="https://www.coinbase.com/assets/button.js" type="text/javascript"></script>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="tab_settings" class="tab-pane" style="margin-top: 12px;">
+            <h3>Mugshot</h3>
             <div>
                 <img src="<?=$loggedInUser->user_image?>" />
             </div>
@@ -110,25 +222,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
                 </form>
             </div>
         </div>
-    </div>
-
-    <div class="panel panel-default">
-        <div class="panel-heading">Funding</div>
-        <div class="panel-body">
-            <div class="row">
-                <div class="col-md-4"><h1>$ 12.83</h1></div>
-                
-                <div class="col-md-4 input-group" style="margin-top: 22px;">
-                    <span class="input-group-addon">$</span>
-                    <input type="number" min="0.25" max="1000" step="0.01" value="1.00" class="form-control">
-                    <span class="input-group-btn">
-                        <button class="btn btn-default" type="button" data-toggle="modal" data-target="#modalDepositFunds">
-                            <i class="fa fa-usd"></i> <i class="fa fa-btc"></i>  Deposit Funds
-                        </button>
-                    </span>
-                </div>
-            </div>
-        </div>
+        
     </div>
 
 </div>
@@ -141,57 +235,61 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
                 <h4 class="modal-title">Deposit $2.50</h4>
             </div>
             <div class="modal-body" id="modalDepositFundsContent">
-                <!-- Nav tabs -->
-                <ul class="nav nav-tabs">
-                    <li class="active"><a href="#google" data-toggle="tab">Google</a></li>
-                    <li><a href="#paypal" data-toggle="tab">Paypal</a></li>
-                    <li><a href="#bitcoin" data-toggle="tab">Bitcoin via Coinbase</a></li>
-                </ul>
                 
-                <!-- Tab panes -->
-                <div class="tab-content">
-                    <div class="tab-pane active" id="google"></div>
-                    <div class="tab-pane" id="paypal">
-						<div class="alert alert-info" style="margin-top: 20px;" role="alert">
-							<p>If this website becomes profitable enough I will pay $30.00 a month for PayPal premium and start accepting user configurable amounts. For now, it has to be fixed prices.</p>
-						</div>
-						<div>
-							<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top" style="display: inline-block;">
-								<input type="hidden" name="cmd" value="_s-xclick">
-								<input type="hidden" name="hosted_button_id" value="MG5YX75N4LFAW">
-								<table>
-								<tr><td><input type="hidden" name="on0" value="Account Deposit">Account Deposit</td></tr><tr><td><select name="os0">
-									<option value="Ye Of Little Faith">Ye Of Little Faith $1.00 USD</option>
-									<option value="Big Spender">Big Spender $5.00 USD</option>
-									<option value="King of the Cash">King of the Cash $10.00 USD</option>
-									<option value="Making it Rain">Making it Rain $15.00 USD</option>
-									<option value="Literal Billionaire">Literal Billionaire $20.00 USD</option>
-								</select> </td></tr>
-								</table>
-								<input type="hidden" name="currency_code" value="USD">
-								<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_paynowCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
-								<img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
-							</form>
-							<div style="display: inline-block;">
-								<ul>
-									<li>$1.00</li>
-									<li>-2.9%</li>
-									<li>-$0.30</li>
-									<li></li>
-								</ul>
-							</div>
-						</div>
-					</div>
-                    <div class="tab-pane" id="bitcoin"></div>
-                </div>
             </div>
         </div>
     </div>
 </div>
 
-<?php echo print_r($loggedInUser) ?>
-
 <?php require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php"); ?>
+
+<script id="messages_template" type="text/template">
+    
+<% _.each( messages, function( message ){ %>
+    
+    <tr>
+        <th scope="row"><%=type_map[message.type]%></th>
+        <td><%- message.sender %></td>
+        <td><%- message.timestamp %></td>
+        <td><%- message.preview %></td>
+    </tr>
+        
+<% }); %>
+
+</script>
+
+<script type="text/javascript">
+
+    var type_map = [];
+    
+    type_map[0] = '<i class="fa fa-comments-o"></i>';
+    type_map[1] = '<i class="fa fa-usd"></i>';
+    type_map[2] = '<i class="fa fa-envelope-o"></i>';
+
+    $(document).ready(function () {
+        var templateFn = _.template($('#messages_template').html());
+        
+        // TODO: Retrieve messages
+        var data = [
+            {id: 219293, type: 0, sender: 'praisejeebus', timestamp: '11:26 AM', preview: 'I don\'t think you have any idea what you are doing...'},
+            {id: 219293, type: 1, sender: 'AR Bank', timestamp: '9:01 AM', preview: 'Heads up! Your realm "The Big Show" has less than $1.00 of funding!'},
+            {id: 219293, type: 2, sender: 'Mr. Champion', timestamp: '10/14/2015', preview: 'Yo brother, have you ever thought about how weird it is to be writing messages to yourself? I mean, really? This is an affront to the reputation I previously held of you... You can do better, sir!'},
+            {id: 219293, type: 1, sender: 'AR Bank', timestamp: '10/14/2015', preview: 'Heads up! Your realm "Poo Poo Planet" has less than $1.00 of funding!'}
+        ];
+
+        $("#messages").html(templateFn({ 'messages': data }));
+    });
+    
+    $('#os0').on('change', function (e) {
+        var optionSelected = $("option:selected", this);
+        // data-fee="- $0.61" data-amt="$20.91"
+        $('#calculator_start').text(optionSelected.attr('data-amt'));
+        $('#calculator_fee').text(optionSelected.attr('data-fee'));
+        $('#calculator_finish').text(optionSelected.attr('value').split(' ')[0] + '.00');
+    });
+
+    
+</script>
 
 </body>
 </html>
