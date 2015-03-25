@@ -98,7 +98,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
     </ul>
     
     <!-- Tab panes -->
-    <div class="tab-content">
+    <div class="tab-content" style="min-height: 400px;">
   
         <div id="tab_messages" class="tab-pane active clearfix" style="margin-top: 12px;">
             <table class="table table-striped table-hover">
