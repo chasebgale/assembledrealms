@@ -125,23 +125,39 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                     <p class="text-right text-muted"><strong>Balance</strong></p>
                 </div>
                 <div class="col-md-9">
-                    <h3>$ 0.27</h3>
+                    <span class="h3">$ 0.27</span>
                 </div>
             </div>
             <div class="row">
                 <div class="col-md-3">
-                    <p class="text-right text-muted"><strong>Balance</strong></p>
+                    <p class="text-right text-muted"><strong>Server</strong></p>
                 </div>
                 <div class="col-md-9">
-                    <p class="text-justify">Loads the latest committed code onto your realm; if online, it will be restarted automatically.</p>
+                    <span class="h3">Offline</small></span>
                 </div>
             </div>
-			<div class="row">
+            <div class="row">
                 <div class="col-md-3">
-                    <button class="btn btn-danger pull-right" id="button-destroy-realm" data-id="<?php echo $realm["id"] ?>"><i class="fa fa-exclamation-triangle"></i> Destroy Realm</button>
+                    <p class="text-right text-muted"><strong>Code</strong></p>
                 </div>
                 <div class="col-md-9">
-                    <p class="text-justify">Think about this first. Destroyed realms can not be recovered.</p>
+                    <span class="h3">Built 03/22/2015 02:22 PM: "Commit Message"</span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <p class="text-right text-muted"><strong>Loves</strong></p>
+                </div>
+                <div class="col-md-9">
+                    <span class="h3">30</span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <p class="text-right text-muted"><strong>Comments</strong></p>
+                </div>
+                <div class="col-md-9">
+                    <span class="h3">46</span>
                 </div>
             </div>
         </div>
@@ -264,6 +280,8 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     };
     
     var __currentState = _.clone(__existingState, true);
+    
+    $('.row').css('margin-bottom', '12px');
 </script>
 
 <script src="js/manager.js" type="text/javascript" charset="utf-8"></script>
