@@ -1,7 +1,7 @@
 // TODO: Grab from URL parameters so users can save favorite searches
 var __page = 0;
 var __pageCount = 0;
-var __resultsPerPage = 10;
+var __resultsPerPage = 50;
 
 $(document).delegate('*[data-toggle="lightbox"]', 'click', function(event) {
     event.preventDefault();

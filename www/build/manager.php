@@ -116,10 +116,48 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 <div id="content">
 
 	<h2><?php echo $realm["title"] ?></h2>
+    
+    <div class="panel panel-default">
+        <div class="panel-heading">Status</div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <p class="text-right text-muted"><strong>Balance</strong></p>
+                </div>
+                <div class="col-md-9">
+                    <h3>$ 0.27</h3>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <p class="text-right text-muted"><strong>Balance</strong></p>
+                </div>
+                <div class="col-md-9">
+                    <p class="text-justify">Loads the latest committed code onto your realm; if online, it will be restarted automatically.</p>
+                </div>
+            </div>
+			<div class="row">
+                <div class="col-md-3">
+                    <button class="btn btn-danger pull-right" id="button-destroy-realm" data-id="<?php echo $realm["id"] ?>"><i class="fa fa-exclamation-triangle"></i> Destroy Realm</button>
+                </div>
+                <div class="col-md-9">
+                    <p class="text-justify">Think about this first. Destroyed realms can not be recovered.</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="panel panel-default">
         <div class="panel-heading">Actions</div>
         <div class="panel-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <button class="btn btn-default pull-right" data-toggle="modal" data-target="#modalDeposit">Deposit Funds</button>
+                </div>
+                <div class="col-md-9">
+                    <p class="text-justify">Transfer funds from your personal account. Your realm's bank has a balance of <strong>$ 0.28</strong>.</p>
+                </div>
+            </div>
             <div class="row">
                 <div class="col-md-3">
                     <button class="btn btn-default pull-right" data-toggle="modal" data-target="#modalTakeRealmOnline">Take Realm Online</button>
@@ -133,7 +171,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                     <button class="btn btn-default pull-right">Publish Latest Code</button>
                 </div>
                 <div class="col-md-9">
-                    <p class="text-justify">Restarts realm. etc. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed augue nisl, pretium at sapien nec, commodo venenatis augue. Nulla aliquet et mi et iaculis. Aliquam auctor felis quis euismod bibendum. Duis vel libero cursus, varius sem quis, malesuada leo.</p>
+                    <p class="text-justify">Loads the latest committed code onto your realm; if online, it will be restarted automatically.</p>
                 </div>
             </div>
 			<div class="row">
@@ -141,14 +179,14 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                     <button class="btn btn-danger pull-right" id="button-destroy-realm" data-id="<?php echo $realm["id"] ?>"><i class="fa fa-exclamation-triangle"></i> Destroy Realm</button>
                 </div>
                 <div class="col-md-9">
-                    <p class="text-justify">Think about this first.</p>
+                    <p class="text-justify">Think about this first. Destroyed realms can not be recovered.</p>
                 </div>
             </div>
         </div>
     </div>
     
     <div class="panel panel-default">
-        <div class="panel-heading">Realm Details</div>
+        <div class="panel-heading">Settings</div>
         <div class="panel-body">
             <div class="row">
                 <div class="col-md-3">
@@ -168,7 +206,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
             </div>
 			<div class="row" style="padding-top: 8px;">
                 <div class="col-md-3">
-                    <p class="text-right text-muted"><strong>Display Crowd Funding / Donations Section</strong></p>
+                    <p class="text-right text-muted"><strong>Display Crowd Funding</strong></p>
                 </div>
                 <div class="col-md-9">
                     <div class="checkbox" style="display:inline">

@@ -289,11 +289,20 @@ switch ($_SERVER['QUERY_STRING']) {
     $("#loginSubmit").on("click", function (e) {
         e.preventDefault();
 	
-	var post = 'directive=login&' + $("#form-signin").serialize();
+        var post = 'directive=login&' + $("#form-signin").serialize();
 
         $.post("<?php echo $_SERVER['PHP_SELF']; ?>", post, function (data) {
 		if (data == "OK") {
-			window.location = "/account";
+            <?php 
+                switch ($_SERVER['QUERY_STRING']) {
+                    case '0':
+                        echo 'window.location = "/build";';
+                        break;
+                    default:
+                        echo 'window.location = "/account";';
+                        break;
+                }
+            ?>
 		}
         });
 
