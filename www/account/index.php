@@ -4,7 +4,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/config.php");
 if (!securePage($_SERVER['PHP_SELF'])){die();}
 
 if(!isUserLoggedIn()) {
-    header("Location: /account/register.php?0");
+    header("Location: /account/register.php?2");
     die();
 }
 

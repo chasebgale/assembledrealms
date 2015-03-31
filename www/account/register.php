@@ -179,12 +179,15 @@ $wrapper = '<div class="panel panel-warning" style="width: 500px; margin: 0 auto
 	   
 $wrapper = str_replace("%target%", $_SERVER['QUERY_STRING'], $wrapper);
 
-switch ($_SERVER['QUERY_STRING']) {
+switch (substr($_SERVER['QUERY_STRING'], 0, 1)) {
     case '0':
         echo str_replace("%message%", "You must be logged in to access our build tools.", $wrapper);
         break;
     case '1':
         echo str_replace("%message%", "You must be logged in to enter a realm.", $wrapper);
+        break;
+    case '2':
+        echo str_replace("%message%", "You must be logged in to access your account information.", $wrapper);
         break;
 }
 
@@ -254,9 +257,15 @@ switch ($_SERVER['QUERY_STRING']) {
         $.post("<?php echo $_SERVER['PHP_SELF']; ?>", post, function (data) {
             if (data == "OK") {
 
-                switch (window.location.search) {
-                    case '?0':
+                switch (window.location.search.substr(1, 1)) {
+                    case '0':
                         window.location = "/build";
+                        break;
+                    case '1':
+                        window.location = "/play/realm.php?" + window.location.search.substr(2);
+                        break;
+                    case '2':
+                        window.location = "/account";
                         break;
                     default:
                         window.location = "/account";
@@ -294,9 +303,15 @@ switch ($_SERVER['QUERY_STRING']) {
         $.post("<?php echo $_SERVER['PHP_SELF']; ?>", post, function (data) {
 		if (data == "OK") {
             <?php 
-                switch ($_SERVER['QUERY_STRING']) {
+                switch (substr($_SERVER['QUERY_STRING'], 0, 1)) {
                     case '0':
                         echo 'window.location = "/build";';
+                        break;
+                    case '1':
+                        echo 'window.location = "/play/realm.php?' . substr($_SERVER['QUERY_STRING'], 1) . '";';
+                        break;
+                    case '2':
+                        echo 'window.location = "/account";';
                         break;
                     default:
                         echo 'window.location = "/account";';

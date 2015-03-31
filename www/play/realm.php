@@ -4,7 +4,13 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/config.php");
 if (!securePage($_SERVER['PHP_SELF'])){die();}
 
 if(!isUserLoggedIn()) {
-    header("Location: /account/register.php?1");
+    
+    if (is_numeric($_SERVER['QUERY_STRING'])) {
+        $realmID = $_SERVER['QUERY_STRING'];
+    } else {
+        $realmID = '';
+    }
+    header("Location: /account/register.php?1" . $realmID);
     die();
 }
 
