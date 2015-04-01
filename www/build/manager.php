@@ -125,7 +125,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                     <p class="text-right text-muted"><strong>Balance</strong></p>
                 </div>
                 <div class="col-md-9">
-                    <span class="h3">$ 0.27</span>
+                    <span class="h3">$ <?php echo $realm["funds"] ?></span>
                 </div>
             </div>
             <div class="row">
@@ -133,7 +133,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                     <p class="text-right text-muted"><strong>Server</strong></p>
                 </div>
                 <div class="col-md-9">
-                    <span class="h3">Offline</small></span>
+                    <span class="h3"><?php echo ($realm["status"] == 0 ? "Offline" : "Online") ?></small></span>
                 </div>
             </div>
             <div class="row">
@@ -149,7 +149,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                     <p class="text-right text-muted"><strong>Loves</strong></p>
                 </div>
                 <div class="col-md-9">
-                    <span class="h3">30</span>
+                    <span class="h3"><?php echo $realm["loves"] ?></span>
                 </div>
             </div>
             <div class="row">
@@ -157,7 +157,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                     <p class="text-right text-muted"><strong>Comments</strong></p>
                 </div>
                 <div class="col-md-9">
-                    <span class="h3">46</span>
+                    <span class="h3"><?php echo $realm["comments"] ?></span>
                 </div>
             </div>
         </div>
@@ -171,15 +171,29 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                     <button class="btn btn-default pull-right" data-toggle="modal" data-target="#modalDeposit">Deposit Funds</button>
                 </div>
                 <div class="col-md-9">
-                    <p class="text-justify">Transfer funds from your personal account. Your realm's bank has a balance of <strong>$ 0.28</strong>.</p>
+                    <p class="text-justify">Transfer funds from your personal account. Your realm's bank has a balance of <strong>$ <?php echo $realm["funds"] ?></strong>.</p>
                 </div>
             </div>
             <div class="row">
                 <div class="col-md-3">
-                    <button class="btn btn-default pull-right" data-toggle="modal" data-target="#modalTakeRealmOnline">Take Realm Online</button>
+                    <?php 
+                        if ($realm["status"] == 0) {
+                            echo '<button class="btn btn-default pull-right" data-toggle="modal" data-target="#modalTakeRealmOnline">Take Realm Online</button>';
+                        } else {
+                            echo '<button class="btn btn-default pull-right">Take Realm Offline</button>';
+                        }
+                    ?>
                 </div>
                 <div class="col-md-9">
-                    <p class="text-justify">Your realm is currently <strong>offline</strong>. Click this button to allow other users to connect to your realm and enjoy the fruits of your hard work!</p>
+                    <p class="text-justify">
+                    <?php 
+                        if ($realm["status"] == 0) {
+                            echo 'Your realm is currently <strong>offline</strong>. Click this button to allow other users to connect to your realm and enjoy the fruits of your hard work!';
+                        } else {
+                            echo 'Your realm is current <strong>Online</strong>. Click this button to bring the server offline.';
+                        }
+                    ?>
+                    </p>
                 </div>
             </div>
             <div class="row">
@@ -202,7 +216,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     </div>
     
     <div class="panel panel-default">
-        <div class="panel-heading">Settings</div>
+        <div class="panel-heading">Display Settings</div>
         <div class="panel-body">
             <div class="row">
                 <div class="col-md-3">
@@ -230,6 +244,23 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 						   <input id="chkFunding" type="checkbox" <?php if ($realm["show_funding"]) echo 'checked="checked"' ?> style="float:inherit;"/>
 						</label>
 					</div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <p class="text-right text-muted"><strong>Screenshots</strong></p>
+                </div>
+                <div class="col-md-9">
+                    <!-- Screenshots are in the format {id}-{#}-thumb.jpg and {id}-{#}.jpg, e.g. 42-1.jpg and 42-1-thumb.jpg -->
+                    <?php
+                        for ($i = 0; $i < intval($realm["screenshots"]); $i++) {
+                            echo '<div style="display: inline-block; margin: 8px;">';
+                            echo '<a href="/play/img/' . $realm["id"] . '-' . $i . '.jpg" data-toggle="lightbox" ';
+                            echo 'data-title="' . $realm["title"] . '<small> screenshot #' . ($i + 1) . ' </small>" data-parent=".wrapper-parent" ';
+                            echo 'data-gallery="gallery-' . $realm["id"] . '" class="thumbnail"> ';
+                            echo '<img src="/play/img/' . $realm["id"] . '-' . $i . '-thumb.jpg"></a></div>';
+                        }
+                    ?>
                 </div>
             </div>
         </div>
@@ -272,6 +303,12 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 <?php require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php"); ?>
 
 <script type="text/javascript">
+
+    $(document).delegate('*[data-toggle="lightbox"]', 'click', function(event) {
+        event.preventDefault();
+        $(this).ekkoLightbox();
+    });
+
     var __markdownCreateNewDB = true;
     var __realmID = <?php echo $_SERVER['QUERY_STRING'] ?>;
     var __existingState = {
@@ -286,8 +323,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
 <script src="js/manager.js" type="text/javascript" charset="utf-8"></script>
 <script src="js/utilities.js" type="text/javascript" charset="utf-8"></script>
-<script src="js/marked.js" type="text/javascript" charset="utf-8"></script>
-<script src="/../js/ace/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/ekko-lightbox.min.js" type="text/javascript" charset="utf-8"></script>
 
 </body>
 </html>
