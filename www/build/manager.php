@@ -14,52 +14,17 @@ if ($method == 'POST') {
     $directive = $_POST['directive'];
     
     if ($directive == 'fetch') {
-	$raw = $loggedInUser->fetchRealmMarkdown($_POST['realm_id']);
-    
-	echo json_encode($raw);
-	die();
+        $raw = $loggedInUser->fetchRealmMarkdown($_POST['realm_id']);
+        
+        echo json_encode($raw);
+        die();
     }
     
     if ($directive == 'save') {
 	
-	global $mysqli;
+        global $mysqli;
         
         $output = '';
-	
-	if ($_POST['markdown_funding'] || $_POST['markdown_description']) {
-            // INSERT OR CREATE REALM_MARKDOWN ROW
-            if ($_POST['markdown_create'] == 'true') {
-                    $stmt_markdown = $mysqli->prepare("INSERT INTO realm_markdown(
-                                                            funding,
-                                                            description,
-                                                            realm_id
-                                                            )
-                                                            VALUES (
-                                                            ?,
-                                                            ?,
-                                                            ?)"
-                    );
-            } else {
-                    $stmt_markdown = $mysqli->prepare("UPDATE realm_markdown
-                                                            SET 
-                                                            funding = ?,
-                                                            description = ?
-                                                            WHERE
-                                                            realm_id = ?"
-                    );
-            }
-            
-            $stmt_markdown->bind_param("ssi", $_POST['markdown_funding'], $_POST['markdown_description'], $_POST['realm_id']);
-            $rc = $stmt_markdown->execute();
-            
-            if ( false===$rc ) {
-                $output .= " Markdown.execute() failed: " . htmlspecialchars($stmt_markdown->error);
-            } else {
-                $output .= " Markdown updated.";
-            }
-            
-            $stmt_markdown->close();
-	}
         
         if (isset($_POST['funding'])) {
             $stmt = $mysqli->prepare("UPDATE realms
@@ -83,18 +48,75 @@ if ($method == 'POST') {
         }
         
         echo json_encode( (object) ['message' => $output] );
-	die();
+        die();
 	
     }
     
     if ($directive == 'destroy') {
-	if (isset($_POST['realm_id'])) {
-	    $loggedInUser->destroyRealm($_POST['realm_id']);
-	    echo json_encode( (object) ['message' => 'OK'] );
-	    die();
-	}	
+        if (isset($_POST['realm_id'])) {
+            $loggedInUser->destroyRealm($_POST['realm_id']);
+            echo json_encode( (object) ['message' => 'OK'] );
+            die();
+        }	
     }
     
+    if ($directive == 'upload') {
+        try {
+            // Undefined | Multiple Files | $_FILES Corruption Attack
+            // If this request falls under any of them, treat it invalid.
+            if (!isset($_FILES['upfile']['error']) || is_array($_FILES['upfile']['error'])) {
+                throw new RuntimeException('Invalid parameters. ' . print_r($_FILES['upfile']));
+            }
+        
+            // Check $_FILES['upfile']['error'] value.
+            switch ($_FILES['upfile']['error']) {
+                case UPLOAD_ERR_OK:
+                    break;
+                case UPLOAD_ERR_NO_FILE:
+                    throw new RuntimeException('No file sent.');
+                case UPLOAD_ERR_INI_SIZE:
+                case UPLOAD_ERR_FORM_SIZE:
+                    throw new RuntimeException('Exceeded filesize limit.');
+                default:
+                    throw new RuntimeException('Unknown errors.');
+            }
+            
+            $img = $_FILES['upfile']['tmp_name'];
+            $dst = '/home/public/play/img/staging/' . sprintf('%04X%04X-%04X-%04X-%04X-%04X%04X%04X', mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(16384, 20479), mt_rand(32768, 49151), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535)) . '.jpg';
+        
+            // You should also check filesize here. 
+            if ($_FILES['upfile']['size'] > 2000000) {
+                throw new RuntimeException('Exceeded filesize limit.');
+            }
+        
+            if (($img_info = getimagesize($img)) === FALSE)
+                throw new RuntimeException('Invalid file format.');
+            
+            $width = $img_info[0];
+            $height = $img_info[1];
+            
+            switch ($img_info[2]) {
+                case IMAGETYPE_GIF  : $src = imagecreatefromgif($img);  break;
+                case IMAGETYPE_JPEG : $src = imagecreatefromjpeg($img); break;
+                case IMAGETYPE_PNG  : $src = imagecreatefrompng($img);  break;
+                default : throw new RuntimeException("Unknown filetype");
+            }
+            
+            $tmp = imagecreatetruecolor($width, $height);
+        
+            imagecopyresampled($tmp, $src, 0, 0, 0, 0, $width, $height, $width, $height);
+            imagejpeg($tmp, $dst);
+            
+            imagedestroy($tmp);
+            
+            echo "OK";
+            die();
+        
+        } catch (RuntimeException $e) {
+            echo $e->getMessage();
+            die();
+        }
+    }
 }
 
 require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
@@ -259,6 +281,19 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                             echo 'data-title="' . $realm["title"] . '<small> screenshot #' . ($i + 1) . ' </small>" data-parent=".wrapper-parent" ';
                             echo 'data-gallery="gallery-' . $realm["id"] . '" class="thumbnail"> ';
                             echo '<img src="/play/img/' . $realm["id"] . '-' . $i . '-thumb.jpg"></a></div>';
+                        }
+                        
+                        if (intval($realm["screenshots"]) < 6) {
+                            echo '<div style="display: inline-block; margin: 8px; vertical-align: top;">';
+                            echo '<form enctype="multipart/form-data" action="" method="POST" role="form">
+                                    <div class="form-group">
+                                        <label for="upfile">Select a new profile image:</label>
+                                        <input type="hidden" name="MAX_FILE_SIZE" value="200000" />
+                                        <input name="upfile" id="upfile" type="file" accept="image/gif, image/png, image/jpeg" />
+                                        <button type="submit" class="btn btn-default">Upload</button>
+                                    </div>
+                                </form>';
+                            echo '</div>';
                         }
                     ?>
                 </div>

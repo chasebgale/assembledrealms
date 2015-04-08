@@ -67,6 +67,34 @@ $(document).ready(function () {
       
    });
    
+   $("#upfile").on('change', function (e) {
+        var formData = new FormData();
+        formData.append('upfile', e.target.files[0]);
+        formData.append("directive", "upload");
+       
+        $.ajax({
+            url: "manager.php",
+            type: "POST",
+            data: formData,
+            processData: false, // tell jQuery not to process the data
+            contentType: false, // tell jQuery not to set contentType
+            success: function(data, textStatus, jqXHR) {
+                if(typeof data.error === 'undefined') {
+                    console.log("SUCCESS");
+                }
+                else
+                {
+                    // Handle errors here
+                    console.log('ERRORS: ' + data.error);
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                // Handle errors here
+                console.log('ERRORS: ' + textStatus);
+            }
+        });
+   });
+   
 });
 
 function fundingMarkdown(data) {
