@@ -156,6 +156,20 @@ class loggedInUser {
 		);
 	}
     
+    public function fetchRealmScreenshots($realm_id) {
+        global $mysqli,$db_table_prefix;
+		
+		$stmt = $mysqli->prepare("SELECT screenshots
+			FROM realms
+			WHERE id = ?");
+		$stmt->bind_param("i", $realm_id);
+		$stmt->execute();
+		$stmt->bind_result($screenshots);
+		$stmt->fetch();
+		$stmt->close();
+		return ($screenshots);
+    }
+    
 	public function fetchRealm($realm_id)
 	{
 		global $mysqli,$db_table_prefix;

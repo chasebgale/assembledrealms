@@ -71,16 +71,27 @@ $(document).ready(function () {
         var formData = new FormData();
         formData.append('upfile', e.target.files[0]);
         formData.append("directive", "upload");
+        // formData.append("realm_id", __realmID);
        
         $.ajax({
             url: "manager.php",
             type: "POST",
             data: formData,
+            dataType: 'json',
             processData: false, // tell jQuery not to process the data
             contentType: false, // tell jQuery not to set contentType
             success: function(data, textStatus, jqXHR) {
-                if(typeof data.error === 'undefined') {
-                    console.log("SUCCESS");
+                if(data.message === 'OK') {
+                    var newContent = '<div class="screenshotHolder" style="display: inline-block; margin: 8px;">';
+                    newContent += '<a href="/play/img/staging/' + data.guid + '.jpg" data-toggle="lightbox" data-title="NEW Screenshot" data-parent=".wrapper-parent" data-gallery="gallery-43" class="thumbnail">';
+                    newContent += '<img src="/play/img/staging/' + data.guid + '-thumb.jpg"></a></div>';
+                    
+                    $('.screenshotHolder:last').after(newContent);
+                    
+                    if ($('.screenShotHolder').length >= 6) {
+                        $('#addNewShot').hide();
+                    }
+                    
                 }
                 else
                 {

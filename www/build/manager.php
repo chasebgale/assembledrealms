@@ -62,6 +62,13 @@ if ($method == 'POST') {
     
     if ($directive == 'upload') {
         try {
+            
+            /*
+            if (!isset($_POST['realm_id'])) {
+                throw new RuntimeException('No Realm ID.');
+            }
+            */
+            
             // Undefined | Multiple Files | $_FILES Corruption Attack
             // If this request falls under any of them, treat it invalid.
             if (!isset($_FILES['upfile']['error']) || is_array($_FILES['upfile']['error'])) {
@@ -81,16 +88,25 @@ if ($method == 'POST') {
                     throw new RuntimeException('Unknown errors.');
             }
             
-            $img = $_FILES['upfile']['tmp_name'];
-            $dst = '/home/public/play/img/staging/' . sprintf('%04X%04X-%04X-%04X-%04X-%04X%04X%04X', mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(16384, 20479), mt_rand(32768, 49151), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535)) . '.jpg';
-        
-            // You should also check filesize here. 
+            // Check filesize. 
             if ($_FILES['upfile']['size'] > 2000000) {
                 throw new RuntimeException('Exceeded filesize limit.');
             }
-        
-            if (($img_info = getimagesize($img)) === FALSE)
+            
+            $img = $_FILES['upfile']['tmp_name'];
+            
+            $guid = sprintf('%04X%04X-%04X-%04X-%04X-%04X%04X%04X', mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(16384, 20479), mt_rand(32768, 49151), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535));
+            
+            $dst        = '/home/public/play/img/staging/' . $guid . '.jpg';
+            $dst_thumb  = '/home/public/play/img/staging/' . $guid . '-thumb.jpg';
+            
+            //$dst_number = $loggedInUser->fetchRealmScreenshots($_POST['realm_id']);
+            //$dst        = '/home/public/play/img/' . $_POST['realm_id'] . '-' . $dst_number . '.jpg';
+            //$dst_thumb  = '/home/public/play/img/' . $_POST['realm_id'] . '-' . $dst_number . '-thumb.jpg';
+            
+            if (($img_info = getimagesize($img)) === FALSE) {
                 throw new RuntimeException('Invalid file format.');
+            }
             
             $width = $img_info[0];
             $height = $img_info[1];
@@ -102,14 +118,37 @@ if ($method == 'POST') {
                 default : throw new RuntimeException("Unknown filetype");
             }
             
-            $tmp = imagecreatetruecolor($width, $height);
-        
-            imagecopyresampled($tmp, $src, 0, 0, 0, 0, $width, $height, $width, $height);
-            imagejpeg($tmp, $dst);
+            //calculate resized image picture dimensions 
+            $thumb_size = 150;
+            $original_ratio = $width/$height;
+            $targetWidth = $targetHeight = min($thumb_size, max($width, $height));
+
+            if ($ratio < 1) {
+                $targetWidth = $targetHeight * $original_ratio;
+            } else {
+                $targetHeight = $targetWidth / $original_ratio;
+            }
             
+            //calculate picture position 'in center' of new image.
+            $int_width = ($thumb_size - $targetWidth)/2;
+            $int_height = ($thumb_size - $targetHeight)/2;        
+        
+            $tmp = imagecreatetruecolor($width, $height);
+            $tmp_thumb = imagecreatetruecolor($thumb_size, $thumb_size);
+        
+            // Full Size JPEG:
+            imagecopyresampled($tmp, $src, 0, 0, 0, 0, $width, $height, $width, $height);
+            
+            // Thumb:
+            imagecopyresampled($tmp_thumb, $src, $int_width, $int_height, 0, 0, $targetWidth, $targetHeight, $width, $height);
+            
+            imagejpeg($tmp, $dst);
             imagedestroy($tmp);
             
-            echo "OK";
+            imagejpeg($tmp_thumb, $dst_thumb);
+            imagedestroy($tmp_thumb);
+            
+            echo json_encode( (object) ['message' => 'OK', 'guid' => $guid] );
             die();
         
         } catch (RuntimeException $e) {
@@ -276,7 +315,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                     <!-- Screenshots are in the format {id}-{#}-thumb.jpg and {id}-{#}.jpg, e.g. 42-1.jpg and 42-1-thumb.jpg -->
                     <?php
                         for ($i = 0; $i < intval($realm["screenshots"]); $i++) {
-                            echo '<div style="display: inline-block; margin: 8px;">';
+                            echo '<div class="screenshotHolder" style="display: inline-block; margin: 8px;">';
                             echo '<a href="/play/img/' . $realm["id"] . '-' . $i . '.jpg" data-toggle="lightbox" ';
                             echo 'data-title="' . $realm["title"] . '<small> screenshot #' . ($i + 1) . ' </small>" data-parent=".wrapper-parent" ';
                             echo 'data-gallery="gallery-' . $realm["id"] . '" class="thumbnail"> ';
@@ -284,13 +323,12 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                         }
                         
                         if (intval($realm["screenshots"]) < 6) {
-                            echo '<div style="display: inline-block; margin: 8px; vertical-align: top;">';
+                            echo '<div id="addNewShot" style="display: inline-block; margin: 8px; vertical-align: top;">';
                             echo '<form enctype="multipart/form-data" action="" method="POST" role="form">
                                     <div class="form-group">
-                                        <label for="upfile">Select a new profile image:</label>
+                                        <label for="upfile">Add a new screenshot:</label>
                                         <input type="hidden" name="MAX_FILE_SIZE" value="200000" />
                                         <input name="upfile" id="upfile" type="file" accept="image/gif, image/png, image/jpeg" />
-                                        <button type="submit" class="btn btn-default">Upload</button>
                                     </div>
                                 </form>';
                             echo '</div>';
@@ -299,7 +337,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                 </div>
             </div>
         </div>
-		<div class="panel-footer">
+		<div class="panel-footer clearfix">
 			<button id="savebutton" class="btn btn-default pull-right">Save Changes!</button>
 		</div>
     </div>
