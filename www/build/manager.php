@@ -315,11 +315,12 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                     <!-- Screenshots are in the format {id}-{#}-thumb.jpg and {id}-{#}.jpg, e.g. 42-1.jpg and 42-1-thumb.jpg -->
                     <?php
                         for ($i = 0; $i < intval($realm["screenshots"]); $i++) {
-                            echo '<div class="screenshotHolder" style="display: inline-block; margin: 8px;">';
+                            echo '<div class="thumbnail screenshotHolder" style="display: inline-block; margin: 8px;">';
                             echo '<a href="/play/img/' . $realm["id"] . '-' . $i . '.jpg" data-toggle="lightbox" ';
                             echo 'data-title="' . $realm["title"] . '<small> screenshot #' . ($i + 1) . ' </small>" data-parent=".wrapper-parent" ';
-                            echo 'data-gallery="gallery-' . $realm["id"] . '" class="thumbnail"> ';
-                            echo '<img src="/play/img/' . $realm["id"] . '-' . $i . '-thumb.jpg"></a></div>';
+                            echo 'data-gallery="gallery-' . $realm["id"] . '"> ';
+                            echo '<img src="/play/img/' . $realm["id"] . '-' . $i . '-thumb.jpg"></a>'; 
+                            echo '<div class="caption"><a href="#" class="btn removeScreenshot"><i class="fa fa-trash-o"></i> Remove</a></div></div>';
                         }
                         
                         if (intval($realm["screenshots"]) < 6) {

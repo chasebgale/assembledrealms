@@ -1,3 +1,6 @@
+var __newScreenshots = [];
+var __removedScreenshots = [];
+
 $(document).ready(function () {
    
    $('.monitored').on('change', function (e) {
@@ -67,6 +70,14 @@ $(document).ready(function () {
       
    });
    
+    $(".removeScreenshot").on('click', function (e) {
+        e.preventDefault();
+        
+        var target = $(this).parent().prev().attr('href').substr(10);
+        __removedScreenshots.push(target);
+        $(this).parent().parent().fadeOut();
+    });
+   
    $("#upfile").on('change', function (e) {
         var formData = new FormData();
         formData.append('upfile', e.target.files[0]);
@@ -91,6 +102,8 @@ $(document).ready(function () {
                     if ($('.screenShotHolder').length >= 6) {
                         $('#addNewShot').hide();
                     }
+                    
+                    __newScreenshots.push(data.guid);
                     
                 }
                 else
