@@ -332,9 +332,15 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                                         <input name="upfile" id="upfile" type="file" accept="image/gif, image/png, image/jpeg" />
                                     </div>
                                 </form>';
+                            echo '<div id="uploadProgress" class="progress" style="width: 200px; display: none;">
+                                    <div id="uploadProgressbar" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+                                    </div>
+                                 </div>';
                             echo '</div>';
                         }
                     ?>
+                    
+                    
                 </div>
             </div>
         </div>

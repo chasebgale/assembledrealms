@@ -79,6 +79,10 @@ $(document).ready(function () {
     });
    
    $("#upfile").on('change', function (e) {
+       
+        $("#upfile").attr('disabled', true);
+        $("#uploadProgress").fadeIn();
+        
         var formData = new FormData();
         formData.append('upfile', e.target.files[0]);
         formData.append("directive", "upload");
@@ -91,11 +95,21 @@ $(document).ready(function () {
             dataType: 'json',
             processData: false, // tell jQuery not to process the data
             contentType: false, // tell jQuery not to set contentType
+            xhr: function () {
+                var xhr = new window.XMLHttpRequest();
+                // Upload progress
+                xhr.upload.addEventListener("progress", function (evt) {
+                    var percentComplete = Math.round((evt.loaded / evt.total) * 100);
+                    $("#uploadProgressbar").attr('aria-valuenow', percentComplete).width(percentComplete + '%');
+                }, false);
+                return xhr;
+            },
             success: function(data, textStatus, jqXHR) {
                 if(data.message === 'OK') {
-                    var newContent = '<div class="screenshotHolder" style="display: inline-block; margin: 8px;">';
-                    newContent += '<a href="/play/img/staging/' + data.guid + '.jpg" data-toggle="lightbox" data-title="NEW Screenshot" data-parent=".wrapper-parent" data-gallery="gallery-43" class="thumbnail">';
-                    newContent += '<img src="/play/img/staging/' + data.guid + '-thumb.jpg"></a></div>';
+                    var newContent = '<div class="thumbnail screenshotHolder" style="display: inline-block; margin: 8px;">';
+                    newContent += '<a href="/play/img/staging/' + data.guid + '.jpg" data-toggle="lightbox" data-title="NEW Screenshot" data-parent=".wrapper-parent" data-gallery="gallery-43">';
+                    newContent += '<img src="/play/img/staging/' + data.guid + '-thumb.jpg"></a>';
+                    newContent += '<div class="caption"><a href="#" class="btn removeScreenshot"><i class="fa fa-trash-o"></i> Remove</a></div></div>';
                     
                     $('.screenshotHolder:last').after(newContent);
                     
