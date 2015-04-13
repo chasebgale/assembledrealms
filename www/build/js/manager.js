@@ -3,82 +3,86 @@ var __removedScreenshots = [];
 
 $(document).ready(function () {
    
-   $('.monitored').on('change', function (e) {
-      var prop = $(this).attr('data-id');
-      __currentState[prop] = $(this).val();
-      checkForChanges();
-   });
+    $('.monitored').on('change', function (e) {
+        var prop = $(this).attr('data-id');
+        __currentState[prop] = $(this).val();
+        checkForChanges();
+    });
    
-   $("#button-destroy-realm").on("click", function (e) {
-    
-         e.preventDefault();
-         var id = $(this).attr('data-id');
+    $("#button-destroy-realm").on("click", function (e) {
 
-         $.ajax({
+        e.preventDefault();
+        var id = $(this).attr('data-id');
+
+        $.ajax({
             url: 'http://source-01.assembledrealms.com/api/project/' + id + '/destroy',
             type: 'GET',
             dataType: 'json',
             success: function (data) {
-                
-               var parameters = {};
-               parameters.directive = "destroy";
-               parameters.realm_id = id;
+            
+            var parameters = {};
+            parameters.directive = "destroy";
+            parameters.realm_id = id;
 
-               $.post("manager.php", parameters, function (data) {
-                  data = JSON.parse(data);
-                  if (data.message == "OK") {
-                      window.location = "http://www.assembledrealms.com/build";
-                  }
-               });
+            $.post("manager.php", parameters, function (data) {
+                data = JSON.parse(data);
+                if (data.message == "OK") {
+                    window.location = "http://www.assembledrealms.com/build";
+                }
+            });
 
-            }
-         });
+        }
+        });
         
-   });
+    });
    
-   $("#savebutton").on('click', function (e) {
-      var button = $(this);
+    $("#savebutton").on('click', function (e) {
+        var button = $(this);
       
-      button.attr('disabled', true);
-      button.html('<i class="fa fa-cog fa-spin"></i> Save Changes!');
-      
-      $.ajax({
+        button.attr('disabled', true);
+        button.html('<i class="fa fa-cog fa-spin"></i> Save Changes!');
+
+        $.ajax({
             url: 'manager.php',
             type: 'post',
             dataType: 'json',
-            data: {directive: 'save',
-                   realm_id: __realmID,
-                   markdown_funding: __editorFunding.getValue(),
-                   markdown_description: __editorReadme.getValue(),
-                   markdown_create: __markdownCreateNewDB,
-                   funding: $("#chkFunding").is(":checked")
-                   }
-      })
-      .done(function (data) {
-         console.log(data);
-         __markdownCreateNewDB = false;
-         enableSave();
-      })
-      .fail(function(data) {
-          console.log(data);
-          $('#newFileCreateAlert').text('Network Error: ' + data.statusText);
-          $('#newFileCreateAlert').fadeIn();
-              // Update DOM to reflect we messed up:
-              //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
-      })
-      
-      
-   });
+            data: {
+                directive: 'save',
+                realm_id: __realmID,
+                description: $("#details-description").val(),
+                funding: $("#chkFunding").is(":checked"),
+                shots_added: __newScreenshots,
+                shots_removed: __removedScreenshots
+            }
+        })
+        .done(function (data) {
+            console.log(data);
+            __markdownCreateNewDB = false;
+            enableSave();
+        })
+        .fail(function(data) {
+            console.log(data);
+            $('#newFileCreateAlert').text('Network Error: ' + data.statusText);
+            $('#newFileCreateAlert').fadeIn();
+            // Update DOM to reflect we messed up:
+            //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
+        });
+    });
    
-    $(".removeScreenshot").on('click', function (e) {
+    $("#screenshotsCol").on('click', '.removeScreenshot', function (e) {
         e.preventDefault();
         
         var target = $(this).parent().prev().attr('href').substr(10);
-        __removedScreenshots.push(target);
+        
+        if (target.substr(0, 7) !== 'staging') {
+            // We only need to report existing shots to be removed, the staging area server side gets wiped daily
+            __removedScreenshots.push(target);
+        }
+        
         $(this).parent().parent().fadeOut();
     });
    
-   $("#upfile").on('change', function (e) {
+    $("#upfile").on('change', function (e) {
        
         $("#upfile").attr('disabled', true);
         $("#uploadProgress").fadeIn();
@@ -86,7 +90,6 @@ $(document).ready(function () {
         var formData = new FormData();
         formData.append('upfile', e.target.files[0]);
         formData.append("directive", "upload");
-        // formData.append("realm_id", __realmID);
        
         $.ajax({
             url: "manager.php",
@@ -117,6 +120,10 @@ $(document).ready(function () {
                         $('#addNewShot').hide();
                     }
                     
+                    $("#uploadScreenshotForm").get(0).reset();
+                    $("#upfile").attr('disabled', false);
+                    $("#uploadProgressbar").attr('aria-valuenow', 0).width('0%');
+                    
                     __newScreenshots.push(data.guid);
                     
                 }
@@ -131,47 +138,9 @@ $(document).ready(function () {
                 console.log('ERRORS: ' + textStatus);
             }
         });
-   });
+    });
    
 });
-
-function fundingMarkdown(data) {
-   var variables = {};
-   variables.funds = "$12.45";
-   variables.priceHour = "$0.009";
-   variables.priceDay = "$0.22";
-   variables.fundsToTime = "9 days, 11 hours";
-   
-   var markedOutput = marked(data);
-   
-   _.forIn(variables, function(value, key) {
-      markedOutput = markedOutput.replace('{' + key + '}', value);
-   });
-   
-   $("#realmFundingDisplay").html( markedOutput );
-}
-
-function fetchFundingTemplate() {
-   $.get( "/data/markdown/funding.markdown", function( data ) {
-      __editorFunding.setValue(data);
-      __existingState.markdown_funding = data;
-      __currentState.markdown_funding = data;
-      fundingMarkdown(data);
-   });
-}
-
-function fetchDescriptionTemplate() {
-   $.get( "/data/markdown/readme.markdown", function( data ) {
-      __editorReadme.setValue(data);
-      __existingState.markdown_readme = data;
-      __currentState.markdown_readme = data;
-      descriptionMarkdown(data);
-   });
-}
-
-function descriptionMarkdown(data) {
-   $("#realmReadmeDisplay").html( marked(data) );
-}
 
 function checkForChanges() {
    if (_.isEqual(__existingState, __currentState)) {

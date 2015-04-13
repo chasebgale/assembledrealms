@@ -26,24 +26,29 @@ if ($method == 'POST') {
         
         $output = '';
         
-        if (isset($_POST['funding'])) {
+        if (isset($_POST['funding']) && isset($_POST['description'])) {
             $stmt = $mysqli->prepare("UPDATE realms
-                                     SET show_funding = ?
+                                     SET show_funding = ?,
+                                     SET description = ?
                                      WHERE id = ?"
             );
             
             $funding = (int)($_POST['funding'] == 'true');
             
-            $stmt->bind_param("ii", $funding, $_POST['realm_id']);
+            $stmt->bind_param("isi", $funding, $_POST['description'], $_POST['realm_id']);
             $rc = $stmt->execute();
             
             if ( false===$rc ) {
-                $output .= " Funding.execute() failed: " . htmlspecialchars($stmt->error);
+                $output = "Realm update failed: " . htmlspecialchars($stmt->error);
             } else {
-                $output .= " Funding updated.";
+                $output = "OK";
             }
             
             $stmt->close();
+            
+        }
+        
+        if (isset($_POST['shots_removed'])) {
             
         }
         
@@ -311,7 +316,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                 <div class="col-md-3">
                     <p class="text-right text-muted"><strong>Screenshots</strong></p>
                 </div>
-                <div class="col-md-9">
+                <div class="col-md-9" id="screenshotsCol">
                     <!-- Screenshots are in the format {id}-{#}-thumb.jpg and {id}-{#}.jpg, e.g. 42-1.jpg and 42-1-thumb.jpg -->
                     <?php
                         for ($i = 0; $i < intval($realm["screenshots"]); $i++) {
@@ -325,7 +330,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                         
                         if (intval($realm["screenshots"]) < 6) {
                             echo '<div id="addNewShot" style="display: inline-block; margin: 8px; vertical-align: top;">';
-                            echo '<form enctype="multipart/form-data" action="" method="POST" role="form">
+                            echo '<form enctype="multipart/form-data" action="" method="POST" role="form" id="uploadScreenshotForm">
                                     <div class="form-group">
                                         <label for="upfile">Add a new screenshot:</label>
                                         <input type="hidden" name="MAX_FILE_SIZE" value="200000" />
