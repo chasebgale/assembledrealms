@@ -12,6 +12,12 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method == 'POST') {
     $directive = $_POST['directive'];
+    $realm_id  = $_POST['realm_id'];
+    
+    if ($loggedInUser->isRealmOwner($realm_id) === false) {
+        echo json_encode( (object) ['message' => 'Not Authorized.'] );
+        die();
+    }
     
     if ($directive == 'fetch') {
         $raw = $loggedInUser->fetchRealmMarkdown($_POST['realm_id']);
@@ -24,35 +30,63 @@ if ($method == 'POST') {
 	
         global $mysqli;
         
-        $output = '';
+        if (isset($_POST['shots_removed']) || isset($_POST['shots'])) {
+            $removed_arr = $_POST['shots_removed'];
+            $newShotOrder = $_POST['shots'];
+            
+            if ($removed_arr) {
+                foreach ($removed_arr as $value) {
+                    unlink('/home/public/play/img/' . $_POST['realm_id'] . '-' . $value . '.jpg');
+                }
+            }
+            
+            $size = count($newShotOrder);
+            
+            for($i = 0; $i < $size; ++$i) {
+                if (startsWith($newShotOrder[$i], 'staging')) {
+                    rename('/home/public/play/img/' . $newShotOrder[$i] . '.jpg',
+                           '/home/public/play/img/' . $_POST['realm_id'] . '-' . $i . '.jpg');
+                           
+                    rename('/home/public/play/img/' . $newShotOrder[$i] . '-thumb.jpg',
+                           '/home/public/play/img/' . $_POST['realm_id'] . '-' . $i . '-thumb.jpg');
+                           
+                } else {
+                    if ($i != $newShotOrder[$i]) {
+                        rename('/home/public/play/img/' . $_POST['realm_id'] . '-' . $newShotOrder[$i] . '.jpg',
+                               '/home/public/play/img/' . $_POST['realm_id'] . '-' . $i . '.jpg');
+                               
+                        rename('/home/public/play/img/' . $_POST['realm_id'] . '-' . $newShotOrder[$i] . '-thumb.jpg',
+                               '/home/public/play/img/' . $_POST['realm_id'] . '-' . $i . '-thumb.jpg');
+                    }
+                }
+            }
+        }
         
         if (isset($_POST['funding']) && isset($_POST['description'])) {
-            $stmt = $mysqli->prepare("UPDATE realms
-                                     SET show_funding = ?,
-                                     SET description = ?
-                                     WHERE id = ?"
-            );
+            $stmt = $mysqli->prepare("UPDATE realms 
+                                        SET description = ?, show_funding = ?, screenshots = ?
+                                        WHERE id = ?");
+                                    
+            if ($stmt == false) {
+                echo json_encode( (object) ['message' => htmlspecialchars($mysqli->error)] );
+                die();
+            }
             
             $funding = (int)($_POST['funding'] == 'true');
             
-            $stmt->bind_param("isi", $funding, $_POST['description'], $_POST['realm_id']);
+            $stmt->bind_param("siii", $_POST['description'], $funding, $size, $_POST['realm_id']);
             $rc = $stmt->execute();
             
             if ( false===$rc ) {
-                $output = "Realm update failed: " . htmlspecialchars($stmt->error);
-            } else {
-                $output = "OK";
+                echo json_encode( (object) ['message' => 'Realm update failed: ' . htmlspecialchars($stmt->error)] );
+                die();
             }
             
             $stmt->close();
             
         }
         
-        if (isset($_POST['shots_removed'])) {
-            
-        }
-        
-        echo json_encode( (object) ['message' => $output] );
+        echo json_encode( (object) ['message' => 'OK'] );
         die();
 	
     }
@@ -320,14 +354,22 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                     <!-- Screenshots are in the format {id}-{#}-thumb.jpg and {id}-{#}.jpg, e.g. 42-1.jpg and 42-1-thumb.jpg -->
                     <?php
                         for ($i = 0; $i < intval($realm["screenshots"]); $i++) {
-                            echo '<div class="thumbnail screenshotHolder" style="display: inline-block; margin: 8px;">';
+                            echo '<div class="thumbnail screenshotHolder" data-id="' . $i . '" style="display: inline-block; margin: 8px;">';
                             echo '<a href="/play/img/' . $realm["id"] . '-' . $i . '.jpg" data-toggle="lightbox" ';
                             echo 'data-title="' . $realm["title"] . '<small> screenshot #' . ($i + 1) . ' </small>" data-parent=".wrapper-parent" ';
                             echo 'data-gallery="gallery-' . $realm["id"] . '"> ';
                             echo '<img src="/play/img/' . $realm["id"] . '-' . $i . '-thumb.jpg"></a>'; 
-                            echo '<div class="caption"><a href="#" class="btn removeScreenshot"><i class="fa fa-trash-o"></i> Remove</a></div></div>';
+                            echo '<div class="caption"><a href="#" class="btn removeScreenshot" data-id="' . $i . '"><i class="fa fa-trash-o"></i> Remove</a></div></div>';
                         }
-                        
+                    ?>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <p class="text-right text-muted"><strong>&nbsp;</strong></p>
+                </div>
+                <div class="col-md-9">
+                    <?php
                         if (intval($realm["screenshots"]) < 6) {
                             echo '<div id="addNewShot" style="display: inline-block; margin: 8px; vertical-align: top;">';
                             echo '<form enctype="multipart/form-data" action="" method="POST" role="form" id="uploadScreenshotForm">
@@ -344,8 +386,6 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                             echo '</div>';
                         }
                     ?>
-                    
-                    
                 </div>
             </div>
         </div>

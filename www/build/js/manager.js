@@ -1,4 +1,3 @@
-var __newScreenshots = [];
 var __removedScreenshots = [];
 
 $(document).ready(function () {
@@ -41,6 +40,12 @@ $(document).ready(function () {
       
         button.attr('disabled', true);
         button.html('<i class="fa fa-cog fa-spin"></i> Save Changes!');
+        
+        var newOrder = [];
+        
+        $('.screenshotHolder').each( function(e) {
+            newOrder.push($(this).attr('data-id'));
+        });
 
         $.ajax({
             url: 'manager.php',
@@ -51,14 +56,14 @@ $(document).ready(function () {
                 realm_id: __realmID,
                 description: $("#details-description").val(),
                 funding: $("#chkFunding").is(":checked"),
-                shots_added: __newScreenshots,
+                shots: newOrder,
                 shots_removed: __removedScreenshots
             }
         })
         .done(function (data) {
-            console.log(data);
-            __markdownCreateNewDB = false;
-            enableSave();
+            __removedScreenshots = [];
+            button.attr('disabled', false);
+            button.html('Save Changes!');
         })
         .fail(function(data) {
             console.log(data);
@@ -71,15 +76,18 @@ $(document).ready(function () {
    
     $("#screenshotsCol").on('click', '.removeScreenshot', function (e) {
         e.preventDefault();
+        var id = $(this).attr('data-id');
         
-        var target = $(this).parent().prev().attr('href').substr(10);
-        
-        if (target.substr(0, 7) !== 'staging') {
+        if (id) {
             // We only need to report existing shots to be removed, the staging area server side gets wiped daily
-            __removedScreenshots.push(target);
+            __removedScreenshots.push(id);
         }
         
-        $(this).parent().parent().fadeOut();
+        $(this).parent().parent().remove();
+        
+        if ($('.screenShotHolder').length < 6) {
+            $('#addNewShot').fadeIn();
+        }
     });
    
     $("#upfile").on('change', function (e) {
@@ -90,6 +98,7 @@ $(document).ready(function () {
         var formData = new FormData();
         formData.append('upfile', e.target.files[0]);
         formData.append("directive", "upload");
+        formData.append("realm_id", __realmID);
        
         $.ajax({
             url: "manager.php",
@@ -109,22 +118,20 @@ $(document).ready(function () {
             },
             success: function(data, textStatus, jqXHR) {
                 if(data.message === 'OK') {
-                    var newContent = '<div class="thumbnail screenshotHolder" style="display: inline-block; margin: 8px;">';
+                    var newContent = '<div class="thumbnail screenshotHolder" data-id="staging/' + data.guid + '" style="display: inline-block; margin: 8px;">';
                     newContent += '<a href="/play/img/staging/' + data.guid + '.jpg" data-toggle="lightbox" data-title="NEW Screenshot" data-parent=".wrapper-parent" data-gallery="gallery-43">';
                     newContent += '<img src="/play/img/staging/' + data.guid + '-thumb.jpg"></a>';
                     newContent += '<div class="caption"><a href="#" class="btn removeScreenshot"><i class="fa fa-trash-o"></i> Remove</a></div></div>';
                     
-                    $('.screenshotHolder:last').after(newContent);
+                    $('#screenshotsCol').append(newContent);
                     
-                    if ($('.screenShotHolder').length >= 6) {
+                    if ($('.screenshotHolder').length >= 6) {
                         $('#addNewShot').hide();
                     }
                     
                     $("#uploadScreenshotForm").get(0).reset();
                     $("#upfile").attr('disabled', false);
                     $("#uploadProgressbar").attr('aria-valuenow', 0).width('0%');
-                    
-                    __newScreenshots.push(data.guid);
                     
                 }
                 else

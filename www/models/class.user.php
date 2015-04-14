@@ -98,6 +98,26 @@ class loggedInUser {
 		$stmt->close();	
 	}
     
+    public function isRealmOwner($realm_id) {
+        global $mysqli,$db_table_prefix;
+		$stmt = $mysqli->prepare("SELECT * FROM realms
+                                    WHERE user_id = ? AND
+                                    id = ?");
+		$stmt->bind_param("ii", $this->user_id, $realm_id);
+		$stmt->execute();
+        $stmt->store_result();
+        $stmt->fetch();
+        $count = $stmt->num_rows();
+		$stmt->close();
+
+        if ($count > 0) {
+            return true;
+        } else {
+            return false;
+        }
+        
+    }
+    
 	public function createRealm($title, $description, $engine)
 	{
 		global $mysqli,$db_table_prefix;
