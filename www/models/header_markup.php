@@ -34,10 +34,8 @@
             echo "<li><a href='/account' class='header-link'><img src='" . $loggedInUser->user_image . "' width='48'>";
             
             $unread = $loggedInUser->unreadMessages();
+            echo "<span class='badge' style='margin-left: -4px; background-color: #4C4C4C; vertical-align: top; text-align: left; line-height: 1.25; height: 48px; border-radius: 0;'>" . $loggedInUser->displayname . "<br /><i class='fa fa-envelope-o'></i> " . $unread . "<span style='color: #777;'> / </span><i class='fa fa-usd'></i> 0.00</span>";
             
-            if ($unread > 0) {
-                echo "<span class='badge' style='margin-left: -8px; margin-top: 2px; background-color: #4C4C4C; vertical-align: top;'><i class='fa fa-envelope-o'></i> " . $unread . "</span>";
-            }
             
             echo "</a></li>";
         } else {

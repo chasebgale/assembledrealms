@@ -377,6 +377,17 @@ class loggedInUser {
 	public function createRealmComment($realmID, $content, $parentID = NULL)
 	{
 		global $mysqli,$db_table_prefix;
+        
+        $mysqli->autocommit(FALSE);
+        
+        $stmt = $mysqli->prepare("UPDATE realms
+                 SET comments = comments + 1
+                 WHERE
+                 id = ?");
+        $stmt->bind_param("i", $realmID);
+        $stmt->execute();
+        $stmt->close();
+        
 		$stmt = $mysqli->prepare("INSERT INTO realm_comments (
 			realm_id,
 			user_id,
@@ -392,6 +403,9 @@ class loggedInUser {
 		$stmt->execute();
 		$inserted_id = $mysqli->insert_id;
 		$stmt->close();
+        
+        $mysqli->commit();
+        $mysqli->autocommit(TRUE);
 		
 		$stmt = $mysqli->prepare("SELECT 
 				realm_comments.*, uc_users.display_name
@@ -405,6 +419,7 @@ class loggedInUser {
 		$stmt->bind_result($id, $realm_id, $user_id, $parent_id, $content, $timestamp, $display_name);
 		$stmt->fetch();
 		$stmt->close();
+        
 		return array('id' => $id,
 				'realm_id' => $realm_id,
 				'user_id' => $user_id,

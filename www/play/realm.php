@@ -150,12 +150,10 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     <div>
         
     <ul id="tabs" class="nav nav-tabs" role="tablist" style="margin-top: 60px;">
-<?php if ($realm['show_funding']) { ?>
-        <li class="active"><a href="#tab_funding" role="tab" data-toggle="tab">Funding</a></li>
-        <li><a href="#tab_readme" role="tab" data-toggle="tab">Readme</a></li>
-<?php } else { ?>
         <li class="active"><a href="#tab_readme" role="tab" data-toggle="tab">Readme</a></li>
-<?php } ?>
+        <?php if ($realm['show_funding']) { ?>
+        <li><a href="#tab_funding" role="tab" data-toggle="tab">Funding</a></li>
+        <?php } ?>
         <li><a href="#tab_comments" role="tab" data-toggle="tab">Comments</a></li>
         <li><a href="#tab_credits" role="tab" data-toggle="tab">Credits</a></li>
     </ul>
@@ -163,7 +161,9 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     <!-- Tab panes -->
     <div class="tab-content">
     
-    <?php if ($realm['show_funding']) { ?>
+        <div id="tab_readme" style="margin-top: 32px;" class="tab-pane<?php if ($realm['show_funding'] == false) echo ' active' ?>"></div>
+    
+        <?php if ($realm['show_funding']) { ?>
         <div id="tab_funding" class="tab-pane active clearfix" style="margin-top: 32px;">
             <div id="funding"></div>
             <div id="realmFundingDonate" style="float: right;">
@@ -193,9 +193,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                 </form>
             </div>
         </div>
-    <?php } ?>
-    
-        <div id="tab_readme" style="margin-top: 32px;" class="tab-pane<?php if ($realm['show_funding'] == false) echo ' active' ?>"></div>
+        <?php } ?>
     
         <div id="tab_comments" class="tab-pane" style="margin-top: 32px;">
             <div id="comment" style="margin-top: 0px;" class="clearfix">
@@ -385,6 +383,11 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                         button.removeAttr('disabled');
                         button.html('Add Comment');
                         $('#commentContent').val('');
+                        
+                        // Update comment count:
+                        var commentCountSpan = $("#commentCount");
+                        var commentCount = parseInt(commentCountSpan.text()) + 1;
+                        commentCountSpan.text(commentCount);
                         
                         // Scroll page to new comment:
                         $('html, body').animate({
