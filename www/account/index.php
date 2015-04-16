@@ -163,6 +163,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
                                 </tr>
                             </table>
                             <input type="hidden" name="currency_code" value="USD">
+                            <input type="hidden" name="custom" value="<?php echo $loggedInUser->user_id ?>">
                             <input style="margin-top: 12px;" type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_paynowCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
                             <img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
                         </form>
@@ -193,7 +194,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
                 </div>
                 <div class="tab-pane" id="bitcoin">
                     <div style="padding: 40px; height: 400px; padding-top: 80px;">
-                        <a class="coinbase-button" data-code="53dc620f9bc6914ac6a5da9c8371e02a" data-custom="customerID" href="https://www.coinbase.com/checkouts/53dc620f9bc6914ac6a5da9c8371e02a" style="margin-left: 20px; margin-top: 40px;">Pay With Bitcoin</a>
+                        <a class="coinbase-button" data-code="53dc620f9bc6914ac6a5da9c8371e02a" data-custom="<?php echo $loggedInUser->user_id ?>" href="https://www.coinbase.com/checkouts/53dc620f9bc6914ac6a5da9c8371e02a" style="margin-left: 20px; margin-top: 40px;">Pay With Bitcoin</a>
                         <script src="https://www.coinbase.com/assets/button.js" type="text/javascript"></script>
                     </div>
                 </div>
