@@ -67,6 +67,24 @@ class loggedInUser {
 		return true;
 	}
 	
+    public function funds()
+	{
+		global $mysqli,$db_table_prefix;
+		
+		$stmt = $mysqli->prepare("SELECT funds
+			FROM ".$db_table_prefix."users
+			WHERE id = ?");
+		$stmt->bind_param("i", $this->user_id);
+		$stmt->execute();
+		$stmt->bind_result($funds);
+		$stmt->fetch();
+		$stmt->close();
+        
+        $funds = money_format("%!n", ($funds / 100));
+        
+		return ($funds);
+	}
+    
 	//Update a users password
 	public function updatePassword($pass)
 	{
