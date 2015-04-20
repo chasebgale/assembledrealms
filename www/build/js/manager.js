@@ -146,6 +146,60 @@ $(document).ready(function () {
             }
         });
     });
+    
+    $("#depositAmountSlider").on('input', function () {
+        var floatDeposit = parseFloat($(this).val());
+        var totalDeposit = __realmFunds + (floatDeposit * 100);
+        var depositToHours = Math.floor(totalDeposit / 0.9);
+        
+        $("#depositAmount").val(floatDeposit);
+        $("#realmFundsAfter").text(accounting.formatMoney(totalDeposit / 100));
+        $("#realmLifespan").text(depositToHours + " hours, or about " + moment.duration(depositToHours, 'hours').humanize() );
+    });
+    
+    $("#depositButton").on('click', function () {
+        
+        var button = $(this);
+        
+        button.attr('disabled', true);
+        button.html('<i class="fa fa-cog fa-spin"></i> Approve Deposit');
+        
+        var depositAmount = (parseFloat($("#depositAmountSlider").val()) * 100);
+        
+        $.ajax({
+            url: 'manager.php',
+            type: 'post',
+            dataType: 'json',
+            data: {
+                directive: 'deposit',
+                realm_id: __realmID,
+                amount: depositAmount
+            }
+        })
+        .done(function (data) {
+            button.attr('disabled', false);
+            button.html('Approve Deposit');
+            
+            if (data.message == "OK") {
+                $("#modalDeposit").modal('hide');
+                __realmFunds += depositAmount;
+                $("#realmFunds").text(accounting.formatMoney(__realmFunds / 100));
+                
+                var userFunds = (parseFloat($("#userFunds").text()) * 100) - depositAmount;
+                $("#userFunds").text(accounting.formatMoney(userFunds / 100));
+            } else {
+                $("#depositAlert").text('Deposit Failed!').show();
+            }
+        })
+        .fail(function(data) {
+            button.attr('disabled', false);
+            button.html('Approve Deposit');
+            
+            // Update DOM to reflect we messed up:
+            $("#depositAlert").text('Deposit Failed!').show();
+        });
+        
+    });
    
 });
 

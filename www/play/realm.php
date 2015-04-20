@@ -257,7 +257,6 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
 </script>
 
-<script src="js/moment.min.js"></script>
 <script src="js/marked.js"></script>
 
 <?php require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php"); ?>

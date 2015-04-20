@@ -169,6 +169,58 @@ class loggedInUser {
 		$stmt->close();	
 	}
     
+    public function depositToRealm($realm_id, $amount) {
+        global $mysqli,$db_table_prefix;
+        
+        $stmt = $mysqli->prepare("SELECT funds
+			FROM ".$db_table_prefix."users
+			WHERE id = ?");
+		$stmt->bind_param("i", $this->user_id);
+		$stmt->execute();
+		$stmt->bind_result($funds);
+		$stmt->fetch();
+		$stmt->close();
+        
+        if ($amount > $funds) {
+            return false;
+        }
+        
+        $mysqli->autocommit(FALSE);
+
+        // Update realm funds
+        $stmt = $mysqli->prepare("UPDATE realms
+						 SET funds = funds + ?
+						 WHERE
+						 id = ?");
+        $stmt->bind_param("ii", $amount, $realm_id);
+        $stmt->execute();
+        $stmt->close();
+        
+        // Update user funds
+        $stmt = $mysqli->prepare("UPDATE uc_users
+						 SET funds = funds - ?
+						 WHERE
+						 id = ?");
+        $stmt->bind_param("ii", $amount, $this->user_id);
+        $stmt->execute();
+        $stmt->close();
+        
+        // Log the deposit
+        $stmt = $mysqli->prepare("INSERT INTO realm_deposits
+				(realm_id, user_id, amount)
+				VALUES
+				(?, ?, ?)"
+			);
+        $stmt->bind_param("iii", $realm_id, $this->user_id, $amount);
+        $stmt->execute();
+        $stmt->close();
+        
+        $mysqli->commit();
+        $mysqli->autocommit(TRUE);
+        
+        return true;
+    }
+    
 	public function fetchRealmMarkdown($realm_id)
 	{
 		global $mysqli,$db_table_prefix;

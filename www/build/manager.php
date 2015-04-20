@@ -19,11 +19,16 @@ if ($method == 'POST') {
         die();
     }
     
-    if ($directive == 'fetch') {
-        $raw = $loggedInUser->fetchRealmMarkdown($_POST['realm_id']);
-        
-        echo json_encode($raw);
-        die();
+    if ($directive == 'deposit') {
+        if (isset($_POST['amount']) && isset($_POST['realm_id'])) {
+            if ($loggedInUser->depositToRealm($realm_id, $_POST['amount'])) {
+                echo json_encode( (object) ['message' => 'OK'] );
+                die();
+            } else {
+                echo json_encode( (object) ['message' => 'FAILURE'] );
+                die();
+            }
+        }
     }
     
     if ($directive == 'save') {
@@ -204,8 +209,10 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     
     $funding_opacity = "0.3";
     if ($realm["show_funding"]) {
-	$funding_opacity = "1.0";
+        $funding_opacity = "1.0";
     }
+    
+    $realm_funds = money_format("%!n", ($realm["funds"] / 100));
 } else {
     echo "<h2>Please stop tinkering.</h2>";
     die();
@@ -225,7 +232,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                     <p class="text-right text-muted"><strong>Balance</strong></p>
                 </div>
                 <div class="col-md-9">
-                    <span class="h3">$ <?php echo $realm["funds"] ?></span>
+                    <span class="h3" id="realmFunds">$ <?php echo $realm_funds ?></span>
                 </div>
             </div>
             <div class="row">
@@ -271,7 +278,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                     <button class="btn btn-default pull-right" data-toggle="modal" data-target="#modalDeposit">Deposit Funds</button>
                 </div>
                 <div class="col-md-9">
-                    <p class="text-justify">Transfer funds from your personal account. Your realm's bank has a balance of <strong>$ <?php echo $realm["funds"] ?></strong>.</p>
+                    <p class="text-justify">Transfer funds from your personal account. Your realm's bank has a balance of <strong>$ <?php echo $realm_funds ?></strong>.</p>
                 </div>
             </div>
             <div class="row">
@@ -402,7 +409,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title">Deposit $2.50</h4>
             </div>
-            <div class="modal-body" id="modalDepositFundsContent">
+            <div class="modal-body" id="modalTakeRealmOnlineContent">
                 <ol>
 					<li>
 						<span>Select a server:</span>
@@ -425,6 +432,51 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     </div>
 </div>
 
+<div class="modal fade" id="modalDeposit" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Deposit Funds</h4>
+            </div>
+            <div class="modal-body" id="modalDepositContent">
+                <div class="row" style="padding-top: 8px;">
+                    <div class="col-md-3">
+                        <p class="text-right text-muted"><strong>Deposit Amount:</strong></p>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="input-group">
+                            <i class="fa fa-usd input-group-addon"></i>
+                            <input class="form-control" type="number" id="depositAmount" value="0.00" step=".01" style="display: inline-block; width: 75px; vertical-align: top;">
+                            <input type="range" min="0" max="<?php echo $loggedInUser->funds() ?>" value="0" id="depositAmountSlider" step=".01" style="display: inline-block; width: 250px; margin-left: 4px; margin-top: 4px;">
+                        </div>
+                    </div>
+                </div>
+                <div class="row" style="padding-top: 8px;">
+                    <div class="col-md-3">
+                        <p class="text-right text-muted"><strong>Realm Funds After Deposit:</strong></p>
+                    </div>
+                    <div class="col-md-9">
+                        <span id="realmFundsAfter">$<?php echo money_format("%!n", ($realm["funds"] / 100)) ?></span>
+                    </div>
+                </div>
+                <div class="row" style="padding-top: 8px;">
+                    <div class="col-md-3">
+                        <p class="text-right text-muted"><strong>Realm Lifespan After Deposit:</strong></p>
+                    </div>
+                    <div class="col-md-9">
+                        <span id="realmLifespan">0 days, 0 hours</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div id="depositAlert" class="alert alert-danger" style="display: none;"></div>
+                <button id="depositButton" type="button" class="btn btn-default">Approve Deposit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php"); ?>
 
 <script type="text/javascript">
@@ -436,6 +488,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
     var __markdownCreateNewDB = true;
     var __realmID = <?php echo $_SERVER['QUERY_STRING'] ?>;
+    var __realmFunds = parseFloat("<?php echo $realm["funds"] ?>");
     var __existingState = {
 	description: "<?php echo $realm["description"] ?>",
 	show_funding: <?php echo $realm["show_funding"] ?>
