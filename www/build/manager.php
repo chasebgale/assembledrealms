@@ -20,7 +20,7 @@ if ($method == 'POST') {
     }
     
     if ($directive == 'deposit') {
-        if (isset($_POST['amount']) && isset($_POST['realm_id'])) {
+        if (isset($_POST['amount'])) {
             if ($loggedInUser->depositToRealm($realm_id, $_POST['amount'])) {
                 echo json_encode( (object) ['message' => 'OK'] );
                 die();
@@ -96,12 +96,24 @@ if ($method == 'POST') {
 	
     }
     
+    if ($directive == 'offline') {
+        // TODO: Bring down droplet if not on free-tier
+        $loggedInUser->offlineRealm($realm_id);
+        echo json_encode( (object) ['message' => 'OK'] );
+        die();
+    }
+    
+    if ($directive == 'online') {
+        // TODO: Bring up droplet if not on free-tier
+        $loggedInUser->onlineRealm($realm_id);
+        echo json_encode( (object) ['message' => 'OK'] );
+        die();
+    }
+    
     if ($directive == 'destroy') {
-        if (isset($_POST['realm_id'])) {
-            $loggedInUser->destroyRealm($_POST['realm_id']);
-            echo json_encode( (object) ['message' => 'OK'] );
-            die();
-        }	
+        $loggedInUser->destroyRealm($realm_id);
+        echo json_encode( (object) ['message' => 'OK'] );
+        die();
     }
     
     if ($directive == 'upload') {
@@ -285,19 +297,19 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                 <div class="col-md-3">
                     <?php 
                         if ($realm["status"] == 0) {
-                            echo '<button class="btn btn-default pull-right" data-toggle="modal" data-target="#modalTakeRealmOnline">Take Realm Online</button>';
+                            echo '<button id="onlineOfflineBtn" class="btn btn-default pull-right" data-toggle="modal" data-target="#modalTakeRealmOnline">Take Realm Online</button>';
                         } else {
-                            echo '<button class="btn btn-default pull-right">Take Realm Offline</button>';
+                            echo '<button id="onlineOfflineBtn" class="btn btn-default pull-right" data-toggle="modal" data-target="#modalTakeRealmOffline">Take Realm Offline</button>';
                         }
                     ?>
                 </div>
                 <div class="col-md-9">
-                    <p class="text-justify">
+                    <p class="text-justify" id="onlineOfflineDescription">
                     <?php 
                         if ($realm["status"] == 0) {
                             echo 'Your realm is currently <strong>offline</strong>. Click this button to allow other users to connect to your realm and enjoy the fruits of your hard work!';
                         } else {
-                            echo 'Your realm is current <strong>Online</strong>. Click this button to bring the server offline.';
+                            echo 'Your realm is currently <strong>Online</strong>. Click this button to bring the server offline.';
                         }
                     ?>
                     </p>
@@ -313,7 +325,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
             </div>
 			<div class="row">
                 <div class="col-md-3">
-                    <button class="btn btn-danger pull-right" id="button-destroy-realm" data-id="<?php echo $realm["id"] ?>"><i class="fa fa-exclamation-triangle"></i> Destroy Realm</button>
+                    <button class="btn btn-danger pull-right" id="button-destroy-realm" data-toggle="modal" data-target="#modalDestroy"><i class="fa fa-exclamation-triangle"></i> Destroy Realm</button>
                 </div>
                 <div class="col-md-9">
                     <p class="text-justify">Think about this first. Destroyed realms can not be recovered.</p>
@@ -407,26 +419,96 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title">Deposit $2.50</h4>
+                <h4 class="modal-title">Bring Realm Online</h4>
             </div>
             <div class="modal-body" id="modalTakeRealmOnlineContent">
-                <ol>
-					<li>
-						<span>Select a server:</span>
-						<div class="dropdown">
-							<button class="btn btn-default dropdown-toggle" type="button" id="dropdownServerType" data-toggle="dropdown" aria-expanded="true">
-							Free, 
-							<span class="caret"></span>
-							</button>
-							<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownServerType">
-								<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Action</a></li>
-								<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Another action</a></li>
-								<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Something else here</a></li>
-								<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Separated link</a></li>
-							</ul>
-						</div>
-					</li>
-				</ol>
+                 <div class="row" style="padding-top: 8px;">
+                    <div class="col-md-6">
+                        <!-- FREE SERVER -->
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="serverTypeRadios" id="typeFree" value="free" checked>
+                                        <span class="h4">Shared Server</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="panel-body">
+                                <h4>Free</h4>
+                            </div>
+                            <ul class="list-group">
+                                <li class="list-group-item">Max simultaneous users: 10</li>
+                                <li class="list-group-item">Resources shared among all realms</li>
+                                <li class="list-group-item">Players will queue globally</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <!-- PAID SERVER -->
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="serverTypeRadios" id="typePaid1" value="paid1" checked>
+                                        <span class="h4">Small Private Server</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="panel-body">
+                            <h4>$0.009 per hour <small>(90% of 1 penny)</small></h4>
+                            </div>
+                            <ul class="list-group">
+                                <li class="list-group-item">Max simultaneous users: Up to you</li>
+                                <li class="list-group-item">512MB Memory, 1 Core Processor, 20GB SSD</li>
+                                <li class="list-group-item">Players will only wait if you have max users</li>
+                            </ul>                        
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div id="realmOnlineAlert" class="alert alert-danger" style="display: none;"></div>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><i class="fa fa-times"></i> Cancel</button>
+                <button id="takeRealmOnline" type="button" class="btn btn-default">Bring Online</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalTakeRealmOffline" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Take Realm Offline</h4>
+            </div>
+            <div class="modal-body" id="modalTakeRealmOfflineContent">
+                <p><strong>Are you sure?</strong> All users will be disconnected and your realm page will indicate your server is offline.</p>
+            </div>
+            <div class="modal-footer">
+                <div id="realmOfflineAlert" class="alert alert-danger" style="display: none;"></div>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><i class="fa fa-times"></i> Cancel</button>
+                <button id="takeRealmOffline" type="button" class="btn btn-default">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalDestroy" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Destroy Realm</h4>
+            </div>
+            <div class="modal-body" id="modalTakeRealmOfflineContent">
+                <p><strong>Are you sure? 100% sure?</strong> This action is permanent. Your realm source code will not be able to be recovered. You might want to download a backup of the code before doing this. Just saying.</p>
+            </div>
+            <div class="modal-footer">
+                <div id="realmOfflineAlert" class="alert alert-danger" style="display: none;"></div>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><i class="fa fa-times"></i> Cancel</button>
+                <button id="destroyRealmConfirm" type="button" class="btn btn-default">Delete this sucker!</button>
             </div>
         </div>
     </div>
@@ -471,6 +553,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
             </div>
             <div class="modal-footer">
                 <div id="depositAlert" class="alert alert-danger" style="display: none;"></div>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><i class="fa fa-times"></i> Cancel</button>
                 <button id="depositButton" type="button" class="btn btn-default">Approve Deposit</button>
             </div>
         </div>

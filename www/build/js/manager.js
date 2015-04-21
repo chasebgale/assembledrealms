@@ -8,7 +8,7 @@ $(document).ready(function () {
         checkForChanges();
     });
    
-    $("#button-destroy-realm").on("click", function (e) {
+    $("#destroyRealmConfirm").on("click", function (e) {
 
         e.preventDefault();
         var id = $(this).attr('data-id');
@@ -19,20 +19,91 @@ $(document).ready(function () {
             dataType: 'json',
             success: function (data) {
             
-            var parameters = {};
-            parameters.directive = "destroy";
-            parameters.realm_id = id;
+                var parameters = {};
+                parameters.directive = "destroy";
+                parameters.realm_id = id;
 
-            $.post("manager.php", parameters, function (data) {
-                data = JSON.parse(data);
-                if (data.message == "OK") {
-                    window.location = "http://www.assembledrealms.com/build";
-                }
-            });
+                $.post("manager.php", parameters, function (data) {
+                    data = JSON.parse(data);
+                    if (data.message == "OK") {
+                        window.location = "http://www.assembledrealms.com/build";
+                    }
+                });
 
-        }
+            }
         });
         
+    });
+   
+    $("#takeRealmOffline").on('click', function (e) {
+        var button = $(this);
+      
+        button.attr('disabled', true);
+        button.html('<i class="fa fa-cog fa-spin"></i> Yes');
+        
+        $.ajax({
+            url: 'manager.php',
+            type: 'post',
+            dataType: 'json',
+            data: {
+                directive: 'offline',
+                realm_id: __realmID
+            }
+        })
+        .done(function (data) {
+            button.attr('disabled', false);
+            button.html('Yes');
+            
+            if (data.message == "OK") {
+                $("#onlineOfflineBtn").attr('data-target', '#modalTakeRealmOnline');
+                $("#onlineOfflineBtn").text('Take Realm Online');
+                $("#onlineOfflineDescription").html('Your realm is currently <strong>offline</strong>. Click this button to allow other users to connect to your realm and enjoy the fruits of your hard work!');
+            }
+        })
+        .fail(function(data) {
+            console.log(data);
+            $('#realmOfflineAlert').text('Network Error: ' + data.statusText);
+            button.attr('disabled', false);
+            button.html('Yes');
+            // Update DOM to reflect we messed up:
+            //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
+        });
+    });
+    
+    $("#takeRealmOnline").on('click', function (e) {
+        var button = $(this);
+      
+        button.attr('disabled', true);
+        button.html('<i class="fa fa-cog fa-spin"></i> Bring Online');
+        
+        $.ajax({
+            url: 'manager.php',
+            type: 'post',
+            dataType: 'json',
+            data: {
+                directive: 'online',
+                realm_id: __realmID,
+                server: 0
+            }
+        })
+        .done(function (data) {
+            button.attr('disabled', false);
+            button.html('Bring Online');
+            
+            if (data.message == "OK") {
+                $("#onlineOfflineBtn").attr('data-target', '#modalTakeRealmOnline');
+                $("#onlineOfflineBtn").text('Take Realm Online');
+                $("#onlineOfflineDescription").html('Your realm is currently <strong>offline</strong>. Click this button to allow other users to connect to your realm and enjoy the fruits of your hard work!');
+            }
+        })
+        .fail(function(data) {
+            console.log(data);
+            $('#realmOfflineAlert').text('Network Error: ' + data.statusText);
+            button.attr('disabled', false);
+            button.html('Bring Online');
+            // Update DOM to reflect we messed up:
+            //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
+        });
     });
    
     $("#savebutton").on('click', function (e) {

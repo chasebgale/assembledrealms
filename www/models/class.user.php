@@ -160,6 +160,7 @@ class loggedInUser {
 	
 	public function destroyRealm($realm_id)
 	{
+        // TODO
 		global $mysqli,$db_table_prefix;
 		$stmt = $mysqli->prepare("DELETE FROM realms
 			WHERE user_id = ? AND
@@ -167,6 +168,30 @@ class loggedInUser {
 		$stmt->bind_param("ii", $this->user_id, $realm_id);
 		$stmt->execute();
 		$stmt->close();	
+	}
+    
+    public function offlineRealm($realm_id)
+	{
+		global $mysqli,$db_table_prefix;
+		$stmt = $mysqli->prepare("UPDATE realms
+						 SET status = 0
+						 WHERE
+						 id = ?");
+        $stmt->bind_param("i", $realm_id);
+        $stmt->execute();
+        $stmt->close();
+	}
+    
+    public function onlineRealm($realm_id)
+	{
+		global $mysqli,$db_table_prefix;
+		$stmt = $mysqli->prepare("UPDATE realms
+						 SET status = 1
+						 WHERE
+						 id = ?");
+        $stmt->bind_param("i", $realm_id);
+        $stmt->execute();
+        $stmt->close();
 	}
     
     public function depositToRealm($realm_id, $amount) {
