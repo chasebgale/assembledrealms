@@ -228,6 +228,16 @@ $(document).ready(function () {
         $("#realmLifespan").text(depositToHours + " hours, or about " + moment.duration(depositToHours, 'hours').humanize() );
     });
     
+    $("#depositAmount").on('input', function () {
+        var floatDeposit = parseFloat($(this).val());
+        var totalDeposit = __realmFunds + (floatDeposit * 100);
+        var depositToHours = Math.floor(totalDeposit / 0.9);
+        
+        $("#depositAmountSlider").val(floatDeposit);
+        $("#realmFundsAfter").text(accounting.formatMoney(totalDeposit / 100));
+        $("#realmLifespan").text(depositToHours + " hours, or about " + moment.duration(depositToHours, 'hours').humanize() );
+    });
+    
     $("#depositButton").on('click', function () {
         
         var button = $(this);
@@ -271,6 +281,9 @@ $(document).ready(function () {
         });
         
     });
+   
+    var depositToHours = Math.floor(__realmFunds / 0.9);
+    $("#realmLifespan").text(depositToHours + " hours, or about " + moment.duration(depositToHours, 'hours').humanize() );
    
 });
 
