@@ -80,6 +80,14 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
         // TODO: Alert realm owner someone tried to play when offline,
         //       (add messages/alerts to profile!)
         $alert = "<h3 style='font-size: 52px; color: white; font-weight: bold;'><i class='fa fa-power-off'></i> OFFLINE</h3>";
+    } else {
+        // 1 - Generate GUID
+        // 2 - Send GUID and user_id to realm
+        // 3 - return iframe with realm url + '/auth/[GUID]'
+        // 4 - realm looks up GUID, validates, then removes GUID from redis
+        
+        $guid = GUID();
+        
     }
     
 } else {
@@ -143,7 +151,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     if ($alert) {
         echo '<div style="background-color: #eee; ' . $style . '"><div class="absoluteCenter text-danger" style="margin-top: 215px; text-align: center; width: 400px;">' . $alert . '</div></div>';
     } else {
-        echo '<iframe onerror="alert(\"failed\")" style="' . $style . '" src="http://' . $realm['url'] . '"></iframe>';   
+        echo '<iframe style="' . $style . '" src="http://' . $realm['url'] . '/auth/' . $guid . '"></iframe>';   
     }
     ?>
     
@@ -161,10 +169,10 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     <!-- Tab panes -->
     <div class="tab-content">
     
-        <div id="tab_readme" style="margin-top: 32px;" class="tab-pane<?php if ($realm['show_funding'] == false) echo ' active' ?>"></div>
+        <div id="tab_readme" style="margin-top: 32px;" class="tab-pane active"></div>
     
         <?php if ($realm['show_funding']) { ?>
-        <div id="tab_funding" class="tab-pane active clearfix" style="margin-top: 32px;">
+        <div id="tab_funding" class="tab-pane clearfix" style="margin-top: 32px;">
             <div id="funding"></div>
             <div id="realmFundingDonate" style="float: right;">
                 <form class="form-horizontal" role="form">
@@ -179,7 +187,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                     <div class="form-group">
                         <label class="col-sm-6 control-label">Account Balance</label>
                         <div class="col-sm-6">
-                            <p class="form-control-static">$ 04.12</p>
+                            <p class="form-control-static">$ <?=$loggedInUser->funds()?></p>
                         </div>
                     </div>
                     <div class="form-group">
