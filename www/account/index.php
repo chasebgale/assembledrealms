@@ -101,18 +101,17 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
     <div class="tab-content" style="min-height: 400px;">
   
         <div id="tab_messages" class="tab-pane active clearfix" style="margin-top: 12px;">
-            <table class="table table-striped table-hover">
-                <thead>
-                    <tr>
-                        <th> </th>
-                        <th>Sender</th>
-                        <th>Timestamp</th>
-                        <th>Preview</th>
-                    </tr>
-                </thead>
-                <tbody id="messages">
-                </tbody>
-            </table>
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					<h2>Notifications</h2>
+				</div>
+				<div class="panel-body">
+					<table class="table table-striped table-hover">
+						<tbody id="messages">
+						</tbody>
+					</table>
+				</div>
+			</div>
         </div>
         
         <div id="tab_funding" class="tab-pane" style="margin-top: 12px;">
@@ -138,16 +137,20 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 			
 			<div class="panel panel-default">
 				<div class="panel-heading">
-					<div class="row" style="margin-bottom: -11px;">
+					<div class="row" style="margin-bottom: -20px;">
 						<div class="col-md-3">
 							<span class="h2 text-muted">Deposit: </span>
 						</div>
-						<div class="col-md-9">
+						<div class="col-md-1">
 							<!-- Nav tabs -->
 							<ul class="nav nav-tabs" style="">
 								<li class="active"><a href="#paypal" data-toggle="tab">Paypal</a></li>
-								<li><a href="#bitcoin" data-toggle="tab">Bitcoin via Coinbase</a></li>
+								<!-- <li><a href="#bitcoin" data-toggle="tab">Bitcoin via Coinbase</a></li> -->
 							</ul>
+						</div>
+						<div class="col-md-8">
+							<a class="coinbase-button" data-code="53dc620f9bc6914ac6a5da9c8371e02a" data-custom="<?php echo $loggedInUser->user_id ?>" href="https://www.coinbase.com/checkouts/53dc620f9bc6914ac6a5da9c8371e02a" style="margin-left: 20px; margin-top: 40px;">Pay With Bitcoin</a>
+							<script src="https://www.coinbase.com/assets/button.js" type="text/javascript"></script>
 						</div>
 					</div>
 				</div>
@@ -155,14 +158,14 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 					<!-- Tab panes -->
 					<div class="tab-content" style="float: left; width: 80%;">
 						<div class="tab-pane active" id="paypal">
-							<div style="padding: 20px; height: 400px;">
-								<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top" style="display: inline-block; width: 200px; margin-left: 20px; vertical-align: top; margin-top: 40px;">
+							<div style="padding: 20px; width: 400px; margin: 0 auto;>
+								<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top" style="margin-bottom: 40px;">
 									<input type="hidden" name="cmd" value="_s-xclick">
 									<input type="hidden" name="hosted_button_id" value="MG5YX75N4LFAW">
 									<table>
 										<tr>
 											<td>
-												<input type="hidden" name="on0" value="Account Deposit:">Account Deposit:
+												<h2><input type="hidden" name="on0" value="Account Deposit:">Account Deposit:</h2>
 											</td>
 										</tr>
 										<tr style="margin-top: 12px;">
@@ -182,7 +185,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 									<input style="margin-top: 12px;" type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_paynowCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
 									<img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
 								</form>
-								<div style="display: inline-block; width: 400px;">
+								<div style="width: 400px; margin-top: 40px;">
 									<h2 style="margin-top: 0;">The Math:</h2>
 									<table class="table">
 										<tbody>
@@ -207,12 +210,14 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 								</div>
 							</div>
 						</div>
+						<!--
 						<div class="tab-pane" id="bitcoin">
 							<div style="padding: 40px; height: 400px; padding-top: 80px;">
 								<a class="coinbase-button" data-code="53dc620f9bc6914ac6a5da9c8371e02a" data-custom="<?php echo $loggedInUser->user_id ?>" href="https://www.coinbase.com/checkouts/53dc620f9bc6914ac6a5da9c8371e02a" style="margin-left: 20px; margin-top: 40px;">Pay With Bitcoin</a>
 								<script src="https://www.coinbase.com/assets/button.js" type="text/javascript"></script>
 							</div>
 						</div>
+						-->
 					</div>
 				</div>
 			</div>
@@ -267,7 +272,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
     
     <tr>
         <th scope="row"><%=type_map[message.type]%></th>
-        <td><%- message.sender %></td>
+        <!--<td><%- message.sender %></td>-->
         <td><%- message.timestamp %></td>
         <td><%- message.preview %></td>
     </tr>
