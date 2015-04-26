@@ -131,74 +131,91 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
                 </div>
             </div>
             -->
-            <!-- Nav tabs -->
-            <ul class="nav nav-pills nav-stacked" style="float: left; width: 20%;">
-                <li class="active"><a href="#paypal" data-toggle="tab">Paypal</a></li>
-                <li><a href="#bitcoin" data-toggle="tab">Bitcoin via Coinbase</a></li>
-            </ul>
-            
-            <!-- Tab panes -->
-            <div class="tab-content" style="float: left; width: 80%;">
-                <div class="tab-pane active" id="paypal">
-                    <div style="padding: 20px; height: 400px;">
-                        <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top" style="display: inline-block; width: 200px; margin-left: 20px; vertical-align: top; margin-top: 40px;">
-                            <input type="hidden" name="cmd" value="_s-xclick">
-                            <input type="hidden" name="hosted_button_id" value="MG5YX75N4LFAW">
-                            <table>
-                                <tr>
-                                    <td>
-                                        <input type="hidden" name="on0" value="Account Deposit:">Account Deposit:
-                                    </td>
-                                </tr>
-                                <tr style="margin-top: 12px;">
-                                    <td>
-                                        <select name="os0" id="os0">
-                                            <option value="$2 for" data-fee="- $0.07" data-amt="$2.37">$2 for $2.37 USD</option>
-                                            <option value="$5 for" data-fee="- $0.16" data-amt="$5.46">$5 for $5.46 USD</option>
-                                            <option value="$10 for" data-fee="- $0.31" data-amt="$10.61">$10 for $10.61 USD</option>
-                                            <option value="$15 for" data-fee="- $0.46" data-amt="$15.76">$15 for $15.76 USD</option>
-                                            <option value="$20 for" data-fee="- $0.61" data-amt="$20.91">$20 for $20.91 USD</option>
-                                        </select>
-                                    </td>
-                                </tr>
-                            </table>
-                            <input type="hidden" name="currency_code" value="USD">
-                            <input type="hidden" name="custom" value="<?php echo $loggedInUser->user_id ?>">
-                            <input style="margin-top: 12px;" type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_paynowCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
-                            <img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
-                        </form>
-                        <div style="display: inline-block; width: 400px;">
-                            <h2 style="margin-top: 0;">The Math:</h2>
-                            <table class="table">
-                                <tbody>
-                                    <tr>
-                                        <td>Payment Amount:</td>
-                                        <td id="calculator_start">  $2.37</td>
-                                    </tr>
-                                    <tr>
-                                        <td><a href="https://www.paypal.com/webapps/mpp/paypal-fees" target="_blank">Paypal Fee (2.9%)</a>:</td>
-                                        <td id="calculator_fee">- $0.07</td>
-                                    </tr>
-                                    <tr>
-                                        <td><a href="https://www.paypal.com/webapps/mpp/paypal-fees" target="_blank">Paypal Transaction Fee</a>:</td>
-                                        <td>- $0.30</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Total Deposit:</td>
-                                        <td id="calculator_finish">  $2.00</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                <div class="tab-pane" id="bitcoin">
-                    <div style="padding: 40px; height: 400px; padding-top: 80px;">
-                        <a class="coinbase-button" data-code="53dc620f9bc6914ac6a5da9c8371e02a" data-custom="<?php echo $loggedInUser->user_id ?>" href="https://www.coinbase.com/checkouts/53dc620f9bc6914ac6a5da9c8371e02a" style="margin-left: 20px; margin-top: 40px;">Pay With Bitcoin</a>
-                        <script src="https://www.coinbase.com/assets/button.js" type="text/javascript"></script>
-                    </div>
-                </div>
-            </div>
+			
+			<div class="well" style="text-align: center;">
+				<h1>Balance: $<?= $loggedInUser->funds() ?></h1>
+			</div>
+			
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					<div class="row" style="margin-bottom: -11px;">
+						<div class="col-md-3">
+							<span class="h2 text-muted">Deposit: </span>
+						</div>
+						<div class="col-md-9">
+							<!-- Nav tabs -->
+							<ul class="nav nav-tabs" style="">
+								<li class="active"><a href="#paypal" data-toggle="tab">Paypal</a></li>
+								<li><a href="#bitcoin" data-toggle="tab">Bitcoin via Coinbase</a></li>
+							</ul>
+						</div>
+					</div>
+				</div>
+				<div class="panel-body">
+					<!-- Tab panes -->
+					<div class="tab-content" style="float: left; width: 80%;">
+						<div class="tab-pane active" id="paypal">
+							<div style="padding: 20px; height: 400px;">
+								<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top" style="display: inline-block; width: 200px; margin-left: 20px; vertical-align: top; margin-top: 40px;">
+									<input type="hidden" name="cmd" value="_s-xclick">
+									<input type="hidden" name="hosted_button_id" value="MG5YX75N4LFAW">
+									<table>
+										<tr>
+											<td>
+												<input type="hidden" name="on0" value="Account Deposit:">Account Deposit:
+											</td>
+										</tr>
+										<tr style="margin-top: 12px;">
+											<td>
+												<select name="os0" id="os0">
+													<option value="$2 for" data-fee="- $0.07" data-amt="$2.37">$2 for $2.37 USD</option>
+													<option value="$5 for" data-fee="- $0.16" data-amt="$5.46">$5 for $5.46 USD</option>
+													<option value="$10 for" data-fee="- $0.31" data-amt="$10.61">$10 for $10.61 USD</option>
+													<option value="$15 for" data-fee="- $0.46" data-amt="$15.76">$15 for $15.76 USD</option>
+													<option value="$20 for" data-fee="- $0.61" data-amt="$20.91">$20 for $20.91 USD</option>
+												</select>
+											</td>
+										</tr>
+									</table>
+									<input type="hidden" name="currency_code" value="USD">
+									<input type="hidden" name="custom" value="<?php echo $loggedInUser->user_id ?>">
+									<input style="margin-top: 12px;" type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_paynowCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+									<img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
+								</form>
+								<div style="display: inline-block; width: 400px;">
+									<h2 style="margin-top: 0;">The Math:</h2>
+									<table class="table">
+										<tbody>
+											<tr>
+												<td>Payment Amount:</td>
+												<td id="calculator_start">  $2.37</td>
+											</tr>
+											<tr>
+												<td><a href="https://www.paypal.com/webapps/mpp/paypal-fees" target="_blank">Paypal Fee (2.9%)</a>:</td>
+												<td id="calculator_fee">- $0.07</td>
+											</tr>
+											<tr>
+												<td><a href="https://www.paypal.com/webapps/mpp/paypal-fees" target="_blank">Paypal Transaction Fee</a>:</td>
+												<td>- $0.30</td>
+											</tr>
+											<tr>
+												<td>Total Deposit:</td>
+												<td id="calculator_finish">  $2.00</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+						<div class="tab-pane" id="bitcoin">
+							<div style="padding: 40px; height: 400px; padding-top: 80px;">
+								<a class="coinbase-button" data-code="53dc620f9bc6914ac6a5da9c8371e02a" data-custom="<?php echo $loggedInUser->user_id ?>" href="https://www.coinbase.com/checkouts/53dc620f9bc6914ac6a5da9c8371e02a" style="margin-left: 20px; margin-top: 40px;">Pay With Bitcoin</a>
+								<script src="https://www.coinbase.com/assets/button.js" type="text/javascript"></script>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
         </div>
         
         <div id="tab_settings" class="tab-pane" style="margin-top: 12px;">
