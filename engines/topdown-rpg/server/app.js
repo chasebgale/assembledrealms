@@ -3,6 +3,8 @@ var app 		= express();
 var server 		= require('http').Server(app);
 var io 			= require('socket.io').listen(server);
 var morgan		= require('morgan');
+var redis       = require('redis');
+var client      = redis.createClient();
 
 // If second argument is passed, we are in debug mode:
 var debug = (process.argv[2] !== undefined);
@@ -119,7 +121,7 @@ if (debug) {
 		console.log("port: " + server.address().port);
 	});
 } else {
-	// In production, the realm instance serves up all it's files:
+	// In a purchased realm node, the realm instance serves up all it's files:
 	app.use(express.static(__dirname + '/../client'));
 
 	// Hey!! Listen! --Navi
