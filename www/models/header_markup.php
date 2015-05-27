@@ -7,7 +7,10 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="http://www.assembledrealms.com/"><img src='../../img/logo.png' /></a>
+      <a class="navbar-brand" href="http://www.assembledrealms.com/">
+		<img src='../../img/logo.png' class='hidden-xs hidden-sm hidden-md' />
+		<img src='../../img/logo_small.png' class='visible-xs-block visible-sm-block visible-md-block' />
+	  </a>
     </div>
     <div class="collapse navbar-collapse">
       <ul class="nav navbar-nav">

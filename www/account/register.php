@@ -7,8 +7,7 @@ if (!securePage($_SERVER['PHP_SELF'])){die();}
 if(isUserLoggedIn()) { header("Location: /account"); die(); }
 
 //Forms posted
-if(!empty($_POST))
-{
+if(!empty($_POST)) {
 	$errors = array();
 	$email = trim($_POST["email"]);
 	$displayname = trim($_POST["displayname"]);
@@ -167,9 +166,9 @@ if(!empty($_POST))
 }
 
 require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
-echo "<div id='content'>";
+echo "<div class='container'>";
 
-$wrapper = '<div class="panel panel-warning" style="width: 500px; margin: 0 auto; margin-bottom: 50px;">
+$wrapper = '<div class="panel panel-warning" style="width: 75%; margin: 30px auto;">
                 <div class="panel-body">
                     <h2 style="text-align: center; margin-top: 0;"><small>
                         %message% Please take a moment to register or login.
@@ -214,7 +213,7 @@ switch (substr($_SERVER['QUERY_STRING'], 0, 1)) {
 	</div>
 	
 	<div class="col-md-2">
-		<h1 style="margin-top: 100px; text-align: center; font-weight: bold;">or</h1>
+		<h1 style="margin: 50px 0; text-align: center; font-weight: bold;" class="text-muted">or</h1>
 	</div>
 	
 	<div class="col-md-5">

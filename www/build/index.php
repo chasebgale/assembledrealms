@@ -25,7 +25,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 
 ?>
 
-<div id="content">
+<div id="content" class="container">
     
     <div style="display: none;" class="alert alert-danger" id="errorMessage"></div>
 

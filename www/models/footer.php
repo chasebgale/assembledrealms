@@ -1,4 +1,4 @@
-<div id='footer'>
+<div id='footer' class="container">
     <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js'></script>
     <script src='//netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js'></script>
     <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
@@ -10,6 +10,9 @@
     <script>
     (adsbygoogle = window.adsbygoogle || []).push({});
     </script>
+	
+	<script
+	
     <script>
         $(function() {
             console.log('Document ready!');
@@ -18,14 +21,6 @@
               { 
                 console.log('1 second later and...');
                 if ($('#footer_ad').is(':hidden')) {
-                    $('#footer').append('<div id="footer_msg" style="display: none; width: 900px; margin: 0 auto;" class="panel panel-danger">' +
-                                            '<div class="panel-heading"><span class="glyphicon glyphicon-exclamation-sign"></span> We need your help!</div>' +
-                                            '<div class="panel-body">' +
-                                                '<h3>If you enjoy this service, please whitelist us in your ad-blocking plugin!</h3>' +
-                                                '<p class="text-justify">Ads put food on the table! A developer with a full belly is a happy developer. Happy developers continue to write code and improve services! ' +
-                                                'If an ad offended or irritated you, or if you have a suggestion, please feel free to send it over: <a href="mailto:outreach@assembledrealms.com">outreach@assembledrealms.com</a></p>' +
-                                            '</div>' +
-                                        '</div>');
                     $('#footer_msg').fadeIn();
                     console.log('...ad was blocked, appended message!');
                 } else {
@@ -34,4 +29,12 @@
             }, 1000);
         });
     </script>
+	
+	<div id="footer_msg" class="panel panel-danger" style="display: none;">
+		<div class="panel-heading"><span class="glyphicon glyphicon-exclamation-sign"></span> We need your help!</div>
+		<div class="panel-body">
+			<h3>If you enjoy this service, please white-list us in your ad-blocking plug-in!</h3>
+			<p class="text-justify">Ads put food on the table! A developer with a full belly is a happy developer. Happy developers continue to write code and improve services! If an ad offended or irritated you, or if you have a suggestion, please feel free to send it over: <a href="mailto:outreach@assembledrealms.com">outreach@assembledrealms.com</a></p>
+		</div>
+	</div>
 </div>

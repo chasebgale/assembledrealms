@@ -117,7 +117,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 
 ?>
 
-<div id="content">
+<div id="content" class="container">
     
     <div class="well" style="margin-bottom: 40px;">
         <div class="row">
