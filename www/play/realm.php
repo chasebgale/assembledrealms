@@ -86,7 +86,21 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
         // 3 - return iframe with realm url + '/auth/[GUID]'
         // 4 - realm looks up GUID, validates, then removes GUID from redis
         
-        $guid = GUID();
+        
+        /* NOTE: url and address are different, in the DB a realm could have a url of 'debug-04.assembledrealms.com/45', but the address will be the IP of
+                    debug-04.assembledrealms.com with the correct port the debug realm is listening on, i.e. 254.222.33.12:3432
+        */
+        if ($realm['address']) {
+            $guid = GUID();
+            
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+                CURLOPT_RETURNTRANSFER => 1,
+                CURLOPT_URL => $realm['address'] . '/' . $loggedInUser->user_id . '/' . $guid
+            ));
+
+            $resp = curl_exec($curl);
+        }
         
     }
     

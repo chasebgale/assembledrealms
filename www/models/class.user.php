@@ -285,8 +285,8 @@ class loggedInUser {
 		return ($screenshots);
     }
     
-	public function fetchRealm($realm_id)
-	{
+	public function fetchRealm($realm_id) {
+        
 		global $mysqli,$db_table_prefix;
 		$stmt = $mysqli->prepare("SELECT 
 				realms.*, uc_users.display_name
@@ -311,6 +311,7 @@ class loggedInUser {
 				   $comments,
 				   $source,
 				   $show_funding,
+                   $address,
 				   $display_name // DISPLAY NAME ALWAYS LAST (JOIN)
 				   );
 		$stmt->fetch();
@@ -329,7 +330,8 @@ class loggedInUser {
 			     'display_name' => $display_name,
 			     'comments' => $comments,
 			     'source' => $source,
-			     'show_funding' => $show_funding
+			     'show_funding' => $show_funding,
+                 'address' => $address
 			     );
 	}
     
@@ -356,7 +358,8 @@ class loggedInUser {
 				   $url,
 				   $comments,
 				   $source,
-				   $show_funding
+				   $show_funding,
+                   $address
 				   );
         
 		while ($stmt->fetch()){
@@ -373,7 +376,8 @@ class loggedInUser {
 				   'url' => $url,
 				   'comments' => $comments,
 				   'source' => $source,
-				   'show_funding' => $show_funding
+				   'show_funding' => $show_funding,
+                   'address' => $address
 				   );
 		}
 		$stmt->close();

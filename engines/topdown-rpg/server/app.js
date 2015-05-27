@@ -4,7 +4,7 @@ var server 		= require('http').Server(app);
 var io 			= require('socket.io').listen(server);
 var morgan		= require('morgan');
 var redis       = require('redis');
-var client      = redis.createClient();
+var rclient     = redis.createClient();
 
 // If second argument is passed, we are in debug mode:
 var debug = (process.argv[2] !== undefined);
@@ -19,6 +19,11 @@ var allowCrossDomain = function(req, res, next) {
     next();
 }
 app.use(allowCrossDomain);
+
+// Catch redis errors
+rclient.on("error", function (err) {
+    console.log("Error " + err);
+});
 
 io.sockets.on('connection', function (client) {
 	
@@ -113,6 +118,19 @@ io.sockets.on('connection', function (client) {
 
 // Log to console
 app.use(morgan('dev')); 	
+
+app.get('/auth/:id/:guid', function(req, res, next) {
+    // TODO: Check the server calling this function is, in fact, assembledrealms.com
+    client.set("auth_" + req.params.id, req.params.guid, function (error) {
+        
+        if (error) {
+            return res.json("error":, error.message);
+        }
+        
+        return res.json(message: 'OK');
+    });
+    
+});
 
 if (debug) {
 	// Listen on random port because lots (hopefully) of other nodes are running too!

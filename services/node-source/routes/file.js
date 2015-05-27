@@ -1,3 +1,4 @@
+/* global __dirname */
 var git = require('nodegit'),
     path = require('path'),
     utilities = require('../utilities'),
