@@ -529,6 +529,34 @@ class loggedInUser {
 				);
 	}
 	
+    public function fetchBlurb() {
+        global $mysqli,$db_table_prefix;
+		
+		$stmt = $mysqli->prepare("SELECT 
+				description
+				FROM user_blurbs
+				WHERE user_id = ?"
+			);
+		$stmt->bind_param("i", $this->user_id);
+		$stmt->execute();
+        $stmt->bind_result($description);
+		$stmt->fetch();
+		$stmt->close();
+		
+		return ($description);
+    }
+    
+    public function updateBlurb($description) {
+        global $mysqli,$db_table_prefix;
+		
+		$stmt = $mysqli->prepare("INSERT INTO user_blurbs (user_id, description) VALUES(?, ?) ON DUPLICATE KEY UPDATE user_id=VALUES(user_id), description=VALUES(description)");
+		$stmt->bind_param("is", $this->user_id, $description);
+		$stmt->execute();
+		$stmt->close();
+		
+		return true;
+    }
+    
 	//Is a user has a permission
 	public function checkPermission($permission)
 	{

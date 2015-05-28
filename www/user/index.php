@@ -17,22 +17,26 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
 <div id="content" class="container">
     
+    <h2><?= $user["display_name"] ?> <small> <?= $user["title"] ?></small></h2>
     <div class="media">
         <div class="pull-left">
             <img src="/img/profiles/<?=$userID . ".jpg?" . time() ?>" />
         </div>
         
-        <div class="media-body">
-            <h3 class="media-heading">
-                <?= $user["display_name"] ?><br />
-                <small><?= $user["title"] ?></small>
-            </h3>
-        </div>
+        <div id="blurb" class="media-body"><?=$loggedInUser->fetchBlurb();?></div>
     </div>
     
 </div>
 
+<script src="/build/js/marked.js"></script>
+
 <?php require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php"); ?>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#blurb").html(marked($("#blurb").text()));
+    });
+</script>
 
 </body>
 </html>

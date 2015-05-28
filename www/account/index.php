@@ -17,64 +17,71 @@ if(!empty($_POST)) {
             !isset($_FILES['upfile']['error']) ||
             is_array($_FILES['upfile']['error'])
         ) {
-            throw new RuntimeException('Invalid parameters.');
-        }
-    
-        // Check $_FILES['upfile']['error'] value.
-        switch ($_FILES['upfile']['error']) {
-            case UPLOAD_ERR_OK:
-                break;
-            case UPLOAD_ERR_NO_FILE:
-                throw new RuntimeException('No file sent.');
-            case UPLOAD_ERR_INI_SIZE:
-            case UPLOAD_ERR_FORM_SIZE:
-                throw new RuntimeException('Exceeded filesize limit.');
-            default:
-                throw new RuntimeException('Unknown errors.');
-        }
-        
-        $img = $_FILES['upfile']['tmp_name'];
-        $dst = '/home/public/img/profiles/' . $loggedInUser->user_id . '.jpg';
-        $size = 150;
-    
-        // You should also check filesize here. 
-        if ($_FILES['upfile']['size'] > 2000000) {
-            throw new RuntimeException('Exceeded filesize limit.');
-        }
-    
-        if (($img_info = getimagesize($img)) === FALSE)
-            throw new RuntimeException('Invalid file format.');
-        
-        $width = $img_info[0];
-        $height = $img_info[1];
-        
-        switch ($img_info[2]) {
-            case IMAGETYPE_GIF  : $src = imagecreatefromgif($img);  break;
-            case IMAGETYPE_JPEG : $src = imagecreatefromjpeg($img); break;
-            case IMAGETYPE_PNG  : $src = imagecreatefrompng($img);  break;
-            default : throw new RuntimeException("Unknown filetype");
-        }
-        
-        $tmp = imagecreatetruecolor($size, $size);
-        
-        //calculate resized image picture dimensions 
-        $original_ratio = $width/$height;
-        $targetWidth = $targetHeight = min($size, max($width, $height));
-    
-        if ($ratio < 1) {
-            $targetWidth = $targetHeight * $original_ratio;
+            if (isset($_POST['description'])) {
+                
+                $loggedInUser->updateBlurb( $_POST['description'] );
+                
+            } else {
+                throw new RuntimeException('Invalid parameters.');
+            }
         } else {
-            $targetHeight = $targetWidth / $original_ratio;
-        }
     
-        //calculate picture position 'in center' of new image.
-        $int_width = ($size - $targetWidth)/2;
-        $int_height = ($size - $targetHeight)/2;        
-    
-        imagecopyresampled($tmp, $src, $int_width, $int_height, 0, 0, $targetWidth, $targetHeight, $width, $height);
-        imagejpeg($tmp, $dst);
+            // Check $_FILES['upfile']['error'] value.
+            switch ($_FILES['upfile']['error']) {
+                case UPLOAD_ERR_OK:
+                    break;
+                case UPLOAD_ERR_NO_FILE:
+                    throw new RuntimeException('No file sent.');
+                case UPLOAD_ERR_INI_SIZE:
+                case UPLOAD_ERR_FORM_SIZE:
+                    throw new RuntimeException('Exceeded filesize limit.');
+                default:
+                    throw new RuntimeException('Unknown errors.');
+            }
+            
+            $img = $_FILES['upfile']['tmp_name'];
+            $dst = '/home/public/img/profiles/' . $loggedInUser->user_id . '.jpg';
+            $size = 150;
         
-        imagedestroy($tmp);
+            // You should also check filesize here. 
+            if ($_FILES['upfile']['size'] > 2000000) {
+                throw new RuntimeException('Exceeded filesize limit.');
+            }
+        
+            if (($img_info = getimagesize($img)) === FALSE)
+                throw new RuntimeException('Invalid file format.');
+            
+            $width = $img_info[0];
+            $height = $img_info[1];
+            
+            switch ($img_info[2]) {
+                case IMAGETYPE_GIF  : $src = imagecreatefromgif($img);  break;
+                case IMAGETYPE_JPEG : $src = imagecreatefromjpeg($img); break;
+                case IMAGETYPE_PNG  : $src = imagecreatefrompng($img);  break;
+                default : throw new RuntimeException("Unknown filetype");
+            }
+            
+            $tmp = imagecreatetruecolor($size, $size);
+            
+            //calculate resized image picture dimensions 
+            $original_ratio = $width/$height;
+            $targetWidth = $targetHeight = min($size, max($width, $height));
+        
+            if ($ratio < 1) {
+                $targetWidth = $targetHeight * $original_ratio;
+            } else {
+                $targetHeight = $targetWidth / $original_ratio;
+            }
+        
+            //calculate picture position 'in center' of new image.
+            $int_width = ($size - $targetWidth)/2;
+            $int_height = ($size - $targetHeight)/2;        
+        
+            imagecopyresampled($tmp, $src, $int_width, $int_height, 0, 0, $targetWidth, $targetHeight, $width, $height);
+            imagejpeg($tmp, $dst);
+            
+            imagedestroy($tmp);
+        }
     
     } catch (RuntimeException $e) {
         echo $e->getMessage();
@@ -224,26 +231,35 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
         </div>
         
         <div id="tab_settings" class="tab-pane" style="margin-top: 12px;">
-            <h3>Mugshot</h3>
-            <div>
-                <img src="<?=$loggedInUser->user_image?>" />
-            </div>
-            <div>
-                <span><?=$loggedInUser->email?></span>
-            </div>
-            <div>
-                <!-- The data encoding type, enctype, MUST be specified as below -->
-                <form enctype="multipart/form-data" action="" method="POST" role="form">
-                    <div class="form-group">
-                        <label for="upfile">Select a new profile image:</label>
-                        <!-- MAX_FILE_SIZE must precede the file input field -->
-                        <input type="hidden" name="MAX_FILE_SIZE" value="200000" />
-                        <!-- Name of input element determines name in $_FILES array -->
-                        <input name="upfile" id="upfile" type="file" accept="image/gif, image/png, image/jpeg" />
-                        <button type="submit" class="btn btn-default">Upload</button>
+            <div class="row">
+                <div class="col-md-3">
+                    <h3>Mugshot</h3>
+                    <div>
+                        <img src="<?=$loggedInUser->user_image?>" />
                     </div>
-                </form>
+                    <!--
+                    <div>
+                        <span><?=$loggedInUser->email?></span>
+                    </div>
+                    -->
+                    <form id="mugshotForm" enctype="multipart/form-data" action="" method="POST" role="form">
+                        <div class="form-group">
+                            <label for="upfile">New mugshot:</label>
+                            <!-- MAX_FILE_SIZE must precede the file input field -->
+                            <input type="hidden" name="MAX_FILE_SIZE" value="200000" />
+                            <!-- Name of input element determines name in $_FILES array -->
+                            <input name="upfile" id="upfile" type="file" accept="image/gif, image/png, image/jpeg" />
+                            <!--<button type="submit" class="btn btn-default">Upload</button>-->
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="col-md-9">
+                    <h3>Blurb</h3>
+                    <div id="editor" style="height: 300px;"><?=$loggedInUser->fetchBlurb();?></div>
+                </div>
             </div>
+            <button id="saveChanges" class="btn btn-default pull-right">Save Changes</button>          
         </div>
         
     </div>
@@ -281,8 +297,12 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 
 </script>
 
+<script src="/build/js/marked.js"></script>
+<script src="/js/ace/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+
 <script type="text/javascript">
 
+    var __editor;
     var type_map = [];
     
     type_map[0] = '<i class="fa fa-comments-o"></i>';
@@ -301,6 +321,25 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
         ];
 
         $("#messages").html(templateFn({ 'messages': data }));
+        
+        var width = $("#content").width() - $("#editor").position().left - $("#tabs").position().left;
+        $("#editor").width(width);
+        
+        __editor = ace.edit("editor");
+        //editor.setTheme("ace/theme/monokai");
+        __editor.getSession().setMode("ace/mode/markdown");
+        
+        __editor.on("change", function () {
+           // TODO: update preview 
+        });
+    });
+    
+    $('#upfile').on('change', function (e) {
+        $('#mugshotForm').submit();
+    });
+    
+    $('#saveChanges').on('click', function () {
+        $.post("index.php", {description: __editor.getValue()});
     });
     
     $('#os0').on('change', function (e) {
