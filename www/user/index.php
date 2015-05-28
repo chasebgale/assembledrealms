@@ -15,7 +15,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
 ?>
 
-<div id="content">
+<div id="content" class="container">
     
     <div class="media">
         <div class="pull-left">

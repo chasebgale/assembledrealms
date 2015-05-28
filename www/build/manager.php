@@ -232,7 +232,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     
 ?>
 
-<div id="content">
+<div id="content" class="container">
 
 	<h2><?php echo $realm["title"] ?></h2>
     

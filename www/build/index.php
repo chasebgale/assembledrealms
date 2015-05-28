@@ -18,6 +18,11 @@ if ($method == 'POST') {
         echo json_encode(array ('project_id' => $project_id));
     }
     
+    if ($directive == 'list') {
+        $realms = $loggedInUser->fetchRealms();
+        echo json_encode(array_values($realms));
+    }
+    
     die();
 }
 

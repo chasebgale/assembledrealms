@@ -110,7 +110,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
 ?>
 
-<div id="content">
+<div id="content" class="container">
     
     
     <div id="realmBar" class="center-block clearfix" style="margin-bottom: 40px;">

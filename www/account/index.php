@@ -89,7 +89,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 
 ?>
 
-<div id="content">
+<div id="content" class="container">
 
     <ul id="tabs" class="nav nav-tabs" role="tablist" style="margin-top: 60px;">
         <li class="active"><a href="#tab_messages" role="tab" data-toggle="tab">Messages</a></li>

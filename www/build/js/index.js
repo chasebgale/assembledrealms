@@ -4,9 +4,9 @@ $(document).ready(function () {
     var templateFn = _.template($('#realms_template').html());
 
     var parameters = {};
-    parameters.directive = "realms";
+    parameters.directive = "list";
 
-    $.post("api.php", parameters, function (data) {
+    $.post("index.php", parameters, function (data) {
         if (data !== "null") {
             $("#existingRealmsTableBody").html(templateFn({ 'realms': JSON.parse( data ) }));
             $("#existingRealms").fadeIn();

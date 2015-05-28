@@ -87,7 +87,8 @@ if ($method == 'POST') {
                        $url,
                        $comments,
                        $source,
-                       $show_funding
+                       $show_funding,
+                       $address
                        );
             
     while ($stmt->fetch()){
@@ -104,7 +105,8 @@ if ($method == 'POST') {
                        'url' => $url,
                        'comments' => $comments,
                        'source' => $source,
-                       'show_funding' => $show_funding
+                       'show_funding' => $show_funding,
+                       'address' => $address
                        );
     }
     $stmt->close();
@@ -119,28 +121,23 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 
 <div id="content" class="container">
     
-    <div class="well" style="margin-bottom: 40px;">
-        <div class="row">
-            <div class="col-xs-2">
-                <div class="checkbox"><label><input id="chkOnline" type="checkbox" value=""> Online</label></div>
-            </div>
-            <div class="col-xs-2">
-                <div class="checkbox"><label><input id="chkScreenshots" type="checkbox" value=""> Screenshots</label></div>
-            </div>
-            <div class="col-xs-2">
-                <div class="checkbox"><label><input type="checkbox"> No Wait</label></div>
-            </div>
-            <div class="col-xs-3">
-                <select class="form-control" id="selectSort">
-                    <option value="0">Sort On: Loves</option>
-                    <option value="1">Sort On: Users, Highest to Lowest</option>
-                    <option value="2">Sort On: Users, Lowest to Highest</option>
-                    <option value="3">Sort On: Reviews</option>
-                </select>
-            </div>
-            <div class="col-xs-3">
-                <button class="btn btn-default" id="btnSearch">Update Search</button>
-            </div>
+    <div class="well clearfix" style="margin-bottom: 40px; padding: 10px;">
+        <div class="pull-left">
+            <strong>Required:</strong>
+            <div class="checkbox" style="display: inline; margin-left: 10px;"><label><input id="chkOnline" type="checkbox" value=""> Online</label></div>
+            <div class="checkbox" style="display: inline; margin-left: 10px;"><label><input id="chkScreenshots" type="checkbox" value=""> Screenshots</label></div>
+            <div class="checkbox" style="display: inline; margin-left: 10px;"><label><input type="checkbox"> No Wait</label></div>
+            <strong style=" margin-left: 16px;">Sort:</strong>
+            <select id="selectSort" style="display: inline-block;">
+                <option value="0">Loves</option>
+                <option value="1">Users, Highest to Lowest</option>
+                <option value="2">Users, Lowest to Highest</option>
+                <option value="3">Reviews</option>
+            </select>
+        </div>
+           
+        <div class="pull-right">
+            <button class="btn btn-default btn-xs" id="btnSearch">Update Search</button>
         </div>
     </div>
     
