@@ -11,20 +11,16 @@ if(!isUserLoggedIn()) {
 $realmID = -1;
 $sourceURL = '';
 
-if (isset($_GET['id'])) {
-    if (is_numeric($_GET['id'])) {
-	$realmID = $_GET['id'];
-    }
-}
+if (is_numeric($_SERVER['QUERY_STRING'])) {
+    $realmID = $_SERVER['QUERY_STRING'];
+    $realm = $loggedInUser->fetchRealm($realmID);
+	$sourceURL = $realm['source'];
 
-if (isset($_GET['source'])) {
-    $sourceURL = $_GET['source'];
-}
-
-if (($realmID < 0) || ($sourceURL == '')) {
-    echo "realmID: " . $realmID;
-    echo "sourceURL: " . $sourceURL;
-    die();
+	if (($realmID < 0) || ($sourceURL == '')) {
+		echo "realmID: " . $realmID;
+		echo "sourceURL: " . $sourceURL;
+		die();
+	}
 }
     
 ?>
@@ -430,19 +426,19 @@ if (($realmID < 0) || ($sourceURL == '')) {
         });
     </script>
 
-    <script src="js/utilities.js"></script>
-    <script src="js/stats.min.js"></script>
-    <script src="<?php echo 'http://' . $sourceURL . '.assembledrealms.com/api/project/' . $realmID . '/file/raw/client/maps/editor.js'; ?>"></script>
-    <script src="js/ide.js"></script>
-    <script src="js/jquery.treeview.js"></script>
-    <script src="js/md5.js"></script>
-    <script src="js/marked.js"></script>
-    <script src="js/lz4.min.js"></script>
+    <script src="/build/js/utilities.js"></script>
+    <script src="/build/js/stats.min.js"></script>
+    <script src="<?php echo 'http://' . $sourceURL . '/api/project/' . $realmID . '/file/raw/client/maps/editor.js'; ?>"></script>
+    <script src="/build/js/ide.js"></script>
+    <script src="/build/js/jquery.treeview.js"></script>
+    <script src="/build/js/md5.js"></script>
+    <script src="/build/js/marked.js"></script>
+    <script src="/build/js/lz4.min.js"></script>
     
-    <script src="/../js/pixi.dev.js"></script>
-	<script src="/../js/bigscreen.min.js"></script>
-    <script src="/../js/lodash.min.js"></script>
-    <script src="/../js/ace/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+    <script src="/js/pixi.dev.js"></script>
+	<script src="/js/bigscreen.min.js"></script>
+    <script src="/js/lodash.min.js"></script>
+    <script src="/js/ace/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
 
 </body>
 </html>

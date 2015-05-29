@@ -21,7 +21,7 @@ function resize() {
 function initialize(projectID, projectDomain) {
     
     __projectId = projectID;
-    __projectURL = 'http://' + projectDomain + '.assembledrealms.com/api/project/' + __projectId;
+    __projectURL = 'http://' + projectDomain + '/api/project/' + __projectId;
     __trackedStorageId = __projectId + "-tracking";
     
     __editor = ace.edit("editor");
