@@ -87,8 +87,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
         // 4 - realm looks up GUID, validates, then removes GUID from redis
         
         
-        /* NOTE: url and address are different, in the DB a realm could have a url of 'debug-04.assembledrealms.com/45', but the address will be the IP of
-                    debug-04.assembledrealms.com with the correct port the debug realm is listening on, i.e. 254.222.33.12:3432
+        /* NOTE: url and address are different, in the DB a realm could have a url of 'debug-04.assembledrealms.com/45', but the address will include the correct port the debug realm is listening on, or just the ip of the realm droplet we have brought up, i.e. debug-04.assembledrealms.com:4451 or 254.222.33.12
         */
         if ($realm['address']) {
             $guid = GUID();
