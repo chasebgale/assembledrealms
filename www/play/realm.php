@@ -87,7 +87,9 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
         // 4 - realm looks up GUID, validates, then removes GUID from redis
         
         
-        /* NOTE: url and address are different, in the DB a realm could have a url of 'debug-04.assembledrealms.com/45', but the address will include the correct port the debug realm is listening on, or just the ip of the realm droplet we have brought up, i.e. debug-04.assembledrealms.com:4451 or 254.222.33.12
+        /* NOTE: url and address are different, in the DB a realm could have a url of 'debug-04.assembledrealms.com/45' or 'www.assembledrealms.com/play/realm/43', but the address will include the correct port the debug realm is listening on, or just the ip of the realm droplet we have brought up, i.e. debug-04.assembledrealms.com:4451 or 254.222.33.12
+		
+		Actually, the more I am thinking about it, address in the db should be an integer of the id on a realm_address table, containing realm_id, host, secret-key
         */
         if ($realm['address']) {
             $guid = GUID();
@@ -95,10 +97,10 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
             $curl = curl_init();
             curl_setopt_array($curl, array(
                 CURLOPT_RETURNTRANSFER => 1,
-                CURLOPT_URL => $realm['address'] . '/' . $loggedInUser->user_id . '/' . $guid
+                CURLOPT_URL => $realm['address'] . '/auth/{secret-key}/' . $loggedInUser->user_id . '/' . $guid
             ));
 
-            $resp = curl_exec($curl);
+            $url_from_auth = curl_exec($curl);
         }
         
     }
@@ -164,7 +166,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     if ($alert) {
         echo '<div style="background-color: #eee; ' . $style . '"><div class="absoluteCenter text-danger" style="margin-top: 215px; text-align: center; width: 400px;">' . $alert . '</div></div>';
     } else {
-        echo '<iframe style="' . $style . '" src="http://' . $realm['url'] . '/auth/' . $guid . '"></iframe>';   
+        echo '<iframe style="' . $style . '" src="' . $url_from_auth . '"></iframe>';   
     }
     ?>
     
