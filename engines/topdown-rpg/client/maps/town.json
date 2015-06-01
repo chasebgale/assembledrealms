@@ -4,14 +4,14 @@
     "description": "Initial starting area for new players..."
   },
   "terrain": {
-    "source": ["client/resource/terrain_atlas.png"]
+    "source": ["terrain_atlas.png"]
   },
   "objects": {
+    "source": ["objects_set_used_in_map.png", "another_objects_set_used_in_map.png"],
     "2": {},
     "3": {}
   },
   "actors": {
-    "source": [],
-    "index": {}
+    "source": ["player_avatars.png", "monsters_for_this_area.png", "npcs_for_this_area.png"]
   }
 }

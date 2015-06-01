@@ -152,7 +152,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
             <td><%- accounting.formatMoney(realm.funds / 100) %></td>
             <td><%- realm.loves %></td>
             <td>
-                <a class="btn btn-default btn-xs" target="_blank" href="editor.php?id=<%- realm.id %>&source=<%- realm.source ? realm.source : 'source-01' %>"><span class="glyphicon glyphicon-fire"></span> Edit Code</a>
+                <a class="btn btn-default btn-xs" target="_blank" href="editor/<%- realm.id %>/"><span class="glyphicon glyphicon-fire"></span> Edit Code</a>
                 <a class="btn btn-default btn-xs" href="manager.php?<%- realm.id %>"><span class="glyphicon glyphicon-eye-open"></span> Manage</a>
             </td>
         

@@ -101,13 +101,7 @@ function(actors, avatar, constants, landscape, objects, utilities, PIXI) {
 			this.objects = map.objects;
 			this.actors  = map.actors;
 
-			//this.over = new PIXI.SpriteBatch();
-			//this.over.cacheAsBitmap = true;
-
 			var assets = _.union(this.terrain.source, this.objects.source, this.actors.source);
-			
-			// TODO: Actor json injected more gracefully?
-			assets.push('/resource/zombie.json', '/resource/effects.json');
 			
 			this.assetLoadCount = assets.length;
 			this.loadResources(assets);
@@ -121,7 +115,7 @@ function(actors, avatar, constants, landscape, objects, utilities, PIXI) {
       
 			_.each(assets, function (asset) {
 
-				asset = 'client' + asset;
+				asset = 'client/resource/' + asset;
 				worker.push(asset);
 
 			});
