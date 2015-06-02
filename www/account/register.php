@@ -161,6 +161,12 @@ if(!empty($_POST)) {
 				}
 			}
 		}
+        
+        // If we got this far, something is FUBAR
+        // echo json_encode(array_values($errors));
+        echo $errors[0];
+        die();
+        
 	}
 
 }
@@ -168,9 +174,9 @@ if(!empty($_POST)) {
 require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 echo "<div class='container'>";
 
-$wrapper = '<div class="panel panel-warning" style="width: 75%; margin: 30px auto;">
+$wrapper = '<div id="alertPanel" class="panel panel-warning" style="width: 75%; margin: 30px auto;">
                 <div class="panel-body">
-                    <h2 style="text-align: center; margin-top: 0;"><small>
+                    <h2 id="alertMessage" style="text-align: center; margin-top: 0;"><small>
                         %message% Please take a moment to register or login.
                     </small></h2>
                 </div>
@@ -317,7 +323,10 @@ switch (substr($_SERVER['QUERY_STRING'], 0, 1)) {
                         break;
                 }
             ?>
-		}
+		} else {
+            $("#alertPanel").removeClass("panel-warning").addClass("panel-danger");
+            $("#alertMessage").html("<small>" + data + "</small>");
+        }
         });
 
     });

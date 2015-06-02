@@ -542,7 +542,7 @@ function listCommitFiles() {
                 fileMD5 = sessionStorage[fileId + '-commit-md5'];
                 
                 if (md5(file) !== fileMD5) {
-                    // Push to gitlab
+                    // Push to git
                     commitProgressList.append('<li id="' + fileId + '"><span style="font-weight: bold; width: 200px; display: inline-block;">' + fileName + '</span><span></span></li>');
                     
                     __commitFiles.push({
@@ -832,6 +832,7 @@ function loadEditor(filename, content, displayRendered) {
             try {
                 var parsed = JSON.parse(content);
                 
+                // TODO: This is a horrible, horrible test for 'are we looking at a map?'
                 if (parsed.terrain) {
                     Map.init("mapContainer", parsed);
                     Map.save = function () {
@@ -844,6 +845,17 @@ function loadEditor(filename, content, displayRendered) {
                         __editor.setValue(JSON.stringify(worker));
                         //sessionStorage[__fileId] = __editor.getValue();
                     };
+                    
+                    // Format the JSON so a human can read it:
+                    content = JSON.stringify(parsed, function(key, value) { 
+                        if (key === "index") { 
+                            return '(tile locations ommitted for readability)'; 
+                        } else { 
+                            return value; 
+                        } 
+                    }, '\t');
+                    
+                    
                     $("#tab-nav-map").css('display', 'block');
                 }
             } catch (e) {
@@ -888,7 +900,20 @@ function loadEditor(filename, content, displayRendered) {
 }
 
 function editor_onChange(e) {
-    sessionStorage[__fileId] = __editor.getValue();
+    
+    if (sessionStorage[__fileId + "-path"].indexOf("/maps/") > -1) {
+        
+        // TODO: Special handling is needed for json under the '/maps/' directory, the sessionStorage value
+        // is the full value of the map; however, the displayed value in the editor has the 'index' property of each
+        // root object, i.e. 'objects' and 'terrain' replace with "ommitted for sanity" so we don't have thousands of tile
+        // locations markers displayed in the editor...
+        // SOLUTION: Merge the editable values in the editor with the stored values for the 'index' values in session storage
+        var newMap = JSON.parse(__editor.getValue());
+        var oldMap = JSON.parse(sessionStorage[__fileId]);
+        
+    } else {
+        sessionStorage[__fileId] = __editor.getValue();
+    }
 }
 
 function setToolbarFocus(target) {
