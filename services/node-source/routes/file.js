@@ -176,15 +176,71 @@ exports.upload = function(req, res, next) {
       fstream = fs.createWriteStream(__dirname + "/../projects/" + req.params.id + '/client/resource/' + filename);
       file.pipe(fstream);
       fstream.on('close', function () {    
-          console.log("Upload Finished of " + filename);              
+          console.log("Upload Finished of " + filename);  
+		  var fullPath = 'client/resource/' + filename;
           
-          // TODO: Add to git tracking by adding to the index and committing, see
-          // 'create' above!
+          git.Repo.open(__dirname + "/../projects/" + req.params.id, function(error, repo) {
+			if (error) return next(error);
+
+			repo.openIndex(function(error, index) {
+				if (error) return next(error);
+
+				index.read(function(error) {
+				  if (error) return next(error);
+
+				  index.addByPath(fullPath, function(error) {
+					if (error) return next(error);
+
+					index.write(function(error) {
+					  if (error) return next(error);
+
+					  index.writeTree(function(error, oid) {
+						if (error) return next(error);
+
+						//get HEAD
+						git.Reference.oidForName(repo, 'HEAD', function(error, head) {
+						  if (error) return next(error);
+
+						  //get latest commit (will be the parent commit)
+						  repo.getCommit(head, function(error, parent) {
+							if (error) return next(error);
+							var author = git.Signature.now("Chase Gale", "chase.b.gale@gmail.com");
+							var committer = git.Signature.now("Chase Gale", "chase.b.gale@gmail.com");
+
+							//commit
+							var commitMessage = 'uploaded ' + fullPath;
+							repo.createCommit('HEAD', author, committer, commitMessage, oid, [parent], function(error, commitId) {
+							  if (error) return next(error);
+							  
+							  repo.getCommit(commitId, function(error, latest) {
+								if (error) return next(error);
+								
+								latest.getEntry(fullPath, function(error, entry) {
+								  if (error) return next(error);
+								  
+								  utilities.logMessage('Added RESOURCE: ' + entry.oid().sha() + ' (' + fullPath + ')');
+								  
+								  var formatted = {};
+								  formatted.commit = commitId.sha();
+								  formatted.sha = entry.oid().sha();
+								  formatted.message = "OK";
+								  
+								  res.json(formatted);
+								  
+								});
+								
+							  });
+							});
+						  });
+						});
+					  });
+					});
+				  });
+				});
+			});
+
+		  });
           
-          var formatted = {};
-          formatted.message = "OK";
-          
-          res.json(formatted);
       });
   });
 }

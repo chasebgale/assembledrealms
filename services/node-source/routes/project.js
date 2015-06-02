@@ -223,7 +223,10 @@ exports.save = function(req, res, next) {
         
         if (fieldname == 'message') {
             commit_message = val;
-        }
+        } else if (fieldname == 'resource') {
+			// Uploaded resource pointer string
+			files.push(val);
+		}
       
     });
     req.busboy.on('finish', function() {

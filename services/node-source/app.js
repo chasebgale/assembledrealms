@@ -76,6 +76,7 @@ app.get('/api/stats', function (req, res, next) {
 
 app.use(function(err, req, res, next){
     console.error(err.message);
+	console.error(err.stack);
     res.send(500, err.message);
 });
 

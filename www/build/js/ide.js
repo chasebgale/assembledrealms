@@ -491,6 +491,14 @@ function resetToolBar() {
     }
 }
 
+function isImageFile(name) {
+	var ext = name.split('.').pop();
+	if ($.inArray(ext, ["png", "jpg", "jpeg"]) > -1) {
+		return true;
+	}
+	return false;
+}
+
 function addToExplorer(path, name, sha) {
     
     var root;
@@ -516,7 +524,9 @@ function addToExplorer(path, name, sha) {
     if (!inserted) {
         root.children().removeClass('last lastExpandable');
         root.append('<li class="last"><span class="file activefile" data-id="' + sha + '" data-path="' + path + "/" + name + '">' + name + '</span></li>');
-    }
+    } else {
+		loadRealmFile(sha, path + "/" + name, name);
+	}
 }
 
 function listCommitFiles() {
@@ -536,26 +546,38 @@ function listCommitFiles() {
         
         if (_.isArray(__processingFiles)) {
             __processingFiles = $.grep(__processingFiles, function (fileId, i) {
-                file = sessionStorage[fileId];
-                fileName = sessionStorage[fileId + '-name'];
-                filePath = sessionStorage[fileId + '-path'];
-                fileMD5 = sessionStorage[fileId + '-commit-md5'];
+				
+				if (isImageFile(fileId)) {
+					commitProgressList.append('<li><span style="font-weight: bold; width: 200px; display: inline-block;">' + fileId + '</span><span></span></li>');
+					__commitFiles.push({
+						name: fileId,
+						resource: true
+					});
+					return true;
+				} else {
+				
+					file = sessionStorage[fileId];
+					fileName = sessionStorage[fileId + '-name'];
+					filePath = sessionStorage[fileId + '-path'];
+					fileMD5 = sessionStorage[fileId + '-commit-md5'];
                 
-                if (md5(file) !== fileMD5) {
-                    // Push to git
-                    commitProgressList.append('<li id="' + fileId + '"><span style="font-weight: bold; width: 200px; display: inline-block;">' + fileName + '</span><span></span></li>');
-                    
-                    __commitFiles.push({
-                        content: file,
-                        name: fileName,
-                        path: filePath,
-                        sha: fileId
-                    });
-                    
-                    return true;
-                } else {
-                    return false;
-                }
+					if (md5(file) !== fileMD5) {
+						// Push to git
+						commitProgressList.append('<li id="' + fileId + '"><span style="font-weight: bold; width: 200px; display: inline-block;">' + fileName + '</span><span></span></li>');
+						
+						__commitFiles.push({
+							content: file,
+							name: fileName,
+							path: filePath,
+							sha: fileId,
+							resource: false
+						});
+						
+						return true;
+					} else {
+						return false;
+					}
+				}
             });
         }
     }
@@ -575,7 +597,11 @@ function commit() {
         var formData = new FormData();
         
         _.each(__commitFiles, function (file) {
-            formData.append(file.path, new Blob([file.content], {type: 'text/plain'}));
+			if (file.resource) {
+				formData.append("resource", file.name);
+			} else {
+				formData.append(file.path, new Blob([file.content], {type: 'text/plain'}));
+			}
         });
         
         formData.append("message", __checkInMsg);
@@ -590,7 +616,9 @@ function commit() {
                 
                 _.each(__commitFiles, function (file) {
                     // Update sessionStorage with new MD5
-                    sessionStorage[file.sha + '-commit-md5'] = md5(sessionStorage[file.sha]);
+					if (!file.resource) {
+						sessionStorage[file.sha + '-commit-md5'] = md5(sessionStorage[file.sha]);
+					}
                 });
                 
                 // Update DOM to reflect we completed ok:
@@ -731,8 +759,6 @@ function loadRealmRoot() {
 
 function loadRealmFile(id, path, name, rendered) {
 
-    var ext = name.split('.').pop();
-    
     var tracking_id = __projectId + '-' + path;
 
     if (sessionStorage[tracking_id + '-name']) {
@@ -742,21 +768,14 @@ function loadRealmFile(id, path, name, rendered) {
                 
     } else {
 
-        var ref = "master"; // For now hit master, in the future, pull from working branch (master is the current production copy of the realm)
-
-        //var req = __projectId + '/repository/files?id=' + __projectId +
-        //                                      '&file_path=' + encodeURIComponent(path) +
-        //                                      '&ref=' + ref +
-        //                                      '&private_token=' + token;
-
-        if (ext.match(/\.(jpg|jpeg|png|gif)$/)) {
+        if (isImageFile(name)) {
                     
             $('#image').children('img').each(function(i) { 
                 $(this).hide();
             });
             
-            $("#image").append("<img src='" + __projectURL + '/file/raw/' + encodeURIComponent(path) + "' id='" + id + "' style='background-image: url(img/transparent_display.gif);' />");
-            
+            $("#image").append("<img src='" + __projectURL + '/file/raw/' + encodeURIComponent(path) + "' id='" + id + "' style='background-image: url(/build/img/transparent_display.gif);' />");
+			
             displayImage();
             
         } else {
@@ -812,9 +831,11 @@ function loadEditor(filename, content, displayRendered) {
 
     $("#mapTabs li").css('display', 'none');
     
-    if (ext === 'png') {
+    if (isImageFile(filename)) {
 
         $("#tab-nav-image").css('display', 'block');
+		$('#tab-nav-image a:first').tab('show');
+		return;
         
     } else {
     
@@ -871,30 +892,22 @@ function loadEditor(filename, content, displayRendered) {
             $("#tab-nav-markdown").css('display', 'block');
             $("#markdown").html(marked(content));
             break;
-        case "png":
-            
             break;
         default:
             __editor.getSession().setMode("ace/mode/plain_text");
             break;
     }
 
-    
-
-    if (ext != 'png') {
-        __editor.setValue(content);
-        __editor.clearSelection();
-        __editor.moveCursorTo(0, 0);
-        
-        if (displayRendered) {
-            // TODO: Switch between rendered things. 
-            $('#tab-nav-markdown a:first').tab('show');
-        } else {
-            $('#tab-nav-editor a:first').tab('show');
-        }
-    } else {
-        $('#tab-nav-image a:first').tab('show');
-    }
+	__editor.setValue(content);
+	__editor.clearSelection();
+	__editor.moveCursorTo(0, 0);
+	
+	if (displayRendered) {
+		// TODO: Switch between rendered things. 
+		$('#tab-nav-markdown a:first').tab('show');
+	} else {
+		$('#tab-nav-editor a:first').tab('show');
+	}
     
     __editor.on("change", editor_onChange);
 }
