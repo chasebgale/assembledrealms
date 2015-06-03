@@ -90,18 +90,19 @@ define(function () {
 		
 		tick: function (engine, PIXI) {
 			var self = this;
-			var amount = 2;
-			var amount_angle_sin = 2 * MOVEMENT_ANGLE_SIN;
-			var amount_angle_cos = 2 * MOVEMENT_ANGLE_COS;
-			var animationSpeed = .2;
 			
-			var oldDirection = self.direction;
-			var wasMoving = self.moving;
-			var oldOffset = $.extend(true, {}, engine.position);
+			var amount 				= 2;
+			var amount_angle_sin 	= 2 * MOVEMENT_ANGLE_SIN;
+			var amount_angle_cos 	= 2 * MOVEMENT_ANGLE_COS;
+			var animationSpeed 		= .2;
+			
+			var oldDirection 	= self.direction;
+			var wasMoving 		= self.moving;
+			var oldOffset 		= $.extend(true, {}, engine.position);
 			
 			var keys = engine.keyboard.activeKeys();
 			
-			if ($.inArray('shift', keys) > -1) {d
+			if ($.inArray('shift', keys) > -1) {
 				amount *= 2;
 				amount_angle_sin *= 2;
 				amount_angle_cos *= 2;
@@ -111,7 +112,7 @@ define(function () {
 			if ($.inArray('w', keys) > -1) {
                 engine.offset.y += amount;
                 engine.position.y -= amount;
-                engine.matrix.translate(0, amount);
+                //engine.matrix.translate(0, amount);
                 self.moving = true;
                 self.direction = DIRECTION_N;
                 self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);
@@ -121,7 +122,7 @@ define(function () {
             if ($.inArray('a', keys) > -1) {
                 engine.offset.x += amount;
 				engine.position.x -= amount;
-                engine.matrix.translate(amount, 0);
+                //engine.matrix.translate(amount, 0);
 				self.moving = true;
 				self.direction = DIRECTION_W;
 				self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);
@@ -131,7 +132,7 @@ define(function () {
             if ($.inArray('s', keys) > -1) {
                 engine.offset.y -= amount;
                 engine.position.y += amount;
-                engine.matrix.translate(0, -amount);
+                //engine.matrix.translate(0, -amount);
                 self.moving = true;
                 self.direction = DIRECTION_S;
                 self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);
@@ -141,7 +142,7 @@ define(function () {
             if ($.inArray('d', keys) > -1) {
                 engine.offset.x -= amount;
 				engine.position.x += amount;
-                engine.matrix.translate(-amount, 0);
+                //engine.matrix.translate(-amount, 0);
 				self.moving = true;
 				self.direction = DIRECTION_E;
 				self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);

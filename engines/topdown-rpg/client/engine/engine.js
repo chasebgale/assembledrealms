@@ -216,6 +216,11 @@ difficult, lone, npc 'adventurers' exploring the dungeon, etc, fast pace
             }
             
             avatar.tick(self, PIXI);
+			
+			// Offset translation for smooth scrolling between tiles
+			self.matrix = new PIXI.Matrix();
+			self.matrix.translate(-self.position.x + CANVAS_WIDTH_HALF, 
+								  -self.position.y + CANVAS_HEIGHT_HALF);
             
             terrain.draw(self, PIXI);
             

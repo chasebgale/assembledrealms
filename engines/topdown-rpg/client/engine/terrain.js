@@ -65,11 +65,17 @@ define(function () {
             
             var sprite;
             
-            var startCol = Math.floor((engine.offset.x - CANVAS_WIDTH_HALF) / TILE_WIDTH);
-            var startRow = Math.floor((engine.offset.y - CANVAS_HEIGHT_HALF) / TILE_HEIGHT);
+            var startCol = Math.floor((engine.position.x - CANVAS_WIDTH_HALF) / TILE_WIDTH);
+            var startRow = Math.floor((engine.position.y - CANVAS_HEIGHT_HALF) / TILE_HEIGHT);
             
-            for (var row = startRow; row < startRow + VIEWPORT_HEIGHT_TILES; row++) {
-                for (var col = startCol; col < startCol + VIEWPORT_WIDTH_TILES; col++) {
+			var maxCol = startCol + VIEWPORT_WIDTH_TILES + 1;
+			var maxRow = startRow + VIEWPORT_HEIGHT_TILES + 1;
+			
+			var startX = startCol * TILE_WIDTH;
+			var startY = startRow * TILE_HEIGHT;
+			
+            for (var row = startRow; row < maxRow; row++) {
+                for (var col = startCol; col < maxCol; col++) {
                     if (engine.map.terrain.index[row] === undefined) continue;
                     if (engine.map.terrain.index[row][col] === undefined) continue;
                     
@@ -85,8 +91,8 @@ define(function () {
                             
                             sprite = new PIXI.Sprite(PIXI.Texture.fromFrame('terrain_' + index));
                     
-                            sprite.position.x = (col * TILE_WIDTH);// + engine.offset.x;
-                            sprite.position.y = (row * TILE_HEIGHT);// + engine.offset.y;
+                            sprite.position.x = startX + ((col - startCol) * TILE_WIDTH);
+                            sprite.position.y = startY + ((row - startRow) * TILE_HEIGHT);
                             
                             this.buffer.addChild(sprite);
                             
