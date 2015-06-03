@@ -11,11 +11,16 @@ difficult, lone, npc 'adventurers' exploring the dungeon, etc, fast pace
 
 	return {
 
-		stage:      undefined,
-		renderer:   undefined,
-		buffer:     undefined,
-		map:		undefined,
-		keyboard:   undefined,
+		stage:          undefined,
+		renderer:       undefined,
+		buffer:         undefined,
+		map:		    undefined,
+		keyboard:       undefined,
+        matrix:         undefined,
+        initialized:    false,
+        
+        layer_terrain:  undefined,
+        layer_actors:   undefined,
 		
 		// Top left tile coordinates
 		coordinates: {row: 0, col: 0},
@@ -28,6 +33,9 @@ difficult, lone, npc 'adventurers' exploring the dungeon, etc, fast pace
 			
 			// Initialize keyboard, check out https://github.com/RobertWHurst/KeyboardJS for more info
 			self.keyboard = require("keyboard");
+            
+            self.matrix = new PIXI.Matrix();
+			self.matrix.translate(0, 0);
 			
 			// Initialize PIXI, the 2D rendering engine we will use, check out
 			// https://github.com/GoodBoyDigital/pixi.js for more info
@@ -37,11 +45,11 @@ difficult, lone, npc 'adventurers' exploring the dungeon, etc, fast pace
 				resolution:1
 			};
 			
-			self.renderer   = PIXI.autoDetectRenderer(constants.CANVAS_WIDTH, constants.CANVAS_HEIGHT, rendererOptions);
+			self.renderer   = PIXI.autoDetectRenderer(CANVAS_WIDTH, CANVAS_HEIGHT, rendererOptions);
 			self.stage      = new PIXI.Stage(0x000000, true);
 			self.buffer     = new PIXI.SpriteBatch();
 			
-			document.getElementById(target).appendChild(self.renderer.view);
+			target.appendChild(self.renderer.view);
 			
 			self.stage.mousedown = function (data) {
 				//console.log(self.indexFromScreen(data.global));
@@ -67,10 +75,29 @@ difficult, lone, npc 'adventurers' exploring the dungeon, etc, fast pace
 
 		load: function (map) {
 		
-			this.map = map;
+            var self = this;
+			self.map = map;
 			
-			terrain.load(map, PIXI, function (error) {
+			terrain.load(this, PIXI, function (error) {
+
+                self.layer_terrain = new PIXI.Sprite(terrain.texture);
+                self.layer_terrain.cacheAsBitmap = true;
+                self.stage.addChild(self.layer_terrain);
+                
+                self.layer_actors = new PIXI.DisplayObjectContainer();
+                self.stage.addChild(self.layer_actors);
+                
+                avatar.load(this, PIXI, function (error) {
+                   
+                    self.layer_actors.addChild(avatar.sprite);
+                   
+                    self.initialized = true;
+                    self.loaded();
+                   
+                });
+                
 				
+                
 			});
 
 		},
@@ -174,31 +201,19 @@ difficult, lone, npc 'adventurers' exploring the dungeon, etc, fast pace
 
 		draw: function () {
 		
-            // engine.buffer.children = [];
-            // engine.texture.clear();
-			
-			this.buffer.children = [];
-			this.texture.clear();
-		
-			var offset = terrain.draw(this, PIXI);
-			
-			
-			
-			return offset;
-		
 		},
 
 		render: function () {
 
-			avatar.tick(this, PIXI);
- 
-			objects.tick(this, PIXI);
- 
-			terrain.context.fillStyle = "rgb(255,0,0)";
-			terrain.context.fillRect(avatar.position.x + 32, avatar.position.y + 64, 2, 2);
-
-			this.updateTexture();
-			this.renderer.render(this.stage);
+            var self = this;
+        
+			if (!self.initialized) {
+                return;
+            }
+            
+            terrain.draw(self, PIXI);
+            
+            self.renderer.render(self.stage);
 
 		},
 
