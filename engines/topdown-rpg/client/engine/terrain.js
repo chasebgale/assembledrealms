@@ -85,8 +85,8 @@ define(function () {
                             
                             sprite = new PIXI.Sprite(PIXI.Texture.fromFrame('terrain_' + index));
                     
-                            sprite.position.x = ((col - engine.coordinates.col) * TILE_WIDTH);// + engine.offset.x;
-                            sprite.position.y = ((row - engine.coordinates.row) * TILE_HEIGHT);// + engine.offset.y;
+                            sprite.position.x = (col * TILE_WIDTH);// + engine.offset.x;
+                            sprite.position.y = (row * TILE_HEIGHT);// + engine.offset.y;
                             
                             this.buffer.addChild(sprite);
                             
