@@ -8,6 +8,85 @@ define(function () {
 		buffer: undefined,
 		sprite: undefined,
 	
+		load: function (engine, PIXI, callback) {
+			var self = this;
+			var worker = [];
+      
+			engine.map.terrain.source.forEach(function (asset) {
+
+				asset = 'client/resource/' + asset;
+				worker.push(asset);
+
+			});
+
+			var loader = new PIXI.AssetLoader(worker, true);
+			
+			loader.onProgress = function (event) {
+                
+				var index;
+				var sprite;
+				var layers;
+				var i;
+				
+				var filename = event.texture.baseTexture.imageUrl.split('/').pop();
+				
+				for (var row = engine.coordinates.row; row < engine.coordinates.row + engine.VIEWPORT_HEIGHT_TILES; row++) {
+					for (var col = engine.coordinates.col; col < engine.coordinates.col + engine.VIEWPORT_WIDTH_TILES; col++) {
+						if (engine.terrain.index[row] === undefined) continue;
+						if (engine.terrain.index[row][col] === undefined) continue;
+						
+						layers = engine.terrain.index[row][col];
+						
+						if (layers.constructor !== Array) continue;
+						
+						for (i = 0; i < layers.length; i++) {
+							
+							index = layers[i];
+							
+							if (index != null) {
+								
+								sprite = new PIXI.Sprite(PIXI.Texture.fromFrame('tile_' + index));
+						
+								sprite.position.x = ((col - engine.coordinates.col) * engine.TILE_WIDTH);
+								sprite.position.y = ((row - engine.coordinates.row) * engine.TILE_HEIGHT);
+								
+								engine.buffer.addChild(sprite);
+								
+							}
+							
+						}
+						
+						
+					}
+				}
+				
+			};
+			
+			loader.onComplete = function (event) {
+				
+				avatar.initialize(self, PIXI);
+				avatar.sprite.position.x = (CANVAS_WIDTH / 2) - 64;
+				avatar.sprite.position.y = (CANVAS_HEIGHT / 2) - 64;
+				
+				objects.initialize(self, PIXI);
+				
+				avatar.offset = self.draw();
+				
+				avatar.position.x = avatar.sprite.position.x + 64;
+				avatar.position.y = avatar.sprite.position.y + 64;
+
+				self.stage.addChild(terrain.sprite);
+				self.stage.addChild(objects.sprite);
+				
+				self.renderer.render(self.stage);
+				
+				self.loaded();
+				
+			};
+			
+			loader.load();
+		},
+	
 		// Called on player login and when changing maps
 		draw: function (engine, PIXI) {
 

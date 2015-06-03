@@ -1,55 +1,50 @@
-define(["actors", "avatar", "constants", "landscape", "objects", "utilities", "pixi"], 
-function(actors, avatar, constants, landscape, objects, utilities, PIXI) {
+define(["actors", "avatar", "constants", "terrain", "objects", "utilities", "pixi"], 
+function(actors, avatar, constants, terrain, objects, utilities, PIXI) {
 
-	/*
-	
-		Classes of wolves, e.g. mages would be 'howlers' that stay out of combat and buff 
-	front line warriors. Dire's, i.e. warriors, receive a combat bonus % equal to wolves in
-	pack.
-	
-		Packing would be a spell like initiating a howl or anything else... when a player wants
-	to join a pack, they use the command and the wolf sits down, another wolf from the existing
-	pack gets in the adjacent tile and presses the same command, thereby adding the wolf to the pack.
-    
-    EXAMPLE: http://www.seveibar.com/liberated-pixel-cup/
-	
-	*/
+
+/*
+
+Weak skelly born in crypt or something, weak, must team up with other player skellys to destroy 
+difficult, lone, npc 'adventurers' exploring the dungeon, etc, fast pace
+
+*/
 
 	return {
 
-		stage: null,
-		renderer: null,
-		playerPos: { x: 0, y: 0 },
-		offsetTracker: { x: 0, y: 0 },
-		terrain: {},
-		objects: {},
-		brush: {},
-		tile: 0,
-		moveOriginPoint: {},
-		moveOriginOffset: {},
-		frames: {},
-		keyboard: undefined,
+		stage:      undefined,
+		renderer:   undefined,
+		buffer:     undefined,
+		map:		undefined,
+		keyboard:   undefined,
+		
+		// Top left tile coordinates
+		coordinates: {row: 0, col: 0},
 
 		initialize: function (target) {
 
+            // If we are inside of nested functions, 'this' can be reassigned, let's keep a reference to 'this'
+            // as it initially references 'engine'
 			var self = this;
 			
-			// Initialize keyboard:
+			// Initialize keyboard, check out https://github.com/RobertWHurst/KeyboardJS for more info
 			self.keyboard = require("keyboard");
 			
-			// Initialize PIXI:
+			// Initialize PIXI, the 2D rendering engine we will use, check out
+			// https://github.com/GoodBoyDigital/pixi.js for more info
 			var rendererOptions = {
 				antialiasing:false,
 				transparent:false,
 				resolution:1
-			}
+			};
 			
-			self.renderer = PIXI.autoDetectRenderer(CANVAS_WIDTH, CANVAS_HEIGHT, rendererOptions);
-			target.appendChild(self.renderer.view);
-			self.stage = new PIXI.Stage(0x000000, true);
+			self.renderer   = PIXI.autoDetectRenderer(constants.CANVAS_WIDTH, constants.CANVAS_HEIGHT, rendererOptions);
+			self.stage      = new PIXI.Stage(0x000000, true);
+			self.buffer     = new PIXI.SpriteBatch();
+			
+			document.getElementById(target).appendChild(self.renderer.view);
 			
 			self.stage.mousedown = function (data) {
-				console.log(self.indexFromScreen(data.global));
+				//console.log(self.indexFromScreen(data.global));
 			};
 			
 			// TODO: Right here I should be handshaking with the server and receiving a 
@@ -69,42 +64,14 @@ function(actors, avatar, constants, landscape, objects, utilities, PIXI) {
 			});
 			
 		},
-		
-		checkBounds: function () {
 
-			var self = this;
-		
-			if (self.offsetTracker.x >= 32 ) {
-				self.offsetTracker.x = 0;
-				self.invalidate = true;
-			}
-
-			if (self.offsetTracker.x <= -32) {
-				self.offsetTracker.x = 0;
-				self.invalidate = true;
-			}
-			
-			if (self.offsetTracker.y >= 16) {
-				self.offsetTracker.y = 0;
-				self.invalidate = true;
-			}
-
-			if (self.offsetTracker.y <= -16) {
-				self.offsetTracker.y = 0;
-				self.invalidate = true;
-			}
-		},
-	   
 		load: function (map) {
 		
-			this.terrain = map.terrain;
-			this.objects = map.objects;
-			this.actors  = map.actors;
-
-			var assets = _.union(this.terrain.source, this.objects.source, this.actors.source);
+			this.map = map;
 			
-			this.assetLoadCount = assets.length;
-			this.loadResources(assets);
+			terrain.load(map, PIXI, function (error) {
+				
+			});
 
 		},
 
@@ -113,7 +80,7 @@ function(actors, avatar, constants, landscape, objects, utilities, PIXI) {
 			var self = this;
 			var worker = [];
       
-			_.each(assets, function (asset) {
+			assets.forEach(function (asset) {
 
 				asset = 'client/resource/' + asset;
 				worker.push(asset);
@@ -123,7 +90,56 @@ function(actors, avatar, constants, landscape, objects, utilities, PIXI) {
 			var loader = new PIXI.AssetLoader(worker, true);
 			
 			loader.onProgress = function (event) {
-				$.extend(self.frames, event.json.frames);
+                // $.extend is like $.merge but targets objects as opposed to arrays, 
+                // i.e. it merges objects' properties: http://api.jquery.com/jquery.extend/
+				// $.extend(self.frames, event.json.frames);
+				//.substr(16)
+				
+				var filename = event.texture.baseTexture.imageUrl.split('/').pop();
+				
+				if (filename.startsWith('terrain')) {
+					
+					
+					var index;
+					var sprite;
+					var layers;
+					var i;
+					
+					for (var row = self.coordinates.row; row < self.coordinates.row + self.VIEWPORT_HEIGHT_TILES; row++) {
+						for (var col = self.coordinates.col; col < self.coordinates.col + self.VIEWPORT_WIDTH_TILES; col++) {
+							if (self.terrain[row] === undefined) continue;
+							if (self.terrain[row][col] === undefined) continue;
+							
+							layers = self.terrain[row][col];
+							
+							if (layers.constructor !== Array) continue;
+							
+							for (i = 0; i < layers.length; i++) {
+								
+								index = layers[i];
+								
+								if (index != null) {
+									
+									sprite = new PIXI.Sprite(PIXI.Texture.fromFrame('tile_' + index));
+							
+									sprite.position.x = ((col - self.coordinates.col) * self.TILE_WIDTH);
+									sprite.position.y = ((row - self.coordinates.row) * self.TILE_HEIGHT);
+									
+									self.buffer.addChild(sprite);
+									
+								}
+								
+							}
+							
+							
+						}
+					}
+					
+					
+				} else if (filename.startsWith('actors')) {
+					
+				}
+				
 			};
 			
 			loader.onComplete = function (event) {
@@ -139,34 +155,9 @@ function(actors, avatar, constants, landscape, objects, utilities, PIXI) {
 				avatar.position.x = avatar.sprite.position.x + 64;
 				avatar.position.y = avatar.sprite.position.y + 64;
 
-				//self.texture = new PIXI.RenderTexture(self.renderer.width, self.renderer.height);
-				
-				//self.overTexture = new PIXI.RenderTexture(self.buffer.width + (CANVAS_WIDTH / 2), self.buffer.height + (CANVAS_HEIGHT / 2));
-				//self.overTexture.render(self.over);
-
-				// self.layer_actors = new PIXI.DisplayObjectContainer();
-				// self.layer_actors.addChild(avatar.sprite);
-				//self.layer_terrain = new PIXI.Sprite(self.bufferTexture); //self.texture);
-				//self.layer_terrain.cacheAsBitmap = true;
-				//self.layer_over = new PIXI.Sprite(self.overTexture); 
-				//self.layer_over.cacheAsBitmap = true;
-
-				self.stage.addChild(landscape.sprite);
+				self.stage.addChild(terrain.sprite);
 				self.stage.addChild(objects.sprite);
 				
-				//self.stage.addChild(self.layer_actors);
-				//self.stage.addChild(self.layer_over);
-				
-				/*
-				var mask = new PIXI.Graphics();
-				self.stage.addChild(mask);
-				mask.position.x = 0;
-				mask.position.y = 0;
-				mask.beginFill(0xFFFFFF, 1.0);
-				mask.drawRect((CANVAS_WIDTH / 2) - 32, (CANVAS_HEIGHT / 2) - 32, 64, 80);
-				mask.endFill();
-				self.layer_over.mask = mask;
-				*/
 				self.renderer.render(self.stage);
 				
 				self.loaded();
@@ -176,29 +167,20 @@ function(actors, avatar, constants, landscape, objects, utilities, PIXI) {
 			loader.load();
 				 
 		},
-	   
+
 		position: function () {
 			return avatar.position;
 		},
-	   
-		updateTexture: function () {
-			//var matrix = new PIXI.Matrix();
-			//matrix.translate(avatar.offset.x, avatar.offset.y);
 
-			//this.texture.render(this.bufferTexture, matrix, true);
-			//this.layer_terrain.position.x = -avatar.position.x + avatar.sprite.position.x; //offset
-			//this.layer_terrain.position.y = -avatar.position.y + avatar.sprite.position.y + 32;
-			
-			landscape.sprite.position.x = -avatar.position.x + avatar.sprite.position.x; //offset
-			landscape.sprite.position.y = -avatar.position.y + avatar.sprite.position.y + 32;
-			
-			//this.layer_over.position.x = -avatar.position.x + avatar.sprite.position.x; //offset
-			//this.layer_over.position.y = -avatar.position.y + avatar.sprite.position.y + 32;
-		},
-	   
 		draw: function () {
 		
-			var offset = landscape.draw(this, PIXI);
+            // engine.buffer.children = [];
+            // engine.texture.clear();
+			
+			this.buffer.children = [];
+			this.texture.clear();
+		
+			var offset = terrain.draw(this, PIXI);
 			
 			
 			
@@ -207,13 +189,13 @@ function(actors, avatar, constants, landscape, objects, utilities, PIXI) {
 		},
 
 		render: function () {
-		  
+
 			avatar.tick(this, PIXI);
-		  
+ 
 			objects.tick(this, PIXI);
-		  
-			landscape.context.fillStyle = "rgb(255,0,0)";
-			landscape.context.fillRect(avatar.position.x + 32, avatar.position.y + 64, 2, 2);
+ 
+			terrain.context.fillStyle = "rgb(255,0,0)";
+			terrain.context.fillRect(avatar.position.x + 32, avatar.position.y + 64, 2, 2);
 
 			this.updateTexture();
 			this.renderer.render(this.stage);
@@ -238,8 +220,9 @@ function(actors, avatar, constants, landscape, objects, utilities, PIXI) {
 			console.log("Coords post-rounding: " + map.row + ", " + map.col);
 
 			return map;
-	   },
-	   
+			
+		},
+
 		coordFromScreen: function (index) {
 			var b = ((index.row * 2) - (index.col * 2)) / 2;
 			var a = (index.row * 2) - b;
@@ -248,9 +231,9 @@ function(actors, avatar, constants, landscape, objects, utilities, PIXI) {
 		},
 		
 		isWalkable: function(point) {
-			return landscape.isWalkable(this, {x: point.x + 32, y: point.y + 64});
+			return terrain.isWalkable(this, {x: point.x + 32, y: point.y + 64});
 		}
-	   
+
 	};
 
 });
