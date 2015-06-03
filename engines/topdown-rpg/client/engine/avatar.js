@@ -112,7 +112,6 @@ define(function () {
 			if ($.inArray('w', keys) > -1) {
                 engine.offset.y += amount;
                 engine.position.y -= amount;
-                //engine.matrix.translate(0, amount);
                 self.moving = true;
                 self.direction = DIRECTION_N;
                 self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);
@@ -122,7 +121,6 @@ define(function () {
             if ($.inArray('a', keys) > -1) {
                 engine.offset.x += amount;
 				engine.position.x -= amount;
-                //engine.matrix.translate(amount, 0);
 				self.moving = true;
 				self.direction = DIRECTION_W;
 				self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);
@@ -132,7 +130,6 @@ define(function () {
             if ($.inArray('s', keys) > -1) {
                 engine.offset.y -= amount;
                 engine.position.y += amount;
-                //engine.matrix.translate(0, -amount);
                 self.moving = true;
                 self.direction = DIRECTION_S;
                 self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);
@@ -142,7 +139,6 @@ define(function () {
             if ($.inArray('d', keys) > -1) {
                 engine.offset.x -= amount;
 				engine.position.x += amount;
-                //engine.matrix.translate(-amount, 0);
 				self.moving = true;
 				self.direction = DIRECTION_E;
 				self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);
