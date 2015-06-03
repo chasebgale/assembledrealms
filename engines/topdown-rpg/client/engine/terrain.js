@@ -65,8 +65,11 @@ define(function () {
             
             var sprite;
             
-            for (var row = engine.coordinates.row; row < engine.coordinates.row + VIEWPORT_HEIGHT_TILES; row++) {
-                for (var col = engine.coordinates.col; col < engine.coordinates.col + VIEWPORT_WIDTH_TILES; col++) {
+            var startCol = Math.floor((engine.offset.x - CANVAS_WIDTH_HALF) / TILE_WIDTH);
+            var startRow = Math.floor((engine.offset.y - CANVAS_HEIGHT_HALF) / TILE_HEIGHT);
+            
+            for (var row = startRow; row < startRow + VIEWPORT_HEIGHT_TILES; row++) {
+                for (var col = startCol; col < startCol + VIEWPORT_WIDTH_TILES; col++) {
                     if (engine.map.terrain.index[row] === undefined) continue;
                     if (engine.map.terrain.index[row][col] === undefined) continue;
                     
@@ -82,8 +85,8 @@ define(function () {
                             
                             sprite = new PIXI.Sprite(PIXI.Texture.fromFrame('terrain_' + index));
                     
-                            sprite.position.x = ((col - engine.coordinates.col) * TILE_WIDTH);
-                            sprite.position.y = ((row - engine.coordinates.row) * TILE_HEIGHT);
+                            sprite.position.x = ((col - engine.coordinates.col) * TILE_WIDTH);// + engine.offset.x;
+                            sprite.position.y = ((row - engine.coordinates.row) * TILE_HEIGHT);// + engine.offset.y;
                             
                             this.buffer.addChild(sprite);
                             

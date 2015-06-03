@@ -5,8 +5,6 @@ define(function () {
     /*
 		sprite: {},
 		active: 0,
-		offset: {x: 0, y: 0},
-		position: {x: 0, y: 0},
 		
 		moving: false,
 		engine: undefined,
@@ -14,6 +12,7 @@ define(function () {
     
         direction:  0,
         sprite:     undefined,
+        moving:     false,
     
 		load: function (engine, PIXI, callback) {
 
@@ -61,8 +60,8 @@ define(function () {
                 for (i = 0; i < directions; i++) {
                     clip = new PIXI.MovieClip(textures[i]);
 
-                    clip.position.x = 0;
-                    clip.position.y = 0;
+                    clip.position.x = (CANVAS_WIDTH / 2) - 32;
+                    clip.position.y = (CANVAS_HEIGHT / 2) - 32;
                     clip.animationSpeed = .2;
                     clip.visible = false;
 
@@ -73,8 +72,9 @@ define(function () {
             
             loader.onComplete = function (event) {
                 self.direction = DIRECTION_S;
+                
                 self.sprite.children[self.direction].visible = true;
-                self.sprite.children[self.direction].play();
+                self.sprite.children[self.direction].gotoAndStop(0);
                 
                 callback();
             };
@@ -88,7 +88,7 @@ define(function () {
 			this.y += offset.y;
 		},
 		
-		tick: function () {
+		tick: function (engine, PIXI) {
 			var self = this;
 			var amount = 2;
 			var amount_angle_sin = 2 * MOVEMENT_ANGLE_SIN;
@@ -97,107 +97,49 @@ define(function () {
 			
 			var oldDirection = self.direction;
 			var wasMoving = self.moving;
-			var oldOffset = _.clone(self.position, true);
+			var oldOffset = $.extend(true, {}, engine.position);
 			
+			var keys = engine.keyboard.activeKeys();
 			
-			
-			var keys = self.engine.keyboard.activeKeys();
-			
-			if (_.contains(keys, 'shift')) {
+			if ($.inArray('shift', keys) > -1) {d
 				amount *= 2;
 				amount_angle_sin *= 2;
 				amount_angle_cos *= 2;
 				animationSpeed *= 2;
 			}
 			
-			if (_.contains(keys, 'w')) {
-				if (_.contains(keys, 'a')) {
-					// North-West
-					self.offset.x += amount_angle_cos;
-					self.offset.y += amount_angle_sin;
-					
-					self.position.x -= amount_angle_cos;
-					self.position.y -= amount_angle_sin;
-					
-					self.moving = true;
-					self.direction = DIRECTION_NW;
-					self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);
-					return;
-				} else if (_.contains(keys, 'd')) {
-					// North-East
-					self.offset.x -= amount_angle_cos;
-					self.offset.y += amount_angle_sin;
-					
-					self.position.x += amount_angle_cos;
-					self.position.y -= amount_angle_sin;
-					
-					self.moving = true;
-					self.direction = DIRECTION_NE;
-					self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);
-					return;
-				} else {
-					// North
-					self.offset.y += amount;
-					self.position.y -= amount;
-					
-					self.moving = true;
-					self.direction = DIRECTION_N;
-					self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);
-					return;
-				}
+			if ($.inArray('w', keys) > -1) {
+                engine.offset.y += amount;
+                engine.position.y -= amount;
+                self.moving = true;
+                self.direction = DIRECTION_N;
+                self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);
+                return;
 			}
-			
-			if (_.contains(keys, 's')) {
-				if (_.contains(keys, 'a')) {
-					// South-West
-					self.offset.x += amount_angle_cos;
-					self.offset.y -= amount_angle_sin;
-					
-					self.position.x -= amount_angle_cos;
-					self.position.y += amount_angle_sin;
-					
-					self.moving = true;
-					self.direction = DIRECTION_SW;
-					self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);
-					return;
-				} else if (_.contains(keys, 'd')) {
-					// South-East
-					self.offset.x -= amount_angle_cos;
-					self.offset.y -= amount_angle_sin;
-					
-					self.position.x += amount_angle_cos;
-					self.position.y += amount_angle_sin;
-					
-					self.moving = true;
-					self.direction = DIRECTION_SE;
-					self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);
-					return;
-				} else {
-					// South
-					self.offset.y -= amount;
-					self.position.y += amount;
-					
-					self.moving = true;
-					self.direction = DIRECTION_S;
-					self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);
-					return;
-				}
-			}
-			
-			if (_.contains(keys, 'd')) {
-				self.offset.x -= amount;
-				self.position.x += amount;
+            
+            if ($.inArray('a', keys) > -1) {
+                engine.offset.x += amount;
+				engine.position.x -= amount;
 				self.moving = true;
-				self.direction = DIRECTION_E;
+				self.direction = DIRECTION_W;
 				self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);
 				return;
 			}
-			
-			if (_.contains(keys, 'a')) {
-				self.offset.x += amount;
-				self.position.x -= amount;
+            
+            if ($.inArray('s', keys) > -1) {
+                engine.offset.y -= amount;
+                engine.position.y += amount;
+                self.moving = true;
+                self.direction = DIRECTION_S;
+                self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);
+                return;
+			}
+            
+            if ($.inArray('d', keys) > -1) {
+                engine.offset.x -= amount;
+				engine.position.x += amount;
 				self.moving = true;
-				self.direction = DIRECTION_W;
+				self.direction = DIRECTION_E;
 				self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);
 				return;
 			}
@@ -206,41 +148,34 @@ define(function () {
 			// the player has stopped moving
 			if (self.moving) {
 				self.moving = false;
-				this.sprite.children[this.direction].visible = false;
-				this.sprite.children[this.direction].stop();
+                
+                self.sprite.children[self.direction].gotoAndStop(0);
 				
-				this.sprite.children[this.direction + 8].visible = true;
-				this.sprite.children[this.direction + 8].play();
+                //this.sprite.children[this.direction].visible = false;
+				//this.sprite.children[this.direction].stop();
+				
+				//this.sprite.children[this.direction + 8].visible = true;
+				//this.sprite.children[this.direction + 8].play();
 			}
 		},
 
 		checkDirection: function(wasMoving, oldDirection, oldOffset, animationSpeed) {
 		
-			// Ensure valid destination tile
-			
-			/*
-			var map = this.engine.indexFromScreen(this.sprite.position);
-			
-			if (this.engine.terrain[map.row] === undefined) {
-				this.offset = oldOffset;
-			} else {
-				if (this.engine.terrain[map.row][map.col] === undefined) {
-					this.offset = oldOffset;
-				}
-			}
-			*/
-			
-			if (!this.engine.isWalkable(this.position)) {
-				this.position = oldOffset;
-			}
+			//if (!this.engine.isWalkable(this.position)) {
+			//	this.position = oldOffset;
+			//}
 		
 			// Update sprites
 			var flag = false;
 			
 			if (!wasMoving && this.moving) {
-				this.sprite.children[oldDirection + 8].visible = false;
-				this.sprite.children[oldDirection + 8].stop();
-				flag = true;
+                
+                this.sprite.children[this.direction].play();
+                
+                // Hide the standing-still sprite:
+				//this.sprite.children[oldDirection + 8].visible = false;
+				//this.sprite.children[oldDirection + 8].stop();
+				//flag = true;
 			}
 		
 			if ((oldDirection !== this.direction) || (flag)) {

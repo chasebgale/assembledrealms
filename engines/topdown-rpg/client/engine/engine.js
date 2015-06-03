@@ -24,6 +24,9 @@ difficult, lone, npc 'adventurers' exploring the dungeon, etc, fast pace
 		
 		// Top left tile coordinates
 		coordinates: {row: 0, col: 0},
+        
+        offset:     {x: 0, y: 0},
+		position:   {x: 0, y: 0},
 
 		initialize: function (target) {
 
@@ -40,9 +43,9 @@ difficult, lone, npc 'adventurers' exploring the dungeon, etc, fast pace
 			// Initialize PIXI, the 2D rendering engine we will use, check out
 			// https://github.com/GoodBoyDigital/pixi.js for more info
 			var rendererOptions = {
-				antialiasing:false,
-				transparent:false,
-				resolution:1
+				antialiasing:   false,
+				transparent:    false,
+				resolution:     1
 			};
 			
 			self.renderer   = PIXI.autoDetectRenderer(CANVAS_WIDTH, CANVAS_HEIGHT, rendererOptions);
@@ -195,10 +198,11 @@ difficult, lone, npc 'adventurers' exploring the dungeon, etc, fast pace
 				 
 		},
 
+        /*
 		position: function () {
 			return avatar.position;
 		},
-
+        */
 		draw: function () {
 		
 		},
@@ -211,7 +215,11 @@ difficult, lone, npc 'adventurers' exploring the dungeon, etc, fast pace
                 return;
             }
             
+            avatar.tick(self, PIXI);
+            
             terrain.draw(self, PIXI);
+            
+            
             
             self.renderer.render(self.stage);
 
