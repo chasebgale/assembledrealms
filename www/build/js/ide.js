@@ -353,6 +353,7 @@ function initialize(projectID, projectDomain) {
                 if (json.message == "OK") {
                     button.attr('disabled', false);
                     
+					$("#explorer .file").removeClass('activefile');
                     addToExplorer('client/resource', upload.name, '');
                     
                     alert.addClass('alert-success');
