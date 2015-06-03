@@ -45,7 +45,7 @@ define(function () {
 							
 							if (index != null) {
 								
-								sprite = new PIXI.Sprite(PIXI.Texture.fromFrame('tile_' + index));
+								sprite = new PIXI.Sprite(PIXI.Texture.fromFrame('terrain_' + index));
 						
 								sprite.position.x = ((col - engine.coordinates.col) * engine.TILE_WIDTH);
 								sprite.position.y = ((row - engine.coordinates.row) * engine.TILE_HEIGHT);
