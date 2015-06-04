@@ -9,11 +9,11 @@ requirejs.config({
 		keyboard: 	"//www.assembledrealms.com/js/keyboard",
 		stats: 		"//www.assembledrealms.com/js/stats.min",
 		main:		"main",
-		actors:		"engine/actors", 
-		avatar:		"engine/avatar", 
-		constants:	"engine/constants", 
-		terrain:	"engine/terrain", 
-		objects:	"engine/objects"
+		actors:		"./engine/actors", 
+		avatar:		"./engine/avatar", 
+		constants:	"./engine/constants", 
+		terrain:	"./engine/terrain", 
+		objects:	"./engine/objects"
     },
 	shim: {
 		'pixi': {

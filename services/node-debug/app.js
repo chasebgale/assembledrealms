@@ -3,7 +3,10 @@ var bodyParser 		= require('body-parser');
 var app 			= express();
 var morgan			= require('morgan');
 var forever 		= require('forever-monitor');
-var redis 			= require("redis");
+var walk            = require('walk');
+var path            = require('path');
+var redis 			= require('redis');
+
 var redisClient 	= redis.createClient();
 
 var allowCrossDomain = function(req, res, next) {
@@ -24,7 +27,7 @@ app.use( bodyParser.urlencoded() ); // to support URL-encoded bodies
 
 // Log to console
 app.use(morgan('dev')); 	
-app.set('view engine', 'jade'); // set up jade for templating
+app.set('view engine', 'ejs'); // set up EJS for templating
 
 app.post('/launch', function (req, res, next) {
 
@@ -48,7 +51,7 @@ app.post('/launch', function (req, res, next) {
 			console.log('Realm ' + realmApp + ' has started on port ' + split[1]);
 			
 			// Remember the port, using the id as the key:
-			redisClient.set(realmID, split[1]);
+			redisClient.set(realmID, split[1].trim());
 			res.send('OK');
 		}
 	});
@@ -56,14 +59,40 @@ app.post('/launch', function (req, res, next) {
 	child.start();
 });
 
+var scripts   = [];
+
 app.get('/realms/:id', function (req, res, next) {
 
 	redisClient.get(req.params.id, function (error, reply) {
-        console.log(reply.toString()); // Will print `OK`
+        console.log(reply.toString());
 		
 		if (error) next(error);
+        
+        scripts   = [];
+        
+        var port = reply.toString().replace(/(\r\n|\n|\r)/gm,"");
+        
+        // For now, grab all the required libs each time we prep the view, in the future,
+        // do this once when '/launch' is called and store the array in redis...
+        var walker  = walk.walk('./realms/' + req.params.id + '/client/', { followLinks: false });
+
+        walker.on('file', function(root, stat, next) {
+            
+            if (path.extname(stat.name) == '.js') {
+                // Add this file to the list of files
+                console.log("root: " + root + " , stat.name: " + stat.name);
+                scripts.push("/" + path.join(root, stat.name));
+            }
+            next();
+            
+        });
+
+        walker.on('end', function() {
+            console.log(scripts);
+            res.render('realm', {id: req.params.id, port: port, scripts: scripts});
+        });
 		
-		res.render('realm.jade', {id: req.params.id, port: reply.toString()});
+		
 		
     });
 

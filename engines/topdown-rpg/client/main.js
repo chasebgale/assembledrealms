@@ -1,6 +1,6 @@
-define(["engine"], function (engine) {
+$(document).ready(function () {    
     
-	//var engine = require('engine');
+    var engine = new Engine();
 	
 	engine.loaded = function () {
 		animate();

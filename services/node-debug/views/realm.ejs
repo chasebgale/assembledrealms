@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Assembled Realms DEBUG</title>
+
+    <link rel="shortcut icon" href="//www.assembledrealms.com/img/favicon.png" )'="">
+
+    <link rel="stylesheet" href="//www.assembledrealms.com/css/root.css">
+    <link rel="stylesheet" href="//www.assembledrealms.com/build/css/style.css">
+
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.css">
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//www.assembledrealms.com/css/bootstrap-theme.css">
+    
+    <style>
+        html, body {
+            height:100%;
+        }
+
+        #commandBar {
+            height: 26px;
+            background-color: #777;
+        }
+        
+        #commandBarButtons {
+            float: left;
+            margin-top: 2px;
+            margin-left: 6px;
+        }
+        
+        #commandBarButtons button {
+            background: #777;
+            color: #e0e0e0;
+            border-color: #666;
+            text-shadow: none;
+        }
+        
+        #commandBarButtons button:hover {
+            background: #555;
+        }
+        
+        #commandBarButtons .spacer {
+            display: inline-block;
+            vertical-align: middle;
+            background: #666;
+            width: 2px;
+            border-left: #888 1px solid;
+            height: 18px;
+            margin-left: 6px;
+            margin-right: 6px;
+        }
+    </style>
+    
+    <script>
+        var DEBUG   = true;
+        var ROOT    = '/realms/<%= id %>/';
+        var HOST    = window.location.host + ':<%= port %>';
+    </script>
+    
+</head>
+
+<body style="padding-top: 0px; padding-bottom: 0px; padding-left: 0px;" class="">
+
+<div id="wrapper">
+    
+    <div id="commandBar">
+        <div id="commandBarButtons">
+            <button type="button" id="btnNewFile" class="btn btn-default btn-xs"><i class="fa fa-file-text-o fa-fw"></i> New File</button>
+            <button type="button" id="btnNewFolder" class="btn btn-default btn-xs"><i class="fa fa-folder-o fa-fw"></i> New Folder</button>
+            <button type="button" id="btnUploadResource" class="btn btn-default btn-xs"><i class="fa fa-upload fa-fw"></i> Upload File</button>
+            <div class="spacer"></div>
+            <button type="button" id="btnDebug" class="btn btn-default btn-xs"><i class="fa fa-caret-square-o-right fa-fw"></i> Debug</button>
+            <button type="button" id="btnCommit" class="btn btn-default btn-xs"><i class="fa fa-check fa-fw"></i> Commit</button>
+        </div>
+        <a href="http://www.assembledrealms.com" style="float: right;"><img src="//www.assembledrealms.com/build/img/logo.png"></a>
+    </div>
+    
+    <div id="realm" style="margin: 20px auto; width: 896px; padding: 0;"></div>
+    
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="//cdn.socket.io/socket.io-1.2.0.js"></script>
+    
+<% for(var i=0; i<scripts.length; i++) { %>
+    <script src="<%= scripts[i] %>"></script>
+<% } %>
+
+    <script src="//www.assembledrealms.com/build/js/utilities.js"></script>
+    <script src="//www.assembledrealms.com/build/js/stats.min.js"></script>
+    <script src="//www.assembledrealms.com/js/keyboard.js"></script>
+    <script src="//www.assembledrealms.com/js/pixi.dev.js"></script>
+	<script src="//www.assembledrealms.com/js/bigscreen.min.js"></script>
+
+
+</div>
+</body>
+</html>
