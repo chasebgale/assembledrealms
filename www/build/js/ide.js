@@ -248,7 +248,6 @@ function initialize(projectID, projectDomain) {
            
                 $('#debugProgressList').append('<li>Published to debug server successfully!</li>');
 				$('#debugProgressList').append('<li>Launching realm on your debug server...</li>');
-				// $('#debugProgressList').append('<li>Your debug URL is <a href="' + debugURL + '">' + debugURL + '</a>!</li>');
 				
 				$.ajax({
 					url: launchURL,
@@ -258,7 +257,7 @@ function initialize(projectID, projectDomain) {
 				})
 				.done(function (data) {
 					if (data.substr(0, 2) === "OK") {
-						var port = data.substr(3);
+						$('#debugProgressList').append('<li>Your debug URL is <a href="' + debugURL + '">' + debugURL + '</a>!</li>');
 					}
 				})
                 .fail(function(data) {
@@ -270,9 +269,9 @@ function initialize(projectID, projectDomain) {
 				});
             }
         })
-        .fail(function(data) {
-            console.log(data);
-            $('#debugAlert').text('<li class="text-danger"><strong><i class="fa fa-exclamation-triangle"></i> Error:</strong> ' + data.statusText);
+        .fail(function(d, textStatus, error) {
+            console.log(textStatus);
+            $('#debugAlert').html('<li class="text-danger"><strong><i class="fa fa-exclamation-triangle"></i> Error: </strong> ' + textStatus);
             $('#debugAlert').fadeIn();
 			$('#debugClose').attr('disabled', false);
                 // Update DOM to reflect we messed up:

@@ -13,7 +13,8 @@ html(lang="en")
     script(async="", type="text/javascript", src="http://www.gstatic.com/pub-config/ca-pub-4898800745718155.js")
     script(async="", type="text/javascript", src="http://www.assembledrealms.com/js/lodash.min.js")
     script(type='text/javascript').
-      var port = #{port};
+      var __port = #{port};
+      var __id = #{id};
   body
     #wrapper
       .navbar-default.navbar-fixed-top(role="navigation")
@@ -67,89 +68,11 @@ html(lang="en")
       #content
         #realmBar.center-block.clearfix(style="margin-bottom: 40px;")
           h2.text-center(style="margin-top: 0;") Just Another REALM
-        canvas#realmCanvas(width="896", height="504", style="display: block; margin: 0 auto; border: 0")  
-        div
-          ul#tabs.nav.nav-tabs(role="tablist", style="margin-top: 60px;")
-            li.active
-              a(href="#tab_funding", role="tab", data-toggle="tab") Funding
-            li
-              a(href="#tab_readme", role="tab", data-toggle="tab") Readme
-            li
-              a(href="#tab_credits", role="tab", data-toggle="tab") Credits
-          // Tab panes
-          .tab-content
-            #tab_funding.tab-pane.active.clearfix(style="margin-top: 32px;")
-              #funding(style="float: left; width: 500px; height: 400px; overflow: hidden;")
-                h2#variables-available- Variables Available:
-                ul
-                  li Funding: $12.45
-                  li
-                    | Cost per hour:
-                    strong $0.009
-                  li
-                    | Cost per day:
-                    strong $0.22
-                  li Lifespan at current funding: 9 days, 11 hours
-                hr
-                h2#example-donation-benefits- Example Donation Benefits:
-                ul
-                  li $0.25: Cool, in-game item
-                  li $0.50: Even cooler in-game item
-                  li $1.00: Special title added to name
-                hr
-                blockquote
-                  p "The wise man does not lay up his own treasures.
-                  p  The more he gives to others,
-                  p  the more he has for his own."
-                  h2#-lao-tzu - Lao Tzu
-              #realmFundingDonate(style="float: right;")
-                form.form-horizontal(role="form")
-                  .form-group
-                    label.col-sm-6.control-label
-                      img(src="/img/profiles/1.jpg?1415044352")
-                    .col-sm-6
-                      p.form-control-static Chase B. Gale
-                  .form-group
-                    label.col-sm-6.control-label Account Balance
-                    .col-sm-6
-                      p.form-control-static $ 04.12
-                  .form-group
-                    label.col-sm-6.control-label(for="donationAmount") Donation Amount
-                    .col-sm-6.left-inner-addon
-                      span $
-                      input#donationAmount.form-control(type="text", style="display: inline; width: 92%;")
-                  button.btn.btn-default.pull-right(type="button") Donate
-            #tab_readme.tab-pane(style="margin-top: 32px;")
-              h2#controls Controls
-              p
-                img(src="http://i.imgur.com/efajygA.gif", alt="keyboard")
-              table.table.table-striped
-                thead
-                  tr
-                    th Keys
-                    th Description 
-                tbody
-                  tr
-                    td blue
-                    td Inventory management. 
-                  tr
-                    td orange
-                    td Movement 
-                  tr
-                    td purple
-                    td I don"t know, use your imagination! 
-              h2#strategy Strategy
-              p
-                | If this weren"t a sample, I"d be discussing how to play in the realm; However, this
-                strong is
-                | a sample,
-                | so I"ll have to copypasta some latin. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                | Vestibulum sed arcu mi. Phasellus pulvinar ultrices justo non egestas. Vestibulum dictum elit ac ligula tristique,
-                | nec finibus ligula feugiat. Curabitur pharetra, turpis at vulputate finibus, ligula ligula commodo lectus,
-                | vel elementum quam leo nec erat.
-            #tab_credits.tab-pane
-        script(src="js/moment.min.js")
-        script(src="js/marked.js")
+        
+        #realm(style="display: block; width: 100%; border: 0; padding: 0;")  
+
+        script(data-main="#{id}/client/loader", src="js/require.js")
+        
         #footer
           script(src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js")
           script(src="//netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js")

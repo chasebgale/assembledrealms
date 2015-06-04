@@ -6,6 +6,19 @@ var forever 		= require('forever-monitor');
 var redis 			= require("redis");
 var redisClient 	= redis.createClient();
 
+var allowCrossDomain = function(req, res, next) {
+    res.header('Access-Control-Allow-Origin', 'http://www.assembledrealms.com');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+    res.header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type');
+    res.header('Access-Control-Allow-Credentials', 'true');
+
+    if ('OPTIONS' == req.method) return res.send(200);
+    
+    next();
+}
+
+app.use(allowCrossDomain);
+
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
 app.use( bodyParser.urlencoded() ); // to support URL-encoded bodies
 
@@ -50,7 +63,7 @@ app.get('/realms/:id', function (req, res, next) {
 		
 		if (error) next(error);
 		
-		res.render('realm.jade', {port: reply.toString()});
+		res.render('realm.jade', {id: req.params.id, port: reply.toString()});
 		
     });
 

@@ -1,12 +1,12 @@
-define(function (require) {
+define(["engine"], function (engine) {
     
-	var engine = require('engine');
+	//var engine = require('engine');
 	
 	engine.loaded = function () {
 		animate();
 	}
 	
-	engine.initialize( document.body );
+	engine.initialize( document.getElementById("realm") );
 	
 	// Debugging:
 	if (DEBUG) {

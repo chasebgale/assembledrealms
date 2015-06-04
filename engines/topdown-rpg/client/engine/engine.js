@@ -1,5 +1,5 @@
-define(["actors", "avatar", "constants", "terrain", "objects", "utilities", "pixi"], 
-function(actors, avatar, constants, terrain, objects, utilities, PIXI) {
+define(["./actors", "./avatar", "./constants", "./terrain", "./objects", "pixi"], 
+function(actors, avatar, constants, terrain, objects, PIXI) {
 
 
 /*
