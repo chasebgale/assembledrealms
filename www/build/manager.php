@@ -508,7 +508,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
             <div class="modal-footer">
                 <div id="realmOfflineAlert" class="alert alert-danger" style="display: none;"></div>
                 <button type="button" class="btn btn-default" data-dismiss="modal"><i class="fa fa-times"></i> Cancel</button>
-                <button id="destroyRealmConfirm" type="button" class="btn btn-default">Delete this sucker!</button>
+                <button id="destroyRealmConfirm" data-id="<?php echo $realm['id'] ?>" type="button" class="btn btn-default">Delete this sucker!</button>
             </div>
         </div>
     </div>
@@ -582,9 +582,9 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     $('.row').css('margin-bottom', '12px');
 </script>
 
-<script src="js/manager.js" type="text/javascript" charset="utf-8"></script>
-<script src="js/utilities.js" type="text/javascript" charset="utf-8"></script>
-<script src="js/ekko-lightbox.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="/build/js/manager.js" type="text/javascript" charset="utf-8"></script>
+<script src="/build/js/utilities.js" type="text/javascript" charset="utf-8"></script>
+<script src="/build/js/ekko-lightbox.min.js" type="text/javascript" charset="utf-8"></script>
 
 </body>
 </html>

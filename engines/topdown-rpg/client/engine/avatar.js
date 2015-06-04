@@ -96,11 +96,57 @@ define(function () {
 			var amount_angle_cos 	= 2 * MOVEMENT_ANGLE_COS;
 			var animationSpeed 		= .2;
 			
-			var oldDirection 	= self.direction;
 			var wasMoving 		= self.moving;
-			var oldOffset 		= $.extend(true, {}, engine.position);
+			var oldDirection 	= self.direction;
+			var oldPosition 	= $.extend(true, {}, engine.position);
 			
-			var keys = engine.keyboard.activeKeys();
+			var keys 			= engine.keyboard.activeKeys();
+			
+			var isStepLegal = function () {
+				
+				var col = Math.floor(engine.position.x / TILE_WIDTH);
+				var row = Math.ceil(engine.position.y / TILE_HEIGHT);
+				
+				if (engine.map.terrain.index[row] !== undefined) {
+					
+					if (engine.map.terrain.index[row][col] !== undefined) {
+						if (engine.map.terrain.index[row][col][2] !== undefined) {
+							engine.position = oldPosition;
+						}
+					} else {
+						engine.position = oldPosition;
+					}
+				} else {
+					engine.position = oldPosition;
+				}
+				
+				
+				
+				var flag = false;
+			
+				if (!wasMoving && self.moving) {
+					
+					self.sprite.children[self.direction].play();
+					
+					// Hide the standing-still sprite:
+					//this.sprite.children[oldDirection + 8].visible = false;
+					//this.sprite.children[oldDirection + 8].stop();
+					//flag = true;
+				}
+			
+				if ((oldDirection !== self.direction) || (flag)) {
+			
+					self.sprite.children[oldDirection].visible = false;
+					self.sprite.children[oldDirection].stop();
+
+					self.sprite.children[self.direction].visible = true;
+					self.sprite.children[self.direction].play();
+				
+				}
+				
+				self.sprite.children[self.direction].animationSpeed = animationSpeed;
+				
+			};
 			
 			if ($.inArray('shift', keys) > -1) {
 				amount *= 2;
@@ -114,7 +160,7 @@ define(function () {
                 engine.position.y -= amount;
                 self.moving = true;
                 self.direction = DIRECTION_N;
-                self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);
+                isStepLegal();
                 return;
 			}
             
@@ -123,7 +169,7 @@ define(function () {
 				engine.position.x -= amount;
 				self.moving = true;
 				self.direction = DIRECTION_W;
-				self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);
+				isStepLegal();
 				return;
 			}
             
@@ -132,7 +178,7 @@ define(function () {
                 engine.position.y += amount;
                 self.moving = true;
                 self.direction = DIRECTION_S;
-                self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);
+                isStepLegal();
                 return;
 			}
             
@@ -141,7 +187,7 @@ define(function () {
 				engine.position.x += amount;
 				self.moving = true;
 				self.direction = DIRECTION_E;
-				self.checkDirection(wasMoving, oldDirection, oldOffset, animationSpeed);
+				isStepLegal();
 				return;
 			}
 			
@@ -158,38 +204,6 @@ define(function () {
 				//this.sprite.children[this.direction + 8].visible = true;
 				//this.sprite.children[this.direction + 8].play();
 			}
-		},
-
-		checkDirection: function(wasMoving, oldDirection, oldOffset, animationSpeed) {
-		
-			//if (!this.engine.isWalkable(this.position)) {
-			//	this.position = oldOffset;
-			//}
-		
-			// Update sprites
-			var flag = false;
-			
-			if (!wasMoving && this.moving) {
-                
-                this.sprite.children[this.direction].play();
-                
-                // Hide the standing-still sprite:
-				//this.sprite.children[oldDirection + 8].visible = false;
-				//this.sprite.children[oldDirection + 8].stop();
-				//flag = true;
-			}
-		
-			if ((oldDirection !== this.direction) || (flag)) {
-		
-				this.sprite.children[oldDirection].visible = false;
-				this.sprite.children[oldDirection].stop();
-
-				this.sprite.children[this.direction].visible = true;
-				this.sprite.children[this.direction].play();
-			
-			}
-			
-			this.sprite.children[this.direction].animationSpeed = animationSpeed;
 		},
 		
 		onEffectFinished: function () {

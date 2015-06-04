@@ -26,7 +26,7 @@ difficult, lone, npc 'adventurers' exploring the dungeon, etc, fast pace
 		coordinates: {row: 0, col: 0},
         
         offset:     {x: 0, y: 0},
-		position:   {x: 0, y: 0},
+		position:   {x: 200, y: 200},
 
 		initialize: function (target) {
 
@@ -65,6 +65,7 @@ difficult, lone, npc 'adventurers' exploring the dungeon, etc, fast pace
 			// OR: Perhaps the handshake just auth's and then we display a list of available 
 			// characters or the new character option...
 			
+			/*
 			$.ajax({
 				type: 'GET',
 				url: 'client/maps/town.json',
@@ -72,6 +73,13 @@ difficult, lone, npc 'adventurers' exploring the dungeon, etc, fast pace
 			})
 			.done(function(json) {
 				self.load(json);
+			});
+			*/
+			
+			var jqxhr = $.getJSON( "client/maps/town.json", function( data ) {
+				self.load(data);
+			}).fail(function(d, textStatus, error) {
+				console.error("getJSON failed, status: " + textStatus + ", error: "+error)
 			});
 			
 		},

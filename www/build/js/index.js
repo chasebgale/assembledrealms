@@ -33,7 +33,7 @@ $(document).ready(function () {
         $.post("http://www.assembledrealms.com/build/index.php", parameters, function ( response ) {
             var jqxhr = $.get( "http://source-01.assembledrealms.com/api/project/" + response.project_id + "/create/" + parameters.engine, function( sourceResponse ) {
                 if (sourceResponse.message === "OK") {
-                    window.location = "http://www.assembledrealms.com/build/editor.php?id=" + response.project_id + "&source=source-01";
+                    window.location = "http://www.assembledrealms.com/build/editor/" + response.project_id + "/";
                 }
             }, 'json')
             .fail(function(data) {

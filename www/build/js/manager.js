@@ -23,7 +23,7 @@ $(document).ready(function () {
                 parameters.directive = "destroy";
                 parameters.realm_id = id;
 
-                $.post("manager.php", parameters, function (data) {
+                $.post("/build/manager.php", parameters, function (data) {
                     data = JSON.parse(data);
                     if (data.message == "OK") {
                         window.location = "http://www.assembledrealms.com/build";

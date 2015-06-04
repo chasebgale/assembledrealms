@@ -14,7 +14,7 @@ define(function () {
       
 			engine.map.terrain.source.forEach(function (asset) {
 
-				asset = 'client/resource/' + asset;
+				//asset = 'client/resource/' + asset;
 				worker.push(asset);
 
 			});
@@ -103,18 +103,11 @@ define(function () {
                     
                 }
             }
+			
+			engine.offset = {startX, startY};
             
             this.texture.render(this.buffer, engine.matrix);
             
-		},
-		
-		isWalkable: function (engine, point) {
-		
-			if (getPixel(this.path, point.x, point.y).r !== 255) {
-				return false;
-			}
-			
-			return true;
 		}
 
 	}
