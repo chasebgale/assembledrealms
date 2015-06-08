@@ -31,7 +31,7 @@ Avatar.prototype.load = function (engine, PIXI, callback) {
     
     //var loader = new PIXI.AssetLoader([ROOT + "client/resource/actors_walkcycle_BODY_skeleton.png"], true);
     var loader = new PIXI.loaders.Loader()
-		.add(ROOT + "client/resource/actors_walkcycle_BODY_skeleton.png")
+		.add([ROOT + "client/resource/actors_walkcycle_BODY_skeleton.png"])
 		.after( function (event) {
         
 			try {
@@ -72,6 +72,13 @@ Avatar.prototype.load = function (engine, PIXI, callback) {
 				self.sprite.addChild(clip);
 			}
 			
+			self.direction = DIRECTION_S;
+        
+			self.sprite.children[self.direction].visible = true;
+			self.sprite.children[self.direction].gotoAndStop(0);
+			
+			callback();
+			
 			} catch (e) {
 				console.log(e);
 			}
@@ -79,7 +86,10 @@ Avatar.prototype.load = function (engine, PIXI, callback) {
 		.on('error', function (e) {
 			console.log(e);
 		})
-		.once('complete', load_complete)
+		.once('complete', function () {
+			// This never fires for some reason
+			load_complete();
+		})		
 		.load();
 };
 		
@@ -105,7 +115,8 @@ Avatar.prototype.tick = function (engine, PIXI) {
         if (engine.map.terrain.index[row] !== undefined) {
             
             if (engine.map.terrain.index[row][col] !== undefined) {
-                if (engine.map.terrain.index[row][col][2] !== undefined) {
+                if ((engine.map.terrain.index[row][col][2] !== undefined) &&
+					(engine.map.terrain.index[row][col][2] !== null)) {
                     engine.position = oldPosition;
                 }
             } else {

@@ -47,11 +47,16 @@ Terrain.prototype.load = function (engine, PIXI, callback) {
 					index++;
 				}
 			}
+			
+			// It's never called normally so if we have more than one item to load we are f'd.
+			// TODO: Figure out why 'complete' is never firing!!!
+			callback();
+			
 		})
 		.on('error', function (e) {
 			console.log(e);
 		})
-		.once('complete', callback())
+		.once('complete', callback)
 		.load();
 };
 	

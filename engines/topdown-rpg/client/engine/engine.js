@@ -21,9 +21,9 @@ difficult, lone, npc 'adventurers' exploring the dungeon, etc, fast pace
     // Top left tile coordinates
     this.coordinates    = {row: 0, col: 0};
     this.offset         = {x: 0, y: 0};
-    this.position       = {x: 200, y: 200};
+    this.position       = {x: 220, y: 220};
     
-    this.socket = io();
+    this.socket = io(HOST);
     
     this.socket.on('auth-handshake', function (msg) {
         
@@ -88,7 +88,7 @@ Engine.prototype.load = function (map) {
     self.terrain.load(self, PIXI, function (error) {
 
         self.layer_terrain = new PIXI.Sprite(self.terrain.texture);
-        self.layer_terrain.cacheAsBitmap = true;
+        //self.layer_terrain.cacheAsBitmap = true;
         self.stage.addChild(self.layer_terrain);
         
         self.layer_actors = new PIXI.Container();
