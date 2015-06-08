@@ -12,6 +12,7 @@ var Map = {
 	TILE_WIDTH_HALF: 16,
 	TILE_HEIGHT: 32,
 	TILE_HEIGHT_HALF: 16,
+	tileIndexes: {},
     
     modes: {
         MOVE: 0,
@@ -71,9 +72,9 @@ var Map = {
 		
 		Map.renderer = PIXI.autoDetectRenderer(Map.width, Map.height, rendererOptions);
 
-		Map.stage = new PIXI.Stage(0x000000, true);
-
 		Map.canvas = target.appendChild(Map.renderer.view);
+		
+		Map.stage = new PIXI.Container();
 
 		Map.VIEWPORT_WIDTH_TILES = Math.ceil(Map.width / Map.TILE_WIDTH) + 1;
 		Map.VIEWPORT_HEIGHT_TILES = Math.ceil(Map.height / Map.TILE_HEIGHT) + 1;
@@ -81,69 +82,89 @@ var Map = {
 		Map.VIEWPORT_WIDTH_TILES_HALF = Math.ceil(Map.VIEWPORT_WIDTH_TILES / 2);
 		Map.VIEWPORT_HEIGHT_TILES_HALF = Math.ceil(Map.VIEWPORT_HEIGHT_TILES / 2);
 
-		Map.buffer = new PIXI.SpriteBatch();
+		Map.buffer = new PIXI.ParticleContainer();
         
         var frameTexture;
         var index = 0;
         var row = 0;
         var col = 0;
         var worker = [];
-        
+		
+		// This sucks but for some reason the on complete events aren't firing:
+		var load_count = 0;
+		var load_complete = function () {
+			Map.initialized = true;
+				
+			Map.tile_count = index - 1;
+			
+			Map.texture = new PIXI.RenderTexture(Map.renderer, Map.renderer.width, Map.renderer.height);
+
+			Map.layer_terrain = new PIXI.Sprite(Map.texture);
+			//Map.layer_terrain.cacheAsBitmap = true;
+			Map.stage.addChild(Map.layer_terrain);
+			
+			Map.mouse_sprite = new PIXI.Sprite(PIXI.Texture.fromFrame('cursor_0'));
+			Map.mouse_sprite.visible = false;
+			Map.stage.addChild(Map.mouse_sprite);
+			
+			Map.mouse_sprite_highlight = new PIXI.Graphics();
+			Map.mouse_sprite_highlight.blendMode = PIXI.BLEND_MODES.DIFFERENCE;
+			Map.stage.addChild(Map.mouse_sprite_highlight);
+			
+			// Map.renderer.plugins.interaction
+			
+			
+			Map.invalidate = true;
+			requestAnimationFrame(Map.render);
+		};
+
         _.each(map.terrain.source, function (asset) {
          
-            asset = realmResourceURL(asset);
-            worker.push(asset);
-
+			worker.push({name: "terrain_", url: realmResourceURL(asset)});
+			
         });
         
-        
-        var loader = new PIXI.AssetLoader(worker, true);
-        loader.onProgress = function (event) {
-            
-            // Once we have the tile image loaded, break it up into textures:
-            for (row = 0; row < event.texture.height; row += 32) {
-                for (col = 0; col < event.texture.width; col += 32) {
-                    frameTexture = new PIXI.Texture(event.texture, {
-                        x: col,
-                        y: row,
-                        width: 32,
-                        height: 32
-                    });
-                    PIXI.Texture.addTextureToCache(frameTexture, 'tile_' + index);
-                    index++;
-                }
-            }
-            
-            document.getElementById('modalTilesBody').appendChild(event.texture.baseTexture.source);
-            
-            //Map.onResourceLoaded(event.json, realmResourceURL('client/resource/' + event.json.meta.image));
-        };
-        loader.onComplete = function (event) {
-            
-            Map.initialized = true;
-            
-            Map.tile_count = index - 1;
-            
-            Map.texture = new PIXI.RenderTexture(Map.renderer.width, Map.renderer.height);
+		worker.push({name: "cursor_", url: realmResourceURL('client/resource/cursors.png')});
+		
+		PIXI.loader
+			.add(worker)
+			.after(function (event) {
+				
+				if (Map.tileIndexes[event.name] === undefined) {
+					Map.tileIndexes[event.name] = 0;
+				}
+				
+				// Once we have the tile image loaded, break it up into textures:
+				for (row = 0; row < event.texture.height; row += 32) {
+					for (col = 0; col < event.texture.width; col += 32) {
+						frameTexture = new PIXI.Texture(event.texture, {
+							x: col,
+							y: row,
+							width: 32,
+							height: 32
+						});
+						PIXI.Texture.addTextureToCache(frameTexture, event.name + Map.tileIndexes[event.name]);
+						Map.tileIndexes[event.name] = Map.tileIndexes[event.name] + 1;
+					}
+				}
+				
+				if (event.name == "terrain_") {
+					document.getElementById('modalTilesBody').appendChild(event.texture.baseTexture.source);
+				}
+				
+				load_count++
+				
+				if (load_count > 1) {
+					load_complete();
+				}
+				
+				//Map.onResourceLoaded(event.json, realmResourceURL('client/resource/' + event.json.meta.image));
+			})
+			.load(function (loader, resources) {
+				load_complete();
+			});
 
-            Map.layer_terrain = new PIXI.Sprite(Map.texture);
-            Map.layer_terrain.cacheAsBitmap = true;
-            Map.stage.addChild(Map.layer_terrain);
-            
-            Map.mouse_sprite = new PIXI.Sprite(PIXI.Texture.fromFrame('tile_0'));
-            Map.mouse_sprite.visible = false;
-            Map.stage.addChild(Map.mouse_sprite);
-            
-            Map.mouse_sprite_highlight = new PIXI.Graphics();
-            Map.mouse_sprite_highlight.blendMode = PIXI.blendModes.DIFFERENCE;
-            Map.stage.addChild(Map.mouse_sprite_highlight);
-            
-            
-            Map.invalidate = true;
-            requestAnimationFrame(Map.render);
-        };
-        loader.load();
-
+		/*
 		var cursors = new Image();
         cursors.crossOrigin = "anonymous";
 		cursors.onload = function() {
@@ -190,7 +211,7 @@ var Map = {
             
 		};
 		cursors.src = realmResourceURL('client/resource/cursors.png');
-        
+        */
         
 	},
 	
@@ -200,22 +221,22 @@ var Map = {
         
         if (tile_index == null) {
             // DELETE THIS TILE:
-            if (Map.terrain[row]) {
-                if (col in Map.terrain[row]) {
-                    delete Map.terrain[row][col][Map.layer_index];
+            if (Map.terrain.index[row]) {
+                if (col in Map.terrain.index[row]) {
+                    delete Map.terrain.index[row][col][Map.layer_index];
                 }
             }
         } else {
             // ADD OR CHANGE A TILE:
-            if (Map.terrain[row] === undefined) {
-                Map.terrain[row] = {};
+            if (Map.terrain.index[row] === undefined) {
+                Map.terrain.index[row] = {};
             }
             
-            if (Map.terrain[row][col] === undefined) {
-                Map.terrain[row][col] = [];
+            if (Map.terrain.index[row][col] === undefined) {
+                Map.terrain.index[row][col] = [];
             }
             
-            Map.terrain[row][col][Map.layer_index] = tile_index;
+            Map.terrain.index[row][col][Map.layer_index] = tile_index;
         }
         
 		Map.invalidate = true;
@@ -232,23 +253,24 @@ var Map = {
             case Map.modes.MOVE:
             
                 // ALL MOUSE EVENTS RE-WIRED FOR THE MOVE TOOL:
-                Map.mouse_sprite.setTexture(PIXI.Texture.fromFrame('cursor_hand'));
+                Map.mouse_sprite.texture = PIXI.Texture.fromFrame('cursor_0');
                 
+				// Map.canvas
                 Map.canvas.onmousedown = function (event) {
                     Map.mouse_down = true;
                     Map.mouse_origin = {x: event.layerX, y: event.layerY};
                     Map.mouse_origin_coordinates = {row: Map.coordinates.row, col: Map.coordinates.col};
-                    Map.mouse_sprite.setTexture(PIXI.Texture.fromFrame('cursor_hand_closed'));
-                }
+                    Map.mouse_sprite.texture = PIXI.Texture.fromFrame('cursor_1');
+                };
                 
                 Map.canvas.onmouseup = function (event) {
                     Map.mouse_down = false;
-                    Map.mouse_sprite.setTexture(PIXI.Texture.fromFrame('cursor_hand'));
-                }
+                    Map.mouse_sprite.texture = PIXI.Texture.fromFrame('cursor_0');
+                };
                 
                 Map.canvas.onmouseout = function (event) {
                     Map.mouse_sprite.visible = false;
-                }
+                };
                 
                 Map.canvas.onmousemove = function (event) {
             
@@ -277,7 +299,7 @@ var Map = {
                     
                     Map.mouse_sprite.x = x;
                     Map.mouse_sprite.y = y;
-                }
+                };
             
                 break;
             case Map.modes.DELETE_TILE:
@@ -334,7 +356,7 @@ var Map = {
                 
             case Map.modes.ADD_TILE:
             
-                Map.mouse_sprite.setTexture(PIXI.Texture.fromFrame('tile_' + Map.tile_index));
+                Map.mouse_sprite.texture = PIXI.Texture.fromFrame('terrain_' + Map.tile_index);
                 
                 Map.mouse_sprite_highlight.clear();
                 Map.mouse_sprite_highlight.lineStyle(1, 0xFFFFFF, 1);
@@ -402,12 +424,14 @@ var Map = {
         var layers;
         var i;
 		
+		console.log('draw called: ' + Map.coordinates.row + ', ' + Map.coordinates.col + ', ' + full);
+		
 		for (var row = Map.coordinates.row; row < Map.coordinates.row + Map.VIEWPORT_HEIGHT_TILES; row++) {
 			for (var col = Map.coordinates.col; col < Map.coordinates.col + Map.VIEWPORT_WIDTH_TILES; col++) {
-				if (Map.terrain[row] === undefined) continue;
-				if (Map.terrain[row][col] === undefined) continue;
+				if (Map.terrain.index[row] === undefined) continue;
+				if (Map.terrain.index[row][col] === undefined) continue;
 				
-				layers = Map.terrain[row][col];
+				layers = Map.terrain.index[row][col];
                 
                 if (layers.constructor !== Array) continue;
 				
@@ -417,7 +441,7 @@ var Map = {
                     
                     if (index != null) {
                         
-                        sprite = new PIXI.Sprite(PIXI.Texture.fromFrame('tile_' + index));
+                        sprite = new PIXI.Sprite(PIXI.Texture.fromFrame('terrain_' + index));
                 
                         sprite.position.x = ((col - Map.coordinates.col) * Map.TILE_WIDTH);
                         sprite.position.y = ((row - Map.coordinates.row) * Map.TILE_HEIGHT);
@@ -433,10 +457,10 @@ var Map = {
 		}
         
 		if (full) {
-			var matrix = new PIXI.Matrix();
-			matrix.translate(0, 0);
+			//var matrix = new PIXI.Matrix();
+			//matrix.translate(0, 0);
 
-			Map.texture.render(Map.buffer, matrix);
+			Map.texture.render(Map.buffer); //, matrix);
 		}
         
 	},
@@ -544,7 +568,7 @@ var Map = {
             Map.tile_index = (rows_to_add * row_tile_width) + Math.floor(point.x / 32);
             
             if (Map.mode === Map.modes.ADD_TILE) {
-                Map.mouse_sprite.setTexture(PIXI.Texture.fromFrame('tile_' + Map.tile_index));
+                Map.mouse_sprite.texture = PIXI.Texture.fromFrame('terrain_' + Map.tile_index);
             }
             
             var background_x = (point.x - (point.x % 32)) * -1;
@@ -607,7 +631,5 @@ var Map = {
             $(this).addClass('active').siblings().removeClass('active');
             
         });
-        
     }
-    
-}
+};

@@ -863,8 +863,18 @@ function loadEditor(filename, content, displayRendered) {
                         worker.objects = Map.objects;
                         worker.actors = Map.actors;
 
-                        __editor.setValue(JSON.stringify(worker));
-                        //sessionStorage[__fileId] = __editor.getValue();
+                        sessionStorage[__fileId] = JSON.stringify(worker);
+						
+						// Format the JSON so a human can read it:
+						content = JSON.stringify(parsed, function(key, value) { 
+							if (key === "index") { 
+								return '(tile locations ommitted for readability)'; 
+							} else { 
+								return value; 
+							} 
+						}, '\t');
+						
+						__editor.setValue(content);
                     };
                     
                     // Format the JSON so a human can read it:
@@ -921,8 +931,9 @@ function editor_onChange(e) {
         // root object, i.e. 'objects' and 'terrain' replace with "ommitted for sanity" so we don't have thousands of tile
         // locations markers displayed in the editor...
         // SOLUTION: Merge the editable values in the editor with the stored values for the 'index' values in session storage
-        var newMap = JSON.parse(__editor.getValue());
-        var oldMap = JSON.parse(sessionStorage[__fileId]);
+        
+		//var newMap = JSON.parse(__editor.getValue());
+        //var oldMap = JSON.parse(sessionStorage[__fileId]);
         
     } else {
         sessionStorage[__fileId] = __editor.getValue();

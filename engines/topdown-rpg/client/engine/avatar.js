@@ -18,61 +18,69 @@ Avatar.prototype.load = function (engine, PIXI, callback) {
     var prefix = "skelly_row";
     var self = this;
     
-    self.sprite = new PIXI.DisplayObjectContainer();
+    self.sprite = new PIXI.Container();
+	
+	var load_complete = function () {
+		self.direction = DIRECTION_S;
+        
+		self.sprite.children[self.direction].visible = true;
+		self.sprite.children[self.direction].gotoAndStop(0);
+		
+		callback();
+	};
     
-    var loader = new PIXI.AssetLoader([ROOT + "client/resource/actors_walkcycle_BODY_skeleton.png"], true);
-    
-    loader.onProgress = function (event) {
+    //var loader = new PIXI.AssetLoader([ROOT + "client/resource/actors_walkcycle_BODY_skeleton.png"], true);
+    var loader = new PIXI.loaders.Loader()
+		.add(ROOT + "client/resource/actors_walkcycle_BODY_skeleton.png")
+		.after( function (event) {
         
-        var index   = 0;
-        var row     = 0;
-        var col     = 0;
-        
-        var frameTexture;
-        var filename = event.texture.baseTexture.imageUrl.split('/').pop();
-        
-        for (row = 0; row < directions; row++) {
-            textures[row] = [];
-            for (col = 0; col < 9; col++) {
-                frameTexture = new PIXI.Texture(event.texture, {
-                    x: col * 64,
-                    y: row * 64,
-                    width: 64,
-                    height: 64
-                });
-                
-                textures[row][col] = frameTexture;
-                
-                PIXI.Texture.addTextureToCache(frameTexture, prefix + row + "_" + "col" + col + ".png");
-                index++;
-            }
-        }
-        
-        // Walking clips:
-        for (i = 0; i < directions; i++) {
-            clip = new PIXI.MovieClip(textures[i]);
-
-            clip.position.x = (CANVAS_WIDTH / 2) - 32;
-            clip.position.y = (CANVAS_HEIGHT / 2) - 32;
-            clip.animationSpeed = .2;
-            clip.visible = false;
-
-            self.sprite.addChild(clip);
-        }
-        
-    };
-    
-    loader.onComplete = function (event) {
-        self.direction = DIRECTION_S;
-        
-        self.sprite.children[self.direction].visible = true;
-        self.sprite.children[self.direction].gotoAndStop(0);
-        
-        callback();
-    };
-    
-    loader.load();
+			try {
+				
+			var index   = 0;
+			var row     = 0;
+			var col     = 0;
 			
+			var frameTexture;
+			var filename = event.url.split('/').pop();
+			
+			for (row = 0; row < directions; row++) {
+				textures[row] = [];
+				for (col = 0; col < 9; col++) {
+					frameTexture = new PIXI.Texture(event.texture, {
+						x: col * 64,
+						y: row * 64,
+						width: 64,
+						height: 64
+					});
+					
+					textures[row][col] = frameTexture;
+					
+					PIXI.Texture.addTextureToCache(frameTexture, prefix + row + "_" + "col" + col + ".png");
+					index++;
+				}
+			}
+			
+			// Walking clips:
+			for (i = 0; i < directions; i++) {
+				clip = new PIXI.extras.MovieClip(textures[i]);
+
+				clip.position.x = (CANVAS_WIDTH / 2) - 32;
+				clip.position.y = (CANVAS_HEIGHT / 2) - 32;
+				clip.animationSpeed = .2;
+				clip.visible = false;
+
+				self.sprite.addChild(clip);
+			}
+			
+			} catch (e) {
+				console.log(e);
+			}
+		})
+		.on('error', function (e) {
+			console.log(e);
+		})
+		.once('complete', load_complete)
+		.load();
 };
 		
 Avatar.prototype.tick = function (engine, PIXI) {

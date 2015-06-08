@@ -49,8 +49,8 @@ Engine.prototype.initialize = function (target) {
     };
     
     self.renderer   = PIXI.autoDetectRenderer(CANVAS_WIDTH, CANVAS_HEIGHT, rendererOptions);
-    self.stage      = new PIXI.Stage(0x000000, true);
-    self.buffer     = new PIXI.SpriteBatch();
+    self.stage      = new PIXI.Container();
+    self.buffer     = new PIXI.ParticleContainer();
     
     target.appendChild(self.renderer.view);
     
@@ -91,7 +91,7 @@ Engine.prototype.load = function (map) {
         self.layer_terrain.cacheAsBitmap = true;
         self.stage.addChild(self.layer_terrain);
         
-        self.layer_actors = new PIXI.DisplayObjectContainer();
+        self.layer_actors = new PIXI.Container();
         self.stage.addChild(self.layer_actors);
         
         self.avatar.load(self, PIXI, function (error) {
