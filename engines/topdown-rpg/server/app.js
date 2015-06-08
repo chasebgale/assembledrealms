@@ -1,8 +1,8 @@
 var express 	= require('express');
+var cookieParse = require('cookie-parser');
 var app 		= express();
-var http        = require('http');
-var server 		= http.createServer(app);
-var io 			= require('socket.io').listen(server);
+var http        = require('http').Server(app);
+var io 			= require('socket.io')(http);
 var morgan		= require('morgan');
 var redis       = require('redis');
 var rclient     = redis.createClient();
@@ -20,24 +20,38 @@ var allowCrossDomain = function(req, res, next) {
     next();
 }
 app.use(allowCrossDomain);
+app.use(cookieParse());
 
 // Catch redis errors
 rclient.on("error", function (err) {
     console.log("Error " + err);
 });
 
-io.sockets.on('connection', function (client) {
+io.use(function(socket, next) {
+    var sheshID = socket.request.cookies.PHPSESSID;
+  
+    rclient.get(sheshID, function(error, sheshID) {
+        if (sheshID === null) {
+            next(new Error('not authorized'));
+        } else {
+            next();
+        }
+    });
+  
+});
+
+io.on('connection', function (socket) {
 	
 	console.log('CLIENT CONNECTED, HANDSHAKING.....');
 
 	// Wire up events:
-	client.on('auth', processAuthorization);
-	client.on('message', processMessage);
-	client.on('update', processUpdate);
-	client.on('error', processError);
+	socket.on('auth', processAuthorization);
+	socket.on('message', processMessage);
+	socket.on('update', processUpdate);
+	socket.on('error', processError);
 	
 	// Ask client to authenticate:
-	client.emit('auth-handshake', 'handshake');
+	socket.emit('auth-handshake', 'handshake');
 	
 	function processAuthorization(data) {
 		// data.id === user ID
@@ -83,14 +97,14 @@ io.sockets.on('connection', function (client) {
 		var redisData = {characterName: 'Tony Stark', characterLocation: {x: 2432, y: 1121}, characterExp: 12399, characterTitle: "Iron Man"};
 		
 		// Notify client auth was successful
-		client.emit('auth-success', redisData);
+		socket.emit('auth-success', redisData);
 		
 		// Notify everyone else of a new player
-		client.broadcast.emit('player-new', redisData);
+		socket.broadcast.emit('player-new', redisData);
 	}
 	
 	function processMessage(data) {
-		client.get('userID', function(error, userID) {
+		rclient.get('userID', function(error, userID) {
 			if(userID !== undefined) {
 				client.broadcast.emit('player-message', {
 					userID: userID,
@@ -101,7 +115,7 @@ io.sockets.on('connection', function (client) {
 	}
 	
 	function processUpdate(data) {
-		client.get('userID', function(error, userID) {
+		rclient.get('userID', function(error, userID) {
 			if(userID !== undefined) {
 				client.broadcast.emit('player-update', {
 					userID: userID,
@@ -120,31 +134,34 @@ io.sockets.on('connection', function (client) {
 // Log to console
 app.use(morgan('dev')); 	
 
-app.get('/auth/:id/:guid', function(req, res, next) {
+app.get('/auth/:id/:seshid', function(req, res, next) {
+    
+    //return res.send('JSON: ' + JSON.stringify(req.cookies));
+    
     // TODO: Check the server calling this function is, in fact, assembledrealms.com
-    client.set("auth_" + req.params.id, req.params.guid, function (error) {
+    rclient.set(req.params.seshid, req.params.id, function (error) {
         
         if (error) {
-            return res.json("error":, error.message);
+            return res.json({"error": error.message});
         }
         
-        return res.json(message: 'OK');
+        return res.json({message: 'OK'});
     });
     
 });
 
 if (debug) {
 	// Listen on random port because lots (hopefully) of other nodes are running too!
-	server.listen(0, function(){
+	http.listen(0, function(){
 		// Log the port to the console - this is caught by the debug server:
-		console.log("port: " + server.address().port);
+		console.log("port: " + http.address().port);
 	});
 } else {
 	// In a purchased realm node, the realm instance serves up all it's files:
 	app.use(express.static(__dirname + '/../client'));
 
 	// Hey!! Listen! --Navi
-	server.listen(3000, function(){
+	http.listen(3000, function(){
 		console.log("Express server listening on port 3000, request to port 80 are redirected to 3000 by Fedora.");
 	});
 }

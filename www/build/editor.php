@@ -11,6 +11,26 @@ if(!isUserLoggedIn()) {
 $realmID = -1;
 $sourceURL = '';
 
+if ($method == 'POST') {
+    $directive = $_POST['directive'];
+    $realmID  = $_POST['realm_id'];
+    
+    if ($directive == 'debug') {
+            
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CURLOPT_RETURNTRANSFER => 1,
+            CURLOPT_URL => $realm['address'] . '/auth/' . $loggedInUser->user_id . '/' . session_id()
+        ));
+
+        $url_from_auth = curl_exec($curl);
+        
+        echo $url_from_auth;
+        die();
+    }
+    
+    return;
+}
 if (is_numeric($_SERVER['QUERY_STRING'])) {
     $realmID = $_SERVER['QUERY_STRING'];
     $realm = $loggedInUser->fetchRealm($realmID);

@@ -2,12 +2,14 @@ var express 		= require('express');
 var bodyParser 		= require('body-parser');
 var app 			= express();
 var morgan			= require('morgan');
+var moment 		    = require('moment');
 var forever 		= require('forever-monitor');
 var walk            = require('walk');
 var path            = require('path');
 var redis 			= require('redis');
 
 var redisClient 	= redis.createClient();
+redisClient.flushdb();
 
 var allowCrossDomain = function(req, res, next) {
     res.header('Access-Control-Allow-Origin', 'http://www.assembledrealms.com');
@@ -42,6 +44,7 @@ app.post('/launch', function (req, res, next) {
 
 	child.on('exit', function () {
 		console.log('Realm ' + realmApp + ' has exited.');
+        res.send('ERROR BOOTING...');
 	});
 	
 	child.on('stdout', function (data) {
@@ -52,6 +55,7 @@ app.post('/launch', function (req, res, next) {
 			
 			// Remember the port, using the id as the key:
 			redisClient.set(realmID, split[1].trim());
+            redisClient.set(realmID + '-time', new Date().toString());
 			res.send('OK');
 		}
 	});
@@ -64,13 +68,22 @@ var scripts   = [];
 app.get('/realms/:id', function (req, res, next) {
 
 	redisClient.get(req.params.id, function (error, reply) {
-        console.log(reply.toString());
+
+        if (reply == null) {
+            // TODO: Modify these errors/realm ejs to show these errors all pretty like
+            return res.send("Backend for realm is down...");
+        }
 		
-		if (error) next(error);
+		if (error) {
+            return res.send("Redis is down...");
+        }
         
         scripts   = [];
         
         var port = reply.toString().replace(/(\r\n|\n|\r)/gm,"");
+        
+        // Update the last access time so it doesn't get shutdown for inactivity:
+        redisClient.set(req.params.id + '-time', new Date().toString());
         
         // For now, grab all the required libs each time we prep the view, in the future,
         // do this once when '/launch' is called and store the array in redis...
