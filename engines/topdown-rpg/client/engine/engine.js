@@ -3,6 +3,8 @@ var Engine = function () {
 /*
 Weak skelly born in crypt or something, weak, must team up with other player skellys to destroy 
 difficult, lone, npc 'adventurers' exploring the dungeon, etc, fast pace
+
+enemies are sparse, think human dovakhins, must be taken down by multiple skellies, difficulty scales with skellies online
 */
 
     this.initialized    = false;
@@ -14,6 +16,7 @@ difficult, lone, npc 'adventurers' exploring the dungeon, etc, fast pace
     this.matrix         = undefined;
     this.layer_terrain  = undefined;
     this.layer_actors   = undefined;
+    this.layer_air      = undefined;
     
     this.avatar     = new Avatar();
     this.terrain    = new Terrain();
@@ -23,11 +26,11 @@ difficult, lone, npc 'adventurers' exploring the dungeon, etc, fast pace
     this.offset         = {x: 0, y: 0};
     this.position       = {x: 220, y: 220};
     
-    this.socket = io(HOST);
+    //this.socket = io(HOST);
     
-    this.socket.on('auth-handshake', function (msg) {
+    //this.socket.on('auth-handshake', function (msg) {
         
-    });
+    //});
         
 };
 
@@ -67,7 +70,7 @@ Engine.prototype.initialize = function (target) {
     var jqxhr = $.getJSON( ROOT + "client/maps/town.json", function( data ) {
         self.load(data);
     }).fail(function(d, textStatus, error) {
-        console.error("getJSON failed, status: " + textStatus + ", error: "+error)
+        console.error("getJSON failed, status: " + textStatus + ", error: "+error);
     });
 
     
@@ -87,12 +90,14 @@ Engine.prototype.load = function (map) {
     
     self.terrain.load(self, PIXI, function (error) {
 
-        self.layer_terrain = new PIXI.Sprite(self.terrain.texture);
-        //self.layer_terrain.cacheAsBitmap = true;
+        self.layer_terrain = new PIXI.Sprite(self.terrain.texture_ground);
         self.stage.addChild(self.layer_terrain);
         
         self.layer_actors = new PIXI.Container();
         self.stage.addChild(self.layer_actors);
+        
+        self.layer_air = new PIXI.Sprite(self.terrain.texture_air);
+        self.stage.addChild(self.layer_air);
         
         self.avatar.load(self, PIXI, function (error) {
            
@@ -127,36 +132,3 @@ Engine.prototype.render = function () {
     self.renderer.render(self.stage);
 
 };
-/*
-		indexFromScreen: function (point) {
-
-			var map = {};
-			var screen = {};
-			screen.x = point.x - avatar.offset.x;
-			screen.y = point.y - avatar.offset.y;
-
-			map.row = (screen.x / TILE_WIDTH_HALF + screen.y / TILE_HEIGHT_HALF) / 2;
-			map.col = (screen.y / TILE_HEIGHT_HALF - screen.x / TILE_WIDTH_HALF) / -2;
-			
-			console.log("Coords pre-rounding: " + map.row + ", " + map.col);
-
-			map.row = Math.floor(map.row);
-			map.col = Math.floor(map.col);
-			
-			console.log("Coords post-rounding: " + map.row + ", " + map.col);
-
-			return map;
-			
-		},
-
-		coordFromScreen: function (index) {
-			var b = ((index.row * 2) - (index.col * 2)) / 2;
-			var a = (index.row * 2) - b;
-
-			return {"a" : a, "b": b};
-		},
-		
-		isWalkable: function(point) {
-			return terrain.isWalkable(this, {x: point.x + 32, y: point.y + 64});
-		}
-*/

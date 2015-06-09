@@ -3,98 +3,140 @@ var Avatar = function () {
     this.direction  = 0;
     this.sprite     = undefined;
     this.moving     = false;
+    this.attacking  = false;
 
 };
     
-Avatar.prototype.load = function (engine, PIXI, callback) {
+Avatar.prototype.load = function (engine, PIXI, callback_complete) {
 
-    // create an array to store the textures
-    var textures = [];
     var clip;
-    var texture;
-    var texture_name;
     var directions = 4;
     var i = 0;
-    var prefix = "skelly_row";
+    var prefix = "avatar";
     var self = this;
     
     self.sprite = new PIXI.Container();
-	
-	var load_complete = function () {
-		self.direction = DIRECTION_S;
+    
+    // Load our avatar sprites in order, still using async xfer, utilizing Caolan McMahon's async library:
+    // https://github.com/caolan/async
+    async.series([
+        function(callback){
+            // First we load the base walking spritesheet
+            var spritesheet = PIXI.BaseTexture.fromImage(ROOT + "client/resource/actors_walkcycle_BODY_skeleton.png");
+            spritesheet.on('loaded', function() {
+                var index   = 0;
+                var row     = 0;
+                var col     = 0;
+                
+                var textures = [];
+                var frameTexture;
+                
+                var cols = Math.floor(spritesheet.width / 64);
+                
+                for (row = 0; row < directions; row++) {
+                    textures[row] = [];
+                    for (col = 0; col < cols; col++) {
+                        frameTexture = new PIXI.Texture(spritesheet, {
+                            x: col * 64,
+                            y: row * 64,
+                            width: 64,
+                            height: 64
+                        });
+                        
+                        textures[row][col] = frameTexture;
+                        
+                        PIXI.Texture.addTextureToCache(frameTexture, prefix + "_walk_" + row + "_" + col + ".png");
+                        index++;
+                    }
+                }
+                
+                // Add/create animated clips:
+                for (i = 0; i < directions; i++) {
+                    clip = new PIXI.extras.MovieClip(textures[i]);
+
+                    clip.position.x = (CANVAS_WIDTH / 2) - 32;
+                    clip.position.y = (CANVAS_HEIGHT / 2) - 32;
+                    clip.animationSpeed = .2;
+                    clip.visible = false;
+
+                    self.sprite.addChild(clip);
+                }
+                
+                callback(null);
+            });
+        },
+        function(callback){
+            // Next we load the attack spritesheet
+            var spritesheet = PIXI.BaseTexture.fromImage(ROOT + "client/resource/actors_slash_BODY_skeleton.png");
+            spritesheet.on('loaded', function() {
+            
+                var index   = 0;
+                var row     = 0;
+                var col     = 0;
+                
+                var textures = [];
+                var frameTexture;
+                
+                var cols = Math.floor(spritesheet.width / 64);
+                
+                for (row = 0; row < directions; row++) {
+                    textures[row] = [];
+                    for (col = 0; col < cols; col++) {
+                        frameTexture = new PIXI.Texture(spritesheet, {
+                            x: col * 64,
+                            y: row * 64,
+                            width: 64,
+                            height: 64
+                        });
+                        
+                        textures[row][col] = frameTexture;
+                        
+                        PIXI.Texture.addTextureToCache(frameTexture, prefix + "_slash_" + row + "_" + col + ".png");
+                        index++;
+                    }
+                }
+                
+                // Add/create animated clips:
+                for (i = 0; i < directions; i++) {
+                    clip = new PIXI.extras.MovieClip(textures[i]);
+
+                    clip.position.x = (CANVAS_WIDTH / 2) - 32;
+                    clip.position.y = (CANVAS_HEIGHT / 2) - 32;
+                    clip.animationSpeed = .2;
+                    clip.loop = false;
+                    clip.visible = false;
+
+                    self.sprite.addChild(clip);
+                }
+                
+                callback(null);
+            });
+        }
+    ],
+    // optional callback
+    function(err, results){
+        if (err) {
+            console.log('error loading assets');
+            return;
+        }
+        
+        self.direction = DIRECTION_S;
         
 		self.sprite.children[self.direction].visible = true;
 		self.sprite.children[self.direction].gotoAndStop(0);
-		
-		callback();
-	};
+        
+        callback_complete();
+        
+    });
     
-    //var loader = new PIXI.AssetLoader([ROOT + "client/resource/actors_walkcycle_BODY_skeleton.png"], true);
-    var loader = new PIXI.loaders.Loader()
-		.add([ROOT + "client/resource/actors_walkcycle_BODY_skeleton.png"])
-		.after( function (event) {
-        
-			try {
-				
-			var index   = 0;
-			var row     = 0;
-			var col     = 0;
-			
-			var frameTexture;
-			var filename = event.url.split('/').pop();
-			
-			for (row = 0; row < directions; row++) {
-				textures[row] = [];
-				for (col = 0; col < 9; col++) {
-					frameTexture = new PIXI.Texture(event.texture, {
-						x: col * 64,
-						y: row * 64,
-						width: 64,
-						height: 64
-					});
-					
-					textures[row][col] = frameTexture;
-					
-					PIXI.Texture.addTextureToCache(frameTexture, prefix + row + "_" + "col" + col + ".png");
-					index++;
-				}
-			}
-			
-			// Walking clips:
-			for (i = 0; i < directions; i++) {
-				clip = new PIXI.extras.MovieClip(textures[i]);
-
-				clip.position.x = (CANVAS_WIDTH / 2) - 32;
-				clip.position.y = (CANVAS_HEIGHT / 2) - 32;
-				clip.animationSpeed = .2;
-				clip.visible = false;
-
-				self.sprite.addChild(clip);
-			}
-			
-			self.direction = DIRECTION_S;
-        
-			self.sprite.children[self.direction].visible = true;
-			self.sprite.children[self.direction].gotoAndStop(0);
-			
-			callback();
-			
-			} catch (e) {
-				console.log(e);
-			}
-		})
-		.on('error', function (e) {
-			console.log(e);
-		})
-		.once('complete', function () {
-			// This never fires for some reason
-			load_complete();
-		})		
-		.load();
 };
 		
 Avatar.prototype.tick = function (engine, PIXI) {
     var self = this;
+    
+    if (self.attacking) {
+        return;
+    }
     
     var amount 				= 2;
     var amount_angle_sin 	= 2 * MOVEMENT_ANGLE_SIN;
@@ -106,6 +148,8 @@ Avatar.prototype.tick = function (engine, PIXI) {
     var oldPosition 	= $.extend(true, {}, engine.position);
     
     var keys 			= KeyboardJS.activeKeys();
+    
+    console.log(keys);
     
     var isStepLegal = function () {
         
@@ -153,6 +197,32 @@ Avatar.prototype.tick = function (engine, PIXI) {
         self.sprite.children[self.direction].animationSpeed = animationSpeed;
         
     };
+    
+    if ($.inArray('space', keys) > -1) {
+        self.sprite.children[self.direction].stop();
+        self.sprite.children[self.direction].visible = false;
+        
+        self.sprite.children[self.direction + 4].onComplete = function () {
+            self.attacking = false;
+            self.sprite.children[self.direction + 4].visible = false;
+            self.sprite.children[self.direction + 4].gotoAndStop(0);
+            self.sprite.children[self.direction].visible = true;
+            
+            if (self.moving) {
+            
+                self.sprite.children[self.direction].play();
+                
+            }
+            
+            //self.tick(engine, PIXI);
+        };
+        
+        self.sprite.children[self.direction + 4].visible = true;
+        self.sprite.children[self.direction + 4].gotoAndPlay(0);
+        
+        self.attacking = true;
+        return;
+    }
     
     if ($.inArray('shift', keys) > -1) {
         amount *= 2;

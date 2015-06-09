@@ -1,7 +1,10 @@
 var Terrain = function () {
 
-	this.texture    = undefined;
-	this.buffer     = undefined;
+	this.texture_ground    = undefined;
+	this.buffer_ground     = undefined;
+	
+	this.texture_air    = undefined;
+	this.buffer_air     = undefined;
 	
 };
     
@@ -9,8 +12,11 @@ Terrain.prototype.load = function (engine, PIXI, callback) {
     var self = this;
     var worker = [];
 
-    self.buffer     = new PIXI.ParticleContainer();
-    self.texture    = new PIXI.RenderTexture(engine.renderer, engine.renderer.width, engine.renderer.height);
+    self.buffer_ground     = new PIXI.ParticleContainer();
+    self.texture_ground    = new PIXI.RenderTexture(engine.renderer, engine.renderer.width, engine.renderer.height);
+    
+    self.buffer_air     = new PIXI.ParticleContainer();
+    self.texture_air    = new PIXI.RenderTexture(engine.renderer, engine.renderer.width, engine.renderer.height);
 
     engine.map.terrain.source.forEach(function (asset) {
 
@@ -63,8 +69,11 @@ Terrain.prototype.load = function (engine, PIXI, callback) {
 		// Called on player login and when changing maps
 Terrain.prototype.draw = function (engine, PIXI) {
             
-    this.buffer.children = [];
-    this.texture.clear();
+    this.buffer_ground.children = [];
+    this.texture_ground.clear();
+    
+    this.buffer_air.children = [];
+    this.texture_air.clear();
     
     var sprite;
     
@@ -90,14 +99,18 @@ Terrain.prototype.draw = function (engine, PIXI) {
                 
                 index = layers[i];
                 
-                if (index != null) {
+                if (index !== null) {
                     
                     sprite = new PIXI.Sprite(PIXI.Texture.fromFrame('terrain_' + index));
             
                     sprite.position.x = startX + ((col - startCol) * TILE_WIDTH);
                     sprite.position.y = startY + ((row - startRow) * TILE_HEIGHT);
                     
-                    this.buffer.addChild(sprite);
+                    if (i < 3) {
+                        this.buffer_ground.addChild(sprite);
+                    } else {
+                        this.buffer_air.addChild(sprite);
+                    }
                     
                 }
                 
@@ -107,10 +120,10 @@ Terrain.prototype.draw = function (engine, PIXI) {
         }
     }
     
-    engine.offset = {startX, startY};
+    engine.offset = {x: startX, y: startY};
     
-    this.texture.render(this.buffer, engine.matrix);
-            
+    this.texture_ground.render(this.buffer_ground, engine.matrix);
+    this.texture_air.render(this.buffer_air, engine.matrix);
 };
 
 	
