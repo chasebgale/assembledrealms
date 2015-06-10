@@ -1,5 +1,6 @@
 var express 		= require('express');
 var bodyParser 		= require('body-parser');
+var cookieParser 	= require('cookie-parser');
 var app 			= express();
 var morgan			= require('morgan');
 var moment 		    = require('moment');
@@ -7,6 +8,8 @@ var forever 		= require('forever-monitor');
 var walk            = require('walk');
 var path            = require('path');
 var redis 			= require('redis');
+var http 			= require('http');
+var uuid 			= require('node-uuid');
 
 var redisClient 	= redis.createClient();
 redisClient.flushdb();
@@ -26,6 +29,8 @@ app.use(allowCrossDomain);
 
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
 app.use( bodyParser.urlencoded() ); // to support URL-encoded bodies
+
+app.use(cookieParser('Assembled Realms is a land without secrets...'));
 
 // Log to console
 app.use(morgan('dev')); 	
@@ -101,8 +106,32 @@ app.get('/realms/:id', function (req, res, next) {
         });
 
         walker.on('end', function() {
-            console.log(scripts);
-            res.render('realm', {id: req.params.id, port: port, scripts: scripts});
+            
+			// Generate GUID and set cookie:
+			var guid = uuid.v1();
+			
+			http.get({port: port, path: "/auth/" + req.params.id + "/" + guid}, function(realm_response) {
+				if (realm_response.statusCode == 200) {
+					
+					res.cookie('realm-' + req.params.id + '-debug', guid, {domain: '.assembledrealms.com'});
+					res.render('realm', {id: req.params.id, port: port, scripts: scripts});
+				
+				} else {
+					
+					var body = '';
+					response.on('data', function(d) {
+						body += d;
+					});
+					response.on('end', function() {
+						return res.status(500).send(body);
+					});
+					
+				}
+			}).on('error', function(e) {
+				console.log("Got error: " + e.message);
+				return res.status(500).send(e.message);
+			});
+			
         });
 		
 		

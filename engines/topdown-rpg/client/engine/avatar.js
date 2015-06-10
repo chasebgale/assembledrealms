@@ -149,8 +149,6 @@ Avatar.prototype.tick = function (engine, PIXI) {
     
     var keys 			= KeyboardJS.activeKeys();
     
-    console.log(keys);
-    
     var isStepLegal = function () {
         
         var col = Math.floor(engine.position.x / TILE_WIDTH);

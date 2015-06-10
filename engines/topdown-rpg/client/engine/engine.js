@@ -26,11 +26,11 @@ enemies are sparse, think human dovakhins, must be taken down by multiple skelli
     this.offset         = {x: 0, y: 0};
     this.position       = {x: 220, y: 220};
     
-    //this.socket = io(HOST);
+    this.socket = io(HOST);
     
-    //this.socket.on('auth-handshake', function (msg) {
-        
-    //});
+    this.socket.on('admin-message', function (msg) {
+        console.log(msg);
+    });
         
 };
 
