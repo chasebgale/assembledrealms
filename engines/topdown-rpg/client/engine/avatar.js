@@ -4,7 +4,17 @@ var Avatar = function () {
     this.sprite     = undefined;
     this.moving     = false;
     this.attacking  = false;
+    this.health     = 100;
+    this.stamina    = 100;
+    this.experience = 0;
 
+};
+
+Avatar.prototype.update = function (avatar) {
+    // Update avatar stats (from realm)
+    this.health     = avatar.health;
+    this.stamina    = avatar.stamina;
+    this.experience = avatar.experience;
 };
     
 Avatar.prototype.load = function (engine, PIXI, callback_complete) {
@@ -230,7 +240,6 @@ Avatar.prototype.tick = function (engine, PIXI) {
     }
     
     if ($.inArray('w', keys) > -1) {
-        engine.offset.y += amount;
         engine.position.y -= amount;
         self.moving = true;
         self.direction = DIRECTION_N;
@@ -239,7 +248,6 @@ Avatar.prototype.tick = function (engine, PIXI) {
     }
     
     if ($.inArray('a', keys) > -1) {
-        engine.offset.x += amount;
         engine.position.x -= amount;
         self.moving = true;
         self.direction = DIRECTION_W;
@@ -248,7 +256,6 @@ Avatar.prototype.tick = function (engine, PIXI) {
     }
     
     if ($.inArray('s', keys) > -1) {
-        engine.offset.y -= amount;
         engine.position.y += amount;
         self.moving = true;
         self.direction = DIRECTION_S;
@@ -257,7 +264,6 @@ Avatar.prototype.tick = function (engine, PIXI) {
     }
     
     if ($.inArray('d', keys) > -1) {
-        engine.offset.x -= amount;
         engine.position.x += amount;
         self.moving = true;
         self.direction = DIRECTION_E;

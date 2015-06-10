@@ -14,6 +14,8 @@ var directory_arr = __dirname.split('/');
 directory_arr.pop();
 var parentDirectory	= directory_arr.pop();
 
+var debug_player_count  = 0;
+
 var allowCrossDomain = function(req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
@@ -32,8 +34,6 @@ rclient.on("error", function (err) {
 });
 
 io.use(function(socket, next) {
-	
-	console.log("Socket req w/ cookie: " + socket.request.headers.cookie);
 	
 	if ( socket.request.headers.cookie ){
 		
@@ -57,6 +57,15 @@ io.use(function(socket, next) {
 			rclient.get(uuid, function(error, reply) {
 				console.log("db found: " + reply.toString());
 				if (reply !== null) {
+                    
+                    var player_obj = {};
+                    
+                    if (reply.toString() !== "new") {
+                        player_obj = JSON.decode(reply.toString());
+                    }
+                    
+                    socket.request.session = {key: uuid, player: player_obj};
+                    
 					next();
 				}
 			});
@@ -69,29 +78,68 @@ io.use(function(socket, next) {
 });
 
 io.on('connection', function (socket) {
+    
+    var player = socket.request.session.player;
+    
+    if (player) {
 	
-	console.log('CLIENT CONNECTED, HANDSHAKING.....');
-
-	// Wire up events:
-	socket.on('message', processMessage);
-	socket.on('update', processUpdate);
-	socket.on('error', processError);
-	
+        if (player.position === undefined) {
+            
+            player = {
+                id: debug_player_count,
+                position: {x: 220, y: 220},
+                life: 100,
+                experience: 0
+            };
+            
+            debug_player_count++;
+            
+            rclient.set(socket.request.session.key, JSON.stringify(player), function (error) {
+            
+                if (error) {
+                    console.error(error);
+                }
+                
+                socket.broadcast.emit('player-new', player);
+                
+            });
+        } else {
+            socket.broadcast.emit('player-new', player);
+        }
+    } else {
+        // TODO: session doesn't exist, disconn or what?
+        return;
+    }
+    
 	// Ask client to authenticate:
-	socket.emit('admin-message', 'BOOM! BOOOOOOOOOM!');
+	// socket.emit('admin-message', socket.request.session.message);
 		
 	// Notify everyone else of a new player
 	// socket.broadcast.emit('player-new', redisData);
 	
-	function processMessage(data) {
-		rclient.get('userID', function(error, userID) {
-			if(userID !== undefined) {
-				socket.broadcast.emit('player-message', {
-					userID: userID,
-					message: data
-				});
-			}
-		});
+    function processNewPlayer(data) {
+        
+    }
+    
+	function processMove(data) {
+        
+        // Update position in memory:
+		player.position.x = data.x;
+        player.position.y = data.y;
+        
+        // TODO: Validate player move here
+        
+        // Broadcast change:
+        socket.broadcast.emit('move', player.position);
+        
+        // Store change:
+        rclient.set(socket.request.session.key, JSON.stringify(player), function (error) {
+            
+            if (error) {
+                console.error(error);
+            }
+            
+        });
 	}
 	
 	function processUpdate(data) {
@@ -108,26 +156,41 @@ io.on('connection', function (socket) {
 	function processError(data) {
 		console.log("ERROR: " + data);
 	}
+    
+    // Wire up events:
+	socket.on('move', processMove);
+	socket.on('update', processUpdate);
+	socket.on('error', processError);
 	
 });
 
 // Log to console
 app.use(morgan('dev')); 	
 
-app.get('/auth/:id/:guid', function(req, res, next) {
-    
-    //return res.send('JSON: ' + JSON.stringify(req.cookies));
-    
+app.get('/auth/:id/:uuid', function(req, res, next) {
     // TODO: Check the server calling this function is, in fact, assembledrealms.com
-    rclient.set(req.params.guid, req.params.id, function (error) {
+    
+    rclient.get(req.params.uuid, function(error, reply) {
+        if (reply === null) {
+            
+            rclient.set(req.params.uuid, req.params.id, function (error) {
         
-        if (error) {
-            console.error(error);
-			return res.status(500).send(error.message);
+                if (error) {
+                    console.error(error);
+                    return res.status(500).send(error.message);
+                }
+                
+                return res.json({message: 'OK'});
+            });
+            
+            
+        } else {
+            return res.json({message: 'OK'});
         }
-        
-        return res.json({message: 'OK'});
     });
+    
+    
+    
     
 });
 

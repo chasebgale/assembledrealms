@@ -20,15 +20,30 @@ enemies are sparse, think human dovakhins, must be taken down by multiple skelli
     
     this.avatar     = new Avatar();
     this.terrain    = new Terrain();
-    
-    // Top left tile coordinates
-    this.coordinates    = {row: 0, col: 0};
-    this.offset         = {x: 0, y: 0};
+    this.actors     = new Actors();
+
     this.position       = {x: 220, y: 220};
     
     this.socket = io(HOST);
     
-    this.socket.on('admin-message', function (msg) {
+    var self = this;
+    
+    this.socket.on('sync', function (data) {
+        // Full JSON from the realm, other players [location, stats, etc], npcs [location, etc]
+        //
+        //  data.actors = [{id: xx, position: {x: xx, y: xx}}, {etc}, {etc}]
+        //  data.avatar = {position: {x: xx, y: xx}, health: 100};
+        //
+        self.actors.update(data.actors);
+        self.avatar.update(data.avatar);
+        
+        this.position = data.avatar.position;
+        
+        // TODO: Setup all, then:
+        self.loaded();
+    });
+    
+    this.socket.on('move', function (data) {
         console.log(msg);
     });
         
@@ -77,12 +92,6 @@ Engine.prototype.initialize = function (target) {
 
 };
 
-Engine.prototype.handshake = function () {
-    
-    socket.emit('handshake', 'encrpytrd');
-    
-};
-
 Engine.prototype.load = function (map) {
 		
     var self = this;
@@ -104,7 +113,9 @@ Engine.prototype.load = function (map) {
             self.layer_actors.addChild(self.avatar.sprite);
            
             self.initialized = true;
-            self.loaded();
+            
+            // Tell the realm we are ready for the initial data pack to setup actors, avatar position, etc
+            self.socket.emit('ready', 'ready');
            
         });
         

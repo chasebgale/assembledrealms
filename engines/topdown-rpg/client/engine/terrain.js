@@ -120,8 +120,6 @@ Terrain.prototype.draw = function (engine, PIXI) {
         }
     }
     
-    engine.offset = {x: startX, y: startY};
-    
     this.texture_ground.render(this.buffer_ground, engine.matrix);
     this.texture_air.render(this.buffer_air, engine.matrix);
 };

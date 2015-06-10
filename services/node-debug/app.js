@@ -108,12 +108,19 @@ app.get('/realms/:id', function (req, res, next) {
         walker.on('end', function() {
             
 			// Generate GUID and set cookie:
-			var guid = uuid.v1();
+			var guid        = uuid.v1();
+            var target      = 'realm-' + req.params.id + '-debug';
+            var hour_milli  = 3600000;
+            
+            if (req.cookies[target]) {
+                // If we already have a guid cookie, use it so we get our existing character in the realm
+                guid = req.cookies[target];
+            }
 			
-			http.get({port: port, path: "/auth/" + req.params.id + "/" + guid}, function(realm_response) {
+			http.get({port: port, path: "/auth/new/" + guid}, function(realm_response) {
 				if (realm_response.statusCode == 200) {
 					
-					res.cookie('realm-' + req.params.id + '-debug', guid, {domain: '.assembledrealms.com'});
+					res.cookie('realm-' + req.params.id + '-debug', guid, {domain: '.assembledrealms.com', maxAge: (hour_milli * 72)});
 					res.render('realm', {id: req.params.id, port: port, scripts: scripts});
 				
 				} else {
