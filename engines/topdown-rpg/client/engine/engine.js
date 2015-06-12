@@ -34,17 +34,18 @@ enemies are sparse, think human dovakhins, must be taken down by multiple skelli
         //  data.actors = [{id: xx, position: {x: xx, y: xx}}, {etc}, {etc}]
         //  data.avatar = {position: {x: xx, y: xx}, health: 100};
         //
-        self.actors.update(data.actors);
-        self.avatar.update(data.avatar);
         
-        this.position = data.avatar.position;
+		//self.actors.update(data.actors);
+        //self.avatar.update(data.avatar);
+        
+        //this.position = data.avatar.position;
         
         // TODO: Setup all, then:
         self.loaded();
     });
     
-    this.socket.on('move', function (data) {
-        console.log(msg);
+    this.socket.on('debug', function (data) {
+        console.log(data);
     });
         
 };

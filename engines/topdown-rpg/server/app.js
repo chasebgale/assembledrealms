@@ -58,13 +58,7 @@ io.use(function(socket, next) {
 				console.log("db found: " + reply.toString());
 				if (reply !== null) {
                     
-                    var player_obj = {};
-                    
-                    if (reply.toString() !== "new") {
-                        player_obj = JSON.decode(reply.toString());
-                    }
-                    
-                    socket.request.session = {key: uuid, player: player_obj};
+                    socket.request.session = {key: uuid};
                     
 					next();
 				}
@@ -77,15 +71,15 @@ io.use(function(socket, next) {
   
 });
 
+var players = {};
+
 io.on('connection', function (socket) {
-    
-    var player = socket.request.session.player;
-    
-    if (player) {
 	
-        if (player.position === undefined) {
-            
-            player = {
+	var uuid = socket.request.session.key;
+	
+	rclient.get(uuid, function(error, player) {
+		if (player == "new") {
+			player = {
                 id: debug_player_count,
                 position: {x: 220, y: 220},
                 life: 100,
@@ -93,75 +87,51 @@ io.on('connection', function (socket) {
             };
             
             debug_player_count++;
-            
-            rclient.set(socket.request.session.key, JSON.stringify(player), function (error) {
+			
+			rclient.set(uuid, player, function (error) {
             
                 if (error) {
                     console.error(error);
                 }
                 
-                socket.broadcast.emit('player-new', player);
-                
             });
-        } else {
-            socket.broadcast.emit('player-new', player);
-        }
-    } else {
-        // TODO: session doesn't exist, disconn or what?
-        return;
-    }
-    
-	// Ask client to authenticate:
-	// socket.emit('admin-message', socket.request.session.message);
+		}
 		
-	// Notify everyone else of a new player
-	// socket.broadcast.emit('player-new', redisData);
-	
-    function processNewPlayer(data) {
-        
-    }
-    
-	function processMove(data) {
-        
-        // Update position in memory:
-		player.position.x = data.x;
-        player.position.y = data.y;
-        
-        // TODO: Validate player move here
-        
-        // Broadcast change:
-        socket.broadcast.emit('move', player.position);
-        
-        // Store change:
-        rclient.set(socket.request.session.key, JSON.stringify(player), function (error) {
-            
-            if (error) {
-                console.error(error);
-            }
-            
-        });
-	}
-	
-	function processUpdate(data) {
-		rclient.get('userID', function(error, userID) {
-			if(userID !== undefined) {
-				socket.broadcast.emit('player-update', {
-					userID: userID,
-					update: data
-				});
-			}
+		players[player.id] = player;
+		
+		socket.broadcast.emit('player-new', player);
+		
+		// Wire up events:
+		socket.on('ready', function (data) {
+			// Send initial data with all npc/pc locations, stats, etc
+			var data = {};
+			data.actors = players;
+			
+			socket.emit('sync', data);
 		});
-	}
-
-	function processError(data) {
-		console.log("ERROR: " + data);
-	}
+		
+		socket.on('move', function (data) {
+			// Update position in memory:
+			player.position.x = data.x;
+			player.position.y = data.y;
+			
+			// TODO: Validate player move here
+			
+			// Broadcast change:
+			socket.broadcast.emit('move', player.position);
+			
+			// Store change:
+			rclient.set(socket.request.session.key, JSON.stringify(player), function (error) {
+				
+				if (error) {
+					console.error(error);
+				}
+				
+			});
+		});
+		
+	});
     
-    // Wire up events:
-	socket.on('move', processMove);
-	socket.on('update', processUpdate);
-	socket.on('error', processError);
-	
 });
 
 // Log to console
