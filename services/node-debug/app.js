@@ -10,9 +10,9 @@ var path            = require('path');
 var redis 			= require('redis');
 var http 			= require('http');
 var uuid 			= require('node-uuid');
-
 var redisClient 	= redis.createClient();
-redisClient.flushdb();
+
+var realms			= {};
 
 var allowCrossDomain = function(req, res, next) {
     res.header('Access-Control-Allow-Origin', 'http://www.assembledrealms.com');
@@ -24,6 +24,8 @@ var allowCrossDomain = function(req, res, next) {
     
     next();
 }
+
+redisClient.flushdb();
 
 app.use(allowCrossDomain);
 
@@ -40,32 +42,54 @@ app.post('/launch', function (req, res, next) {
 
 	var realmID = req.body.id;
 	var realmApp = '/var/www/realms/' + realmID + '/server/app.js';
-
-	var child = new (forever.Monitor)(realmApp, {
-		max: 1,
-		silent: false,
-		options: ['debug']
-	});
-
-	child.on('exit', function () {
-		console.log('Realm ' + realmApp + ' has exited.');
-        res.send('ERROR BOOTING...');
-	});
 	
-	child.on('stdout', function (data) {
-		console.log('Realm ' + realmID + ' stdout: ' + data);
-		var split = data.toString().split(' ');
-		if (split[0] == 'port:') {
-			console.log('Realm ' + realmApp + ' has started on port ' + split[1]);
-			
-			// Remember the port, using the id as the key:
-			redisClient.set(realmID, split[1].trim());
-            redisClient.set(realmID + '-time', new Date().toString());
-			res.send('OK');
-		}
-	});
+	if (realms[realmID] === undefined) {
 
-	child.start();
+		var child = new (forever.Monitor)(realmApp, {
+			max: 1,
+			silent: false,
+			options: ['debug']
+		});
+
+		child.on('exit', function () {
+			console.log('Realm ' + realmApp + ' has exited.');
+			res.send('ERROR BOOTING...');
+		});
+		
+		child.on('stdout', function (data) {
+			console.log('Realm ' + realmID + ' stdout: ' + data);
+			var split = data.toString().split(' ');
+			if (split[0] == 'port:') {
+				console.log('Realm ' + realmApp + ' has started on port ' + split[1]);
+				
+				// Remember the port, using the id as the key:
+				redisClient.set(realmID, split[1].trim());
+				redisClient.set(realmID + '-time', new Date().toString());
+				res.send('OK');
+			}
+		});
+		
+		realms[realmID] = child;
+
+		child.start();
+	} else {
+		var child = realms[realmID];
+		
+		child.on('stdout', function (data) {
+			console.log('Realm ' + realmID + ' stdout: ' + data);
+			var split = data.toString().split(' ');
+			if (split[0] == 'port:') {
+				console.log('Realm ' + realmApp + ' has started on port ' + split[1]);
+				
+				// Remember the port, using the id as the key:
+				redisClient.set(realmID, split[1].trim());
+				redisClient.set(realmID + '-time', new Date().toString());
+				res.send('OK');
+			}
+		});
+		
+		child.restart();
+	}
 });
 
 var scripts   = [];

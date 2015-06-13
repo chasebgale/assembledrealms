@@ -5,6 +5,7 @@ var http        = require('http').Server(app);
 var io 			= require('socket.io')(http);
 var morgan		= require('morgan');
 var redis       = require('redis');
+var memwatch 	= require('memwatch-next');
 var rclient     = redis.createClient();
 
 // If second argument is passed, we are in debug mode:
@@ -27,6 +28,10 @@ var allowCrossDomain = function(req, res, next) {
 }
 app.use(allowCrossDomain);
 app.use(cookieParse());
+
+memwatch.on('leak', function(info) {
+	console.log(JSON.stringify(info));
+});
 
 // Catch redis errors
 rclient.on("error", function (err) {
