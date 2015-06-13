@@ -22,7 +22,7 @@ Avatar.prototype.load = function (engine, PIXI, callback_complete) {
     var clip;
     var directions = 4;
     var i = 0;
-    var prefix = "avatar";
+    var prefix = "skeleton";
     var self = this;
     
     self.sprite = new PIXI.Container();

@@ -44,6 +44,9 @@ app.post('/launch', function (req, res, next) {
 	var realmApp = '/var/www/realms/' + realmID + '/server/app.js';
 	
 	if (realms[realmID] === undefined) {
+		
+		// TODO: Right here, check if the memory for the server can handle adding another
+		// child process and if not, perhaps KILL the longest-idle existing child?
 
 		var child = new (forever.Monitor)(realmApp, {
 			max: 1,

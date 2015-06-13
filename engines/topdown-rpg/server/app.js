@@ -77,6 +77,7 @@ io.use(function(socket, next) {
 });
 
 var players = {};
+var npcs	= {};
 
 io.on('connection', function (socket) {
 	
@@ -123,7 +124,7 @@ io.on('connection', function (socket) {
 			// TODO: Validate player move here
 			
 			// Broadcast change:
-			socket.broadcast.emit('move', player.position);
+			socket.broadcast.emit('move', {id: player.id, position: player.position});
 			
 			// Store change:
 			rclient.set(socket.request.session.key, JSON.stringify(player), function (error) {
