@@ -88,19 +88,22 @@ io.on('connection', function (socket) {
 			player = {
                 id: debug_player_count,
                 position: {x: 220, y: 220},
+				direction: 0,
                 life: 100,
                 experience: 0
             };
             
             debug_player_count++;
 			
-			rclient.set(uuid, player, function (error) {
+			rclient.set(uuid, JSON.stringify(player), function (error) {
             
                 if (error) {
                     console.error(error);
                 }
                 
             });
+		} else {
+			player = JSON.parse(player);
 		}
 		
 		players[player.id] = player;
@@ -111,6 +114,7 @@ io.on('connection', function (socket) {
 		socket.on('ready', function (data) {
 			// Send initial data with all npc/pc locations, stats, etc
 			var data = {};
+			data.player = player;
 			data.actors = players;
 			
 			socket.emit('sync', data);
@@ -118,13 +122,15 @@ io.on('connection', function (socket) {
 		
 		socket.on('move', function (data) {
 			// Update position in memory:
-			player.position.x = data.x;
-			player.position.y = data.y;
+			player.position.x = data.position.x;
+			player.position.y = data.position.y;
+			
+			player.direction = data.direction;
 			
 			// TODO: Validate player move here
 			
 			// Broadcast change:
-			socket.broadcast.emit('move', {id: player.id, position: player.position});
+			socket.broadcast.emit('move', {id: player.id, position: player.position, direction: player.direction});
 			
 			// Store change:
 			rclient.set(socket.request.session.key, JSON.stringify(player), function (error) {

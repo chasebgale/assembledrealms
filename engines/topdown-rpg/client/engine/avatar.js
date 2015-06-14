@@ -1,12 +1,13 @@
 var Avatar = function () {
 
     this.direction  = 0;
-    this.sprite     = undefined;
+    this.sprite     = new PIXI.Container();
     this.moving     = false;
     this.attacking  = false;
     this.health     = 100;
     this.stamina    = 100;
     this.experience = 0;
+	this.id			= "";
 
 };
 
@@ -15,6 +16,7 @@ Avatar.prototype.update = function (avatar) {
     this.health     = avatar.health;
     this.stamina    = avatar.stamina;
     this.experience = avatar.experience;
+	this.id			= avatar.id;
 };
     
 Avatar.prototype.load = function (engine, PIXI, callback_complete) {
@@ -24,8 +26,6 @@ Avatar.prototype.load = function (engine, PIXI, callback_complete) {
     var i = 0;
     var prefix = "skeleton";
     var self = this;
-    
-    self.sprite = new PIXI.Container();
     
     // Load our avatar sprites in order, still using async xfer, utilizing Caolan McMahon's async library:
     // https://github.com/caolan/async
@@ -203,6 +203,8 @@ Avatar.prototype.tick = function (engine, PIXI) {
         }
         
         self.sprite.children[self.direction].animationSpeed = animationSpeed;
+		
+		engine.socket.emit('move', {position: engine.position, direction: self.direction});
         
     };
     
@@ -277,6 +279,10 @@ Avatar.prototype.tick = function (engine, PIXI) {
         self.moving = false;
         
         self.sprite.children[self.direction].gotoAndStop(0);
+		
+		// Sending one more 'move' with duplicate coords as the last update will tell all clients this
+		// actor has stopped moving
+		engine.socket.emit('move', {position: engine.position, direction: self.direction});
         
         //this.sprite.children[this.direction].visible = false;
         //this.sprite.children[this.direction].stop();

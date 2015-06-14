@@ -34,8 +34,10 @@ enemies are sparse, think human dovakhins, must be taken down by multiple skelli
         //  data.avatar = {position: {x: xx, y: xx}, health: 100};
         //
         
-		self.actors.create(data.actors);
-        //self.avatar.update(data.avatar);
+		self.avatar.update(data.player);
+		self.actors.create(data.actors, data.player.id);
+		
+		self.position = data.player.position;
         
         //this.position = data.avatar.position;
         
@@ -111,14 +113,16 @@ Engine.prototype.load = function (map) {
         self.stage.addChild(self.layer_terrain);
         
         self.stage.addChild(self.actors.layer);
+		self.stage.addChild(self.avatar.sprite);
         
         self.layer_air = new PIXI.Sprite(self.terrain.texture_air);
         self.stage.addChild(self.layer_air);
         
         self.avatar.load(self, PIXI, function (error) {
            
-            self.actors.layer.addChild(self.avatar.sprite);
-           
+            // self.actors.layer.addChild(self.avatar.sprite);
+			
+		   
             self.initialized = true;
             
             // Tell the realm we are ready for the initial data pack to setup actors, avatar position, etc
@@ -139,6 +143,8 @@ Engine.prototype.render = function () {
     }
     
     self.avatar.tick(self, PIXI);
+	
+	self.actors.layer.position = {x: -self.position.x + CANVAS_WIDTH_HALF, y: -self.position.y + CANVAS_HEIGHT_HALF};
     
     // Offset translation for smooth scrolling between tiles
     self.matrix = new PIXI.Matrix();
