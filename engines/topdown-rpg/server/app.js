@@ -77,7 +77,6 @@ io.use(function(socket, next) {
 });
 
 var players = {};
-var npcs	= {};
 
 io.on('connection', function (socket) {
 	
@@ -170,11 +169,28 @@ app.get('/auth/:id/:uuid', function(req, res, next) {
             return res.json({message: 'OK'});
         }
     });
-    
-    
-    
-    
 });
+
+var npcs	= {};
+
+var spawn = function() {
+	
+	var id 		= Object.keys(npcs).length;
+	
+	npcs[id] = {
+		position: {x: -41 * 32, y: 41 * 32},
+		direction: 0,
+		life: 100,
+		experience: 0
+	};
+	
+}
+
+// 16ms is 60fps, updating at half that
+var worldLoop = setInterval(function () {
+	
+}, 32);
+
 
 if (debug) {
 	// Listen on random port because lots (hopefully) of other nodes are running too!
