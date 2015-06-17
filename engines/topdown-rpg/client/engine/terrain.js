@@ -8,7 +8,7 @@ var Terrain = function () {
 	
 };
     
-Terrain.prototype.load = function (engine, PIXI, callback) {
+Terrain.prototype.load = function (callback) {
     var self = this;
     var worker = [];
 

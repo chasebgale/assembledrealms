@@ -7,9 +7,42 @@ var Actors = function () {
 
 };
 
-Actors.prototype.load = function (engine, PIXI, callback_complete) {
+Actors.prototype.load = function (callback_complete) {
+    
+    var load_count = 0;
+    
     // Load base assets and textures for all possible NPCs as other player 
     // assets have already been loaded by the Avatar class
+    PIXI.loader
+		.add(ROOT + "client/resource/actors_walkcycle_BODY_male.png")
+        .add(ROOT + "client/resource/HEAD_chain_armor_helmet.png")
+        .add(ROOT + "client/resource/HEAD_chain_armor_hood.png")
+        .add(ROOT + "client/resource/HEAD_plate_armor_helmet.png")
+        .add(ROOT + "client/resource/TORSO_chain_armor_torso.png")
+        .add(ROOT + "client/resource/TORSO_plate_armor_arms_shoulders.png")
+        .add(ROOT + "client/resource/TORSO_plate_armor_torso.png")
+        .add(ROOT + "client/resource/LEGS_plate_armor_pants.png")
+        .add(ROOT + "client/resource/HANDS_plate_armor_gloves.png")
+        .add(ROOT + "client/resource/FEET_plate_armor_shoes.png")
+	
+    // TODO: The way this works right now, the actual integer indices located in the map file
+    // for tile locations assume the same load order of images. Make sure they are the same by adding an
+    // id or something in the json definition for the source array items
+		.after( function (event) {
+        
+			load_count++;
+            
+            if (load_count > 9) {
+                // It's never called normally 
+                // TODO: Figure out why 'complete' is never firing!!!
+                callback_complete();
+            }
+		})
+		.on('error', function (e) {
+			console.log(e);
+		})
+		.once('complete', callback_complete)
+		.load();
 };
 
 Actors.prototype.create = function (actors, avatar_id) {
@@ -34,6 +67,15 @@ Actors.prototype.add = function (actor) {
 	var player = new Player(actor);
 	this.players[player.id] = player;
 	this.layer.addChild(player.sprite);
+};
+
+Actors.prototype.update = function (npcs) {
+    // Server updates to npcs, mainly pathfinding
+	var keys = Object.keys(npcs);
+    for (var i = 0; i < keys.length; i++) {
+		// TODO: Call player.move below, like actors, so we get the correct walking animations
+		this.npcs[keys[i]].position = npcs[keys[i]].position;
+	}
 };
 
 Actors.prototype.move = function (player) {

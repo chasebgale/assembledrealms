@@ -44,6 +44,10 @@ enemies are sparse, think human dovakhins, must be taken down by multiple skelli
         // TODO: Setup all, then:
         self.loaded();
     });
+    
+    this.socket.on('update', function (npcs) {
+        self.actors.update(npcs);
+    });
 	
 	this.socket.on('move', function (player) {
         self.actors.move(player);
@@ -107,7 +111,7 @@ Engine.prototype.load = function (map) {
     var self = this;
     self.map = map;
     
-    self.terrain.load(self, PIXI, function (error) {
+    self.terrain.load(function (error) {
 
         self.layer_terrain = new PIXI.Sprite(self.terrain.texture_ground);
         self.stage.addChild(self.layer_terrain);
@@ -118,16 +122,15 @@ Engine.prototype.load = function (map) {
         self.layer_air = new PIXI.Sprite(self.terrain.texture_air);
         self.stage.addChild(self.layer_air);
         
-        self.avatar.load(self, PIXI, function (error) {
+        self.avatar.load(function (error) {
            
-            // self.actors.layer.addChild(self.avatar.sprite);
-			
-		   
-            self.initialized = true;
+            self.actors.load(function (error) {
+                self.initialized = true;
             
-            // Tell the realm we are ready for the initial data pack to setup actors, avatar position, etc
-            self.socket.emit('ready', 'ready');
-           
+                // Tell the realm we are ready for the initial data pack to setup actors, avatar position, etc
+                self.socket.emit('ready', 'ready');
+            });
+            
         });
         
     });

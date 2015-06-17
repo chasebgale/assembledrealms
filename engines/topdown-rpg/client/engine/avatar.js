@@ -19,7 +19,7 @@ Avatar.prototype.update = function (avatar) {
 	this.id			= avatar.id;
 };
     
-Avatar.prototype.load = function (engine, PIXI, callback_complete) {
+Avatar.prototype.load = function (callback_complete) {
 
     var clip;
     var directions = 4;

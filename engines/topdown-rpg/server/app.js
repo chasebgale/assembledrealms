@@ -112,10 +112,11 @@ io.on('connection', function (socket) {
 		// Wire up events:
 		socket.on('ready', function (data) {
 			// Send initial data with all npc/pc locations, stats, etc
-			var data = {};
-			data.player = player;
-			data.actors = players;
-			
+			var data        = {};
+			data.player     = player;
+			data.players    = players;
+			data.npcs       = npcs;
+            
 			socket.emit('sync', data);
 		});
 		
@@ -171,24 +172,60 @@ app.get('/auth/:id/:uuid', function(req, res, next) {
     });
 });
 
-var npcs	= {};
+var npcs	        = {};
+var npc_spawn_count = 0;
 
 var spawn = function() {
 	
-	var id 		= Object.keys(npcs).length;
-	
-	npcs[id] = {
+	npcs[npc_spawn_count] = {
 		position: {x: -41 * 32, y: 41 * 32},
 		direction: 0,
 		life: 100,
 		experience: 0
 	};
+    
+    npc_spawn_count++;
 	
+};
+
+spawn();
+
+var npc_tick = function (id) {
+    var DIRECTION_N = 0;
+    var DIRECTION_W = 1;
+    var DIRECTION_S = 2;
+    var DIRECTION_E = 3;
+    
+    // Double the odds of walking north / east, so the npc naturally heads towards player spawn
+    var weightedDirection = [DIRECTION_N, DIRECTION_N, DIRECTION_E, DIRECTION_E, DIRECTION_S, DIRECTION_W];
+    var direction = Math.floor(Math.random() * weightedDirection.length);
+    
+    switch (direction) {
+        case DIRECTION_N:
+            npcs[id].position.y += 1;
+            break;
+        case DIRECTION_E:
+            npcs[id].position.x += 1;
+            break;
+        case DIRECTION_S:
+            npcs[id].position.y -= 1;
+            break;
+        case DIRECTION_W:
+            npcs[id].position.x -= 1;
+            break;
+    }
 }
 
 // 16ms is 60fps, updating at half that
 var worldLoop = setInterval(function () {
-	
+	var npc_ids = Object.keys(npcs);
+    
+    for (var i = 0; i < npc_ids.length; i++) {
+        npc_tick(npc_ids[i]);
+    }
+    
+    socket.emit('update', npcs);
+    
 }, 32);
 
 
