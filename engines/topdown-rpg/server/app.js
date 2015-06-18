@@ -1,4 +1,5 @@
 var express 	= require('express');
+var engine 		= require('./engine');
 var cookieParse = require('cookie-parser');
 var app 		= express();
 var http        = require('http').Server(app);
@@ -6,7 +7,7 @@ var io 			= require('socket.io')(http);
 var morgan		= require('morgan');
 var redis       = require('redis');
 var memwatch 	= require('memwatch-next');
-var rclient     = redis.createClient();
+var db     		= redis.createClient();
 
 // If second argument is passed, we are in debug mode:
 var debug 			= (process.argv[2] !== undefined);
@@ -34,7 +35,7 @@ memwatch.on('leak', function(info) {
 });
 
 // Catch redis errors
-rclient.on("error", function (err) {
+db.on("error", function (err) {
     console.log("Error " + err);
 });
 
@@ -44,25 +45,25 @@ io.use(function(socket, next) {
 		
 		// TODO: target should be different not on debug mode
 		var target	= "realm-" + parentDirectory + "-debug";
-		var arr 	= socket.request.headers.cookie.split(";");
+		var cookies = socket.request.headers.cookie.split(";");
 		var worker 	= [];
 		var uuid	= "";
 		
-		for (var i = 0; i < arr.length; i++) {
-			worker = arr[i].split("=");
+		// Search for the cookie set by an earlier call to '/auth/:id/:uuid'
+		for (var i = 0; i < cookies.length; i++) {
+			worker = cookies[i].split("=");
 			if (worker[0].toString().trim() == target) {
 				uuid = worker[1].toString().trim();
 				break;
 			}
 		}
 		
-		console.log("Parsed cookies: " + arr.length + ", found: " + uuid);
-		
 		if (uuid !== "") {
-			rclient.get(uuid, function(error, reply) {
-				console.log("db found: " + reply.toString());
+			// Grab the player object in redis for this user
+			db.get(uuid, function(error, reply) {
 				if (reply !== null) {
                     
+					// Set the content of the session object to the redis/cookie key
                     socket.request.session = {key: uuid};
                     
 					next();
@@ -76,13 +77,12 @@ io.use(function(socket, next) {
   
 });
 
-var players = {};
-
 io.on('connection', function (socket) {
 	
+	// Retrieve the key set earlier
 	var uuid = socket.request.session.key;
 	
-	rclient.get(uuid, function(error, player) {
+	db.get(uuid, function(error, player) {
 		if (player == "new") {
 			player = {
                 id: debug_player_count,
@@ -94,7 +94,7 @@ io.on('connection', function (socket) {
             
             debug_player_count++;
 			
-			rclient.set(uuid, JSON.stringify(player), function (error) {
+			db.set(uuid, JSON.stringify(player), function (error) {
             
                 if (error) {
                     console.error(error);
@@ -105,7 +105,7 @@ io.on('connection', function (socket) {
 			player = JSON.parse(player);
 		}
 		
-		players[player.id] = player;
+		engine.addPlayer(player);
 		
 		socket.broadcast.emit('player-new', player);
 		
@@ -114,8 +114,8 @@ io.on('connection', function (socket) {
 			// Send initial data with all npc/pc locations, stats, etc
 			var data        = {};
 			data.player     = player;
-			data.players    = players;
-			data.npcs       = npcs;
+			data.players    = engine.players();
+			data.npcs       = engine.npcs();
             
 			socket.emit('sync', data);
 		});
@@ -133,7 +133,7 @@ io.on('connection', function (socket) {
 			socket.broadcast.emit('move', {id: player.id, position: player.position, direction: player.direction});
 			
 			// Store change:
-			rclient.set(socket.request.session.key, JSON.stringify(player), function (error) {
+			db.set(socket.request.session.key, JSON.stringify(player), function (error) {
 				
 				if (error) {
 					console.error(error);
@@ -152,10 +152,10 @@ app.use(morgan('dev'));
 app.get('/auth/:id/:uuid', function(req, res, next) {
     // TODO: Check the server calling this function is, in fact, assembledrealms.com
     
-    rclient.get(req.params.uuid, function(error, reply) {
+    db.get(req.params.uuid, function(error, reply) {
         if (reply === null) {
             
-            rclient.set(req.params.uuid, req.params.id, function (error) {
+            db.set(req.params.uuid, req.params.id, function (error) {
         
                 if (error) {
                     console.error(error);
@@ -172,59 +172,13 @@ app.get('/auth/:id/:uuid', function(req, res, next) {
     });
 });
 
-var npcs	        = {};
-var npc_spawn_count = 0;
-
-var spawn = function() {
-	
-	npcs[npc_spawn_count] = {
-		position: {x: -41 * 32, y: 41 * 32},
-		direction: 0,
-		life: 100,
-		experience: 0
-	};
-    
-    npc_spawn_count++;
-	
-};
-
-spawn();
-
-var npc_tick = function (id) {
-    var DIRECTION_N = 0;
-    var DIRECTION_W = 1;
-    var DIRECTION_S = 2;
-    var DIRECTION_E = 3;
-    
-    // Double the odds of walking north / east, so the npc naturally heads towards player spawn
-    var weightedDirection = [DIRECTION_N, DIRECTION_N, DIRECTION_E, DIRECTION_E, DIRECTION_S, DIRECTION_W];
-    var direction = Math.floor(Math.random() * weightedDirection.length);
-    
-    switch (direction) {
-        case DIRECTION_N:
-            npcs[id].position.y += 1;
-            break;
-        case DIRECTION_E:
-            npcs[id].position.x += 1;
-            break;
-        case DIRECTION_S:
-            npcs[id].position.y -= 1;
-            break;
-        case DIRECTION_W:
-            npcs[id].position.x -= 1;
-            break;
-    }
-}
 
 // 16ms is 60fps, updating at half that
 var worldLoop = setInterval(function () {
-	var npc_ids = Object.keys(npcs);
+	
+	engine.tick();
     
-    for (var i = 0; i < npc_ids.length; i++) {
-        npc_tick(npc_ids[i]);
-    }
-    
-    socket.emit('update', npcs);
+    socket.emit('update', engine.npcs());
     
 }, 32);
 
