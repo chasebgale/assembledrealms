@@ -6,6 +6,7 @@ var DIRECTION_E = 3;
 var npcs 			= {};
 var players 		= {};
 var npc_spawn_count = 0;
+var tick_count		= 0;
 
 // Double the odds of walking north / east, so the npc naturally heads towards player spawn
 var weightedDirection = [DIRECTION_N, DIRECTION_N, DIRECTION_E, DIRECTION_E, DIRECTION_S, DIRECTION_W];
@@ -16,10 +17,17 @@ module.exports = {
 	},
 	tick: function () {
 		
+		tick_count++;
+		
+		if ((tick_count % 1800) == 0) {
+			spawn();
+		}
+		
 		var direction 	= Math.floor(Math.random() * weightedDirection.length);
 		var npc_keys 	= Object.keys(npcs);
 		
 		for (var i = 0; i < npc_keys.length; i++) {
+			
 			switch (direction) {
 				case DIRECTION_N:
 					npcs[npc_keys[i]].position.y += 1;

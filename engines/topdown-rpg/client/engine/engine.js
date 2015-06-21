@@ -17,9 +17,9 @@ enemies are sparse, think human dovakhins, must be taken down by multiple skelli
     this.layer_terrain  = undefined;
     this.layer_air      = undefined;
     
-    this.avatar     = new Avatar();
-    this.terrain    = new Terrain();
-    this.actors     = new Actors();
+    this.avatar     = new Avatar(this);
+    this.terrain    = new Terrain(this);
+    this.actors     = new Actors(this);
 
     this.position       = {x: 220, y: 220};
     
@@ -35,7 +35,7 @@ enemies are sparse, think human dovakhins, must be taken down by multiple skelli
         //
         
 		self.avatar.update(data.player);
-		self.actors.create(data.actors, data.player.id);
+		self.actors.create(data); //data.players, data.player.id);
 		
 		self.position = data.player.position;
         
@@ -145,7 +145,7 @@ Engine.prototype.render = function () {
         return;
     }
     
-    self.avatar.tick(self, PIXI);
+    self.avatar.tick();
 	
 	self.actors.layer.position = {x: -self.position.x + CANVAS_WIDTH_HALF, y: -self.position.y + CANVAS_HEIGHT_HALF};
     
@@ -154,7 +154,7 @@ Engine.prototype.render = function () {
     self.matrix.translate(-self.position.x + CANVAS_WIDTH_HALF, 
                           -self.position.y + CANVAS_HEIGHT_HALF);
     
-    self.terrain.draw(self, PIXI);
+    self.terrain.draw();
     
     self.renderer.render(self.stage);
 

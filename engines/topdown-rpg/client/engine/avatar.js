@@ -1,4 +1,4 @@
-var Avatar = function () {
+var Avatar = function (engine) {
 
     this.direction  = 0;
     this.sprite     = new PIXI.Container();
@@ -8,7 +8,7 @@ var Avatar = function () {
     this.stamina    = 100;
     this.experience = 0;
 	this.id			= "";
-
+	this.engine 	= engine;
 };
 
 Avatar.prototype.update = function (avatar) {
@@ -141,7 +141,7 @@ Avatar.prototype.load = function (callback_complete) {
     
 };
 		
-Avatar.prototype.tick = function (engine, PIXI) {
+Avatar.prototype.tick = function () {
     var self = this;
     
     if (self.attacking) {
@@ -155,27 +155,27 @@ Avatar.prototype.tick = function (engine, PIXI) {
     
     var wasMoving 		= self.moving;
     var oldDirection 	= self.direction;
-    var oldPosition 	= $.extend(true, {}, engine.position);
+    var oldPosition 	= $.extend(true, {}, self.engine.position);
     
     var keys 			= KeyboardJS.activeKeys();
     
     var isStepLegal = function () {
         
-        var col = Math.floor(engine.position.x / TILE_WIDTH);
-        var row = Math.ceil(engine.position.y / TILE_HEIGHT);
+        var col = Math.floor(self.engine.position.x / TILE_WIDTH);
+        var row = Math.ceil(self.engine.position.y / TILE_HEIGHT);
         
-        if (engine.map.terrain.index[row] !== undefined) {
+        if (self.engine.map.terrain.index[row] !== undefined) {
             
-            if (engine.map.terrain.index[row][col] !== undefined) {
-                if ((engine.map.terrain.index[row][col][2] !== undefined) &&
-					(engine.map.terrain.index[row][col][2] !== null)) {
-                    engine.position = oldPosition;
+            if (self.engine.map.terrain.index[row][col] !== undefined) {
+                if ((self.engine.map.terrain.index[row][col][2] !== undefined) &&
+					(self.engine.map.terrain.index[row][col][2] !== null)) {
+                    self.engine.position = oldPosition;
                 }
             } else {
-                engine.position = oldPosition;
+                self.engine.position = oldPosition;
             }
         } else {
-            engine.position = oldPosition;
+            self.engine.position = oldPosition;
         }
         
         
@@ -204,7 +204,7 @@ Avatar.prototype.tick = function (engine, PIXI) {
         
         self.sprite.children[self.direction].animationSpeed = animationSpeed;
 		
-		engine.socket.emit('move', {position: engine.position, direction: self.direction});
+		self.engine.socket.emit('move', {position: self.engine.position, direction: self.direction});
         
     };
     
@@ -242,7 +242,7 @@ Avatar.prototype.tick = function (engine, PIXI) {
     }
     
     if ($.inArray('w', keys) > -1) {
-        engine.position.y -= amount;
+        self.engine.position.y -= amount;
         self.moving = true;
         self.direction = DIRECTION_N;
         isStepLegal();
@@ -250,7 +250,7 @@ Avatar.prototype.tick = function (engine, PIXI) {
     }
     
     if ($.inArray('a', keys) > -1) {
-        engine.position.x -= amount;
+        self.engine.position.x -= amount;
         self.moving = true;
         self.direction = DIRECTION_W;
         isStepLegal();
@@ -258,7 +258,7 @@ Avatar.prototype.tick = function (engine, PIXI) {
     }
     
     if ($.inArray('s', keys) > -1) {
-        engine.position.y += amount;
+        self.engine.position.y += amount;
         self.moving = true;
         self.direction = DIRECTION_S;
         isStepLegal();
@@ -266,7 +266,7 @@ Avatar.prototype.tick = function (engine, PIXI) {
     }
     
     if ($.inArray('d', keys) > -1) {
-        engine.position.x += amount;
+        self.engine.position.x += amount;
         self.moving = true;
         self.direction = DIRECTION_E;
         isStepLegal();
@@ -282,7 +282,7 @@ Avatar.prototype.tick = function (engine, PIXI) {
 		
 		// Sending one more 'move' with duplicate coords as the last update will tell all clients this
 		// actor has stopped moving
-		engine.socket.emit('move', {position: engine.position, direction: self.direction});
+		self.engine.socket.emit('move', {position: self.engine.position, direction: self.direction});
         
         //this.sprite.children[this.direction].visible = false;
         //this.sprite.children[this.direction].stop();

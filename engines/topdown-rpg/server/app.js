@@ -172,13 +172,14 @@ app.get('/auth/:id/:uuid', function(req, res, next) {
     });
 });
 
+engine.initialize();
 
 // 16ms is 60fps, updating at half that
 var worldLoop = setInterval(function () {
 	
 	engine.tick();
     
-    socket.emit('update', engine.npcs());
+    io.emit('update', engine.npcs());
     
 }, 32);
 

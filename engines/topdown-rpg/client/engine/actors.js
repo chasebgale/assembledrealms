@@ -1,10 +1,10 @@
-var Actors = function () {
+var Actors = function (engine) {
 
     this.players    = {};
     this.npcs       = {};
 	
-	this.layer = new PIXI.Container();
-
+	this.layer 	= new PIXI.Container();
+	this.engine	= engine;
 };
 
 Actors.prototype.load = function (callback_complete) {
@@ -28,7 +28,7 @@ Actors.prototype.load = function (callback_complete) {
     // TODO: The way this works right now, the actual integer indices located in the map file
     // for tile locations assume the same load order of images. Make sure they are the same by adding an
     // id or something in the json definition for the source array items
-		.after( function (event) {
+		.on('progress', function (e) {
         
 			load_count++;
             
@@ -45,20 +45,33 @@ Actors.prototype.load = function (callback_complete) {
 		.load();
 };
 
-Actors.prototype.create = function (actors, avatar_id) {
+Actors.prototype.create = function (actors) {
     // Create players from actors
-	var keys = Object.keys(actors);
+	var keys = Object.keys(actors.players);
     for (var i = 0; i < keys.length; i++) {
 		
 		if (keys[i] == avatar_id) {
 			continue;
 		}
-		
-		var actor 	= actors[keys[i]];
-		var player 	= new Player(actor);
+
+		var player 	= new Player( actors.players[keys[i]] );
 		
 		this.players[player.id] = player;
 		this.layer.addChild(player.sprite);
+	}
+	
+	// TODO: Create npcs from actors: (STUBBED FOR NOW)
+	var keys = Object.keys(actors.npcs);
+    for (var i = 0; i < keys.length; i++) {
+		
+		if (keys[i] == avatar_id) {
+			continue;
+		}
+
+		var npc 	= new NPC( actors.npcs[keys[i]] );
+		
+		this.npcs[npc.id] = npc;
+		this.layer.addChild(npc.sprite);
 	}
 };
 
@@ -74,7 +87,11 @@ Actors.prototype.update = function (npcs) {
 	var keys = Object.keys(npcs);
     for (var i = 0; i < keys.length; i++) {
 		// TODO: Call player.move below, like actors, so we get the correct walking animations
-		this.npcs[keys[i]].position = npcs[keys[i]].position;
+		if (this.npcs[keys[i]] === undefined) {
+			this.npcs[keys[i]] = npcs[keys[i]];
+		} else {
+			this.npcs[keys[i]].position = npcs[keys[i]].position;
+		}
 	}
 };
 
@@ -172,5 +189,65 @@ Player.prototype.move = function(player) {
 		self.sprite.position.y -= 32;
 	}
 	
+	
+};
+
+var NPC = function (data) {
+	
+	// Public properties
+	this.sprite     		= new PIXI.Container();
+	this.sprite.position 	= data.position;
+	
+	this.direction  = DIRECTION_S;
+	this.health     = 100;
+	this.stamina    = 100;
+	this.moving     = false;
+    this.attacking  = false;
+	this.id			= data.id;
+	
+	// Constructor variables
+	var prefix 		= "human";
+	var self		= this;
+	var directions 	= 4;
+	var textures	= [];
+	var clip;
+	var i;
+	var j;
+	
+	// Create animations from texture cache textures
+	for (i = 0; i < directions; i++) {
+		
+		// Walking animation
+		textures = [];
+		
+		for (j = 0; j < 9; j++) {
+			textures[j] = PIXI.utils.TextureCache[prefix + "_walk_" + i + "_" + j + ".png"];
+		}
+		
+		clip = new PIXI.extras.MovieClip(textures);
+		clip.animationSpeed = 0.2;
+		clip.visible = false;
+
+		self.sprite.addChild(clip);
+	}
+	
+	for (i = 0; i < directions; i++) {
+		// Slashing animation
+		textures = [];
+		
+		for (j = 0; j < 6; j++) {
+			textures[j] = PIXI.utils.TextureCache[prefix + "_slash_" + i + "_" + j + ".png"];
+		}
+		
+		clip = new PIXI.extras.MovieClip(textures);
+		clip.animationSpeed = 0.2;
+		clip.loop = false;
+		clip.visible = false;
+
+		self.sprite.addChild(clip);
+	}
+        
+	self.sprite.children[self.direction].visible = true;
+	self.sprite.children[self.direction].gotoAndStop(0);
 	
 };

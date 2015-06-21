@@ -1,10 +1,12 @@
-var Terrain = function () {
+var Terrain = function (engine) {
 
 	this.texture_ground    = undefined;
 	this.buffer_ground     = undefined;
 	
 	this.texture_air    = undefined;
 	this.buffer_air     = undefined;
+	
+	this.engine = engine;
 	
 };
     
@@ -13,12 +15,12 @@ Terrain.prototype.load = function (callback) {
     var worker = [];
 
     self.buffer_ground     = new PIXI.ParticleContainer();
-    self.texture_ground    = new PIXI.RenderTexture(engine.renderer, engine.renderer.width, engine.renderer.height);
+    self.texture_ground    = new PIXI.RenderTexture(self.engine.renderer, self.engine.renderer.width, self.engine.renderer.height);
     
     self.buffer_air     = new PIXI.ParticleContainer();
-    self.texture_air    = new PIXI.RenderTexture(engine.renderer, engine.renderer.width, engine.renderer.height);
+    self.texture_air    = new PIXI.RenderTexture(self.engine.renderer, self.engine.renderer.width, self.engine.renderer.height);
 
-    engine.map.terrain.source.forEach(function (asset) {
+    self.engine.map.terrain.source.forEach(function (asset) {
 
         asset = ROOT + asset;
         worker.push(asset);
@@ -67,18 +69,20 @@ Terrain.prototype.load = function (callback) {
 };
 	
 		// Called on player login and when changing maps
-Terrain.prototype.draw = function (engine, PIXI) {
+Terrain.prototype.draw = function () {
             
-    this.buffer_ground.children = [];
-    this.texture_ground.clear();
+	var self = this;
+			
+    self.buffer_ground.children = [];
+    self.texture_ground.clear();
     
-    this.buffer_air.children = [];
-    this.texture_air.clear();
-    
+    self.buffer_air.children = [];
+    self.texture_air.clear();
+	
     var sprite;
     
-    var startCol = Math.floor((engine.position.x - CANVAS_WIDTH_HALF) / TILE_WIDTH);
-    var startRow = Math.floor((engine.position.y - CANVAS_HEIGHT_HALF) / TILE_HEIGHT);
+    var startCol = Math.floor((self.engine.position.x - CANVAS_WIDTH_HALF) / TILE_WIDTH);
+    var startRow = Math.floor((self.engine.position.y - CANVAS_HEIGHT_HALF) / TILE_HEIGHT);
     
     var maxCol = startCol + VIEWPORT_WIDTH_TILES + 1;
     var maxRow = startRow + VIEWPORT_HEIGHT_TILES + 1;
@@ -88,10 +92,10 @@ Terrain.prototype.draw = function (engine, PIXI) {
     
     for (var row = startRow; row < maxRow; row++) {
         for (var col = startCol; col < maxCol; col++) {
-            if (engine.map.terrain.index[row] === undefined) continue;
-            if (engine.map.terrain.index[row][col] === undefined) continue;
+            if (self.engine.map.terrain.index[row] === undefined) continue;
+            if (self.engine.map.terrain.index[row][col] === undefined) continue;
             
-            layers = engine.map.terrain.index[row][col];
+            layers = self.engine.map.terrain.index[row][col];
             
             if (layers.constructor !== Array) continue;
             
@@ -107,9 +111,9 @@ Terrain.prototype.draw = function (engine, PIXI) {
                     sprite.position.y = startY + ((row - startRow) * TILE_HEIGHT);
                     
                     if (i < 3) {
-                        this.buffer_ground.addChild(sprite);
+                        self.buffer_ground.addChild(sprite);
                     } else {
-                        this.buffer_air.addChild(sprite);
+                        self.buffer_air.addChild(sprite);
                     }
                     
                 }
@@ -120,8 +124,8 @@ Terrain.prototype.draw = function (engine, PIXI) {
         }
     }
     
-    this.texture_ground.render(this.buffer_ground, engine.matrix);
-    this.texture_air.render(this.buffer_air, engine.matrix);
+    self.texture_ground.render(self.buffer_ground, self.engine.matrix);
+    self.texture_air.render(self.buffer_air, self.engine.matrix);
 };
 
 	
