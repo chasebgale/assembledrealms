@@ -62,7 +62,8 @@ var spawn = function() {
 		position: {x: -41 * 32, y: 41 * 32},
 		direction: 0,
 		life: 100,
-		experience: 0
+		experience: 0,
+		layers: [0, 4, 7, 8, 9]
 	};
     
     npc_spawn_count++;
