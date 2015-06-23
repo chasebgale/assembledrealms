@@ -78,6 +78,11 @@ app.post('/launch', function (req, res, next) {
 	} else {
 		var child = realms[realmID];
 		
+		child.on('exit', function () {
+			console.log('Realm ' + realmApp + ' has exited.');
+			res.send('ERROR BOOTING...');
+		});
+		
 		child.on('stdout', function (data) {
 			console.log('Realm ' + realmID + ' stdout: ' + data);
 			var split = data.toString().split(' ');

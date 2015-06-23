@@ -7,6 +7,7 @@ var io 			= require('socket.io')(http);
 var morgan		= require('morgan');
 var redis       = require('redis');
 var memwatch 	= require('memwatch-next');
+var fs			= require('fs');
 var db     		= redis.createClient();
 
 // If second argument is passed, we are in debug mode:
@@ -17,6 +18,8 @@ directory_arr.pop();
 var parentDirectory	= directory_arr.pop();
 
 var debug_player_count  = 0;
+
+var map = JSON.parse( fs.readFileSync(__dirname + '/../client/maps/town.json') );
 
 var engine = new Engine();
 
@@ -185,7 +188,7 @@ engine.initialize();
 // 16ms is 60fps, updating at half that
 var worldLoop = setInterval(function () {
 	
-	engine.tick();
+	engine.tick(map);
     
     io.emit('update', engine.broadcast());
 	
