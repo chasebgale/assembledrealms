@@ -35,7 +35,7 @@ Engine.prototype.tick = function () {
 		this.spawn();
 	}
 	
-	var direction 	= Math.floor(Math.random() * weightedDirection.length);
+	var direction 	= weightedDirection[ Math.floor(Math.random() * weightedDirection.length) ];
 	var npc_keys 	= Object.keys(npcs);
 	
 	for (var i = 0; i < npc_keys.length; i++) {
@@ -58,6 +58,8 @@ Engine.prototype.tick = function () {
 				npcs[npc_keys[i]].position.x -= 1;
 				break;
 		}
+		
+		npcs[npc_keys[i]].direction = direction;
 		
 		broadcast.npcs[npc_keys[i]] = npcs[npc_keys[i]];
 	}
@@ -100,8 +102,47 @@ Engine.prototype.spawn = function() {
 		direction: 0,
 		life: 100,
 		experience: 0,
-		layers: [0, 4, 7, 8, 9]
+		layers: [0] // , 4, 7, 8, 9
 	};
+	
+	// Head: 1, 2, 3
+	var rand = Math.random();
+	if (rand <= 0.2) {
+		npcs[npc_spawn_count].layers.push(1);
+	} else if (rand <= 0.4) {
+		npcs[npc_spawn_count].layers.push(2);
+	} else if (rand <= 0.6) {
+		npcs[npc_spawn_count].layers.push(3);
+	}
+	
+	// Torso: 4, 5, 6
+	rand = Math.random();
+	if (rand <= 0.2) {
+		npcs[npc_spawn_count].layers.push(4);
+	} else if (rand <= 0.4) {
+		npcs[npc_spawn_count].layers.push(5);
+	} else if (rand <= 0.6) {
+		npcs[npc_spawn_count].layers.push(6);
+	}
+	
+	// Legs: 7
+	rand = Math.random();
+	if (rand <= 0.5) {
+		npcs[npc_spawn_count].layers.push(7);
+	}
+	
+	// Hands: 8
+	rand = Math.random();
+	if (rand <= 0.5) {
+		npcs[npc_spawn_count].layers.push(8);
+	}
+	
+	// Feet: 9
+	rand = Math.random();
+	if (rand <= 0.5) {
+		npcs[npc_spawn_count].layers.push(9);
+	}
+	
     
 	this.emit('create', { 
 		npcs: {npc_spawn_count: npcs[npc_spawn_count]},

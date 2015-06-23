@@ -125,6 +125,8 @@ var Player = function (data) {
 		}
 		
 		clip = new PIXI.extras.MovieClip(textures);
+		clip.position.x = -32;
+		clip.position.y = -32;
 		clip.animationSpeed = 0.2;
 		clip.visible = false;
 
@@ -140,6 +142,8 @@ var Player = function (data) {
 		}
 		
 		clip = new PIXI.extras.MovieClip(textures);
+		clip.position.x = -32;
+		clip.position.y = -32;
 		clip.animationSpeed = 0.2;
 		clip.loop = false;
 		clip.visible = false;
@@ -251,6 +255,8 @@ var NPC = function (npc, renderer) {
 		}
 		
 		clip = new PIXI.extras.MovieClip(textures);
+		clip.position.x = -32;
+		clip.position.y = -32;
 		clip.animationSpeed = 0.2;
 		clip.visible = false;
 
