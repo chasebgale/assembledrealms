@@ -1,4 +1,4 @@
-var Terrain = function (engine) {
+var Terrain = function () {
 
 	this.texture_ground    = undefined;
 	this.buffer_ground     = undefined;
@@ -6,21 +6,19 @@ var Terrain = function (engine) {
 	this.texture_air    = undefined;
 	this.buffer_air     = undefined;
 	
-	this.engine = engine;
-	
 };
     
-Terrain.prototype.load = function (callback) {
+Terrain.prototype.load = function (source, renderer, callback) {
     var self = this;
     var worker = [];
 
     self.buffer_ground     = new PIXI.ParticleContainer();
-    self.texture_ground    = new PIXI.RenderTexture(self.engine.renderer, self.engine.renderer.width, self.engine.renderer.height);
+    self.texture_ground    = new PIXI.RenderTexture(renderer, renderer.width, renderer.height);
     
     self.buffer_air     = new PIXI.ParticleContainer();
-    self.texture_air    = new PIXI.RenderTexture(self.engine.renderer, self.engine.renderer.width, self.engine.renderer.height);
+    self.texture_air    = new PIXI.RenderTexture(renderer, renderer.width, renderer.height);
 
-    self.engine.map.terrain.source.forEach(function (asset) {
+    source.forEach(function (asset) {
 
         asset = ROOT + asset;
         worker.push(asset);
@@ -69,7 +67,7 @@ Terrain.prototype.load = function (callback) {
 };
 	
 		// Called on player login and when changing maps
-Terrain.prototype.draw = function () {
+Terrain.prototype.draw = function (source, matrix, position) {
             
 	var self = this;
 			
@@ -81,8 +79,8 @@ Terrain.prototype.draw = function () {
 	
     var sprite;
     
-    var startCol = Math.floor((self.engine.position.x - CANVAS_WIDTH_HALF) / TILE_WIDTH);
-    var startRow = Math.floor((self.engine.position.y - CANVAS_HEIGHT_HALF) / TILE_HEIGHT);
+    var startCol = Math.floor((position.x - CANVAS_WIDTH_HALF) / TILE_WIDTH);
+    var startRow = Math.floor((position.y - CANVAS_HEIGHT_HALF) / TILE_HEIGHT);
     
     var maxCol = startCol + VIEWPORT_WIDTH_TILES + 1;
     var maxRow = startRow + VIEWPORT_HEIGHT_TILES + 1;
@@ -92,10 +90,10 @@ Terrain.prototype.draw = function () {
     
     for (var row = startRow; row < maxRow; row++) {
         for (var col = startCol; col < maxCol; col++) {
-            if (self.engine.map.terrain.index[row] === undefined) continue;
-            if (self.engine.map.terrain.index[row][col] === undefined) continue;
+            if (source.index[row] === undefined) continue;
+            if (source.index[row][col] === undefined) continue;
             
-            layers = self.engine.map.terrain.index[row][col];
+            layers = source.index[row][col];
             
             if (layers.constructor !== Array) continue;
             
@@ -124,8 +122,8 @@ Terrain.prototype.draw = function () {
         }
     }
     
-    self.texture_ground.render(self.buffer_ground, self.engine.matrix);
-    self.texture_air.render(self.buffer_air, self.engine.matrix);
+    self.texture_ground.render(self.buffer_ground, matrix);
+    self.texture_air.render(self.buffer_air, matrix);
 };
 
 	

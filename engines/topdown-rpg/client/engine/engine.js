@@ -27,17 +27,19 @@ enemies are sparse, think human dovakhins, must be taken down by multiple skelli
     
     var self = this;
     
-    this.socket.on('sync', function (data) {
+    this.socket.on('sync', function (actors) {
         // Full JSON from the realm, other players [location, stats, etc], npcs [location, etc]
         //
         //  data.actors = [{id: xx, position: {x: xx, y: xx}}, {etc}, {etc}]
         //  data.avatar = {position: {x: xx, y: xx}, health: 100};
         //
         
-		self.avatar.update(data.player);
-		self.actors.create(data); //data.players, data.player.id);
+		self.avatar.update(actors.player);
+		self.actors.create(actors, self.renderer); //data.players, data.player.id);
 		
-		self.position = data.player.position;
+		self.position = actors.player.position;
+		
+		self.initialized = true;
         
         //this.position = data.avatar.position;
         
@@ -45,16 +47,14 @@ enemies are sparse, think human dovakhins, must be taken down by multiple skelli
         self.loaded();
     });
     
-    this.socket.on('update', function (npcs) {
-        self.actors.update(npcs);
+    this.socket.on('update', function (actors) {
+		if (self.initialized) {
+			self.actors.update(actors);
+		}
     });
 	
-	this.socket.on('move', function (player) {
-        self.actors.move(player);
-    });
-	
-	this.socket.on('player-new', function (player) {
-		self.actors.add(player);
+	this.socket.on('create', function (actors) {
+		self.actors.create(actors, self.renderer);
 	});
     
     this.socket.on('debug', function (data) {
@@ -111,7 +111,7 @@ Engine.prototype.load = function (map) {
     var self = this;
     self.map = map;
     
-    self.terrain.load(function (error) {
+    self.terrain.load(map.terrain.source, self.renderer, function (error) {
 
         self.layer_terrain = new PIXI.Sprite(self.terrain.texture_ground);
         self.stage.addChild(self.layer_terrain);
@@ -125,8 +125,6 @@ Engine.prototype.load = function (map) {
         self.avatar.load(function (error) {
            
             self.actors.load(function (error) {
-                self.initialized = true;
-            
                 // Tell the realm we are ready for the initial data pack to setup actors, avatar position, etc
                 self.socket.emit('ready', 'ready');
             });
@@ -154,7 +152,7 @@ Engine.prototype.render = function () {
     self.matrix.translate(-self.position.x + CANVAS_WIDTH_HALF, 
                           -self.position.y + CANVAS_HEIGHT_HALF);
     
-    self.terrain.draw();
+    self.terrain.draw(self.map.terrain, self.matrix, self.position);
     
     self.renderer.render(self.stage);
 

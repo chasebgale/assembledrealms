@@ -1,10 +1,10 @@
-var Actors = function (engine) {
-
+var Actors = function () {
+	
     this.players    = {};
     this.npcs       = {};
-	
-	this.layer 	= new PIXI.Container();
-	this.engine	= engine;
+	this.layer 		= new PIXI.Container();
+	this.player_id	= -1;
+
 };
 
 Actors.prototype.load = function (callback_complete) {
@@ -45,12 +45,13 @@ Actors.prototype.load = function (callback_complete) {
 		.load();
 };
 
-Actors.prototype.create = function (actors) {
+Actors.prototype.create = function (actors, renderer) {
     // Create players from actors
 	var keys = Object.keys(actors.players);
     for (var i = 0; i < keys.length; i++) {
 		
 		if (keys[i] == actors.player.id) {
+			this.player_id = actors.player.id;
 			continue;
 		}
 
@@ -64,37 +65,30 @@ Actors.prototype.create = function (actors) {
 	var keys = Object.keys(actors.npcs);
     for (var i = 0; i < keys.length; i++) {
 
-		var npc 	= new NPC( this.engine, actors.npcs[keys[i]] );
+		var npc 	= new NPC( actors.npcs[keys[i]], renderer );
 		
 		this.npcs[npc.id] = npc;
 		this.layer.addChild(npc.sprite);
 	}
 };
 
-Actors.prototype.add = function (actor) {
-    // Create player from actor
-	var player = new Player(actor);
-	this.players[player.id] = player;
-	this.layer.addChild(player.sprite);
-};
+Actors.prototype.update = function (actors) {
+    // Server updates to npcs, pathfinding, life/stamina changes, etc
+	// TODO: Check what properties were sent by the server for each npc/actor and only update those
 
-Actors.prototype.update = function (npcs) {
-    // Server updates to npcs, mainly pathfinding
-	var keys = Object.keys(npcs);
+	var keys = Object.keys(actors.players);
     for (var i = 0; i < keys.length; i++) {
-		// TODO: Call player.move below, like actors, so we get the correct walking animations
-		if (this.npcs[keys[i]] === undefined) {
-			var npc = new NPC( this.engine, npcs[keys[i]] );			
-			this.npcs[npc.id] = npc;
-			this.layer.addChild(npc.sprite);
-		} else {
-			this.npcs[keys[i]].position = npcs[keys[i]].position;
-		}
+		if (keys[i] == this.player_id) {
+			continue;
+		}		
+		this.players[actors.players[keys[i]].id].move(actors.players[keys[i]]);
 	}
-};
-
-Actors.prototype.move = function (player) {
-    this.players[player.id].move(player);
+	
+	var keys = Object.keys(actors.npcs);
+    for (var i = 0; i < keys.length; i++) {
+		this.npcs[actors.npcs[keys[i]].id].move(actors.npcs[keys[i]]);
+	}
+	
 };
 
 var Player = function (data) {
@@ -190,7 +184,7 @@ Player.prototype.move = function(player) {
 	
 };
 
-var NPC = function (engine, npc) {
+var NPC = function (npc, renderer) {
 	
 	// Public properties
 	this.sprite     		= new PIXI.Container();
@@ -228,7 +222,7 @@ var NPC = function (engine, npc) {
 	var model 			= new PIXI.Container();
 	var modelSprite		= undefined;
 	var modelTextures	= [];
-	var modelTexture	= new PIXI.RenderTexture(engine.renderer, 576, 256);
+	var modelTexture	= new PIXI.RenderTexture(renderer, 576, 256);
 	
 	// RenderTexture the layers:
 	for (i = 0; i < npc.layers.length; i++) {
@@ -265,5 +259,37 @@ var NPC = function (engine, npc) {
         
 	self.sprite.children[self.direction].visible = true;
 	self.sprite.children[self.direction].gotoAndStop(0);
+	
+};
+
+NPC.prototype.move = function(npc) {
+	
+	var self = this;
+	
+	if (!self.moving) {
+		self.sprite.children[self.direction].play();
+	}
+	
+	if (self.direction !== npc.direction) {
+		self.sprite.children[self.direction].visible = false;
+		self.sprite.children[self.direction].stop();
+
+		self.sprite.children[npc.direction].visible = true;
+		self.sprite.children[npc.direction].play();
+	}
+	
+	self.direction = npc.direction;
+	
+	if ((self.sprite.position.x == (npc.position.x - 32)) && 
+		(self.sprite.position.y == (npc.position.y - 32))) {
+		self.moving = false;
+		self.sprite.children[self.direction].gotoAndStop(0);
+	} else {
+		self.moving = true;
+		self.sprite.position = npc.position;
+		self.sprite.position.x -= 32;
+		self.sprite.position.y -= 32;
+	}
+	
 	
 };

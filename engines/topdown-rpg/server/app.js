@@ -1,5 +1,5 @@
 var express 	= require('express');
-var engine 		= require('./engine');
+var Engine 		= require('./engine');
 var cookieParse = require('cookie-parser');
 var app 		= express();
 var http        = require('http').Server(app);
@@ -18,6 +18,12 @@ var parentDirectory	= directory_arr.pop();
 
 var debug_player_count  = 0;
 
+var engine = new Engine();
+
+engine.on('create', function (actors) {
+	io.emit('create', actors);
+});
+
 var allowCrossDomain = function(req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
@@ -26,7 +32,8 @@ var allowCrossDomain = function(req, res, next) {
     if ('OPTIONS' == req.method) return res.send(200);
     
     next();
-}
+};
+
 app.use(allowCrossDomain);
 app.use(cookieParse());
 
@@ -130,7 +137,8 @@ io.on('connection', function (socket) {
 			// TODO: Validate player move here
 			
 			// Broadcast change:
-			socket.broadcast.emit('move', {id: player.id, position: player.position, direction: player.direction});
+			//socket.broadcast.emit('move', {id: player.id, position: player.position, direction: player.direction});
+			engine.addBroadcast(player);
 			
 			// Store change:
 			db.set(socket.request.session.key, JSON.stringify(player), function (error) {
@@ -179,7 +187,9 @@ var worldLoop = setInterval(function () {
 	
 	engine.tick();
     
-    io.emit('update', engine.npcs());
+    io.emit('update', engine.broadcast());
+	
+	engine.broadcastComplete();
     
 }, 32);
 
