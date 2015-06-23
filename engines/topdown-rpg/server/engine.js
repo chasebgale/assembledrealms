@@ -50,6 +50,15 @@ Engine.prototype.tick = function (map) {
 			// What row/col are we in?
 			var row = Math.floor( npcs[npc_keys[i]].position.x / TILE_WIDTH );
 			var col = Math.floor( npcs[npc_keys[i]].position.y / TILE_HEIGHT );
+			
+			var options = [];
+			
+			while (true) {
+				// Can we walk north?
+				
+				// Can we walk east?
+			}
+			
 		}
 		
 		if (Math.random() > 0.5) {
