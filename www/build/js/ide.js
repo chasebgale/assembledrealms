@@ -258,7 +258,9 @@ function initialize(projectID, projectDomain) {
 				.done(function (data) {
 					if (data.substr(0, 2) === "OK") {
 						$('#debugProgressList').append('<li>Your debug URL is <a href="' + debugURL + '">' + debugURL + '</a>!</li>');
-					}
+					} else {
+                        $('#debugProgressList').append('<li class="text-danger"><strong><i class="fa fa-exclamation-triangle"></i> ' + data + '</strong> Please try again in a few minutes, monkeys are furiously typing away to fix this problem.</li>');
+                    }
 				})
                 .fail(function(data) {
                     $('#debugProgressList').append('<li class="text-danger"><strong><i class="fa fa-exclamation-triangle"></i> Fatal Error!</strong> Please try again in a few minutes, monkeys are furiously typing away to fix this problem.</li>');

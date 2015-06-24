@@ -4,7 +4,7 @@ var cookieParser 	= require('cookie-parser');
 var app 			= express();
 var morgan			= require('morgan');
 var moment 		    = require('moment');
-var forever 		= require('forever-monitor');
+var pm2             = require('pm2');
 var walk            = require('walk');
 var path            = require('path');
 var redis 			= require('redis');
@@ -40,9 +40,48 @@ app.set('view engine', 'ejs'); // set up EJS for templating
 
 app.post('/launch', function (req, res, next) {
 
-	var realmID = req.body.id;
-	var realmApp = '/var/www/realms/' + realmID + '/server/app.js';
+	var realmID     = req.body.id;
+	var realmApp    = '/var/www/realms/' + realmID + '/server/app.js';
+    var found_proc  = [];
 	
+    pm2.connect(function(err) {
+        
+        // Get all processes running
+        pm2.list(function(err, process_list) {
+            
+            // Search for running instance of requested realm
+            process_list.forEach(function(proc) {
+                if (proc.name == realmApp) {
+                    found_proc.push(proc);
+                }
+            });
+            
+            if (found_proc.length === 0) {
+                // No existing realm server running, spool up new one:
+                pm2.start(realmApp, { name: realmID, scriptArgs: ['debug'] }, function(err, proc) {
+                    if (err) {
+                        res.send('ERROR BOOTING: ' + err.message);
+                        throw new Error('err');
+                    }
+
+                    res.send('OK');
+                });
+            } else {
+                // Existing realm server found, restart it
+                pm2.restart(realmApp, function(err, proc) {
+                    if (err) {
+                        res.send('ERROR BOOTING: ' + err.message);
+                        throw new Error('err');
+                    }
+
+                    res.send('OK');
+                });
+            }
+        });
+        
+    });
+    
+    /*
 	if (realms[realmID] === undefined) {
 		
 		// TODO: Right here, check if the memory for the server can handle adding another
@@ -98,6 +137,7 @@ app.post('/launch', function (req, res, next) {
 		
 		child.restart();
 	}
+    */
 });
 
 var scripts   = [];

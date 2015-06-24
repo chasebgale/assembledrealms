@@ -15,7 +15,7 @@ var debug 			= (process.argv[2] !== undefined);
 
 var directory_arr = __dirname.split('/');
 directory_arr.pop();
-var parentDirectory	= directory_arr.pop();
+var realmID	= directory_arr.pop();
 
 var debug_player_count  = 0;
 
@@ -54,7 +54,7 @@ io.use(function(socket, next) {
 	if ( socket.request.headers.cookie ){
 		
 		// TODO: target should be different not on debug mode
-		var target	= "realm-" + parentDirectory + "-debug";
+		var target	= "realm-" + realmID + "-debug";
 		var cookies = socket.request.headers.cookie.split(";");
 		var worker 	= [];
 		var uuid	= "";
@@ -200,8 +200,12 @@ var worldLoop = setInterval(function () {
 if (debug) {
 	// Listen on random port because lots (hopefully) of other nodes are running too!
 	http.listen(0, function(){
-		// Log the port to the console - this is caught by the debug server:
-		console.log("port: " + http.address().port);
+		// Log the port to the console
+		// console.log("port: " + http.address().port);
+        
+        db.set(realmID, http.address().port);
+        db.set(realmID + '-time', new Date().toString());
+        
 	});
 } else {
 	// In a purchased realm node, the realm instance serves up all it's files:
