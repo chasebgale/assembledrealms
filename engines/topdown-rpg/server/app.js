@@ -117,7 +117,11 @@ io.on('connection', function (socket) {
 		
 		engine.addPlayer(player);
 		
-		socket.broadcast.emit('player-new', player);
+		var data = {};
+		data.players = {};
+		data.players[player.id] = player;
+		
+		socket.broadcast.emit('create', data);
 		
 		// Wire up events:
 		socket.on('ready', function (data) {

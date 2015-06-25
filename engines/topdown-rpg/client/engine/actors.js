@@ -47,28 +47,34 @@ Actors.prototype.load = function (callback_complete) {
 
 Actors.prototype.create = function (actors, renderer) {
     // Create players from actors
-	var keys = Object.keys(actors.players);
-    for (var i = 0; i < keys.length; i++) {
-		
-		if (keys[i] == actors.player.id) {
-			this.player_id = actors.player.id;
-			continue;
-		}
+	if (actors.players !== undefined) {
+		var keys = Object.keys(actors.players);
+		for (var i = 0; i < keys.length; i++) {
+			
+			if (actors.player !== undefined) {
+				if (keys[i] == actors.player.id) {
+					this.player_id = actors.player.id;
+					continue;
+				}
+			}
 
-		var player 	= new Player( actors.players[keys[i]] );
-		
-		this.players[player.id] = player;
-		this.layer.addChild(player.sprite);
+			var player 	= new Player( actors.players[keys[i]] );
+			
+			this.players[player.id] = player;
+			this.layer.addChild(player.sprite);
+		}
 	}
 	
 	// Create npcs from actors
-	var keys = Object.keys(actors.npcs);
-    for (var i = 0; i < keys.length; i++) {
+	if (actors.npcs !== undefined) {
+		var keys = Object.keys(actors.npcs);
+		for (var i = 0; i < keys.length; i++) {
 
-		var npc 	= new NPC( actors.npcs[keys[i]], renderer );
-		
-		this.npcs[npc.id] = npc;
-		this.layer.addChild(npc.sprite);
+			var npc 	= new NPC( actors.npcs[keys[i]], renderer );
+			
+			this.npcs[npc.id] = npc;
+			this.layer.addChild(npc.sprite);
+		}
 	}
 };
 
@@ -81,7 +87,7 @@ Actors.prototype.update = function (actors) {
 		if (keys[i] == this.player_id) {
 			continue;
 		}		
-		this.players[actors.players[keys[i]].id].move(actors.players[keys[i]]);
+		this.players[keys[i]].move(actors.players[keys[i]]);
 	}
 	
 	var keys = Object.keys(actors.npcs);
@@ -174,15 +180,15 @@ Player.prototype.move = function(player) {
 	
 	self.direction = player.direction;
 	
-	if ((self.sprite.position.x == (player.position.x - 32)) && 
-		(self.sprite.position.y == (player.position.y - 32))) {
+	if ((self.sprite.position.x == player.position.x) &&
+		(self.sprite.position.y == player.position.y)) {
 		self.moving = false;
 		self.sprite.children[self.direction].gotoAndStop(0);
 	} else {
 		self.moving = true;
 		self.sprite.position = player.position;
-		self.sprite.position.x -= 32;
-		self.sprite.position.y -= 32;
+		//self.sprite.position.x -= 32;
+		//self.sprite.position.y -= 32;
 	}
 	
 	
@@ -286,15 +292,15 @@ NPC.prototype.move = function(npc) {
 	
 	self.direction = npc.direction;
 	
-	if ((self.sprite.position.x == (npc.position.x - 32)) && 
-		(self.sprite.position.y == (npc.position.y - 32))) {
+	if ((self.sprite.position.x == npc.position.x) && 
+		(self.sprite.position.y == npc.position.y)) {
 		self.moving = false;
 		self.sprite.children[self.direction].gotoAndStop(0);
 	} else {
 		self.moving = true;
 		self.sprite.position = npc.position;
-		self.sprite.position.x -= 32;
-		self.sprite.position.y -= 32;
+		//self.sprite.position.x -= 32;
+		//self.sprite.position.y -= 32;
 	}
 	
 	
