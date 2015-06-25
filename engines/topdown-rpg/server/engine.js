@@ -38,55 +38,139 @@ Engine.prototype.tick = function (map) {
 		this.spawn();
 	}
 	
-	var direction 	= weightedDirection[ Math.floor(Math.random() * weightedDirection.length) ];
+	//var direction 	= weightedDirection[ Math.floor(Math.random() * weightedDirection.length) ];
+	var direction;
 	var npc_keys 	= Object.keys(npcs);
+	var i 			= 0;
+	var j 			= 0;
 	
-	for (var i = 0; i < npc_keys.length; i++) {
+	for (i = 0; i < npc_keys.length; i++) {
 		
-		if (npcs[npc_keys[i]].steps.length > npcs[npc_keys[i]].step) {
-			// If we have a step greater than the steps array, the npc has walked over all the step, 
+		if (npcs[npc_keys[i]].step === npcs[npc_keys[i]].steps.length) {
+			// If we have a step equal to the length of the step array, we walked em all, 
 			// we need to generate a new walking path
 			
-			// What row/col are we in?
-			var row = Math.floor( npcs[npc_keys[i]].position.x / TILE_WIDTH );
-			var col = Math.floor( npcs[npc_keys[i]].position.y / TILE_HEIGHT );
+			npcs[npc_keys[i]].steps.length 	= 0;
+			npcs[npc_keys[i]].step 			= 0;
 			
-			var options = [];
-			
-			while (true) {
-				// Can we walk north?
+			// ~10% chance of resuming a walk
+			if (Math.random() < 0.11) {
 				
-				// Can we walk east?
+				// What row/col are we in?
+				var col = Math.floor( npcs[npc_keys[i]].position.x / TILE_WIDTH );
+				var row = Math.floor( npcs[npc_keys[i]].position.y / TILE_HEIGHT );
+				
+				var options 	= [];
+				var randomizer 	= 0;
+				
+				// NPC can move maximum five tiles away
+				for (j = 0; j < 5; j++) {
+					
+					randomizer 		= Math.floor(Math.random() * 100);
+					options.length 	= 0;
+					
+					// Add either our first or an additional tile step (having diminishing odds)
+					if (randomizer > (40 + (12 * j))) {
+						
+						// Can we walk north?
+						if (this.walkable( map, row - 1, col )) {
+							options.push(DIRECTION_N);
+						}
+						
+						// Can we walk east?
+						if (this.walkable( map, row, col + 1 )) {
+							options.push(DIRECTION_E);
+							options.push(DIRECTION_E);
+						}
+						
+						// Can we walk south?
+						if (this.walkable( map, row + 1, col )) {
+							options.push(DIRECTION_S);
+						}
+						
+						// Can we walk west?
+						if (this.walkable( map, row, col - 1 )) {
+							options.push(DIRECTION_W);
+						}
+						
+						direction = options[ Math.floor(Math.random() * options.length) ];
+						
+						switch (direction) {
+							case DIRECTION_N:
+								npcs[npc_keys[i]].steps.push({x: (col * 32) + 16, y: ((row - 1) * 32) + 16});
+								break;
+							case DIRECTION_E:
+								npcs[npc_keys[i]].steps.push({x: ((col + 1) * 32) + 16, y: ((row * 32) + 16)});
+								break;
+							case DIRECTION_S:
+								npcs[npc_keys[i]].steps.push({x: (col * 32) + 16, y: ((row + 1) * 32) + 16});
+								break;
+							case DIRECTION_W:
+								npcs[npc_keys[i]].steps.push({x: ((col - 1) * 32) + 16, y: ((row * 32) + 16)});
+								break;
+						}
+					} else {
+						break;
+					}
+					
+				}
+			}
+		}
+		
+		if (npcs[npc_keys[i]].steps.length > 0) {
+			
+			var npc_step	= npcs[npc_keys[i]].steps[npcs[npc_keys[i]].step];
+			
+			console.log("pos: " + JSON.stringify(npcs[npc_keys[i]].position) + ", target: " + JSON.stringify(npc_step));
+			
+			direction = npcs[npc_keys[i]].direction;
+			
+			if (npcs[npc_keys[i]].position.y > npc_step.y) {
+				direction = DIRECTION_N;
+				npcs[npc_keys[i]].position.y--;
+			} else if (npcs[npc_keys[i]].position.y < npc_step.y) {
+				direction = DIRECTION_S;
+				npcs[npc_keys[i]].position.y++;
 			}
 			
+			if (npcs[npc_keys[i]].position.x > npc_step.x) {
+				direction = DIRECTION_W;
+				npcs[npc_keys[i]].position.x--;
+			} else if (npcs[npc_keys[i]].position.x < npc_step.x) {
+				direction = DIRECTION_E;
+				npcs[npc_keys[i]].position.x++;
+			}
+			
+			if ((npcs[npc_keys[i]].position.x == npc_step.x) &&
+				(npcs[npc_keys[i]].position.y == npc_step.y)) {
+				npcs[npc_keys[i]].step++;
+			}
+			
+			npcs[npc_keys[i]].direction = direction;
+			broadcast.npcs[npc_keys[i]] = npcs[npc_keys[i]];
+		
 		}
-		
-		if (Math.random() > 0.5) {
-			continue;
-		}
-		
-		switch (direction) {
-			case DIRECTION_N:
-				npcs[npc_keys[i]].position.y -= 1;
-				break;
-			case DIRECTION_E:
-				npcs[npc_keys[i]].position.x += 1;
-				break;
-			case DIRECTION_S:
-				npcs[npc_keys[i]].position.y += 1;
-				break;
-			case DIRECTION_W:
-				npcs[npc_keys[i]].position.x -= 1;
-				break;
-		}
-		
-		npcs[npc_keys[i]].direction = direction;
-		broadcast.npcs[npc_keys[i]] = npcs[npc_keys[i]];
-		
-		direction = weightedDirection[ Math.floor(Math.random() * weightedDirection.length) ];
 	}
 		
 };
+
+Engine.prototype.walkable = function (map, row, col) {
+	console.log("1");
+	if (map.terrain.index[row] !== undefined) {
+		console.log("2");
+		if (map.terrain.index[row][col] !== undefined) {
+			console.log("3");
+			if ((map.terrain.index[row][col][2] !== undefined) &&
+				(map.terrain.index[row][col][2] !== null)) {
+				return false;
+			} else {
+				return true;
+			}
+		}
+	}
+	
+	return false;
+}
 
 Engine.prototype.addBroadcast = function (player) {
 	broadcast.players[player.id] = player;
@@ -125,7 +209,7 @@ Engine.prototype.spawn = function() {
 		life: 100,
 		experience: 0,
 		layers: [0],
-		step: 1,
+		step: 0,
 		steps: [] // Pathfinding
 	};
 	
