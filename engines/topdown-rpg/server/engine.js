@@ -33,18 +33,32 @@ Engine.prototype.initialize = function () {
 Engine.prototype.tick = function (map) {
 		
 	tick_count++;
+    
+    var npc_keys = Object.keys(npcs);
 	
-	if ((tick_count % 1800) == 0) {
-		this.spawn();
+	if (tick_count > 1800) {
+        // Every minute fire and reset
+        tick_count = 0;
+        
+        // If we have less than 10 npc's, spawn a new one:
+        if (npc_keys.length < 10) {
+            this.spawn();
+        }
 	}
 	
 	//var direction 	= weightedDirection[ Math.floor(Math.random() * weightedDirection.length) ];
-	var direction;
-	var npc_keys 	= Object.keys(npcs);
+	var direction   = -1;
 	var i 			= 0;
 	var j 			= 0;
 	
 	for (i = 0; i < npc_keys.length; i++) {
+        
+        direction = -1;
+        
+        if (npcs[npc_keys[i]].sleep > 0) {
+            npcs[npc_keys[i]].sleep--;
+            continue;
+        }
 		
 		if (npcs[npc_keys[i]].step === npcs[npc_keys[i]].steps.length) {
 			// If we have a step equal to the length of the step array, we walked em all, 
@@ -53,8 +67,8 @@ Engine.prototype.tick = function (map) {
 			npcs[npc_keys[i]].steps.length 	= 0;
 			npcs[npc_keys[i]].step 			= 0;
 			
-			// ~10% chance of resuming a walk
-			if (Math.random() < 0.11) {
+			// ~25% chance of resuming a walk
+			if (Math.random() < 0.26) {
 				
 				// What row/col are we in?
 				var col = Math.floor( npcs[npc_keys[i]].position.x / TILE_WIDTH );
@@ -72,24 +86,23 @@ Engine.prototype.tick = function (map) {
 					// Add either our first or an additional tile step (having diminishing odds)
 					if (randomizer > (40 + (12 * j))) {
 						
-						// Can we walk north?
-						if (this.walkable( map, row - 1, col )) {
+						// Can we walk north? (and also was our last direction not south, to avoid walking in circles)
+						if ((this.walkable( map, row - 1, col )) && ( direction !== DIRECTION_S )) {
 							options.push(DIRECTION_N);
 						}
 						
 						// Can we walk east?
-						if (this.walkable( map, row, col + 1 )) {
-							options.push(DIRECTION_E);
+						if ((this.walkable( map, row, col + 1 )) && ( direction !== DIRECTION_W )) {
 							options.push(DIRECTION_E);
 						}
 						
 						// Can we walk south?
-						if (this.walkable( map, row + 1, col )) {
+						if ((this.walkable( map, row + 1, col )) && ( direction !== DIRECTION_N )) {
 							options.push(DIRECTION_S);
 						}
 						
 						// Can we walk west?
-						if (this.walkable( map, row, col - 1 )) {
+						if ((this.walkable( map, row, col - 1 )) && ( direction !== DIRECTION_E )) {
 							options.push(DIRECTION_W);
 						}
 						
@@ -114,15 +127,18 @@ Engine.prototype.tick = function (map) {
 					}
 					
 				}
-			}
-		}
+			} else {
+                // If we aren't resuming our walk, sleep for a second or two
+                npcs[npc_keys[i]].sleep = Math.floor( Math.random() * 100 );
+                broadcast.npcs[npc_keys[i]] = {position: npcs[npc_keys[i]].position,
+                                               direction: npcs[npc_keys[i]].direction};
+            }
+        }
 		
 		if (npcs[npc_keys[i]].steps.length > 0) {
 			
 			var npc_step	= npcs[npc_keys[i]].steps[npcs[npc_keys[i]].step];
-			
-			console.log("pos: " + JSON.stringify(npcs[npc_keys[i]].position) + ", target: " + JSON.stringify(npc_step));
-			
+
 			direction = npcs[npc_keys[i]].direction;
 			
 			if (npcs[npc_keys[i]].position.y > npc_step.y) {
@@ -147,7 +163,8 @@ Engine.prototype.tick = function (map) {
 			}
 			
 			npcs[npc_keys[i]].direction = direction;
-			broadcast.npcs[npc_keys[i]] = npcs[npc_keys[i]];
+			broadcast.npcs[npc_keys[i]] = {position: npcs[npc_keys[i]].position,
+                                           direction: npcs[npc_keys[i]].direction};
 		
 		}
 	}
@@ -210,7 +227,8 @@ Engine.prototype.spawn = function() {
 		experience: 0,
 		layers: [0],
 		step: 0,
-		steps: [] // Pathfinding
+		steps: [], // Pathfinding
+        sleep: 0
 	};
 	
 	// Head: 1, 2, 3

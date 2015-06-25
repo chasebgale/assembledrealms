@@ -190,7 +190,14 @@ var worldLoop = setInterval(function () {
 	
 	engine.tick(map);
     
-    io.emit('update', engine.broadcast());
+    var broadcast = engine.broadcast();
+    
+    if ((Object.getOwnPropertyNames(broadcast.npcs).length > 0) ||
+    (Object.getOwnPropertyNames(broadcast.players).length > 0)) {
+    
+        io.emit('update', broadcast);
+        
+    }
 	
 	engine.broadcastComplete();
     

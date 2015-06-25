@@ -86,7 +86,7 @@ Actors.prototype.update = function (actors) {
 	
 	var keys = Object.keys(actors.npcs);
     for (var i = 0; i < keys.length; i++) {
-		this.npcs[actors.npcs[keys[i]].id].move(actors.npcs[keys[i]]);
+		this.npcs[keys[i]].move(actors.npcs[keys[i]]);
 	}
 	
 };

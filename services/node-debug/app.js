@@ -49,12 +49,17 @@ app.post('/launch', function (req, res, next) {
         // Get all processes running
         pm2.list(function(err, process_list) {
             
+            console.log('/launch called, running processes:');
+            
             // Search for running instance of requested realm
             process_list.forEach(function(proc) {
-                if (proc.name == realmApp) {
+                console.log('checking: ' + proc.name);
+                if (proc.name == realmID) {
                     found_proc.push(proc);
                 }
             });
+            
+            console.log('found ' + found_proc.length);
             
             if (found_proc.length === 0) {
                 // No existing realm server running, spool up new one:
