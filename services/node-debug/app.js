@@ -34,6 +34,11 @@ app.use( bodyParser.urlencoded() ); // to support URL-encoded bodies
 
 app.use(cookieParser('Assembled Realms is a land without secrets...'));
 
+// Catch redis errors
+redisClient.on("error", function (err) {
+    console.log("Error " + err);
+});
+
 // Log to console
 app.use(morgan('dev')); 	
 app.set('view engine', 'ejs'); // set up EJS for templating
