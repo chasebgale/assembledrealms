@@ -8,7 +8,7 @@
 
     <title>Assembled Realms DEBUG</title>
 
-    <link rel="shortcut icon" href="//www.assembledrealms.com/img/favicon.png" )'="">
+    <link rel="shortcut icon" href="//www.assembledrealms.com/img/favicon.png">
 
     <link rel="stylesheet" href="//www.assembledrealms.com/css/root.css">
     <link rel="stylesheet" href="//www.assembledrealms.com/build/css/style.css">
@@ -59,6 +59,7 @@
     <script>
         var DEBUG   = true;
         var ROOT    = '/realms/<%= id %>/';
+        var STATS   = '/realms/<%= id %>/stats';
         var HOST    = window.location.host + ':<%= port %>';
     </script>
     
@@ -82,6 +83,10 @@
     
     <div id="realm" style="margin: 20px auto; width: 896px; padding: 0;"></div>
     
+    <div id="realmStats">
+        <canvas id="memory_cpu" width="400" height="100"></canvas>
+    </div>
+    
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
     <script src="//cdn.socket.io/socket.io-1.2.0.js"></script>
@@ -96,8 +101,33 @@
     <script src="//www.assembledrealms.com/js/pixi.min.js"></script>
 	<script src="//www.assembledrealms.com/js/bigscreen.min.js"></script>
     <script src="//www.assembledrealms.com/js/async.js"></script>
+    <script src="//www.assembledrealms.com/js/smoothie.js"></script>
 
 
+    <script>
+        var memory_series   = undefined;
+        var cpu_series      = undefined;
+        
+        $(document).ready(function () {  
+        
+            memory_series   = new TimeSeries();
+            cpu_series      = new TimeSeries();
+            
+            setInterval(function() {
+                $.get( STATS, function( data ) {
+                    memory_series.append(new Date().getTime(), Math.round(data[0].monit.memory / 1000000));
+                    cpu_series.append(new Date().getTime(), data[0].monit.cpu);
+                });
+            }, 1000);
+
+            var smoothie = new SmoothieChart({ grid: { strokeStyle: 'rgb(125, 0, 0)', fillStyle: 'rgb(60, 0, 0)', lineWidth: 1, millisPerLine: 250, verticalSections: 6 } });
+            smoothie.addTimeSeries(memory_series, { strokeStyle: 'rgb(0, 255, 0)', fillStyle: 'rgba(0, 255, 0, 0.4)', lineWidth: 2 });
+            smoothie.addTimeSeries(cpu_series, { strokeStyle: 'rgb(255, 255, 255)', fillStyle: 'rgba(255, 255, 255, 0.3)', lineWidth: 2 });
+
+            smoothie.streamTo(document.getElementById("memory_cpu"), 1000);
+        });
+    </script>
+    
 </div>
 </body>
 </html>

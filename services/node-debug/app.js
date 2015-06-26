@@ -225,6 +225,19 @@ app.get('/realms/:id', function (req, res, next) {
 	
 });
 
+app.get('/realms/:id/stats', function (req, res, next) {
+    pm2.connect(function(err) {
+        
+        pm2.describe(req.params.id, function (err, list) {
+            if (err) {
+                return res.send(err.message);
+            } 
+            return res.json(list);
+        });
+        
+    });
+});
+
 // Serve up the realm files, when requested:
 app.use('/realms', express.static(__dirname + '/realms'));
 
