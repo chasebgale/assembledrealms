@@ -69,6 +69,9 @@ app.post('/launch', function (req, res, next) {
             if (found_proc.length === 0) {
                 // No existing realm server running, spool up new one:
                 pm2.start(realmApp, { name: realmID, scriptArgs: ['debug'] }, function(err, proc) {
+					
+					pm2.disconnect();
+					
                     if (err) {
                         res.send('ERROR BOOTING: ' + err.message);
                         throw new Error('err');
@@ -79,6 +82,9 @@ app.post('/launch', function (req, res, next) {
             } else {
                 // Existing realm server found, restart it
                 pm2.restart(realmApp, function(err, proc) {
+					
+					pm2.disconnect();
+					
                     if (err) {
                         res.send('ERROR BOOTING: ' + err.message);
                         throw new Error('err');
@@ -234,6 +240,9 @@ app.get('/realms/:id/stats', function (req, res, next) {
     pm2.connect(function(err) {
         
         pm2.describe(req.params.id, function (err, list) {
+			
+			pm2.disconnect();
+			
             if (err) {
                 return res.send(err.message);
             } 
