@@ -117,8 +117,8 @@
             
             setInterval(function() {
                 $.get( STATS, function( data ) {
-                    memory_series.append(new Date().getTime(), Math.round(data[0].monit.memory / 1000000));
-                    cpu_series.append(new Date().getTime(), data[0].monit.cpu);
+                    memory_series.append(new Date().getTime(), Math.round(data.memory / 1000000));
+                    cpu_series.append(new Date().getTime(), data.cpu);
                 });
             }, 1000);
 

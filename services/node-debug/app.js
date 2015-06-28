@@ -246,7 +246,7 @@ app.get('/realms/:id/stats', function (req, res, next) {
             if (err) {
                 return res.send(err.message);
             } 
-            return res.json(list);
+            return res.json({cpu: list[0].monit.cpu, memory: list[0].monit.memory});
         });
         
     });
