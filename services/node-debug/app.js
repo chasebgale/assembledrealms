@@ -203,7 +203,7 @@ app.get('/realms/:id', function (req, res, next) {
 				if (realm_response.statusCode == 200) {
 					
 					res.cookie('realm-' + req.params.id + '-debug', guid, {domain: '.assembledrealms.com', maxAge: (hour_milli * 72)});
-					res.render('realm', {id: req.params.id, port: port, scripts: scripts});
+					res.render('realm', {id: req.params.id, host: req.headers.host, port: port, scripts: scripts});
 				
 				} else {
 					

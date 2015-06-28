@@ -172,11 +172,8 @@ Engine.prototype.tick = function (map) {
 };
 
 Engine.prototype.walkable = function (map, row, col) {
-	console.log("1");
 	if (map.terrain.index[row] !== undefined) {
-		console.log("2");
 		if (map.terrain.index[row][col] !== undefined) {
-			console.log("3");
 			if ((map.terrain.index[row][col][2] !== undefined) &&
 				(map.terrain.index[row][col][2] !== null)) {
 				return false;

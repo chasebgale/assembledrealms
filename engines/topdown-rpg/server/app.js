@@ -212,7 +212,7 @@ if (debug) {
 	// Listen on random port because lots (hopefully) of other nodes are running too!
 	http.listen(0, function(){
 		// Log the port to the console
-		// console.log("port: " + http.address().port);
+		console.log("port: " + http.address().port);
         
         db.set(realmID, http.address().port);
         db.set(realmID + '-time', new Date().toString());
