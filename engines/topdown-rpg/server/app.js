@@ -13,12 +13,14 @@ var db     		= redis.createClient();
 // If second argument is passed, we are in debug mode:
 var debug 			= (process.argv[2] !== undefined);
 
-var directory_arr = __dirname.split('/');
-directory_arr.pop();
-var realmID	= directory_arr.pop();
+// Grab our realm from the folder structure
+var directory_arr 	= __dirname.split('/');
+var realmID			= directory_arr[directory_arr.length - 2];
 
-var debug_player_count  = 0;
+// Increment and assign the smallest ids to clients
+var counter = 0;
 
+// Grab the map and parse into an object
 var map = JSON.parse( fs.readFileSync(__dirname + '/../client/maps/town.json') );
 
 var engine = new Engine();
@@ -63,7 +65,7 @@ io.use(function(socket, next) {
 		for (var i = 0; i < cookies.length; i++) {
 			worker = cookies[i].split("=");
 			if (worker[0].toString().trim() == target) {
-				uuid = worker[1].toString().trim();
+				uuid = realmID + "-" + worker[1].toString().trim();
 				break;
 			}
 		}
@@ -95,14 +97,14 @@ io.on('connection', function (socket) {
 	db.get(uuid, function(error, player) {
 		if (player == "new") {
 			player = {
-                id: debug_player_count,
+                id: counter,
                 position: {x: 220, y: 220},
 				direction: 0,
                 life: 100,
                 experience: 0
             };
             
-            debug_player_count++;
+            counter++;
 			
 			db.set(uuid, JSON.stringify(player), function (error) {
             
@@ -167,10 +169,12 @@ app.use(morgan('dev'));
 app.get('/auth/:id/:uuid', function(req, res, next) {
     // TODO: Check the server calling this function is, in fact, assembledrealms.com
     
-    db.get(req.params.uuid, function(error, reply) {
+	var uuid = realmID + "-" + req.params.uuid;
+	
+    db.get(uuid, function(error, reply) {
         if (reply === null) {
             
-            db.set(req.params.uuid, req.params.id, function (error) {
+            db.set(uuid, req.params.id, function (error) {
         
                 if (error) {
                     console.error(error);
@@ -213,6 +217,15 @@ if (debug) {
 	http.listen(0, function(){
 		// Log the port to the console
 		console.log("port: " + http.address().port);
+
+		// In debug mode, trash any DB entries on (re)start so we don't get into trouble
+		db.keys(realmID + "-*", function (err, keys) {
+			keys.forEach(function (key, pos) {
+				db.del(key, function (err) {
+					console.log("Deleted key: " + key);
+				});
+			});
+		});
         
         db.set(realmID, http.address().port);
         db.set(realmID + '-time', new Date().toString());

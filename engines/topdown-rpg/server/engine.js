@@ -187,7 +187,8 @@ Engine.prototype.walkable = function (map, row, col) {
 }
 
 Engine.prototype.addBroadcast = function (player) {
-	broadcast.players[player.id] = player;
+	broadcast.players[player.id] = {position: player.position,
+									direction: player.direction};
 };
 
 Engine.prototype.broadcastComplete = function () {
