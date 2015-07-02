@@ -42,6 +42,7 @@ var allowCrossDomain = function(req, res, next) {
 app.use(allowCrossDomain);
 app.use(cookieParse());
 
+// Catch memory leaks
 memwatch.on('leak', function(info) {
 	console.log(JSON.stringify(info));
 });
