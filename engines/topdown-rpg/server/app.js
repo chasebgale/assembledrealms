@@ -228,7 +228,7 @@ if (debug) {
 		});
         
         db.set(realmID, http.address().port);
-        db.set(realmID + '-time', new Date().toString());
+        db.set(realmID + 'time', new Date().toString());
         
 	});
 } else {
