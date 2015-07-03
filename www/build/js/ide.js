@@ -454,7 +454,7 @@ function initialize(projectID, projectDomain) {
         
     });
     
-    $("#mapToolbar [data-toggle='tooltip']").tooltip();
+    //$("#mapToolbar [data-toggle='tooltip']").tooltip();
     
     Map.onResourceLoaded = function (json, source) {
         var template = $('#resource_template').html();
@@ -464,6 +464,9 @@ function initialize(projectID, projectDomain) {
     };
 
     loadRealmRoot();
+	
+	// Tooltips
+	$("[data-toggle='tooltip']").tooltip();
 	
 	console.log("____ ____ ____ ____ _  _ ___  _    ____ ___     ____ ____ ____ _    _  _ ____");
 	console.log("|__| [__  [__  |___ |\\\/| |__] |    |___ |  \\\    |__/ |___ |__| |    |\\\/| [__ ");
@@ -898,7 +901,7 @@ function loadEditor(filename, content, displayRendered) {
                         } 
                     }, '\t');
                     
-                    
+                    $("#mapToolbar [data-toggle='tooltip']").tooltip();
                     $("#tab-nav-map").css('display', 'block');
 					renderTarget = $("#tab-nav-map a:first");
                 }
