@@ -133,66 +133,49 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                 <div class="spacer"></div>
                 <button type="button" id="btnDebug" class="btn btn-default btn-xs"><i class="fa fa-caret-square-o-right fa-fw"></i> Debug</button>
                 <button type="button" id="btnCommit" class="btn btn-default btn-xs"><i class="fa fa-check fa-fw"></i> Commit</button>
+				<div class="spacer"></div>
+				<div class="btn-group">
+					<button type="button" id="btnView" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					<i class="fa fa-eye"></i> Rendered Markdown <span class="caret"></span>
+					</button>
+					<ul id="ulView" class="dropdown-menu">
+						<li id="tab-nav-editor" class="display: none;"><a href="#editor">Raw Text</a></li>
+						<li id="tab-nav-image" style="display: none;"><a href="#image">Raw Image</a></li>
+						<li id="tab-nav-map" style="display: none;"><a href="#map">Map Editor</a></li>
+						<li id="tab-nav-markdown" style="display: none;"><a href="#markdown">Rendered Markdown</a></li>
+						<li id="tab-nav-file" style="display: none;"><a href="#file">File Tools</a></li>
+					</ul>
+				</div>
             </div>
             <a href="http://www.assembledrealms.com" style="float: right;"><img src="/build/img/logo.png"></img></a>
         </div>
     
-        <!--<div id="leftBar">
-			<button id="btnCommit" type="button" class="btn btn-default">
-				<span class="glyphicon glyphicon-open"></span> Commit
-			</button>
-			<button id="btnDebug" type="button" class="btn btn-default">
-				<span class="glyphicon glyphicon-play"></span> Debug
-			</button>
-        -->
-        <div id="tree" class="panel panel-default">
+        <div id="tree">
             <ul id="explorer" class="filetree treeview">
             </ul>
         </div>
-        <!--
-			<button id="btnNewFile" type="button" class="btn btn-default">
-				<span class="glyphicon glyphicon-plus"></span> New File
-			</button>
-			<button id="btnUploadResource" type="button" class="btn btn-default">
-				<span class="fa fa-upload"></span> Add Media
-			</button>
-        
-        </div>
-        -->
 		
         <div id="tabs">
-            <ul class="nav nav-tabs" id="mapTabs">
-                <li id="tab-nav-editor" class="active"><a href="#editor" data-toggle="tab">Raw Text</a></li>
-				<li id="tab-nav-image" style="display: none;"><a href="#image" data-toggle="tab">Raw Image</a></li>
-                <li id="tab-nav-map" style="display: none;"><a href="#map" data-toggle="tab">Map Editor</a></li>
-                <li id="tab-nav-markdown" style="display: none;"><a href="#markdown" data-toggle="tab">Rendered Markdown</a></li>
-				<li id="tab-nav-file" style="display: none;"><a href="#file" data-toggle="tab">File Tools</a></li>
-            </ul>
-
-            <div class="tab-content" style="border: 1px solid #ddd; border-top-width: 0; border-radius: 0 0 4px 4px;">
-
-                <div class="tab-pane active" id="editor"></div>
-				<div class="tab-pane" id="image"></div>
-                <div class="tab-pane" id="map">
-                    <nav class="navbar navbar-light" role="navigation">
-                        <div class="container-fluid">
-                            <div class="collapse navbar-collapse">
-                                <ul class="nav navbar-nav" id="mapToolbar">
-                                </ul>
-                            </div>
-                        </div>
-                    </nav>
-                    <div id="mapContainer">
-                    
-                    </div>
-					<div id="mapDetails">
-                    
-                    </div>
-                </div>
-
-                <div class="tab-pane" id="markdown"></div>
-				<div class="tab-pane" id="file"></div>
-            </div>
+            <div class="tab-pane active" id="editor"></div>
+			<div class="tab-pane" id="image"></div>
+			<div class="tab-pane" id="map">
+				<nav class="navbar navbar-light" role="navigation">
+					<div class="container-fluid">
+						<div class="collapse navbar-collapse">
+							<ul class="nav navbar-nav" id="mapToolbar">
+							</ul>
+						</div>
+					</div>
+				</nav>
+				<div id="mapContainer">
+				
+				</div>
+				<div id="mapDetails">
+				
+				</div>
+			</div>
+			<div class="tab-pane" id="markdown"></div>
+			<div class="tab-pane" id="file"></div>
         </div>
 
     </section>

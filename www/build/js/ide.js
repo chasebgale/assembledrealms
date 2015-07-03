@@ -10,12 +10,7 @@ var __trackedFiles      = [];
 var __commitFiles       = [];
 
 function resize() {
-    var workAreaHeight = $("#tree").height();
-    var tabsHeight = $("#mapTabs").height();
-    
-    var calculatedHeight = workAreaHeight - tabsHeight;
-    
-    $("#editor").height(calculatedHeight);
+    $("#editor").height( $("#tree").height() );
 }
 
 function initialize(projectID, projectDomain) {
@@ -64,17 +59,22 @@ function initialize(projectID, projectDomain) {
 
     });
 
-    $('#mapTabs a').on("click", function (e) {
+    $('#ulView a').on("click", function (e) {
         e.preventDefault();
-        $(this).tab('show');
+        // Hide all tabs
+		$("#tabs .tab-pane").hide();
+		
+		if ($(this).attr('href') == "#markdown") {
+			$("#markdown").html(marked(__editor.getValue()));
+		} else if ($(this).attr('href') == "#editor") {
+			__editor.renderer.updateFull()
+		}
+		
+		// show tab
+		$($(this).attr('href')).show();
+		
+		$("#btnView").html('<i class="fa fa-eye"></i> ' + $(this).text() + ' <span class="caret"></span>');
     });
-
-    $('#tab-nav-markdown a:first').on('shown.bs.tab', function (e) {
-        //e.target // activated tab
-        //e.relatedTarget // previous tab
-        $("#markdown").html(marked(__editor.getValue()));
-    });
-
 
 /*
     
@@ -464,6 +464,12 @@ function initialize(projectID, projectDomain) {
     };
 
     loadRealmRoot();
+	
+	console.log("____ ____ ____ ____ _  _ ___  _    ____ ___     ____ ____ ____ _    _  _ ____");
+	console.log("|__| [__  [__  |___ |\\\/| |__] |    |___ |  \\\    |__/ |___ |__| |    |\\\/| [__ ");
+	console.log("|  | ___] ___] |___ |  | |__] |___ |___ |__/    |  \\\ |___ |  | |___ |  | ___]");
+	console.log(" ");
+	console.log("Build: 108 07/02/2015 - Thanks for taking a look!");
     
 }
 
@@ -747,8 +753,6 @@ function loadRealmRoot() {
             welcomeDOM.addClass('activefile');
         
             loadRealmFile(welcomeDOM.attr('data-id'), 'WELCOME.md', 'WELCOME.md', true);
-            
-            $('#tab-nav-markdown a:first').tab('show');
         }
         
         $("#loading").fadeOut(500, function () {
@@ -821,7 +825,7 @@ function realmResourceURL(path) {
 }
 
 function displayImage() {
-    $("#mapTabs li").css('display', 'none');
+    $("#ulView li").css('display', 'none');
     $("#tab-nav-image").css('display', 'block');
     $('#tab-nav-image a:first').tab('show');
 }
@@ -830,8 +834,10 @@ function loadEditor(filename, content, displayRendered) {
 
     __editor.off("change", editor_onChange);
     var ext = filename.split('.').pop();
+	
+	var renderTarget;
 
-    $("#mapTabs li").css('display', 'none');
+    $("#ulView li").css('display', 'none');
     
     if (isImageFile(filename)) {
 
@@ -851,6 +857,10 @@ function loadEditor(filename, content, displayRendered) {
             break;
         case "json":
             __editor.getSession().setMode("ace/mode/json");
+			
+			if (displayRendered === undefined) {
+				displayRendered = true;
+			}
             
             try {
                 var parsed = JSON.parse(content);
@@ -890,6 +900,7 @@ function loadEditor(filename, content, displayRendered) {
                     
                     
                     $("#tab-nav-map").css('display', 'block');
+					renderTarget = $("#tab-nav-map a:first");
                 }
             } catch (e) {
                 console.log(e);
@@ -900,8 +911,12 @@ function loadEditor(filename, content, displayRendered) {
             __editor.getSession().setMode("ace/mode/html");
             break;
         case "md":
+			if (displayRendered === undefined) {
+				displayRendered = true;
+			}
             __editor.getSession().setMode("ace/mode/plain_text");
             $("#tab-nav-markdown").css('display', 'block');
+			renderTarget = $("#tab-nav-markdown a:first");
             $("#markdown").html(marked(content));
             break;
             break;
@@ -914,12 +929,18 @@ function loadEditor(filename, content, displayRendered) {
 	__editor.clearSelection();
 	__editor.moveCursorTo(0, 0);
 	
+	$("#tabs .tab-pane").hide();
+	
 	if (displayRendered) {
 		// TODO: Switch between rendered things. 
-		$('#tab-nav-markdown a:first').tab('show');
+		$(renderTarget.attr("href")).show();
+		$("#btnView").html('<i class="fa fa-eye"></i> ' + renderTarget.text() + ' <span class="caret"></span>');
 	} else {
-		$('#tab-nav-editor a:first').tab('show');
+		$($('#tab-nav-editor a:first').attr('href')).show();
+		$("#btnView").html('<i class="fa fa-eye"></i> ' + $('#tab-nav-editor a:first').text() + ' <span class="caret"></span>');
 	}
+	
+	
     
     __editor.on("change", editor_onChange);
 }

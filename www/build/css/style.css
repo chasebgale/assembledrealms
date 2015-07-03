@@ -5,8 +5,8 @@
 div#tree {
     overflow-y: scroll;
     position: absolute;
-    top: 34px;
-    bottom: 10px;
+    top: 26px;
+    bottom: 0;
     width: 200px;
     margin: 0;
     left: 10px;
@@ -19,11 +19,12 @@ div#leftBar {
 }
 
 div#tabs {
+	overflow-y: scroll;
     position: absolute;
-    top: 34px;
+    top: 26px;
     left: 209px;
-    right: 10px;
-    bottom: 10px;
+    right: 0;
+    bottom: 0;
 }
 
 div#editor {
@@ -32,7 +33,7 @@ div#editor {
 }
 
 div#map {
-    height: 600px;
+
 }
 
 div#markdown {
