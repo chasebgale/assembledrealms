@@ -132,7 +132,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                 <button type="button" id="btnUploadResource" class="btn btn-default btn-xs"><i class="fa fa-upload fa-fw"></i> Upload File</button>
                 <div class="spacer"></div>
                 <button type="button" id="btnDebug" class="btn btn-default btn-xs"><i class="fa fa-caret-square-o-right fa-fw"></i> Debug</button>
-                <button type="button" id="btnCommit" class="btn btn-default btn-xs"><i class="fa fa-check fa-fw"></i> Commit</button>
+                <button type="button" id="btnCommit" class="btn btn-default btn-xs"><i class="fa fa-cloud-upload fa-fw"></i> Commit</button>
 				<div class="spacer"></div>
 				<div class="btn-group">
 					<button type="button" id="btnView" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
