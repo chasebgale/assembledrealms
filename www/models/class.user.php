@@ -182,9 +182,39 @@ class loggedInUser {
         $stmt->close();
 	}
     
-    public function onlineRealm($realm_id)
+    public function onlineRealm($realm_id, $realm_level)
 	{
 		global $mysqli,$db_table_prefix;
+		
+		// Bring the server online, if necessary
+		if ($realm_level > 0) {
+			$curl 					= curl_init();
+			$curl_data 				= array('name'	=>'realm-' . $realm_id . '.assembledrealms.com',
+											'region'=>'nyc3',
+											'size'	=>'512mb'
+											'image'	=>'realm_snapshot');
+			$digital_ocean_token 	= "254c9a09018914f98dd83d0ab1670f307b036fe761dda0d7eaeee851a37eb1cd";
+
+			curl_setopt_array($curl, array(
+				CURLOPT_HTTPHEADER 		=> array('Content-Type: application/json', 'Authorization: Bearer ' . $digital_ocean_token),
+				CURLOPT_RETURNTRANSFER 	=> true,
+				CURLOPT_POST            => 1,            
+				CURLOPT_POSTFIELDS     	=> json_encode($curl_data),
+				CURLOPT_SSL_VERIFYHOST 	=> 0,
+				CURLOPT_SSL_VERIFYPEER 	=> false,
+				CURLOPT_URL 			=> 'https://api.digitalocean.com/v2/droplets'
+			));
+
+			$resp = curl_exec($curl);
+			curl_close($curl);
+			
+			$decoded = json_decode($resp, true);
+			
+			// TODO: INSPECT HTTP RESPONSE CODE, IF IN THE 400 RANGE, 
+			// RETURN FALSE AND LOG THE ERROR, ELSE RECORD INFO AND PROCEED
+		}
+		
+		
 		$stmt = $mysqli->prepare("UPDATE realms
 						 SET status = 1
 						 WHERE
