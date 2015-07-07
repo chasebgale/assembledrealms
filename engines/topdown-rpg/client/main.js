@@ -14,11 +14,11 @@ $(document).ready(function () {
 		stats.setMode(0); // 0: fps, 1: ms
 
 		// align top-left
-		stats.domElement.style.position = 'absolute';
-		stats.domElement.style.left = '32px';
-		stats.domElement.style.top = '564px';
+		//stats.domElement.style.position = 'absolute';
+		//stats.domElement.style.left = '32px';
+		//stats.domElement.style.top = '564px';
 
-		document.body.appendChild( stats.domElement );
+		document.getElementById("realmStats").appendChild( stats.domElement );
 	}
 	
 	function animate() {

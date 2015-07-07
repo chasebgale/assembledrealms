@@ -8,11 +8,7 @@ var RENDER_STACK_LANDSCAPE = 0;
 var RENDER_STACK_AVATAR = 1;
 
 // sin(45degrees) ~= .707 and cos(45degrees) ~= .707
-// var MOVEMENT_ANGLE = 0.707;
-
-// sin && cos of 27 degrees
-var MOVEMENT_ANGLE_SIN = 0.454;
-var MOVEMENT_ANGLE_COS = 0.891;
+var MOVEMENT_ANGLE = 0.707;
 
 var CANVAS_WIDTH = 896;
 var CANVAS_WIDTH_HALF = 448;

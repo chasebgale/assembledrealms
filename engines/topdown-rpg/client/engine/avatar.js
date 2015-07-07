@@ -236,9 +236,11 @@ Avatar.prototype.tick = function () {
     if ($.inArray('w', keys) > -1) {
 		
 		if ($.inArray('a', keys) > -1) {
+			amount *= MOVEMENT_ANGLE;
 			self.engine.position.x -= amount;
 			self.direction = DIRECTION_W;
 		} else if ($.inArray('d', keys) > -1) {
+			amount *= MOVEMENT_ANGLE;
 			self.engine.position.x += amount;
 			self.direction = DIRECTION_E;
 		} else {
@@ -254,9 +256,11 @@ Avatar.prototype.tick = function () {
 	if ($.inArray('s', keys) > -1) {
 		
 		if ($.inArray('a', keys) > -1) {
+			amount *= MOVEMENT_ANGLE;
 			self.engine.position.x -= amount;
 			self.direction = DIRECTION_W;
 		} else if ($.inArray('d', keys) > -1) {
+			amount *= MOVEMENT_ANGLE;
 			self.engine.position.x += amount;
 			self.direction = DIRECTION_E;
 		} else {
