@@ -185,18 +185,21 @@ class loggedInUser {
     public function onlineRealm($realm_id, $realm_level)
 	{
 		global $mysqli,$db_table_prefix;
+        
+        $logfile = '/home/tmp/digital_ocean_api.log';
 		
 		// Bring the server online, if necessary
 		if ($realm_level > 0) {
 			$curl 					= curl_init();
 			$curl_data 				= array('name'	=>'realm-' . $realm_id . '.assembledrealms.com',
 											'region'=>'nyc3',
-											'size'	=>'512mb'
-											'image'	=>'realm_snapshot');
+											'size'	=>'512mb',
+											'image'	=>12588564);
 			$digital_ocean_token 	= "254c9a09018914f98dd83d0ab1670f307b036fe761dda0d7eaeee851a37eb1cd";
 
 			curl_setopt_array($curl, array(
 				CURLOPT_HTTPHEADER 		=> array('Content-Type: application/json', 'Authorization: Bearer ' . $digital_ocean_token),
+                CURLOPT_HEADER          => true,
 				CURLOPT_RETURNTRANSFER 	=> true,
 				CURLOPT_POST            => 1,            
 				CURLOPT_POSTFIELDS     	=> json_encode($curl_data),
@@ -205,13 +208,21 @@ class loggedInUser {
 				CURLOPT_URL 			=> 'https://api.digitalocean.com/v2/droplets'
 			));
 
-			$resp = curl_exec($curl);
+			$resp       = curl_exec($curl);
+            $httpcode   = intval(curl_getinfo($curl, CURLINFO_HTTP_CODE));
+            
 			curl_close($curl);
 			
 			$decoded = json_decode($resp, true);
 			
-			// TODO: INSPECT HTTP RESPONSE CODE, IF IN THE 400 RANGE, 
-			// RETURN FALSE AND LOG THE ERROR, ELSE RECORD INFO AND PROCEED
+            if (($httpcode < 200) && ($httpcode > 299)) {
+                // We have an error:
+                error_log($httpcode . ": " . $resp, 3, $logfile);
+                return false;
+            } else {
+                // TODO: Do it better
+                error_log($httpcode . ": " . $resp, 3, $logfile);
+            }
 		}
 		
 		
@@ -222,6 +233,8 @@ class loggedInUser {
         $stmt->bind_param("i", $realm_id);
         $stmt->execute();
         $stmt->close();
+        
+        return true;
 	}
     
     public function depositToRealm($realm_id, $amount) {

@@ -76,6 +76,8 @@ $(document).ready(function () {
         button.attr('disabled', true);
         button.html('<i class="fa fa-cog fa-spin"></i> Bring Online');
         
+        var server_type = $("input[name=serverTypeRadios]:checked").val();
+        
         $.ajax({
             url: 'manager.php',
             type: 'post',
@@ -83,7 +85,7 @@ $(document).ready(function () {
             data: {
                 directive: 'online',
                 realm_id: __realmID,
-                server: 0
+                server: server_type
             }
         })
         .done(function (data) {
@@ -94,6 +96,8 @@ $(document).ready(function () {
                 $("#onlineOfflineBtn").attr('data-target', '#modalTakeRealmOnline');
                 $("#onlineOfflineBtn").text('Take Realm Online');
                 $("#onlineOfflineDescription").html('Your realm is currently <strong>offline</strong>. Click this button to allow other users to connect to your realm and enjoy the fruits of your hard work!');
+            } else {
+                alert("FAILURE!");
             }
         })
         .fail(function(data) {

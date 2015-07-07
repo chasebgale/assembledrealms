@@ -105,8 +105,16 @@ if ($method == 'POST') {
     
     if ($directive == 'online') {
         // TODO: Bring up droplet if not on free-tier
-        $loggedInUser->onlineRealm($realm_id);
-        echo json_encode( (object) ['message' => 'OK'] );
+        
+        $server_type = $_POST['server'];
+        
+        $success = $loggedInUser->onlineRealm($realm_id, $server_type);
+        
+        if ($success == true) {
+            echo json_encode( (object) ['message' => 'OK'] );
+        } else {
+            echo json_encode( (object) ['message' => 'FAILURE'] );
+        }
         die();
     }
     
@@ -429,7 +437,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                             <div class="panel-heading">
                                 <div class="radio">
                                     <label>
-                                        <input type="radio" name="serverTypeRadios" id="typeFree" value="free" checked>
+                                        <input type="radio" name="serverTypeRadios" id="typeFree" value="0" checked>
                                         <span class="h4">Shared Server</span>
                                     </label>
                                 </div>
@@ -450,7 +458,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                             <div class="panel-heading">
                                 <div class="radio">
                                     <label>
-                                        <input type="radio" name="serverTypeRadios" id="typePaid1" value="paid1" checked>
+                                        <input type="radio" name="serverTypeRadios" id="typePaid1" value="1" checked>
                                         <span class="h4">Small Private Server</span>
                                     </label>
                                 </div>
