@@ -149,8 +149,6 @@ Avatar.prototype.tick = function () {
     }
     
     var amount 				= 2;
-    var amount_angle_sin 	= 2 * MOVEMENT_ANGLE_SIN;
-    var amount_angle_cos 	= 2 * MOVEMENT_ANGLE_COS;
     var animationSpeed 		= .2;
     
     var wasMoving 		= self.moving;
@@ -219,12 +217,8 @@ Avatar.prototype.tick = function () {
             self.sprite.children[self.direction].visible = true;
             
             if (self.moving) {
-            
-                self.sprite.children[self.direction].play();
-                
+                self.sprite.children[self.direction].play();   
             }
-            
-            //self.tick(engine, PIXI);
         };
         
         self.sprite.children[self.direction + 4].visible = true;
@@ -236,15 +230,41 @@ Avatar.prototype.tick = function () {
     
     if ($.inArray('shift', keys) > -1) {
         amount *= 2;
-        amount_angle_sin *= 2;
-        amount_angle_cos *= 2;
         animationSpeed *= 2;
     }
     
     if ($.inArray('w', keys) > -1) {
+		
+		if ($.inArray('a', keys) > -1) {
+			self.engine.position.x -= amount;
+			self.direction = DIRECTION_W;
+		} else if ($.inArray('d', keys) > -1) {
+			self.engine.position.x += amount;
+			self.direction = DIRECTION_E;
+		} else {
+			self.direction = DIRECTION_N;
+		}
+		
         self.engine.position.y -= amount;
         self.moving = true;
-        self.direction = DIRECTION_N;
+        isStepLegal();
+        return;
+    }
+	
+	if ($.inArray('s', keys) > -1) {
+		
+		if ($.inArray('a', keys) > -1) {
+			self.engine.position.x -= amount;
+			self.direction = DIRECTION_W;
+		} else if ($.inArray('d', keys) > -1) {
+			self.engine.position.x += amount;
+			self.direction = DIRECTION_E;
+		} else {
+			self.direction = DIRECTION_S;
+		}
+		
+        self.engine.position.y += amount;
+        self.moving = true;
         isStepLegal();
         return;
     }
@@ -253,14 +273,6 @@ Avatar.prototype.tick = function () {
         self.engine.position.x -= amount;
         self.moving = true;
         self.direction = DIRECTION_W;
-        isStepLegal();
-        return;
-    }
-    
-    if ($.inArray('s', keys) > -1) {
-        self.engine.position.y += amount;
-        self.moving = true;
-        self.direction = DIRECTION_S;
         isStepLegal();
         return;
     }
