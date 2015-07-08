@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Assembled Realms DEBUG</title>
+
+    <link rel="shortcut icon" href="//www.assembledrealms.com/img/favicon.png">
+
+    <link rel="stylesheet" href="//www.assembledrealms.com/css/root.css">
+    <link rel="stylesheet" href="//www.assembledrealms.com/build/css/style.css">
+
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.css">
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//www.assembledrealms.com/css/bootstrap-theme.css">
+    
+    <style>
+        html, body {
+            height:		100%;
+			margin: 	0;
+			padding: 	0;
+        }
+    </style>
+    
+    <script>
+        var DEBUG   = true;
+        var ROOT    = '/realms/<%= id %>/';
+        var STATS   = '/realms/<%= id %>/stats';
+        var HOST    = window.location.host + ':<%= port %>';
+    </script>
+    
+</head>
+
+<body style="padding-top: 0px; padding-bottom: 0px; padding-left: 0px;" class="">
+
+<div id="wrapper">
+    
+    <div id="commandBar">
+        <div id="commandBarButtons">
+			<button type="button" id="btnReboot" class="btn btn-default btn-xs"><i class="fa fa-refresh fa-fw"></i> Reboot</button>
+			<button type="button" id="btnCommand" class="btn btn-default btn-xs"><i class="fa fa-keyboard-o fa-fw"></i> Message -> Server</button>
+			<div class="spacer"></div>
+            <button type="button" id="btnScreenshot" class="btn btn-default btn-xs"><i class="fa fa-camera-retro fa-fw"></i> Take Screenshot</button>
+            <div class="spacer"></div>
+            <button type="button" id="btnFPS" class="btn btn-default btn-xs active"><i class="fa fa-check-square-o fa-fw"></i> FPS</button>
+            <button type="button" id="btnServerDiagnostics" class="btn btn-default btn-xs"><i class="fa fa-square-o fa-fw"></i> Server Diagnostics</button>
+        </div>
+        <a href="http://www.assembledrealms.com" style="float: right;"><img src="//www.assembledrealms.com/build/img/logo.png"></a>
+    </div>
+    
+    <div id="realm" style="margin: 20px auto; width: 896px; padding: 0;"></div>
+    
+    <div id="realmStats">
+        <canvas id="memory_cpu" width="200" height="50"></canvas>
+    </div>
+    
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="//<%= host %>:<%= port %>/socket.io/socket.io.js"></script>
+	
+	<!--<script src="//cdn.socket.io/socket.io-1.2.0.js"></script>-->
+    
+<% for(var i=0; i<scripts.length; i++) { %>
+    <script src="<%= scripts[i] %>"></script>
+<% } %>
+
+    <script src="//www.assembledrealms.com/build/js/utilities.js"></script>
+    <script src="//www.assembledrealms.com/build/js/stats.min.js"></script>
+    <script src="//www.assembledrealms.com/js/keyboard.js"></script>
+    <script src="//www.assembledrealms.com/js/pixi.min.js"></script>
+	<script src="//www.assembledrealms.com/js/bigscreen.min.js"></script>
+    <script src="//www.assembledrealms.com/js/async.js"></script>
+    <script src="//www.assembledrealms.com/js/smoothie.js"></script>
+
+
+    <script>
+        var memory_series   = undefined;
+        var cpu_series      = undefined;
+        
+        $(document).ready(function () {  
+        
+            memory_series   = new TimeSeries();
+            cpu_series      = new TimeSeries();
+            
+            setInterval(function() {
+                $.get( STATS, function( data ) {
+                    memory_series.append(new Date().getTime(), Math.round(data.memory / 1000000));
+                    cpu_series.append(new Date().getTime(), data.cpu);
+                });
+            }, 1000);
+
+            var smoothie = new SmoothieChart({ grid: { strokeStyle: 'rgb(125, 0, 0)', fillStyle: 'rgb(60, 0, 0)', lineWidth: 1, millisPerLine: 250, verticalSections: 6 } });
+            smoothie.addTimeSeries(memory_series, { strokeStyle: 'rgb(0, 255, 0)', fillStyle: 'rgba(0, 255, 0, 0.4)', lineWidth: 2 });
+            smoothie.addTimeSeries(cpu_series, { strokeStyle: 'rgb(255, 255, 255)', fillStyle: 'rgba(255, 255, 255, 0.3)', lineWidth: 2 });
+
+            smoothie.streamTo(document.getElementById("memory_cpu"), 1000);
+        });
+    </script>
+    
+</div>
+</body>
+</html>

@@ -54,14 +54,6 @@ if ($method == 'POST') {
             }
         }
         
-        if ($directive == 'markdown') {
-            if (isset($_POST['realmID'])) {
-                if (is_numeric($_POST['realmID'])) {
-                    echo json_encode( $loggedInUser->fetchRealmMarkdown($_POST['realmID']) );
-                }
-            }
-        }
-        
     }
     
     die();
@@ -113,21 +105,21 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
 <div id="content" class="container">
     
-    
     <div id="realmBar" class="center-block clearfix" style="margin-bottom: 40px;">
         
         <div class="container-fluid">
 
-        <div class="row">
-            <div class="col-md-2">&nbsp;</div>
-            <div class="col-md-8"><h2 class="text-center" style="margin-top: 0;"><?=$realm['title']?></h2></div>
-            <div class="col-md-2" style="padding-right: 0;">
-                <h4 class="text-right"><small>
-                    <i class="fa fa-heart"></i>&nbsp;<span id="loveCount"><?=$realm['loves']?></span>
-                    &nbsp;&nbsp;
-                    <i class="fa fa-comments"></i>&nbsp;<span id="commentCount"><?=$realm['comments']?></span>
-                </small></h4></div>
-        </div>
+			<div class="row">
+				<div class="col-md-2">&nbsp;</div>
+				<div class="col-md-8"><h2 class="text-center" style="margin-top: 0;"><?=$realm['title']?></h2></div>
+				<div class="col-md-2" style="padding-right: 0;">
+					<h4 class="text-right"><small>
+						<i class="fa fa-heart"></i>&nbsp;<span id="loveCount"><?=$realm['loves']?></span>
+						&nbsp;&nbsp;
+						<i class="fa fa-comments"></i>&nbsp;<span id="commentCount"><?=$realm['comments']?></span>
+					</small></h4>
+				</div>
+			</div>
         
         </div>
 
@@ -150,15 +142,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
             
             <button id="btnComment" type="button" class="btn btn-default navbar-btn"><i class="fa fa-comments-o"></i> Comment</button>
         </div>
-            
-        <!--
-        <div class="container">
-            <button type="button" class="btn btn-default navbar-btn" data-toggle="button"><i class="fa fa-heart-o"></i> Love</button>
-            <button type="button" class="btn btn-default navbar-btn active" data-toggle="button"><i class="fa fa-heart"></i>  Loved!</button>
-        </div>
-    
-        Array ( [id] => 43 [user_id] => 1 [title] => Just Another REALM [description] => This is a short description, I don't really feel like writing one. [status] => 1 [players] => 8 [funds] => 0.00 [screenshots] => 2 [loves] => 14 [url] => debug-01.assembledrealms.com ) 1
-        -->
+		
     </div>
     
     <?php
@@ -172,68 +156,68 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     
     <div>
         
-    <ul id="tabs" class="nav nav-tabs" role="tablist" style="margin-top: 60px;">
-        <li class="active"><a href="#tab_readme" role="tab" data-toggle="tab">Readme</a></li>
-        <?php if ($realm['show_funding']) { ?>
-        <li><a href="#tab_funding" role="tab" data-toggle="tab">Funding</a></li>
-        <?php } ?>
-        <li><a href="#tab_comments" role="tab" data-toggle="tab">Comments</a></li>
-        <li><a href="#tab_credits" role="tab" data-toggle="tab">Credits</a></li>
-    </ul>
+		<ul id="tabs" class="nav nav-tabs" role="tablist" style="margin-top: 60px;">
+			<li class="active"><a href="#tab_readme" role="tab" data-toggle="tab">Readme</a></li>
+			<?php if ($realm['show_funding']) { ?>
+			<li><a href="#tab_funding" role="tab" data-toggle="tab">Funding</a></li>
+			<?php } ?>
+			<li><a href="#tab_comments" role="tab" data-toggle="tab">Comments</a></li>
+			<li><a href="#tab_credits" role="tab" data-toggle="tab">Credits</a></li>
+		</ul>
     
-    <!-- Tab panes -->
-    <div class="tab-content">
+		<!-- Tab panes -->
+		<div class="tab-content">
     
-        <div id="tab_readme" style="margin-top: 32px;" class="tab-pane active"></div>
-    
-        <?php if ($realm['show_funding']) { ?>
-        <div id="tab_funding" class="tab-pane clearfix" style="margin-top: 32px;">
-            <div id="funding"></div>
-            <div id="realmFundingDonate" style="float: right;">
-                <form class="form-horizontal" role="form">
-                    <div class="form-group">
-                        <label class="col-sm-6 control-label">
-                            <img src="/img/profiles/<?=$loggedInUser->user_id . ".jpg?" . time() ?>" />
-                        </label>
-                        <div class="col-sm-6">
-                            <p class="form-control-static"><?=$loggedInUser->displayname?></p>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-6 control-label">Account Balance</label>
-                        <div class="col-sm-6">
-                            <p class="form-control-static">$ <?=$loggedInUser->funds()?></p>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-6 control-label" for="donationAmount">Donation Amount</label>
-                        <div class="col-sm-6 left-inner-addon">
-                            <span>$</span>
-                            <input id="donationAmount" type="text" class="form-control" style="display: inline; width: 92%;" />
-                        </div>
-                    </div>
-                    <button type="button" class="btn btn-default pull-right">Donate</button>
-                </form>
-            </div>
-        </div>
-        <?php } ?>
-    
-        <div id="tab_comments" class="tab-pane" style="margin-top: 32px;">
-            <div id="comment" style="margin-top: 0px;" class="clearfix">
-                <textarea class="form-control" rows="5" cols="100" id="commentContent" placeholder="Add your voice to the conversation..."></textarea>
-                <button id="btnAddComment" style="margin-top: 10px;" class="btn btn-default pull-right">Add Comment</button>
-            </div>
-            
-            <div>
-                <ul id="comments" class="media-list">
-                </ul>
-            </div>    
-        </div>
-        
-        <div id="tab_credits" class="tab-pane"></div>
-    
-    </div>
-    
+			<div id="tab_readme" style="margin-top: 32px;" class="tab-pane active"></div>
+		
+			<?php if ($realm['show_funding']) { ?>
+			<div id="tab_funding" class="tab-pane clearfix" style="margin-top: 32px;">
+				<div id="funding"></div>
+				<div id="realmFundingDonate" style="float: right;">
+					<form class="form-horizontal" role="form">
+						<div class="form-group">
+							<label class="col-sm-6 control-label">
+								<img src="/img/profiles/<?=$loggedInUser->user_id . ".jpg?" . time() ?>" />
+							</label>
+							<div class="col-sm-6">
+								<p class="form-control-static"><?=$loggedInUser->displayname?></p>
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="col-sm-6 control-label">Account Balance</label>
+							<div class="col-sm-6">
+								<p class="form-control-static">$ <?=$loggedInUser->funds()?></p>
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="col-sm-6 control-label" for="donationAmount">Donation Amount</label>
+							<div class="col-sm-6 left-inner-addon">
+								<span>$</span>
+								<input id="donationAmount" type="text" class="form-control" style="display: inline; width: 92%;" />
+							</div>
+						</div>
+						<button type="button" class="btn btn-default pull-right">Donate</button>
+					</form>
+				</div>
+			</div>
+			<?php } ?>
+		
+			<div id="tab_comments" class="tab-pane" style="margin-top: 32px;">
+				<div id="comment" style="margin-top: 0px;" class="clearfix">
+					<textarea class="form-control" rows="5" cols="100" id="commentContent" placeholder="Add your voice to the conversation..."></textarea>
+					<button id="btnAddComment" style="margin-top: 10px;" class="btn btn-default pull-right">Add Comment</button>
+				</div>
+				
+				<div>
+					<ul id="comments" class="media-list">
+					</ul>
+				</div>    
+			</div>
+			
+			<div id="tab_credits" class="tab-pane"></div>
+		
+		</div>
+	</div>
 </div>
 
 <script id="comments_template" type="text/template">
@@ -288,7 +272,6 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     
     var __renderer;
     
-    
     function fundingMarkdown(data) {
        var variables = {};
        variables.funds = "$12.45";
@@ -320,7 +303,8 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
         
         var templateFn = _.template($('#comments_template').html());
         var templateReplyFn = _.template($('#comment_reply_template').html());
-        
+
+		<?php if ($realm['address']) { ?>
         $.post( "realm.php", { directive: "markdown", realmID: "<?=$realmID?>" })
         .done(function( data ) {
             if (data !== "null") {
@@ -337,6 +321,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
             }
         });
+		<?php } ?>
         
         $.post( "realm.php", { directive: "comment", realmID: "<?=$realmID?>" })
         .done(function( data ) {

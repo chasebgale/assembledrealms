@@ -1,6 +1,6 @@
 /*
 
-Realm-Broker handles all the auth, security, etc functions for a realm's app.js file, outside of 
+node-realm handles all the auth, security, etc functions for a realm's app.js file, outside of 
 the editable layer the end-user has access to.
 
 */

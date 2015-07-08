@@ -104,13 +104,11 @@ if ($method == 'POST') {
     }
     
     if ($directive == 'online') {
-        // TODO: Bring up droplet if not on free-tier
-        
         $server_type = $_POST['server'];
         
         $success = $loggedInUser->onlineRealm($realm_id, $server_type);
         
-        if ($success == true) {
+        if ($success !== false) {
             echo json_encode( (object) ['message' => 'OK'] );
         } else {
             echo json_encode( (object) ['message' => 'FAILURE'] );

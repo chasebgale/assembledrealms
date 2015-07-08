@@ -234,7 +234,7 @@ if (debug) {
 	});
 } else {
 	// In a purchased realm node, the realm instance serves up all it's files:
-	app.use(express.static(__dirname + '/../client'));
+	app.use(express.static(__dirname + '/../'));
 
 	// Hey!! Listen! --Navi
 	http.listen(3000, function(){

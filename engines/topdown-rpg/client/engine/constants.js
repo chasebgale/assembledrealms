@@ -8,7 +8,9 @@ var RENDER_STACK_LANDSCAPE = 0;
 var RENDER_STACK_AVATAR = 1;
 
 // sin(45degrees) ~= .707 and cos(45degrees) ~= .707
-var MOVEMENT_ANGLE = 0.707;
+// var MOVEMENT_ANGLE = 0.707;
+// TODO: Using the correct angle slows down drawing and exposes edges, try to fix
+var MOVEMENT_ANGLE = 0.5;
 
 var CANVAS_WIDTH = 896;
 var CANVAS_WIDTH_HALF = 448;

@@ -188,7 +188,7 @@ class loggedInUser {
         
         $logfile = '/home/tmp/digital_ocean_api.log';
 		
-		// Bring the server online, if necessary
+		// Bring the server online, if not on the free tier
 		if ($realm_level > 0) {
 			$curl 					= curl_init();
 			$curl_data 				= array('name'	=>'realm-' . $realm_id . '.assembledrealms.com',
@@ -225,11 +225,11 @@ class loggedInUser {
             }
 		}
 		
-		
+		// Add 35 seconds to now as that's when we should attempt to see if the droplet booted
 		$stmt = $mysqli->prepare("UPDATE realms
-						 SET status = 1
-						 WHERE
-						 id = ?");
+									SET status = 1
+									WHERE
+									id = ?");
         $stmt->bind_param("i", $realm_id);
         $stmt->execute();
         $stmt->close();
@@ -289,31 +289,6 @@ class loggedInUser {
         return true;
     }
     
-	public function fetchRealmMarkdown($realm_id)
-	{
-		global $mysqli,$db_table_prefix;
-		$stmt = $mysqli->prepare("SELECT 
-					*
-					FROM realm_markdown
-					WHERE realm_id = ?"
-			);
-		$stmt->bind_param("i", $realm_id);
-		$stmt->execute();
-		$stmt->bind_result($id,
-				   $realm_id_db,
-				   $funding,
-				   $description
-				   );
-		$stmt->fetch();
-		$stmt->close();
-		
-		return array('id' => $id,
-		     'realm_id' => $realm_id_db,
-		     'funding' => $funding,
-		     'description' => $description
-		);
-	}
-    
     public function fetchRealmScreenshots($realm_id) {
         global $mysqli,$db_table_prefix;
 		
@@ -332,7 +307,22 @@ class loggedInUser {
         
 		global $mysqli,$db_table_prefix;
 		$stmt = $mysqli->prepare("SELECT 
-				realms.*, uc_users.display_name
+				realms.id,
+				realms.user_id,
+				realms.title,
+				realms.description,
+				realms.engine,
+				realms.status,
+				realms.players_online,
+				realms.funds,
+				realms.screenshots,
+				realms.loves,
+				realms.url,
+				realms.comments,
+				realms.source,
+				realms.show_funding,
+				realms.address,
+				uc_users.display_name
 				FROM realms
 				INNER JOIN uc_users
 				ON realms.user_id = uc_users.id
@@ -382,7 +372,22 @@ class loggedInUser {
 	public function fetchRealms()
 	{
 		global $mysqli,$db_table_prefix;
-		$stmt = $mysqli->prepare("SELECT *
+		$stmt = $mysqli->prepare("SELECT
+			id,
+			user_id,
+			title,
+			description,
+			engine,
+			status,
+			players_online,
+			funds,
+			screenshots,
+			loves,
+			url,
+			comments,
+			source,
+			show_funding,
+			address
 			FROM realms
 			WHERE user_id = ?");
 		$stmt->bind_param("i", $this->user_id);
