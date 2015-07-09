@@ -319,7 +319,7 @@ $(document).ready(function () {
 	chart.addTimeSeries(__cpu_series, {lineWidth:2.3,strokeStyle:'#ffffff',fillStyle:'rgba(255,255,255,0.11)'});
 	
 	var socket = io('http://debug-01.assembledrealms.com/');
-	socket.on('ready', function () {
+	socket.on('connect', function () {
 		socket.emit('subscribe', {id: '99'});
 	});
 	socket.on('stats', function (data) {

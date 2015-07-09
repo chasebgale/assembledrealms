@@ -65,12 +65,14 @@
 		}
 		
 		#realmStats {
-			display: inline-block;
+            text-align: center;
 		}
-		
-		#memory_cpu {
-			display: inline-block;
-		}
+        
+        #realmStatInside {
+            background-color: #4C4C4C;
+            padding: 4px;
+            display: inline-block;
+        }
 		
     </style>
     
@@ -103,9 +105,15 @@
     <div id="realm" style="margin: 20px auto; width: 896px; padding: 0;"></div>
     
     <div id="realmStats">
-        <canvas id="memory_cpu" width="200" height="50"></canvas>
+        <div id="realmStatInside">
+            <div style="display: inline-block; font-size: 0.75em; vertical-align: top; margin-top: 6px;">
+                <span style="color: #ffffff;"><span id="cpu_display"></span> CPU <i class="fa fa-square"></i></span>
+                <br />
+                <span style="color: #00ff00;"><span id="mem_display"></span> MB <i class="fa fa-square"></i></span>
+            </div>
+            <canvas id="chart-server" width="300" height="48" style="display: inline-block;"></canvas>
+        </div>
     </div>
-    
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
     <script src="//<%= host %>:<%= port %>/socket.io/socket.io.js"></script>
@@ -126,11 +134,13 @@
 
 
     <script>
-        var memory_series   = undefined;
-        var cpu_series      = undefined;
+        var __memory_series   = undefined;
+        var __cpu_series      = undefined;
+        var __memory_span     = undefined;
+        var __cpu_span        = undefined;
         
         $(document).ready(function () {  
-        
+            /*
             memory_series   = new TimeSeries();
             cpu_series      = new TimeSeries();
             
@@ -146,6 +156,55 @@
             smoothie.addTimeSeries(cpu_series, { strokeStyle: 'rgb(255, 255, 255)', fillStyle: 'rgba(255, 255, 255, 0.3)', lineWidth: 2 });
 
             smoothie.streamTo(document.getElementById("memory_cpu"), 10000);
+            */
+            
+            var chart 	= new SmoothieChart({millisPerPixel: 100,
+									grid: {fillStyle:'#4C4C4C',strokeStyle:'#777777'},
+									yRangeFunction: function(range) { 
+										return {min: 0, max: (range.max + 10 > 100) ? 100 : range.max + 10}; 
+									},
+									yMinFormatter: function(min, precision) {
+										return parseFloat(min).toFixed(0) + " %";
+									},
+									yMaxFormatter: function(max, precision) {
+										return parseFloat(max).toFixed(0) + " %";
+									}});
+									 
+            var canvas 	= document.getElementById('chart-server');
+            
+            __memory_series = new TimeSeries();
+            __cpu_series 	= new TimeSeries();
+            
+            __memory_span = document.getElementById('mem_display');
+            __cpu_span = document.getElementById('cpu_display');
+            
+            chart.addTimeSeries(__memory_series, {lineWidth:2.3,strokeStyle:'#00ff00',fillStyle:'rgba(0,255,0,0.11)'});
+            chart.addTimeSeries(__cpu_series, {lineWidth:2.3,strokeStyle:'#ffffff',fillStyle:'rgba(255,255,255,0.11)'});
+            
+            var socket = io('http://<%= host %>');
+            socket.on('connect', function () {
+                socket.emit('subscribe', {id: '<%= id %>'});
+            });
+            socket.on('stats', function (data) {
+                __memory_series.append(new Date().getTime(), data.memory / 1000000 / 512 * 100);
+                __memory_span.textContent = parseFloat(data.memory / 1000000).toFixed(2);
+                
+                __cpu_series.append(new Date().getTime(), data.cpu);
+                __cpu_span.textContent = data.cpu + ' %';
+            });
+            /*
+            setInterval(function() {
+                $.get( 'http://debug-01.assembledrealms.com/realms/99/stats', function( data ) {
+                    __memory_series.append(new Date().getTime(), data.memory / 1000000 / 512 * 100);
+                    __memory_span.textContent = parseFloat(data.memory / 1000000).toFixed(2);
+                    
+                    __cpu_series.append(new Date().getTime(), data.cpu);
+                    __cpu_span.textContent = data.cpu + ' %';
+                });
+            }, 2000);
+            */
+            chart.streamTo(canvas, 2000);
+            
         });
     </script>
     

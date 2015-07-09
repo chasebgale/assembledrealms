@@ -18,7 +18,7 @@ $(document).ready(function () {
 		//stats.domElement.style.left = '32px';
 		//stats.domElement.style.top = '564px';
 
-		document.getElementById("realmStats").appendChild( stats.domElement );
+		document.getElementById("realmStatInside").appendChild( stats.domElement );
 	}
 	
 	function animate() {

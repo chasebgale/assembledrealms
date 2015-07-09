@@ -244,26 +244,24 @@ io.on('connection', function (socket) {
 	
 	var diagnostics = undefined;
 	
-	socket.emit('ready');
-	
 	socket.on('subscribe', function (data) {
-		
-		console.log('Subscribed to ' + data.id + "!");
-		
-		diagnostics = setInterval(function () {
-			pm2.describe(data.id, function (err, list) {
-				console.log('checking ' + data.id);
-				if (err) {
-					socket.volatile.emit('ERR', err.message);
-					return;
-				} 
-				socket.volatile.emit('stats', {cpu: list[0].monit.cpu, memory: list[0].monit.memory});
-			});
-		}, 1000);
+        if (diagnostics === undefined) {
+            diagnostics = setInterval(function () {
+                pm2.describe(data.id, function (err, list) {
+                    console.log('checking ' + data.id);
+                    if (err) {
+                        socket.volatile.emit('ERR', err.message);
+                        return;
+                    } 
+                    socket.volatile.emit('stats', {cpu: list[0].monit.cpu, memory: list[0].monit.memory});
+                });
+            }, 1000);
+        }
 	});
 	
 	socket.on('disconnect', function () {
 		clearInterval(diagnostics);
+        diagnostics = undefined;
 	});
 });
 
@@ -279,6 +277,10 @@ app.use('/realms', express.static(__dirname + '/realms'));
 
 pm2.connect(function(err) {
 	
+    if (err) {
+        console.log(err.message);
+    }
+    
 	// Hey!! Listen!
 	server.listen(3000, function(){
 	  console.log("Express server listening on port 3000, request to port 80 are redirected to 3000 by Fedora.");
