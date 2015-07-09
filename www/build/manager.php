@@ -240,105 +240,81 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
 <div id="content" class="container">
 
-	<h2><?php echo $realm["title"] ?></h2>
+	<div>
+		<!--<h2></h2>-->
+		<div style="height: 42px; background-color: #4C4C4C;">
+			<div style="display: inline-block; vertical-align: top; padding-right: 28px;">
+				<h3 class="manager-title" style="margin-top: 0;"> <?php echo $realm["title"] ?>
+					<div style="display: inline-block; margin-left: 24px;">
+						<small style="vertical-align: middle;">
+						
+						<!--  Users  -->
+							<span style="margin-left: 6px;"><i class="fa fa-child"></i> 8</span>
+						
+							<div class="spacer"></div>
+						
+						<!--  Loves -->
+							<span style="margin-left: 6px;"><i class="fa fa-heart"></i> 15</span>
+							
+						</small>
+					</div>
+				</h3>
+			</div>
+			<div style="background-color: #4C4C4C; padding: 0; height: 42px; text-align: right; display: inline-block; vertical-align: top;" class="pull-right">
+				<div style="display: inline-block; font-size: 0.75em; vertical-align: top; margin-top: 6px;">
+					<span style="color: #ffffff;"><span id="cpu_display"></span> CPU <i class="fa fa-square"></i></span>
+					<br />
+					<span style="color: #00ff00;"><span id="mem_display"></span> MB <i class="fa fa-square"></i></span>
+				</div>
+				<div style="display: inline-block;">
+					<canvas id="chart-server" width="300" height="42" style="display: inline-block;"></canvas>
+				</div>
+			</div>
+		</div>
+	</div>
     
-    <div class="panel panel-default">
-        <div class="panel-heading">Status</div>
-        <div class="panel-body">
-            <div class="row">
-                <div class="col-md-3">
-                    <p class="text-right text-muted"><strong>Balance</strong></p>
-                </div>
-                <div class="col-md-9">
-                    <span class="h3" id="realmFunds">$ <?php echo $realm_funds ?></span>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-3">
-                    <p class="text-right text-muted"><strong>Server</strong></p>
-                </div>
-                <div class="col-md-9">
-                    <span class="h3"><?php echo ($realm["status"] == 0 ? "Offline" : "Online") ?></small></span>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-3">
-                    <p class="text-right text-muted"><strong>Code</strong></p>
-                </div>
-                <div class="col-md-9">
-                    <span class="h3">Built 03/22/2015 02:22 PM: "Commit Message"</span>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-3">
-                    <p class="text-right text-muted"><strong>Loves</strong></p>
-                </div>
-                <div class="col-md-9">
-                    <span class="h3"><?php echo $realm["loves"] ?></span>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-3">
-                    <p class="text-right text-muted"><strong>Comments</strong></p>
-                </div>
-                <div class="col-md-9">
-                    <span class="h3"><?php echo $realm["comments"] ?></span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="panel panel-default">
-        <div class="panel-heading">Actions</div>
-        <div class="panel-body">
-            <div class="row">
-                <div class="col-md-3">
-                    <button class="btn btn-default pull-right" data-toggle="modal" data-target="#modalDeposit">Deposit Funds</button>
-                </div>
-                <div class="col-md-9">
-                    <p class="text-justify">Transfer funds from your personal account. Your realm's bank has a balance of <strong>$ <?php echo $realm_funds ?></strong>.</p>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-3">
-                    <?php 
-                        if ($realm["status"] == 0) {
-                            echo '<button id="onlineOfflineBtn" class="btn btn-default pull-right" data-toggle="modal" data-target="#modalTakeRealmOnline">Take Realm Online</button>';
-                        } else {
-                            echo '<button id="onlineOfflineBtn" class="btn btn-default pull-right" data-toggle="modal" data-target="#modalTakeRealmOffline">Take Realm Offline</button>';
-                        }
-                    ?>
-                </div>
-                <div class="col-md-9">
-                    <p class="text-justify" id="onlineOfflineDescription">
-                    <?php 
-                        if ($realm["status"] == 0) {
-                            echo 'Your realm is currently <strong>offline</strong>. Click this button to allow other users to connect to your realm and enjoy the fruits of your hard work!';
-                        } else {
-                            echo 'Your realm is currently <strong>Online</strong>. Click this button to bring the server offline.';
-                        }
-                    ?>
-                    </p>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-3">
-                    <button class="btn btn-default pull-right">Publish Latest Code</button>
-                </div>
-                <div class="col-md-9">
-                    <p class="text-justify">Loads the latest committed code onto your realm; if online, it will be restarted automatically.</p>
-                </div>
-            </div>
-			<div class="row">
-                <div class="col-md-3">
-                    <button class="btn btn-danger pull-right" id="button-destroy-realm" data-toggle="modal" data-target="#modalDestroy"><i class="fa fa-exclamation-triangle"></i> Destroy Realm</button>
-                </div>
-                <div class="col-md-9">
-                    <p class="text-justify">Think about this first. Destroyed realms can not be recovered.</p>
-                </div>
-            </div>
-        </div>
-    </div>
+	<div style="margin-top: 24px;">
+		<div class="row">
+			<div class="col-md-1">
+				<p class="text-muted"><strong>Balance</strong></p>
+			</div>
+			<div class="col-md-4">
+				<span class="h3" id="realmFunds">$ <?php echo $realm_funds ?></span>
+			</div>
+			<div class="col-md-3">
+				<button class="btn btn-default" data-toggle="modal" data-target="#modalDeposit">Deposit Funds</button>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-1">
+				<p class="text-muted"><strong>Server</strong></p>
+			</div>
+			<div class="col-md-4">
+				<span class="h3"><?php echo ($realm["status"] == 0 ? "Offline" : "<span class='label label-success'><i class='fa fa-power-off'></i> Online</span>") ?></small></span>
+			</div>
+			<div class="col-md-6">
+				<?php 
+					if ($realm["status"] == 0) {
+						echo '<button id="onlineOfflineBtn" class="btn btn-default" data-toggle="modal" data-target="#modalTakeRealmOnline">Take Realm Online</button>';
+					} else {
+						echo '<button id="onlineOfflineBtn" class="btn btn-default" data-toggle="modal" data-target="#modalTakeRealmOffline">Take Realm Offline</button>';
+					}
+				?>
+				<button style="margin-left: 12px;" class="btn btn-danger" id="button-destroy-realm" data-toggle="modal" data-target="#modalDestroy"><i class="fa fa-exclamation-triangle"></i> Destroy Realm</button>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-1">
+				<p class="text-muted"><strong>Code</strong></p>
+			</div>
+			<div class="col-md-4">
+				<span>Published 03/22/2015 02:22 PM<br/>"Commit Message"</span>
+			</div>
+			<div class="col-md-2">
+				<button class="btn btn-default">Publish Latest Code</button>
+			</div>
+		</div>
+	</div>
     
     <div class="panel panel-default">
         <div class="panel-heading">Display Settings</div>
@@ -591,6 +567,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 <script src="/build/js/manager.js" type="text/javascript" charset="utf-8"></script>
 <script src="/build/js/utilities.js" type="text/javascript" charset="utf-8"></script>
 <script src="/build/js/ekko-lightbox.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="/js/smoothie.js" type="text/javascript" charset="utf-8"></script>
 
 </body>
 </html>

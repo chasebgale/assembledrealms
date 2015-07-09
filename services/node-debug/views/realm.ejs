@@ -139,13 +139,13 @@
                     memory_series.append(new Date().getTime(), Math.round(data.memory / 1000000));
                     cpu_series.append(new Date().getTime(), data.cpu);
                 });
-            }, 1000);
+            }, 10000);
 
             var smoothie = new SmoothieChart({ grid: { strokeStyle: 'rgb(125, 0, 0)', fillStyle: 'rgb(60, 0, 0)', lineWidth: 1, millisPerLine: 250, verticalSections: 6 } });
             smoothie.addTimeSeries(memory_series, { strokeStyle: 'rgb(0, 255, 0)', fillStyle: 'rgba(0, 255, 0, 0.4)', lineWidth: 2 });
             smoothie.addTimeSeries(cpu_series, { strokeStyle: 'rgb(255, 255, 255)', fillStyle: 'rgba(255, 255, 255, 0.3)', lineWidth: 2 });
 
-            smoothie.streamTo(document.getElementById("memory_cpu"), 1000);
+            smoothie.streamTo(document.getElementById("memory_cpu"), 10000);
         });
     </script>
     

@@ -8,11 +8,11 @@
         <span class="icon-bar"></span>
       </button>
       <a class="navbar-brand" href="http://www.assembledrealms.com/">
-		<img src='../../img/logo.png' class='hidden-xs hidden-sm hidden-md' />
-		<img src='../../img/logo_small.png' class='visible-xs-block visible-sm-block visible-md-block' />
+		<img src='../../img/logo_small.png' />
 	  </a>
     </div>
     
+	<!--
     <div class="hidden-xs hidden-sm hidden-md">
     <div class="collapse navbar-collapse">
       <ul class="nav navbar-nav">
@@ -48,12 +48,11 @@
         }
         ?>
       </ul>
-    </div><!--/.nav-collapse -->
     </div>
+    </div>
+    -->
     
     
-    
-    <div class="visible-xs-block visible-sm-block visible-md-block">
     <div class="collapse navbar-collapse">
       <ul class="nav navbar-nav">
         <li><a href='../../build' class='header-link'><i class='fa fa-cogs'></i> Build</a></li>
@@ -79,7 +78,7 @@
             echo "<li><a href='/account' class='header-link'><img src='" . $loggedInUser->user_image . "' width='24'>";
             
             $unread = $loggedInUser->unreadMessages();
-            echo "<span class='badge' style='margin-left: -4px; background-color: #4C4C4C; vertical-align: top; text-align: left; line-height: 1.25; height: 24px; border-radius: 0;'>" . $loggedInUser->displayname . "</span>";
+            echo "<span class='badge' style='background-color: #4C4C4C; vertical-align: top; text-align: left; line-height: 1.5em; height: 24px; border-radius: 0;'>" . $loggedInUser->displayname . " <div class='spacer'></div><i class='fa fa-usd'></i> <span id='userFunds'>" . $loggedInUser->funds() . "</span></span>";
             
             
             echo "</a></li>";
@@ -89,7 +88,6 @@
         ?>
       </ul>
     </div><!--/.nav-collapse -->
-    </div>
     
   </div>
 </div>

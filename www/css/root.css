@@ -1,5 +1,5 @@
 ﻿body {
-    padding-top: 80px;
+    padding-top: 24px;
 }
 
 #content {
@@ -236,4 +236,34 @@ div#funding {
 
 .caption-background {
     background: radial-gradient(ellipse at center, rgba(0,0,0,0.5) 30%,rgba(0,0,0,0) 75%);
+}
+
+.navbar-brand {
+	height: auto !important;
+	padding: 10px 15px !important;
+}
+
+.nav>li>a {
+	padding: 10px 15px !important;
+}
+
+.panel {
+	border-radius: 0 !important;
+}
+
+.spacer {
+  display: inline-block;
+  vertical-align: middle;
+  background: #444444;
+  width: 2px;
+  border-left: #5A5A5A 1px solid;
+  height: 18px;
+  margin-left: 6px;
+  margin-right: 6px;
+}
+
+.manager-title {
+	background-color: #4C4C4C;
+	color: #FFF;
+	padding: 8px;
 }

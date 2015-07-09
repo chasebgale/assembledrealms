@@ -1,4 +1,10 @@
-var __removedScreenshots = [];
+var __removedScreenshots 	= [];
+
+var __memory_series   		= undefined;
+var __cpu_series      		= undefined;
+
+var __memory_span			= undefined;
+var __cpu_span				= undefined;
 
 $(document).ready(function () {
    
@@ -271,7 +277,7 @@ $(document).ready(function () {
                 $("#realmFunds").text(accounting.formatMoney(__realmFunds / 100));
                 
                 var userFunds = (parseFloat($("#userFunds").text()) * 100) - depositAmount;
-                $("#userFunds").text(accounting.formatMoney(userFunds / 100));
+                $("#userFunds").text(accounting.formatMoney(userFunds / 100, {format: "%v"}));
             } else {
                 $("#depositAlert").text('Deposit Failed!').show();
             }
@@ -288,6 +294,45 @@ $(document).ready(function () {
    
     var depositToHours = Math.floor(__realmFunds / 0.9);
     $("#realmLifespan").text(depositToHours + " hours, or about " + moment.duration(depositToHours, 'hours').humanize() );
+   
+   /*
+   									minValue: 0,
+									maxValue: 100,
+									*/
+	var chart 	= new SmoothieChart({millisPerPixel: 100,
+									grid: {fillStyle:'#4C4C4C',strokeStyle:'#777777'},
+									yRangeFunction: function(range) { 
+										return {min: 0, max: (range.max + 10 > 100) ? 100 : range.max + 10}; 
+									},
+									yMinFormatter: function(min, precision) {
+										return parseFloat(min).toFixed(0) + " %";
+									},
+									yMaxFormatter: function(max, precision) {
+										return parseFloat(max).toFixed(0) + " %";
+									}});
+									 
+    var canvas 	= document.getElementById('chart-server');
+	
+	__memory_series = new TimeSeries();
+	__cpu_series 	= new TimeSeries();
+	
+	__memory_span = document.getElementById('mem_display');
+	__cpu_span = document.getElementById('cpu_display');
+	
+	chart.addTimeSeries(__memory_series, {lineWidth:2.3,strokeStyle:'#00ff00',fillStyle:'rgba(0,255,0,0.11)'});
+	chart.addTimeSeries(__cpu_series, {lineWidth:2.3,strokeStyle:'#ffffff',fillStyle:'rgba(255,255,255,0.11)'});
+	
+	setInterval(function() {
+		$.get( 'http://debug-01.assembledrealms.com/realms/99/stats', function( data ) {
+			__memory_series.append(new Date().getTime(), data.memory / 1000000 / 512 * 100);
+			__memory_span.textContent = parseFloat(data.memory / 1000000).toFixed(2);
+			
+			__cpu_series.append(new Date().getTime(), data.cpu);
+			__cpu_span.textContent = data.cpu + ' %';
+		});
+	}, 2000);
+	
+	chart.streamTo(canvas, 2000);
    
 });
 
