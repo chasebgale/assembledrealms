@@ -11,11 +11,13 @@ var redis 			= require('redis');
 var http 			= require('http');
 var uuid 			= require('node-uuid');
 var redisClient 	= redis.createClient();
+var server			= http.Server(app);
+var io 				= require('socket.io')(server);
 
 var realms			= {};
 
 var allowCrossDomain = function(req, res, next) {
-    res.header('Access-Control-Allow-Origin', 'http://www.assembledrealms.com');
+    res.header('Access-Control-Allow-Origin', '*'); //'http://www.assembledrealms.com');
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
     res.header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type');
     res.header('Access-Control-Allow-Credentials', 'true');
@@ -236,26 +238,50 @@ app.get('/realms/:id', function (req, res, next) {
 	
 });
 
-app.get('/realms/:id/stats', function (req, res, next) {
-    pm2.connect(function(err) {
-        
-        pm2.describe(req.params.id, function (err, list) {
-			
-			pm2.disconnect();
-			
-            if (err) {
-                return res.send(err.message);
-            } 
-            return res.json({cpu: list[0].monit.cpu, memory: list[0].monit.memory});
-        });
-        
-    });
+var clients = {};
+
+io.on('connection', function (socket) {
+	
+	var diagnostics = undefined;
+	
+	socket.emit('ready');
+	
+	socket.on('subscribe', function (data) {
+		
+		console.log('Subscribed to ' + data.id + "!");
+		
+		diagnostics = setInterval(function () {
+			pm2.describe(data.id, function (err, list) {
+				console.log('checking ' + data.id);
+				if (err) {
+					socket.volatile.emit('ERR', err.message);
+					return;
+				} 
+				socket.volatile.emit('stats', {cpu: list[0].monit.cpu, memory: list[0].monit.memory});
+			});
+		}, 1000);
+	});
+	
+	socket.on('disconnect', function () {
+		clearInterval(diagnostics);
+	});
 });
+
+
+    
+        
+        
+        
+    
 
 // Serve up the realm files, when requested:
 app.use('/realms', express.static(__dirname + '/realms'));
 
-// Hey!! Listen!
-app.listen(3000, function(){
-  console.log("Express server listening on port 3000, request to port 80 are redirected to 3000 by Fedora.");
+pm2.connect(function(err) {
+	
+	// Hey!! Listen!
+	server.listen(3000, function(){
+	  console.log("Express server listening on port 3000, request to port 80 are redirected to 3000 by Fedora.");
+	});
+	
 });

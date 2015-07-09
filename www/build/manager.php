@@ -569,5 +569,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 <script src="/build/js/ekko-lightbox.min.js" type="text/javascript" charset="utf-8"></script>
 <script src="/js/smoothie.js" type="text/javascript" charset="utf-8"></script>
 
+<script src="https://cdn.socket.io/socket.io-1.3.5.js"></script>
+
 </body>
 </html>
