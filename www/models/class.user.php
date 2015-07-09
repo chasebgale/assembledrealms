@@ -227,9 +227,9 @@ class loggedInUser {
 		
 		// Add 35 seconds to now as that's when we should attempt to see if the droplet booted
 		$stmt = $mysqli->prepare("UPDATE realms
-									SET status = 1
-									WHERE
-									id = ?");
+								  SET status = 1
+								  WHERE
+								  id = ?");
         $stmt->bind_param("i", $realm_id);
         $stmt->execute();
         $stmt->close();
