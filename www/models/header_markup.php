@@ -83,7 +83,7 @@
             
             echo "</a></li>";
         } else {
-            echo "<li><a href='/account/register.php' class='header-link'><i class='fa fa-sign-in fa-2x' style='display: block;'></i>Login / Join</a></li>";
+            echo "<li><a href='/account/register/0' class='header-link'><i class='fa fa-sign-in'></i> Login / Join</a></li>";
         }
         ?>
       </ul>

@@ -240,7 +240,7 @@ div#funding {
 
 .navbar-brand {
 	height: auto !important;
-	padding: 10px 15px !important;
+	padding: 10px 0px !important;
 }
 
 .nav>li>a {
