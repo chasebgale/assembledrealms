@@ -5,6 +5,10 @@ var http 			= require('http');
 var https           = require('https');
 var server			= http.Server(app);
 
+// TODO: For now we'll just keep the list of servers to check on in memory; however, this should really be stored
+// in redis or the like for fault tolerance in case this service crashes for some reason... if not someone could
+// potentially be waiting in perpetuity for thier realm to come online...
+var check_list      = [];
 var ocean_token 	= "254c9a09018914f98dd83d0ab1670f307b036fe761dda0d7eaeee851a37eb1cd";
 
 var allowCrossDomain = function(req, res, next) {
@@ -30,7 +34,7 @@ app.post('/launch', function (req, res, next) {
         hostname: 'api.digitalocean.com',
         port: 443,
         path: '/v2/droplets',
-        method: 'GET',
+        method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + ocean_token,
