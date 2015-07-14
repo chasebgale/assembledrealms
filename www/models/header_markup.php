@@ -60,7 +60,7 @@
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li><a href='../../blog' class='header-link'><i class='fa fa-pencil-square-o'></i> Blog</a></li>
-		<li><a href="#" class="header-link"><i class='fa fa-life-ring'></i> Help</a></li>
+		<li><a href="../../help" class="header-link"><i class='fa fa-life-ring'></i> Help</a></li>
         <?php
         if (isUserLoggedIn()) {
             // echo "<li><a href='/account/logout.php' class='header-link'><i class='fa fa-sign-out fa-2x' style='display: block;'></i>Logout</a></li>";
