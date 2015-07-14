@@ -19,6 +19,13 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
     </p>
     
     <div class="page-header">
+        <h1>Things Are Broken!!<small></small></h1>
+    </div>
+    <p>
+        Assembled Realms is currently in a seriously alpha state - and I don't mean leading the pack; The technology is expansive and is developed by <a href="/user/index/1">a single, solitary code-monkey</a>. Please don't take things too seriously until the platform is more stable. Please remember this fact before sending that lonely, poor programmer a hate-filled email. 
+    </p>
+    
+    <div class="page-header">
         <h1>Can I Contact You? <small>Please?</small></h1>
     </div>
     <blockquote>
