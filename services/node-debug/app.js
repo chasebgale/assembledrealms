@@ -244,8 +244,12 @@ io.on('connection', function (socket) {
 	
 	var diagnostics = undefined;
 	
+	console.log('SOCKET: ' + socket.id + ' CONNECTED');
+	
 	socket.on('subscribe', function (data) {
+		console.log('SOCKET: ' + socket.id + ' SUBSCRIBED ' + JSON.stringify(data));
         if (diagnostics === undefined) {
+			console.log('SOCKET: ' + socket.id + ' diagnostics = undefined');
             diagnostics = setInterval(function () {
                 pm2.describe(data.id, function (err, list) {
                     console.log('checking ' + data.id);
@@ -256,7 +260,9 @@ io.on('connection', function (socket) {
                     socket.volatile.emit('stats', {cpu: list[0].monit.cpu, memory: list[0].monit.memory});
                 });
             }, 1000);
-        }
+        } else {
+			console.log('SOCKET: ' + socket.id + ' diagnostics = something');
+		}
 	});
 	
 	socket.on('disconnect', function () {

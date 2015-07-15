@@ -53,7 +53,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
                         <div class="item active">
                             <img src="/build/img/topdown.jpg" alt="Top-down Engine">
                             <div class="carousel-caption caption-background">
-                                <h3>Top-down Engine</h3>
+                                <h3>"Barebones" <small>Top-down Engine</small></h3>
                                 <p>Iconic style used in legends of gaming, from Zelda on the SNES and NES to Grand Theft Auto II on the PC. Simple and powerful, this is a great place to start if you're new.</p>
                             </div>
                         </div>

@@ -235,7 +235,7 @@ div#funding {
 }
 
 .caption-background {
-    background: radial-gradient(ellipse at center, rgba(0,0,0,0.5) 30%,rgba(0,0,0,0) 75%);
+    background: radial-gradient(ellipse at center, rgba(0,0,0,1) 30%,rgba(0,0,0,0) 75%);
 }
 
 .navbar-brand {
