@@ -8,6 +8,7 @@ var morgan		= require('morgan');
 var redis       = require('redis');
 var memwatch 	= require('memwatch-next');
 var fs			= require('fs');
+var pm2         = require('pm2');
 var db     		= redis.createClient();
 
 // If second argument is passed, we are in debug mode:
@@ -159,6 +160,14 @@ io.on('connection', function (socket) {
 				
 			});
 		});
+        
+        socket.on('join_debug', function (data) {
+            socket.join('debug');
+        });
+        
+        socket.on('leave_debug', function (data) {
+            socket.leave('debug');
+        });
 		
 	});
     
@@ -210,34 +219,49 @@ var worldLoop = setInterval(function () {
 	
 	engine.broadcastComplete();
     
+    //var room = io.sockets.adapter.rooms['debug']; Object.keys(room).length;
+    pm2.describe(realmID, function (err, list) {
+        if (err) {
+            return;
+        } 
+        io.to('debug').emit('stats', {cpu: list[0].monit.cpu, memory: list[0].monit.memory});
+    });
+    
 }, 32);
 
+pm2.connect(function(err) {
+	
+    if (err) {
+        console.log(err.message);
+    } else {
+        if (debug) {
+            // Listen on random port because lots (hopefully) of other nodes are running too!
+            http.listen(0, function(){
+                // Log the port to the console
+                console.log("port: " + http.address().port);
 
-if (debug) {
-	// Listen on random port because lots (hopefully) of other nodes are running too!
-	http.listen(0, function(){
-		// Log the port to the console
-		console.log("port: " + http.address().port);
+                // In debug mode, trash any DB entries on (re)start so we don't get into trouble
+                db.keys(realmID + "-*", function (err, keys) {
+                    keys.forEach(function (key, pos) {
+                        db.del(key, function (err) {
+                            console.log("Deleted key: " + key);
+                        });
+                    });
+                });
+                
+                db.set(realmID, http.address().port);
+                db.set(realmID + 'time', new Date().toString());
+                
+            });
+        } else {
+            // In a purchased realm node, the realm instance serves up all it's files:
+            app.use(express.static(__dirname + '/../'));
 
-		// In debug mode, trash any DB entries on (re)start so we don't get into trouble
-		db.keys(realmID + "-*", function (err, keys) {
-			keys.forEach(function (key, pos) {
-				db.del(key, function (err) {
-					console.log("Deleted key: " + key);
-				});
-			});
-		});
-        
-        db.set(realmID, http.address().port);
-        db.set(realmID + 'time', new Date().toString());
-        
-	});
-} else {
-	// In a purchased realm node, the realm instance serves up all it's files:
-	app.use(express.static(__dirname + '/../'));
-
-	// Hey!! Listen! --Navi
-	http.listen(3000, function(){
-		console.log("Express server listening on port 3000, request to port 80 are redirected to 3000 by Fedora.");
-	});
-}
+            // Hey!! Listen! --Navi
+            http.listen(3000, function(){
+                console.log("Express server listening on port 3000, request to port 80 are redirected to 3000 by Fedora.");
+            });
+        }
+    }
+    
+});

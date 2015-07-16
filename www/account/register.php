@@ -219,7 +219,8 @@ switch (substr($_SERVER['QUERY_STRING'], 0, 1)) {
 	</div>
 	
 	<div class="col-md-2">
-		<h1 style="margin: 50px 0; text-align: center; font-weight: bold;" class="text-muted">or</h1>
+        <div class="tall_spacer"></div>
+		<!--<h1 style="margin: 50px 0; text-align: center; font-weight: bold;" class="text-muted">or</h1>-->
 	</div>
 	
 	<div class="col-md-5">

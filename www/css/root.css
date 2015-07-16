@@ -262,6 +262,15 @@ div#funding {
   margin-right: 6px;
 }
 
+.tall_spacer {
+    height: 300px;
+    margin-top: 20px;
+    margin: 0 auto;
+    width: 2px;
+    background-color: #E7E7E7;
+    border-left: #D5D5D5 1px solid;
+}
+
 .manager-title {
 	background-color: #4C4C4C;
 	color: #FFF;
