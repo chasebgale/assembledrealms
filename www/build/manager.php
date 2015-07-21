@@ -260,7 +260,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 					</div>
 				</h3>
 			</div>
-			<div style="background-color: #4C4C4C; padding: 0; height: 42px; text-align: right; display: inline-block; vertical-align: top;" class="pull-right">
+			<div id="chart-container" style="opacity: 0.25; background-color: #4C4C4C; padding: 0; height: 42px; text-align: right; display: inline-block; vertical-align: top;" class="pull-right">
 				<div style="display: inline-block; font-size: 0.75em; vertical-align: top; margin-top: 6px;">
 					<span style="color: #ffffff;"><span id="cpu_display"></span> CPU <i class="fa fa-square"></i></span>
 					<br />
@@ -554,6 +554,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     var __markdownCreateNewDB = true;
     var __realmID = <?php echo $_SERVER['QUERY_STRING'] ?>;
     var __realmFunds = parseFloat("<?php echo $realm["funds"] ?>");
+    var __realmOnline = parseInt(<?php echo $realm["status"] ?>);
     var __existingState = {
 	description: "<?php echo $realm["description"] ?>",
 	show_funding: <?php echo $realm["show_funding"] ?>

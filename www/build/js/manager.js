@@ -295,7 +295,8 @@ $(document).ready(function () {
     var depositToHours = Math.floor(__realmFunds / 0.9);
     $("#realmLifespan").text(depositToHours + " hours, or about " + moment.duration(depositToHours, 'hours').humanize() );
    
-	var chart 	= new SmoothieChart({millisPerPixel: 100,
+   
+    var chart 	= new SmoothieChart({millisPerPixel: 100,
 									grid: {fillStyle:'#4C4C4C',strokeStyle:'#777777'},
 									yRangeFunction: function(range) { 
 										return {min: 0, max: (range.max + 10 > 100) ? 100 : range.max + 10}; 
@@ -317,7 +318,14 @@ $(document).ready(function () {
 	
 	chart.addTimeSeries(__memory_series, {lineWidth:2.3,strokeStyle:'#00ff00',fillStyle:'rgba(0,255,0,0.11)'});
 	chart.addTimeSeries(__cpu_series, {lineWidth:2.3,strokeStyle:'#ffffff',fillStyle:'rgba(255,255,255,0.11)'});
-	
+   
+    if (__realmOnline) {
+        enableChart();
+    }
+   
+});
+
+function enableChart() {
 	var socket = io('http://debug-01.assembledrealms.com/');
 	socket.on('connect', function () {
 		socket.emit('subscribe', {id: '99'});
@@ -329,20 +337,10 @@ $(document).ready(function () {
 		__cpu_series.append(new Date().getTime(), data.cpu);
 		__cpu_span.textContent = data.cpu + ' %';
 	});
-	/*
-	setInterval(function() {
-		$.get( 'http://debug-01.assembledrealms.com/realms/99/stats', function( data ) {
-			__memory_series.append(new Date().getTime(), data.memory / 1000000 / 512 * 100);
-			__memory_span.textContent = parseFloat(data.memory / 1000000).toFixed(2);
-			
-			__cpu_series.append(new Date().getTime(), data.cpu);
-			__cpu_span.textContent = data.cpu + ' %';
-		});
-	}, 2000);
-	*/
 	chart.streamTo(canvas, 2000);
    
-});
+    $("#chart-container").css('opacity', '1.0');
+}
 
 function checkForChanges() {
    if (_.isEqual(__existingState, __currentState)) {

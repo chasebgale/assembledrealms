@@ -183,7 +183,7 @@
             
             var socket = io('http://<%= host %>');
             socket.on('connect', function () {
-                socket.emit('subscribe', {id: '<%= id %>'});
+                socket.emit('join_debug');
             });
             socket.on('stats', function (data) {
                 __memory_series.append(new Date().getTime(), data.memory / 1000000 / 512 * 100);
