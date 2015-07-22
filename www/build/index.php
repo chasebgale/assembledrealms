@@ -153,7 +153,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
             <td><%- realm.loves %></td>
             <td>
                 <a class="btn btn-default btn-xs" target="_blank" href="editor/<%- realm.id %>/"><i class="fa fa-code"></i> Edit Code</a>
-                <a class="btn btn-default btn-xs" href="manager.php?<%- realm.id %>"><span class="glyphicon glyphicon-eye-open"></span> Manage</a>
+                <a class="btn btn-default btn-xs" href="manager/<%- realm.id %>"><span class="glyphicon glyphicon-eye-open"></span> Manage</a>
             </td>
         
         </tr>

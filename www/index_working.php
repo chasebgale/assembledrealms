@@ -8,7 +8,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 
 ?>
 
-<div id='content'>
+<div id='content' class="container">
 
 	<div id="carousel-banner" class="carousel slide" data-ride="carousel">
 	  <!-- Indicators -->
