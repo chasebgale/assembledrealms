@@ -1,9 +1,8 @@
 var express 		= require('express');
 var bodyParser 		= require('body-parser');
 var app 			= express();
-var http 			= require('http');
-var https           = require('https');
 var server			= http.Server(app);
+var request         = require('request');
 
 // TODO: For now we'll just keep the list of servers to check on in memory; however, this should really be stored
 // in redis or the like for fault tolerance in case this service crashes for some reason... if not someone could
@@ -26,34 +25,43 @@ app.use( allowCrossDomain );
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
 app.use( bodyParser.urlencoded() ); // to support URL-encoded bodies
 
-app.post('/launch', function (req, res, next) {
+// TODO: Make sure only assembledrealms.com can call this
+app.get('/launch/:id', function (req, res, next) {
+    
+    console.log('### Received request to /launch/' + req.params.id);
 
-	var realmID = req.body.id;
+	var realm_host = 'realm-' + req.params.id + '.assembledrealms.com';
     
     var options = {
-        hostname: 'api.digitalocean.com',
-        port: 443,
-        path: '/v2/droplets',
+        url: 'https://api.digitalocean.com/v2/droplets',
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + ocean_token,
             'Accept': '*/*'
+        },
+        form: {
+            name:     realm_host,
+            region:   'nyc3',
+            size:     '512mb',
+            image:    '12588564'
         }
     };
     
-    https.get(options, function(res) {
-        console.log("Got response: " + res.statusCode);
+    request.post(options, function(err, response, body) {
+        console.log("Got response: " + response.statusCode);
         
-        if ((res.statusCode > 199) && (res.statusCode < 300)) {
+        if ((response.statusCode > 199) && (response.statusCode < 300)) {
             // True success
         } else {
             // Successful request but failure on DO API side
-            console.log("Got error response code: " + res.statusCode);
+            console.log("Got error response code: " + response.statusCode);
         }
-        
-    }).on('error', function(e) {
-        console.log("Got error: " + e.message);
     });
     
+});
+
+// Hey!! Listen!
+server.listen(3000, function(){
+    console.log("Express server listening on port 3000, request to port 80 are redirected to 3000 by Fedora.");
 });

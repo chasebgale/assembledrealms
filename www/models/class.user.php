@@ -186,6 +186,8 @@ class loggedInUser {
 	{
 		global $mysqli,$db_table_prefix;
         
+        /*
+        
         $logfile = '/home/tmp/digital_ocean_api.log';
 		
 		// Bring the server online, if not on the free tier
@@ -224,7 +226,8 @@ class loggedInUser {
                 error_log($httpcode . ": " . $resp, 3, $logfile);
             }
 		}
-		
+		*/
+        
 		// Add 35 seconds to now as that's when we should attempt to see if the droplet booted
 		$stmt = $mysqli->prepare("UPDATE realms
 								  SET status = 1
