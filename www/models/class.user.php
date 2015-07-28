@@ -186,28 +186,22 @@ class loggedInUser {
 	{
 		global $mysqli,$db_table_prefix;
         
-        /*
+        // 
         
-        $logfile = '/home/tmp/digital_ocean_api.log';
+        $logfile = '/home/tmp/gatekeeper_outbound.log';
 		
 		// Bring the server online, if not on the free tier
 		if ($realm_level > 0) {
 			$curl 					= curl_init();
-			$curl_data 				= array('name'	=>'realm-' . $realm_id . '.assembledrealms.com',
-											'region'=>'nyc3',
-											'size'	=>'512mb',
-											'image'	=>12588564);
-			$digital_ocean_token 	= "254c9a09018914f98dd83d0ab1670f307b036fe761dda0d7eaeee851a37eb1cd";
+			$gatekeeper_token 	    = "2f15adf29c930d8281b0fb076b0a14062ef93d4d142f6f19f4cdbed71fff3394";
 
 			curl_setopt_array($curl, array(
-				CURLOPT_HTTPHEADER 		=> array('Content-Type: application/json', 'Authorization: Bearer ' . $digital_ocean_token),
+				CURLOPT_HTTPHEADER 		=> array('Authorization: ' . $gatekeeper_token),
                 CURLOPT_HEADER          => true,
 				CURLOPT_RETURNTRANSFER 	=> true,
-				CURLOPT_POST            => 1,            
-				CURLOPT_POSTFIELDS     	=> json_encode($curl_data),
 				CURLOPT_SSL_VERIFYHOST 	=> 0,
 				CURLOPT_SSL_VERIFYPEER 	=> false,
-				CURLOPT_URL 			=> 'https://api.digitalocean.com/v2/droplets'
+				CURLOPT_URL 			=> 'http://gatekeeper.assembledrealms.com/launch/' . $realm_id
 			));
 
 			$resp       = curl_exec($curl);
@@ -222,22 +216,17 @@ class loggedInUser {
                 error_log($httpcode . ": " . $resp, 3, $logfile);
                 return false;
             } else {
-                // TODO: Do it better
-                error_log($httpcode . ": " . $resp, 3, $logfile);
-            }
-		}
-		*/
-        
-		// Add 35 seconds to now as that's when we should attempt to see if the droplet booted
-		$stmt = $mysqli->prepare("UPDATE realms
+                $stmt = $mysqli->prepare("UPDATE realms
 								  SET status = 1
 								  WHERE
 								  id = ?");
-        $stmt->bind_param("i", $realm_id);
-        $stmt->execute();
-        $stmt->close();
+                $stmt->bind_param("i", $realm_id);
+                $stmt->execute();
+                $stmt->close();
+                return true;
+            }
+		}
         
-        return true;
 	}
     
     public function depositToRealm($realm_id, $amount) {
