@@ -136,15 +136,9 @@ setInterval(function(){
             request.post({url: 'http://www.assembledrealms.com/external/gatekeeper.php',
                         headers: {'Content-Type': 'application/json', 'Token': realms_token},
                         json: true, body: online}, function(err, response, body) {
-                
-                if ((response.statusCode > 199) && (response.statusCode < 300)) {
-                    // True success
-                    if (body.droplet.networks.v4[0].ip_address) {
-                        check_item.address = body.droplet.networks.v4[0].ip_address;
-                    }
-                } else {
-                    // Successful request but failure on DO API side
-                    console.log("Failure message: " + body);
+                            
+                if (body.message !== 'OK') {
+                    // TODO: QUEUE UP RETRY
                 }
                 
                 callback();
