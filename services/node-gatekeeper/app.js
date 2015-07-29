@@ -1,13 +1,13 @@
 var express 		= require('express');
 var bodyParser 		= require('body-parser');
 var app 			= express();
-var server			= http.Server(app);
+var server			= require('http').Server(app);
 var request         = require('request');
 var async           = require('async');
 
 // TODO: For now we'll just keep the list of servers to check on in memory; however, this should really be stored
 // in redis or the like for fault tolerance in case this service crashes for some reason... if not someone could
-// potentially be waiting in perpetuity for thier realm to come online...
+// potentially be waiting in perpetuity for their realm to come online...
 var check_list      = [];
 var ocean_token 	= "254c9a09018914f98dd83d0ab1670f307b036fe761dda0d7eaeee851a37eb1cd";
 var realms_token    = "b2856c87d4416db5e3d1eaef2fbef317846b06549f1b5f3cce1ea9d639839224";
