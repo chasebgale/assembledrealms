@@ -4,9 +4,8 @@ var cookieParse = require('cookie-parser');
 var app 		= express();
 var http        = require('http').Server(app);
 var io 			= require('socket.io')(http);
-var morgan		= require('morgan');
 var redis       = require('redis');
-var memwatch 	= require('memwatch-next');
+//var memwatch 	= require('memwatch-next');
 var fs			= require('fs');
 var pm2         = require('pm2');
 var db     		= redis.createClient();
@@ -44,9 +43,11 @@ app.use(allowCrossDomain);
 app.use(cookieParse());
 
 // Catch memory leaks
+/*
 memwatch.on('leak', function(info) {
 	console.log(JSON.stringify(info));
 });
+*/
 
 // Catch redis errors
 db.on("error", function (err) {
@@ -171,10 +172,7 @@ io.on('connection', function (socket) {
 		
 	});
     
-});
-
-// Log to console
-app.use(morgan('dev')); 	
+});	
 
 app.get('/auth/:id/:uuid', function(req, res, next) {
     // TODO: Check the server calling this function is, in fact, assembledrealms.com

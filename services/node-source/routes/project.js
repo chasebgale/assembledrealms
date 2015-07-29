@@ -446,7 +446,7 @@ exports.debug = function(req, res, next) {
         
       });
     }).connect({
-      host: '104.131.114.6',
+      host: '10.132.227.95', //'104.131.114.6',
       port: 22,
       username: 'web',
       password: '87141eeda7861e0b41801ad48ff19904'
