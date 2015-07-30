@@ -34,7 +34,7 @@ if ($method == 'POST') {
 if (is_numeric($_SERVER['QUERY_STRING'])) {
     $realmID = $_SERVER['QUERY_STRING'];
     $realm = $loggedInUser->fetchRealm($realmID);
-	$sourceURL = $realm['source'];
+	$sourceURL = "source-" . $realm['source'] . "assembledrealms.com";
 
 	if (($realmID < 0) || ($sourceURL == '')) {
 		echo "realmID: " . $realmID;

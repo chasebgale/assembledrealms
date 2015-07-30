@@ -139,23 +139,27 @@ class loggedInUser {
 	public function createRealm($title, $description, $engine)
 	{
 		global $mysqli,$db_table_prefix;
+        
+        $source_server = "02"; // TODO: Have a function here that picks the server under the least load
+        
 		$stmt = $mysqli->prepare("INSERT INTO realms (
 			user_id,
 			title,
 			description,
-            engine
+            engine,
+            source
 			)
 			VALUES (
 			?,
 			?,
 			?,
             ?)");
-		$stmt->bind_param("issi", $this->user_id, $title, $description, $engine);
+		$stmt->bind_param("issis", $this->user_id, $title, $description, $engine, $source_server);
 		$stmt->execute();
 		$inserted_id = $mysqli->insert_id;
 		$stmt->close();
 		
-		return $inserted_id;
+		return array($inserted_id, $source_server);
 	}
 	
 	public function destroyRealm($realm_id)
