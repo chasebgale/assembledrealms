@@ -472,8 +472,8 @@ function initialize(projectID, projectDomain) {
 	console.log("|__| [__  [__  |___ |\\\/| |__] |    |___ |  \\\    |__/ |___ |__| |    |\\\/| [__ ");
 	console.log("|  | ___] ___] |___ |  | |__] |___ |___ |__/    |  \\\ |___ |  | |___ |  | ___]");
 	console.log(" ");
-	console.log("Build: 108 07/02/2015 - Thanks for taking a look!");
-    
+	console.log("Thanks for taking a look!");
+	console.log("Please contact me if you find a bug or an exploit chase@assembledrealms.com");
 }
 
 function lz4Compress(data) {
