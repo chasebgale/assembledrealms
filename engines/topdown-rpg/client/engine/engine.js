@@ -60,6 +60,10 @@ enemies are sparse, think human dovakhins, must be taken down by multiple skelli
     this.socket.on('debug', function (data) {
         console.log(data);
     });
+	
+	this.socket.on('stats', function (data) {
+		self.debugging(data);
+	});
         
 };
 
@@ -156,4 +160,15 @@ Engine.prototype.render = function () {
     
     self.renderer.render(self.stage);
 
+};
+
+Engine.prototype.debug = function (enabled) {
+	
+	var self = this;
+	
+	if (enabled) {
+		self.socket.emit('join_debug');
+	} else {
+		self.socket.emit('leave_debug');
+	}
 };

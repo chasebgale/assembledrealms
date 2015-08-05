@@ -89,21 +89,37 @@ Engine.prototype.tick = function (map) {
 						// Can we walk north? (and also was our last direction not south, to avoid walking in circles)
 						if ((this.walkable( map, row - 1, col )) && ( direction !== DIRECTION_S )) {
 							options.push(DIRECTION_N);
+							if (direction == DIRECTION_N) {
+								// If the last time we moved it was this way, double the odds to keep going
+								options.push(DIRECTION_N);
+							}
 						}
 						
 						// Can we walk east?
 						if ((this.walkable( map, row, col + 1 )) && ( direction !== DIRECTION_W )) {
 							options.push(DIRECTION_E);
+							if (direction == DIRECTION_E) {
+								// If the last time we moved it was this way, double the odds to keep going
+								options.push(DIRECTION_E);
+							}
 						}
 						
 						// Can we walk south?
 						if ((this.walkable( map, row + 1, col )) && ( direction !== DIRECTION_N )) {
 							options.push(DIRECTION_S);
+							if (direction == DIRECTION_S) {
+								// If the last time we moved it was this way, double the odds to keep going
+								options.push(DIRECTION_S);
+							}
 						}
 						
 						// Can we walk west?
 						if ((this.walkable( map, row, col - 1 )) && ( direction !== DIRECTION_E )) {
 							options.push(DIRECTION_W);
+							if (direction == DIRECTION_W) {
+								// If the last time we moved it was this way, double the odds to keep going
+								options.push(DIRECTION_W);
+							}
 						}
 						
 						direction = options[ Math.floor(Math.random() * options.length) ];

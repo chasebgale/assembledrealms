@@ -66,22 +66,16 @@
 		
 		#realmStats {
             text-align: center;
+			background-color: #4C4C4C;
+			width: 896px;
 		}
         
-        #realmStatInside {
-            background-color: #4C4C4C;
+        #serverStats {
             padding: 4px;
             display: inline-block;
         }
 		
     </style>
-    
-    <script>
-        var DEBUG   = true;
-        var ROOT    = '/realms/<%= id %>/';
-        var STATS   = '/realms/<%= id %>/stats';
-        var HOST    = window.location.host + ':<%= port %>';
-    </script>
     
 </head>
 
@@ -97,15 +91,15 @@
             <button type="button" id="btnScreenshot" class="btn btn-default btn-xs"><i class="fa fa-camera-retro fa-fw"></i> Take Screenshot</button>
             <div class="spacer"></div>
             <button type="button" id="btnFPS" class="btn btn-default btn-xs active"><i class="fa fa-check-square-o fa-fw"></i> FPS</button>
-            <button type="button" id="btnServerDiagnostics" class="btn btn-default btn-xs"><i class="fa fa-square-o fa-fw"></i> Server Diagnostics</button>
+            <button type="button" id="btnServerDiagnostics" class="btn btn-default btn-xs active"><i class="fa fa-check-square-o fa-fw"></i> Server CPU MB</button>
         </div>
         <a href="http://www.assembledrealms.com" style="float: right;"><img src="//www.assembledrealms.com/build/img/logo.png"></a>
     </div>
     
     <div id="realm" style="margin: 20px auto; width: 896px; padding: 0;"></div>
     
-    <div id="realmStats">
-        <div id="realmStatInside">
+    <div id="realmStats" class="center-block">
+        <div id="serverStats">
             <div style="display: inline-block; font-size: 0.75em; vertical-align: top; margin-top: 6px;">
                 <span style="color: #ffffff;"><span id="cpu_display"></span> CPU <i class="fa fa-square"></i></span>
                 <br />
@@ -134,29 +128,102 @@
 
 
     <script>
+		var DEBUG   = true;
+        var ROOT    = '/realms/<%= id %>/';
+        var STATS   = '/realms/<%= id %>/stats';
+        var HOST    = window.location.host + ':<%= port %>';
+		
+		var engine 	= new Engine();
+		var stats 	= new Stats();
+		
         var __memory_series   = undefined;
         var __cpu_series      = undefined;
         var __memory_span     = undefined;
         var __cpu_span        = undefined;
+		var __display_fps	  = true;
+		var __display_server  = true;
+		
+		$("#btnFPS").on("click", function (e) {
+		
+			var self = $(this);
+		
+			if (__display_fps) {
+				// Turn off:
+				$("#stats").hide();
+				__display_fps = false;
+				self.removeClass("active");
+				self.html('<i class="fa fa-square-o fa-fw"></i> FPS');
+			} else {
+				// Turn on:
+				$("#stats").show();
+				__display_fps = true;
+				self.addClass("active");
+				self.html('<i class="fa fa-check-square-o fa-fw"></i> FPS');
+			}
+		});
+		
+		$("#btnServerDiagnostics").on("click", function (e) {
+		
+			var self = $(this);
+		
+			if (__display_server) {
+				// Turn off:
+				$("#serverStats").hide();
+				__display_server = false;
+				self.removeClass("active");
+				self.html('<i class="fa fa-square-o fa-fw"></i> Server CPU MB');
+			} else {
+				// Turn on:
+				$("#serverStats").show();
+				__display_server = true;
+				self.addClass("active");
+				self.html('<i class="fa fa-check-square-o fa-fw"></i> Server CPU MB');
+			}
+			
+			engine.debug(__display_server);
+		});
         
         $(document).ready(function () {  
-            /*
-            memory_series   = new TimeSeries();
-            cpu_series      = new TimeSeries();
-            
-            setInterval(function() {
-                $.get( STATS, function( data ) {
-                    memory_series.append(new Date().getTime(), Math.round(data.memory / 1000000));
-                    cpu_series.append(new Date().getTime(), data.cpu);
-                });
-            }, 10000);
+	
+			engine.loaded = function () {
+			
+				if (DEBUG) {
+					
+					stats.setMode(0); // 0: fps, 1: ms
+					document.getElementById("realmStats").appendChild( stats.domElement );
+					
+					engine.debug(true);
+				}
+			
+				animate();
+			};
+			
+			engine.debugging = function (data) {
+				__memory_series.append(new Date().getTime(), data.memory / 1000000 / 512 * 100);
+                __memory_span.textContent = parseFloat(data.memory / 1000000).toFixed(2);
+                
+                __cpu_series.append(new Date().getTime(), data.cpu);
+                __cpu_span.textContent = data.cpu + ' %';
+			};
+			
+			
+			
+			function animate() {
+				
+				if (__display_fps) {
+					stats.begin();
+				}
+				
+				engine.render();
+				
+				if (__display_fps) {
+					stats.end();
+				}
+				
+				requestAnimationFrame(animate);
 
-            var smoothie = new SmoothieChart({ grid: { strokeStyle: 'rgb(125, 0, 0)', fillStyle: 'rgb(60, 0, 0)', lineWidth: 1, millisPerLine: 250, verticalSections: 6 } });
-            smoothie.addTimeSeries(memory_series, { strokeStyle: 'rgb(0, 255, 0)', fillStyle: 'rgba(0, 255, 0, 0.4)', lineWidth: 2 });
-            smoothie.addTimeSeries(cpu_series, { strokeStyle: 'rgb(255, 255, 255)', fillStyle: 'rgba(255, 255, 255, 0.3)', lineWidth: 2 });
-
-            smoothie.streamTo(document.getElementById("memory_cpu"), 10000);
-            */
+			}
+		
             
             var chart 	= new SmoothieChart({millisPerPixel: 100,
 									grid: {fillStyle:'#4C4C4C',strokeStyle:'#777777'},
@@ -180,10 +247,15 @@
             
             chart.addTimeSeries(__memory_series, {lineWidth:2.3,strokeStyle:'#00ff00',fillStyle:'rgba(0,255,0,0.11)'});
             chart.addTimeSeries(__cpu_series, {lineWidth:2.3,strokeStyle:'#ffffff',fillStyle:'rgba(255,255,255,0.11)'});
-            
+			
+			chart.streamTo(canvas, 2000);
+			
+			engine.initialize( document.getElementById("realm") );
+			
+            /*
             var socket = io('http://<%= host %>');
             socket.on('connect', function () {
-                socket.emit('join_debug');
+                socket.emit('subscribe', {id: <%= id %>});
             });
             socket.on('stats', function (data) {
                 __memory_series.append(new Date().getTime(), data.memory / 1000000 / 512 * 100);
@@ -192,7 +264,7 @@
                 __cpu_series.append(new Date().getTime(), data.cpu);
                 __cpu_span.textContent = data.cpu + ' %';
             });
-            /*
+            
             setInterval(function() {
                 $.get( 'http://debug-01.assembledrealms.com/realms/99/stats', function( data ) {
                     __memory_series.append(new Date().getTime(), data.memory / 1000000 / 512 * 100);
@@ -203,7 +275,7 @@
                 });
             }, 2000);
             */
-            chart.streamTo(canvas, 2000);
+            
             
         });
     </script>

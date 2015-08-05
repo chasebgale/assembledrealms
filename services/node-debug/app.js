@@ -163,14 +163,13 @@ var scripts   = [];
 app.get('/realms/:id', function (req, res, next) {
 
 	redisClient.get(req.params.id, function (error, reply) {
-
-        if (reply == null) {
-            // TODO: Modify these errors/realm ejs to show these errors all pretty like
-            return res.send("Backend for realm is down...");
-        }
 		
 		if (error) {
-            return res.send("Redis is down...");
+			return res.render('error', {message: "REDIS appears to be down or unresponsive..."});
+        }
+		
+		if (reply == null) {
+            return res.render('error', {message: "REDIS has no knowledge of this realm..."});
         }
         
         scripts   = [];
@@ -240,26 +239,14 @@ app.get('/realms/:id', function (req, res, next) {
 
 var clients = {};
 
+/*
 io.on('connection', function (socket) {
-	
-	var diagnostics = undefined;
-	
-	console.log('SOCKET: ' + socket.id + ' CONNECTED');
 	
 	socket.on('subscribe', function (data) {
 		console.log('SOCKET: ' + socket.id + ' SUBSCRIBED ' + JSON.stringify(data));
         if (diagnostics === undefined) {
 			console.log('SOCKET: ' + socket.id + ' diagnostics = undefined');
-            diagnostics = setInterval(function () {
-                pm2.describe(data.id, function (err, list) {
-                    console.log('checking ' + data.id);
-                    if (err) {
-                        socket.volatile.emit('ERR', err.message);
-                        return;
-                    } 
-                    socket.volatile.emit('stats', {cpu: list[0].monit.cpu, memory: list[0].monit.memory});
-                });
-            }, 1000);
+            
         } else {
 			console.log('SOCKET: ' + socket.id + ' diagnostics = something');
 		}
@@ -271,12 +258,17 @@ io.on('connection', function (socket) {
 	});
 });
 
-
-    
-        
-        
-        
-    
+var diagnostics = setInterval(function () {
+	pm2.describe(data.id, function (err, list) {
+		console.log('checking ' + data.id);
+		if (err) {
+			socket.volatile.emit('ERR', err.message);
+			return;
+		} 
+		socket.volatile.emit('stats', {cpu: list[0].monit.cpu, memory: list[0].monit.memory});
+	});
+}, 1000);
+  */  
 
 // Serve up the realm files, when requested:
 app.use('/realms', express.static(__dirname + '/realms'));

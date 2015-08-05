@@ -153,6 +153,7 @@ class loggedInUser {
 			?,
 			?,
 			?,
+			?,
             ?)");
 		$stmt->bind_param("issis", $this->user_id, $title, $description, $engine, $source_server);
 		$stmt->execute();
@@ -164,14 +165,27 @@ class loggedInUser {
 	
 	public function destroyRealm($realm_id)
 	{
-        // TODO
+		// Realms with status -99 are flagged for deletion,
+		// TODO: Record the current date so we can remove after 30 days or something
+		
+		global $mysqli,$db_table_prefix;
+		$stmt = $mysqli->prepare("UPDATE realms
+						 SET status = -99
+						 WHERE
+						 id = ?");
+        $stmt->bind_param("i", $realm_id);
+        $stmt->execute();
+        $stmt->close();
+		
+        /*
 		global $mysqli,$db_table_prefix;
 		$stmt = $mysqli->prepare("DELETE FROM realms
 			WHERE user_id = ? AND
 			id = ?");
 		$stmt->bind_param("ii", $this->user_id, $realm_id);
 		$stmt->execute();
-		$stmt->close();	
+		$stmt->close();
+		*/		
 	}
     
     public function offlineRealm($realm_id)

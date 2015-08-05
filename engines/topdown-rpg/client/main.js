@@ -1,3 +1,4 @@
+/*
 $(document).ready(function () {    
     
     var engine = new Engine();
@@ -17,6 +18,8 @@ $(document).ready(function () {
 		//stats.domElement.style.position = 'absolute';
 		//stats.domElement.style.left = '32px';
 		//stats.domElement.style.top = '564px';
+		
+		
 
 		document.getElementById("realmStatInside").appendChild( stats.domElement );
 	}
@@ -35,3 +38,4 @@ $(document).ready(function () {
 	}
 	
 });
+*/
