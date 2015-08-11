@@ -140,8 +140,6 @@ setInterval(function(){
                 if (body.message !== 'OK') {
                     // TODO: QUEUE UP RETRY
                 }
-                
-                callback();
             });
             
         } else {
