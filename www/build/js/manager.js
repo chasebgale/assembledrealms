@@ -1,5 +1,8 @@
 var __removedScreenshots 	= [];
 
+var __chart                 = undefined;
+var __chart_canvas          = undefined;
+
 var __memory_series   		= undefined;
 var __cpu_series      		= undefined;
 
@@ -231,21 +234,19 @@ $(document).ready(function () {
     $("#depositAmountSlider").on('input', function () {
         var floatDeposit = parseFloat($(this).val());
         var totalDeposit = __realmFunds + (floatDeposit * 100);
-        var depositToHours = Math.floor(totalDeposit / 0.9);
         
         $("#depositAmount").val(floatDeposit);
         $("#realmFundsAfter").text(accounting.formatMoney(totalDeposit / 100));
-        $("#realmLifespan").text(depositToHours + " hours, or about " + moment.duration(depositToHours, 'hours').humanize() );
+        $("#realmLifespan").text(totalDeposit + " hours, or about " + moment.duration(totalDeposit, 'hours').humanize() );
     });
     
     $("#depositAmount").on('input', function () {
         var floatDeposit = parseFloat($(this).val());
         var totalDeposit = __realmFunds + (floatDeposit * 100);
-        var depositToHours = Math.floor(totalDeposit / 0.9);
         
         $("#depositAmountSlider").val(floatDeposit);
         $("#realmFundsAfter").text(accounting.formatMoney(totalDeposit / 100));
-        $("#realmLifespan").text(depositToHours + " hours, or about " + moment.duration(depositToHours, 'hours').humanize() );
+        $("#realmLifespan").text(totalDeposit + " hours, or about " + moment.duration(totalDeposit, 'hours').humanize() );
     });
     
     $("#depositButton").on('click', function () {
@@ -296,7 +297,7 @@ $(document).ready(function () {
     $("#realmLifespan").text(depositToHours + " hours, or about " + moment.duration(depositToHours, 'hours').humanize() );
    
    
-    var chart 	= new SmoothieChart({millisPerPixel: 100,
+    __chart 	    = new SmoothieChart({millisPerPixel: 100,
 									grid: {fillStyle:'#4C4C4C',strokeStyle:'#777777'},
 									yRangeFunction: function(range) { 
 										return {min: 0, max: (range.max + 10 > 100) ? 100 : range.max + 10}; 
@@ -308,7 +309,7 @@ $(document).ready(function () {
 										return parseFloat(max).toFixed(0) + " %";
 									}});
 									 
-    var canvas 	= document.getElementById('chart-server');
+    __chart_canvas  = document.getElementById('chart-server');
 	
 	__memory_series = new TimeSeries();
 	__cpu_series 	= new TimeSeries();
@@ -316,8 +317,8 @@ $(document).ready(function () {
 	__memory_span = document.getElementById('mem_display');
 	__cpu_span = document.getElementById('cpu_display');
 	
-	chart.addTimeSeries(__memory_series, {lineWidth:2.3,strokeStyle:'#00ff00',fillStyle:'rgba(0,255,0,0.11)'});
-	chart.addTimeSeries(__cpu_series, {lineWidth:2.3,strokeStyle:'#ffffff',fillStyle:'rgba(255,255,255,0.11)'});
+	__chart.addTimeSeries(__memory_series, {lineWidth:2.3,strokeStyle:'#00ff00',fillStyle:'rgba(0,255,0,0.11)'});
+	__chart.addTimeSeries(__cpu_series, {lineWidth:2.3,strokeStyle:'#ffffff',fillStyle:'rgba(255,255,255,0.11)'});
    
     if (__realmOnline) {
         enableChart();
@@ -337,7 +338,7 @@ function enableChart() {
 		__cpu_series.append(new Date().getTime(), data.cpu);
 		__cpu_span.textContent = data.cpu + ' %';
 	});
-	chart.streamTo(canvas, 2000);
+	__chart.streamTo(__chart_canvas, 2000);
    
     $("#chart-container").css('opacity', '1.0');
 }

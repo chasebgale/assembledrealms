@@ -9,6 +9,7 @@ var async           = require('async');
 // in redis or the like for fault tolerance in case this service crashes for some reason... if not someone could
 // potentially be waiting in perpetuity for their realm to come online...
 var check_list      = [];
+var realms          = {};
 var ocean_token 	= "254c9a09018914f98dd83d0ab1670f307b036fe761dda0d7eaeee851a37eb1cd";
 var realms_token    = "b2856c87d4416db5e3d1eaef2fbef317846b06549f1b5f3cce1ea9d639839224";
 var self_token      = "2f15adf29c930d8281b0fb076b0a14062ef93d4d142f6f19f4cdbed71fff3394";
@@ -32,11 +33,11 @@ app.get('/launch/:id', function (req, res, next) {
     
     var auth = req.get('Authorization');
 
-    console.log('### Received request to /launch/' + req.params.id + ' with authorization: ' + auth);
-
     if (auth !== self_token) {
         return res.status(401).send("Please don't try to break things :/");
     }
+    
+    console.log(new Date().toISOString() + ' Received valid request to /launch/' + req.params.id);
     
 	var realm_host = 'realm-' + req.params.id + '.assembledrealms.com';
     
@@ -57,12 +58,47 @@ app.get('/launch/:id', function (req, res, next) {
     };
     
     request.post(options, function(err, response, body) {
-        console.log("Got response: " + response.statusCode + " for " + req.params.id);
+        console.log(new Date().toISOString() + " Got launch response from DO: " + response.statusCode + " for " + req.params.id);
         
         if ((response.statusCode > 199) && (response.statusCode < 300)) {
             // True success
             check_list.push( {id: req.params.id, droplet: body.droplet.id, time: new Date().getTime()} );
+            realms[req.params.id] = body.droplet.id;
             
+            return res.json({message: 'OK'});
+        } else {
+            // Successful request but failure on DO API side
+            console.log("Failure message: " + body);
+            return res.json({message: 'FAILURE: ' + body});
+        }
+    });
+    
+});
+
+app.get('/shutdown/:id', function (req, res, next) {
+    
+    var auth = req.get('Authorization');
+
+    if (auth !== self_token) {
+        return res.status(401).send("Please don't try to break things :/");
+    }
+    
+    console.log(new Date().toISOString() + ' Received valid request to /shutdown/' + req.params.id);
+    
+	var options = {
+        url: 'https://api.digitalocean.com/v2/droplets/' + realms[req.params.id],
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + ocean_token,
+            'Accept': '*/*'
+        }
+    };
+    
+    request.del(options, function(err, response, body) {
+        console.log(new Date().toISOString() + " Got delete response from DO: " + response.statusCode + " for " + req.params.id);
+        
+        if ((response.statusCode > 199) && (response.statusCode < 300)) {
+            // True success
             return res.json({message: 'OK'});
         } else {
             // Successful request but failure on DO API side
@@ -109,7 +145,7 @@ setInterval(function(){
                     }
                 } else {
                     // Successful request but failure on DO API side
-                    console.log("Failure message: " + body);
+                    console.log("CHECKER ::: Failure message: " + body);
                 }
                 
                 callback();
@@ -139,6 +175,7 @@ setInterval(function(){
                             
                 if (body.message !== 'OK') {
                     // TODO: QUEUE UP RETRY
+                    console.log(new Date().toISOString() + ' Failure to update assembledrealms...');
                 }
             });
             

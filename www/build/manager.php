@@ -231,6 +231,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     }
     
     $realm_funds = money_format("%!n", ($realm["funds"] / 100));
+    $realm_cents = intval($realm["funds"]);
 } else {
     echo "<h2>Please stop tinkering.</h2>";
     die();
@@ -290,7 +291,15 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 				<p class="text-muted"><strong>Server</strong></p>
 			</div>
 			<div class="col-md-4">
-				<span class="h3"><?php echo ($realm["status"] == 0 ? "Offline" : "<span class='label label-success'><i class='fa fa-power-off'></i> Online</span>") ?></small></span>
+				<span class="h3">
+                <?php if ($realm["status"] == 0) { ?>
+                    Offline
+                <?php } else if ($realm["status"] == 1) { ?>
+                    <span class='label label-success'><i class='fa fa-power-off'></i> Online</span>
+                <?php } else if ($realm["status"] == 2) { ?>
+                    <span class='label label-warning'><i class='fa fa-cog fa-spin'></i> Booting</span>
+                <?php } ?>
+                </span>
 			</div>
 			<div class="col-md-6">
 				<?php 
@@ -404,6 +413,11 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                 <h4 class="modal-title">Bring Realm Online</h4>
             </div>
             <div class="modal-body" id="modalTakeRealmOnlineContent">
+            <?php if ($realm_cents < 25) { ?>
+                <div class="alert alert-warning" role="alert">
+                    <strong>Heads Up!</strong> Your realm needs at least $0.25 of funds before you're able to bring up a private server.
+                </div>
+            <?php } ?>
                  <div class="row" style="padding-top: 8px;">
                     <div class="col-md-6">
                         <!-- FREE SERVER -->
@@ -430,15 +444,24 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                         <!-- PAID SERVER -->
                         <div class="panel panel-default">
                             <div class="panel-heading">
+                            <?php if ($realm_cents < 25) { ?>
+                                <div class="radio disabled">
+                                    <label>
+                                        <input type="radio" name="serverTypeRadios" id="typePaid1" value="1" disabled>
+                                        <span class="h4"><s>Small Private Server</s></span>
+                                    </label>
+                                </div>
+                            <?php } else { ?>
                                 <div class="radio">
                                     <label>
-                                        <input type="radio" name="serverTypeRadios" id="typePaid1" value="1" checked>
+                                        <input type="radio" name="serverTypeRadios" id="typePaid1" value="1">
                                         <span class="h4">Small Private Server</span>
                                     </label>
                                 </div>
+                            <?php } ?>
                             </div>
                             <div class="panel-body">
-                            <h4>$0.009 per hour <small>(90% of 1 penny)</small></h4>
+                            <h4>$0.01 per hour <small>(1 cent)</small></h4>
                             </div>
                             <ul class="list-group">
                                 <li class="list-group-item">Max simultaneous users: Up to you</li>

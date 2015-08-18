@@ -146,7 +146,6 @@ class loggedInUser {
 			user_id,
 			title,
 			description,
-            engine,
             source
 			)
 			VALUES (
@@ -155,7 +154,7 @@ class loggedInUser {
 			?,
 			?,
             ?)");
-		$stmt->bind_param("issis", $this->user_id, $title, $description, $engine, $source_server);
+		$stmt->bind_param("issis", $this->user_id, $title, $description, $source_server);
 		$stmt->execute();
 		$inserted_id = $mysqli->insert_id;
 		$stmt->close();
@@ -191,23 +190,7 @@ class loggedInUser {
     public function offlineRealm($realm_id)
 	{
 		global $mysqli,$db_table_prefix;
-		$stmt = $mysqli->prepare("UPDATE realms
-						 SET status = 0
-						 WHERE
-						 id = ?");
-        $stmt->bind_param("i", $realm_id);
-        $stmt->execute();
-        $stmt->close();
-	}
-    
-    public function onlineRealm($realm_id, $realm_level)
-	{
-		global $mysqli,$db_table_prefix;
         
-        // 
-        
-        $logfile = '/home/tmp/gatekeeper_outbound.log';
-		
 		// Bring the server online, if not on the free tier
 		if ($realm_level > 0) {
 			$curl 					= curl_init();
@@ -235,7 +218,7 @@ class loggedInUser {
                 return false;
             } else {
                 $stmt = $mysqli->prepare("UPDATE realms
-								  SET status = 1
+								  SET status = 2
 								  WHERE
 								  id = ?");
                 $stmt->bind_param("i", $realm_id);
@@ -244,6 +227,59 @@ class loggedInUser {
                 return true;
             }
 		}
+	}
+    
+    public function onlineRealm($realm_id, $realm_level)
+	{
+		global $mysqli,$db_table_prefix;
+        
+        // 
+        
+        $logfile = '/home/tmp/gatekeeper_outbound.log';
+        $status = 1;
+		
+		// Bring the server online, if not on the free tier
+		if ($realm_level > 0) {
+			$curl 					= curl_init();
+			$gatekeeper_token 	    = "2f15adf29c930d8281b0fb076b0a14062ef93d4d142f6f19f4cdbed71fff3394";
+
+			curl_setopt_array($curl, array(
+				CURLOPT_HTTPHEADER 		=> array('Authorization: ' . $gatekeeper_token),
+                CURLOPT_HEADER          => true,
+				CURLOPT_RETURNTRANSFER 	=> true,
+				CURLOPT_SSL_VERIFYHOST 	=> 0,
+				CURLOPT_SSL_VERIFYPEER 	=> false,
+				CURLOPT_URL 			=> 'http://gatekeeper.assembledrealms.com/launch/' . $realm_id
+			));
+
+			$resp       = curl_exec($curl);
+            $httpcode   = intval(curl_getinfo($curl, CURLINFO_HTTP_CODE));
+            
+			curl_close($curl);
+			
+			$decoded = json_decode($resp, true);
+			
+            if (($httpcode < 200) && ($httpcode > 299)) {
+                // We have an error:
+                error_log($httpcode . ": " . $resp, 3, $logfile);
+                return false;
+            } else {
+                $status = 2;
+            }
+		} else {
+            // Free tier, call play-XX.assembledrealms.com and load latest source
+            // TODO
+        }
+        
+        $stmt = $mysqli->prepare("UPDATE realms
+                          SET status = ?, level = ?
+                          WHERE
+                          id = ?");
+        $stmt->bind_param("iii", $status, $realm_level, $realm_id);
+        $stmt->execute();
+        $stmt->close();
+        
+        return true;
         
 	}
     
@@ -321,7 +357,7 @@ class loggedInUser {
 				realms.user_id,
 				realms.title,
 				realms.description,
-				realms.engine,
+				realms.level,
 				realms.status,
 				realms.players_online,
 				realms.funds,
@@ -344,7 +380,7 @@ class loggedInUser {
 				   $user_id,
 				   $title,
 				   $description,
-                   $engine,
+                   $level,
 				   $status,
 				   $players,
 				   $funds,
@@ -363,7 +399,7 @@ class loggedInUser {
 			     'user_id' => $user_id,
 			     'title' => $title,
 			     'description' => $description,
-                 'engine' => $engine,
+                 'level' => $level,
 			     'status' => $status,
 			     'players' => $players,
 			     'funds' => $funds,
@@ -387,7 +423,7 @@ class loggedInUser {
 			user_id,
 			title,
 			description,
-			engine,
+			level,
 			status,
 			players_online,
 			funds,
@@ -407,7 +443,7 @@ class loggedInUser {
 				   $user_id,
 				   $title,
 				   $description,
-                   $engine,
+                   $level,
 				   $status,
 				   $players,
 				   $funds,
@@ -425,7 +461,7 @@ class loggedInUser {
 				   'user_id' => $user_id,
 				   'title' => $title,
 				   'description' => $description,
-                   'engine' => $engine,
+                   'level' => $level,
 				   'status' => $status,
 				   'players' => $players,
 				   'funds' => $funds,
