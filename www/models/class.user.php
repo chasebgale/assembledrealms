@@ -191,6 +191,15 @@ class loggedInUser {
 	{
 		global $mysqli,$db_table_prefix;
         
+        $stmt = $mysqli->prepare("SELECT level
+			FROM realms
+			WHERE id = ?");
+		$stmt->bind_param("i", $realm_id);
+		$stmt->execute();
+		$stmt->bind_result($realm_level);
+		$stmt->fetch();
+		$stmt->close();
+        
 		// Bring the server online, if not on the free tier
 		if ($realm_level > 0) {
 			$curl 					= curl_init();
@@ -202,7 +211,7 @@ class loggedInUser {
 				CURLOPT_RETURNTRANSFER 	=> true,
 				CURLOPT_SSL_VERIFYHOST 	=> 0,
 				CURLOPT_SSL_VERIFYPEER 	=> false,
-				CURLOPT_URL 			=> 'http://gatekeeper.assembledrealms.com/launch/' . $realm_id
+				CURLOPT_URL 			=> 'http://gatekeeper.assembledrealms.com/shutdown/' . $realm_id
 			));
 
 			$resp       = curl_exec($curl);
@@ -218,7 +227,7 @@ class loggedInUser {
                 return false;
             } else {
                 $stmt = $mysqli->prepare("UPDATE realms
-								  SET status = 2
+								  SET status = 0, address = NULL
 								  WHERE
 								  id = ?");
                 $stmt->bind_param("i", $realm_id);

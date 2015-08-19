@@ -66,7 +66,8 @@ $(document).ready(function () {
             if (data.message == "OK") {
                 $("#onlineOfflineBtn").attr('data-target', '#modalTakeRealmOnline');
                 $("#onlineOfflineBtn").text('Take Realm Online');
-                $("#onlineOfflineDescription").html('Your realm is currently <strong>offline</strong>. Click this button to allow other users to connect to your realm and enjoy the fruits of your hard work!');
+                $("#realmStatus").text('Offline');
+                $("#modalTakeRealmOffline").modal('hide');
             }
         })
         .fail(function(data) {
@@ -102,9 +103,10 @@ $(document).ready(function () {
             button.html('Bring Online');
             
             if (data.message == "OK") {
-                $("#onlineOfflineBtn").attr('data-target', '#modalTakeRealmOnline');
-                $("#onlineOfflineBtn").text('Take Realm Online');
-                $("#onlineOfflineDescription").html('Your realm is currently <strong>offline</strong>. Click this button to allow other users to connect to your realm and enjoy the fruits of your hard work!');
+                $("#onlineOfflineBtn").attr('data-target', '#modalTakeRealmOffline');
+                $("#onlineOfflineBtn").text('Take Realm Offline');
+                $("#realmStatus").html("<span class='label label-warning'><i class='fa fa-cog fa-spin'></i> Booting</span>");
+                $("#modalTakeRealmOnline").modal('hide');
             } else {
                 alert("FAILURE!");
             }

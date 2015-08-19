@@ -291,7 +291,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 				<p class="text-muted"><strong>Server</strong></p>
 			</div>
 			<div class="col-md-4">
-				<span class="h3">
+				<span class="h3" id="realmStatus">
                 <?php if ($realm["status"] == 0) { ?>
                     Offline
                 <?php } else if ($realm["status"] == 1) { ?>

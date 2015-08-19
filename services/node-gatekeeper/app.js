@@ -140,8 +140,13 @@ setInterval(function(){
                 
                 if ((response.statusCode > 199) && (response.statusCode < 300)) {
                     // True success
-                    if (body.droplet.networks.v4[0].ip_address) {
-                        check_item.address = body.droplet.networks.v4[0].ip_address;
+                    try {
+                        if (body.droplet.networks.v4.length > 0) {
+                            check_item.address = body.droplet.networks.v4[0].ip_address;
+                        }
+                    } catch (e) {
+                            console.log(e.message);
+                            console.log(JSON.stringify(body));
                     }
                 } else {
                     // Successful request but failure on DO API side
