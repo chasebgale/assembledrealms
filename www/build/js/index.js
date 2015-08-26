@@ -9,8 +9,12 @@ $(document).ready(function () {
     $.post("index.php", parameters, function (data) {
         if (data !== "null") {
             $("#existingRealmsTableBody").html(templateFn({ 'realms': JSON.parse( data ) }));
-            $("#existingRealms").fadeIn();
+        } else {
+            $("#existingRealmsTable").hide();
+            $("#emptyAlert").show();
         }
+        
+        $("#existingRealms").fadeIn();
     });
 
     $("#buttonCreateProject").on('click', function (e) {

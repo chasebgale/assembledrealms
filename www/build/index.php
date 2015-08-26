@@ -20,7 +20,12 @@ if ($method == 'POST') {
     
     if ($directive == 'list') {
         $realms = $loggedInUser->fetchRealms();
-        echo json_encode(array_values($realms));
+        
+        if ($realms) {
+            echo json_encode(array_values($realms));
+        } else {
+            echo 'null';
+        }
     }
     
     die();
@@ -101,6 +106,9 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
                 <h3 class="realm-panel-title">Your Realms</h3>
             </div>
             <div class="panel-body">
+                <div id="emptyAlert" class="alert alert-info" role="alert" style="display: none;">
+                    <strong>Time to get busy!</strong> You haven't created a realm yet...
+                </div>
                 <table id="existingRealmsTable" class="table table-hover">
                     <thead>
                         <tr>

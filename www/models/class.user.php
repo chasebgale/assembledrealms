@@ -152,9 +152,8 @@ class loggedInUser {
 			?,
 			?,
 			?,
-			?,
             ?)");
-		$stmt->bind_param("issis", $this->user_id, $title, $description, $source_server);
+		$stmt->bind_param("isss", $this->user_id, $title, $description, $source_server);
 		$stmt->execute();
 		$inserted_id = $mysqli->insert_id;
 		$stmt->close();
@@ -444,7 +443,7 @@ class loggedInUser {
 			show_funding,
 			address
 			FROM realms
-			WHERE user_id = ?");
+			WHERE user_id = ? AND status > -1");
 		$stmt->bind_param("i", $this->user_id);
 		$stmt->execute();
         
