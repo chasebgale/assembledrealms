@@ -48,6 +48,7 @@ app.post('/launch', function (req, res, next) {
 	var realmID     = req.body.id;
 	var realmApp    = '/var/www/realms/' + realmID + '/server/app.js';
     var found_proc  = [];
+    var close_proc  = [];
 	
     pm2.connect(function(err) {
         
@@ -62,9 +63,34 @@ app.post('/launch', function (req, res, next) {
                 if (proc.name == realmID) {
                     found_proc.push(proc);
                 }
+                
+                redisClient.get(realmID + "-clients",  function (error, reply) {
+		
+                    if (error) {
+                        continue;
+                    }
+                    
+                    // If the server is empty, shut it down:
+                    // TODO: Maybe check the last activity time and only shudown proc if it's been idle for
+                    // over 5-10 minutes or something...
+                    if (reply == 0) {
+                        close_proc.push(proc);
+                    }
+                    
+                });
+                
             });
             
             console.log('found ' + found_proc.length);
+            console.log('idle ' + close_proc.length);
+            
+            close_proc.forEach(function(proc) {
+                pm2.stop(proc, function(err, proc) {
+                    if (err) {
+                        console.log("Attempted to stop " + proc + " but errored: " + err.stack);
+                    }                   
+                });
+            });
             
             if (found_proc.length === 0) {
                 // No existing realm server running, spool up new one:
@@ -118,7 +144,8 @@ app.get('/realms/:id', function (req, res, next) {
         var port = reply.toString().replace(/(\r\n|\n|\r)/gm,"");
         
         // Update the last access time so it doesn't get shutdown for inactivity:
-        redisClient.set(req.params.id + '-time', new Date().toString());
+        // (NOW WE ARE DOING THIS IN THE APP ITSELF)
+        // redisClient.set(req.params.id + '-time', new Date().toString());
         
         // For now, grab all the required libs each time we prep the view, in the future,
         // do this once when '/launch' is called and store the array in redis...

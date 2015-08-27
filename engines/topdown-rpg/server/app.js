@@ -19,6 +19,9 @@ var realmID			= directory_arr[directory_arr.length - 2];
 // Increment and assign the smallest ids to clients
 var counter = 0;
 
+// Keep a connected client count:
+var clients = 0;
+
 // Grab the map and parse into an object
 var map = JSON.parse( fs.readFileSync(__dirname + '/../client/maps/town.json') );
 
@@ -120,6 +123,10 @@ io.on('connection', function (socket) {
 		}
 		
 		engine.addPlayer(player);
+        clients++;
+        
+        // Update the last access time so it doesn't get shutdown for inactivity:
+        redisClient.set(req.params.id + '-time', new Date().toString());
 		
 		var data = {};
 		data.players = {};
@@ -170,6 +177,15 @@ io.on('connection', function (socket) {
         });
 		
 	});
+    
+    socket.on('disconnect', function() {
+        // Update the last access time so it doesn't get shutdown for inactivity:
+        db.set(req.params.id + '-time', new Date().toString());
+        
+        // Maintain connected client count:
+        clients--;
+        db.set(req.params.id + '-clients', clients);
+    });
     
 });	
 
@@ -252,6 +268,9 @@ pm2.connect(function(err) {
                 
                 db.set(realmID, http.address().port);
                 db.set(realmID + '-time', new Date().toString());
+                
+                // Connected client count
+                db.set(req.params.id + '-clients', 0);
                 
             });
         } else {
