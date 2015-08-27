@@ -14,8 +14,6 @@ var redisClient 	= redis.createClient();
 var server			= http.Server(app);
 var io 				= require('socket.io')(server);
 
-var realms			= {};
-
 var allowCrossDomain = function(req, res, next) {
     res.header('Access-Control-Allow-Origin', '*'); //'http://www.assembledrealms.com');
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
@@ -75,8 +73,8 @@ app.post('/launch', function (req, res, next) {
 					pm2.disconnect();
 					
                     if (err) {
-                        res.send('ERROR BOOTING: ' + err.message);
-                        throw new Error('err');
+                        console.log(e.stack);
+                        return res.send('ERROR BOOTING: ' + err.message);
                     }
 
                     res.send('OK');
@@ -88,8 +86,8 @@ app.post('/launch', function (req, res, next) {
 					pm2.disconnect();
 					
                     if (err) {
-                        res.send('ERROR BOOTING: ' + err.message);
-                        throw new Error('err');
+                        console.log(e.stack);
+                        return res.send('ERROR BOOTING: ' + err.message);
                     }
 
                     res.send('OK');
@@ -99,63 +97,6 @@ app.post('/launch', function (req, res, next) {
         
     });
     
-    /*
-	if (realms[realmID] === undefined) {
-		
-		// TODO: Right here, check if the memory for the server can handle adding another
-		// child process and if not, perhaps KILL the longest-idle existing child?
-
-		var child = new (forever.Monitor)(realmApp, {
-			max: 1,
-			silent: false,
-			options: ['debug']
-		});
-
-		child.on('exit', function () {
-			console.log('Realm ' + realmApp + ' has exited.');
-			res.send('ERROR BOOTING...');
-		});
-		
-		child.on('stdout', function (data) {
-			console.log('Realm ' + realmID + ' stdout: ' + data);
-			var split = data.toString().split(' ');
-			if (split[0] == 'port:') {
-				console.log('Realm ' + realmApp + ' has started on port ' + split[1]);
-				
-				// Remember the port, using the id as the key:
-				redisClient.set(realmID, split[1].trim());
-				redisClient.set(realmID + '-time', new Date().toString());
-				res.send('OK');
-			}
-		});
-		
-		realms[realmID] = child;
-
-		child.start();
-	} else {
-		var child = realms[realmID];
-		
-		child.on('exit', function () {
-			console.log('Realm ' + realmApp + ' has exited.');
-			res.send('ERROR BOOTING...');
-		});
-		
-		child.on('stdout', function (data) {
-			console.log('Realm ' + realmID + ' stdout: ' + data);
-			var split = data.toString().split(' ');
-			if (split[0] == 'port:') {
-				console.log('Realm ' + realmApp + ' has started on port ' + split[1]);
-				
-				// Remember the port, using the id as the key:
-				redisClient.set(realmID, split[1].trim());
-				redisClient.set(realmID + '-time', new Date().toString());
-				res.send('OK');
-			}
-		});
-		
-		child.restart();
-	}
-    */
 });
 
 var scripts   = [];
@@ -230,45 +171,10 @@ app.get('/realms/:id', function (req, res, next) {
 			
         });
 		
-		
-		
     });
 
 	
 });
-
-var clients = {};
-
-/*
-io.on('connection', function (socket) {
-	
-	socket.on('subscribe', function (data) {
-		console.log('SOCKET: ' + socket.id + ' SUBSCRIBED ' + JSON.stringify(data));
-        if (diagnostics === undefined) {
-			console.log('SOCKET: ' + socket.id + ' diagnostics = undefined');
-            
-        } else {
-			console.log('SOCKET: ' + socket.id + ' diagnostics = something');
-		}
-	});
-	
-	socket.on('disconnect', function () {
-		clearInterval(diagnostics);
-        diagnostics = undefined;
-	});
-});
-
-var diagnostics = setInterval(function () {
-	pm2.describe(data.id, function (err, list) {
-		console.log('checking ' + data.id);
-		if (err) {
-			socket.volatile.emit('ERR', err.message);
-			return;
-		} 
-		socket.volatile.emit('stats', {cpu: list[0].monit.cpu, memory: list[0].monit.memory});
-	});
-}, 1000);
-  */  
 
 // Serve up the realm files, when requested:
 app.use('/realms', express.static(__dirname + '/realms'));

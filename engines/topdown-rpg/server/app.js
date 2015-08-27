@@ -1,14 +1,13 @@
 var express 	= require('express');
-var Engine 		= require('./engine');
 var cookieParse = require('cookie-parser');
 var app 		= express();
 var http        = require('http').Server(app);
 var io 			= require('socket.io')(http);
 var redis       = require('redis');
-//var memwatch 	= require('memwatch-next');
 var fs			= require('fs');
 var pm2         = require('pm2');
 var db     		= redis.createClient();
+var Engine 		= require('./engine');
 
 // If second argument is passed, we are in debug mode:
 var debug 			= (process.argv[2] !== undefined);
@@ -252,7 +251,7 @@ pm2.connect(function(err) {
                 });
                 
                 db.set(realmID, http.address().port);
-                db.set(realmID + 'time', new Date().toString());
+                db.set(realmID + '-time', new Date().toString());
                 
             });
         } else {
