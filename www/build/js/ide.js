@@ -473,7 +473,7 @@ function initialize(projectID, projectDomain) {
 	console.log("|  | ___] ___] |___ |  | |__] |___ |___ |__/    |  \\\ |___ |  | |___ |  | ___]");
 	console.log(" ");
 	console.log("Thanks for taking a look!");
-	console.log("Please contact me if you find a bug or an exploit chase@assembledrealms.com");
+	console.log("Please contact me if you find a bug or an exploit, you'll be rewarded! chase@assembledrealms.com");
 }
 
 function lz4Compress(data) {
