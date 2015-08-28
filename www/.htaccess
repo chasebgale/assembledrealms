@@ -5,6 +5,7 @@ RewriteBase /
 
 ## don't touch /js URIs
 RewriteRule ^js/ - [L,NC]
+RewriteRule ^jobs/ - [L,NC]
 
 ## hide .php extension snippet
 

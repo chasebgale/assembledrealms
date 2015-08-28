@@ -16,6 +16,8 @@ enemies are sparse, think human dovakhins, must be taken down by multiple skelli
     this.matrix         = undefined;
     this.layer_terrain  = undefined;
     this.layer_air      = undefined;
+    this.layer_text     = undefined;
+    this.text_input     = undefined;
     
     this.avatar     = new Avatar(this);
     this.terrain    = new Terrain(this);
@@ -63,6 +65,10 @@ enemies are sparse, think human dovakhins, must be taken down by multiple skelli
 	
 	this.socket.on('stats', function (data) {
 		self.debugging(data);
+	});
+	
+	this.socket.on('text', function (data) {
+	    console.log(data);
 	});
         
 };
@@ -131,12 +137,24 @@ Engine.prototype.load = function (map) {
             self.actors.load(function (error) {
                 // Tell the realm we are ready for the initial data pack to setup actors, avatar position, etc
                 self.socket.emit('ready', 'ready');
+                
             });
             
         });
         
+        var loader = new PIXI.loaders.Loader();
+        loader.add('UO', ROOT + 'client/resource/uo.xml');
+        loader.once('complete', function () {
+            self.layer_text = new PIXI.Container(); 
+            self.text_input = new PIXI.extras.BitmapText('', { font: '16px UO Classic (rough)', align: 'left' });
+            self.text_input.position.x = 0;
+            self.text_input.position.y = CANVAS_HEIGHT - 16;
+            self.layer_text.addChild(self.text_input);
+            self.stage.addChild(self.layer_text);
+        });
+        loader.load();
+        
     });
-
 };
 
 Engine.prototype.render = function () {
