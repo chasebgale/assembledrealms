@@ -69,7 +69,7 @@ app.get('/launch/:id', function (req, res, next) {
         } else {
             // Successful request but failure on DO API side
             console.log("Failure message: " + body);
-            return res.json({message: 'FAILURE: ' + body});
+            return res.status(401).send(body);
         }
     });
     
@@ -85,27 +85,32 @@ app.get('/shutdown/:id', function (req, res, next) {
     
     console.log(new Date().toISOString() + ' Received valid request to /shutdown/' + req.params.id);
     
-	var options = {
-        url: 'https://api.digitalocean.com/v2/droplets/' + realms[req.params.id],
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + ocean_token,
-            'Accept': '*/*'
-        }
-    };
-    
-    request.del(options, function(err, response, body) {
-        console.log(new Date().toISOString() + " Got delete response from DO: " + response.statusCode + " for " + req.params.id);
+    if (realms[req.params.id]) {
+        var options = {
+            url: 'https://api.digitalocean.com/v2/droplets/' + realms[req.params.id],
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + ocean_token,
+                'Accept': '*/*'
+            }
+        };
         
-        if ((response.statusCode > 199) && (response.statusCode < 300)) {
-            // True success
-            return res.json({message: 'OK'});
-        } else {
-            // Successful request but failure on DO API side
-            console.log("Failure message: " + body);
-            return res.json({message: 'FAILURE: ' + body});
-        }
-    });
+        request.del(options, function(err, response, body) {
+            console.log(new Date().toISOString() + " Got delete response from DO: " + response.statusCode + " for " + req.params.id);
+            
+            if ((response.statusCode > 199) && (response.statusCode < 300)) {
+                // True success
+                realms[req.params.id] = undefined;
+                return res.json({message: 'OK'});
+            } else {
+                // Successful request but failure on DO API side
+                console.log("Failure message: " + body);
+                return res.status(401).send(body);
+            }
+        });
+    } else {
+        console.log(new Date().toISOString() + " : Delete request was missing a DO droplet ID from memory array...");
+    }
     
 });
 

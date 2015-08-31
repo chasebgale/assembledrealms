@@ -3,7 +3,7 @@ Options +FollowSymLinks -MultiViews
 RewriteEngine On
 RewriteBase /
 
-## don't touch /js URIs
+## don't touch a few specific URIs
 RewriteRule ^js/ - [L,NC]
 RewriteRule ^jobs/ - [L,NC]
 
