@@ -103,6 +103,10 @@ var Player = function (data) {
 	this.sprite     		= new PIXI.Container();
 	this.sprite.position 	= data.position;
 	
+	this.text               = new PIXI.extras.BitmapText('Hello, just testing!', { font: '16px UO Classic (rough)', align: 'center' });
+    this.text.position.x    = 0;
+    this.text.position.y    = 0;
+	
 	this.direction  = DIRECTION_S;
 	this.health     = 100;
 	this.stamina    = 100;
@@ -160,6 +164,8 @@ var Player = function (data) {
 	self.sprite.children[self.direction].visible = true;
 	self.sprite.children[self.direction].gotoAndStop(0);
 	
+	self.sprite.addChild(this.text);
+	
 };
 
 Player.prototype.move = function(player) {
@@ -199,6 +205,10 @@ var NPC = function (npc, renderer) {
 	// Public properties
 	this.sprite     		= new PIXI.Container();
 	this.sprite.position 	= npc.position;
+	
+	this.text               = new PIXI.extras.BitmapText('Hello, just testing!', { font: '16px UO Classic (rough)', align: 'left' });
+    this.text.position.x    = -1 * Math.round(this.text.textWidth / 2);
+    this.text.position.y    = -32;
 	
 	this.direction  = DIRECTION_S;
 	this.health     = 100;
@@ -271,6 +281,8 @@ var NPC = function (npc, renderer) {
         
 	self.sprite.children[self.direction].visible = true;
 	self.sprite.children[self.direction].gotoAndStop(0);
+	
+	self.sprite.addChild(this.text);
 	
 };
 

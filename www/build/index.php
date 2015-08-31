@@ -138,10 +138,11 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
     
         <% if (realm.status == 0) { %>
         <tr>
-        <% } else { %>
+        <% } else if (realm.status == 1) { %>
         <tr class="success">
+        <% } else if (realm.status == 2) { %>
+        <tr class="warning">
         <% } %>
-        
             <td>
             <% if (realm.status == 1) { %>
                 <i class="fa fa-power-off" style="color: white;"></i>

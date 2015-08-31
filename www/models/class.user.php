@@ -244,7 +244,7 @@ class loggedInUser {
         // 
         
         $logfile = '/home/tmp/gatekeeper_outbound.log';
-        $status = 1;
+        $status = 0;
 		
 		// Bring the server online, if not on the free tier
 		if ($realm_level > 0) {
@@ -272,7 +272,7 @@ class loggedInUser {
                 error_log($httpcode . ": " . $resp, 3, $logfile);
                 return false;
             } else {
-                $status = 2;
+                $status = 1;
             }
 		} else {
             // Free tier, call play-XX.assembledrealms.com and load latest source

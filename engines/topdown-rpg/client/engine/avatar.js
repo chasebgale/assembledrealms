@@ -4,6 +4,8 @@ var Avatar = function (engine) {
     this.sprite     = new PIXI.Container();
     this.moving     = false;
     this.attacking  = false;
+    this.typing     = false;
+    this.blurb      = "";
     this.health     = 100;
     this.stamina    = 100;
     this.experience = 0;
@@ -134,17 +136,145 @@ Avatar.prototype.load = function (callback_complete) {
         
 		self.sprite.children[self.direction].visible = true;
 		self.sprite.children[self.direction].gotoAndStop(0);
+		
+		KeyboardJS.on('enter', function() {
+
+            if (self.typing) {
+                // Send our text string, then clear it
+                self.engine.socket.emit('text', self.blurb);
+                self.blurb = ""; 
+                self.engine.text_input.text = self.blurb;
+                document.removeEventListener("keydown", self.keydown, false);
+            } else {
+                // Stop our avatar and show the carrot blinking for input
+                if (self.moving) {
+                    self.moving = false;
+                    self.sprite.children[self.direction].gotoAndStop(0);
+
+                    // Sending one more 'move' with duplicate coords as the last update will tell all clients this
+                    // actor has stopped moving
+                    self.engine.socket.emit('move', {position: self.engine.position, direction: self.direction});
+                }
+                
+                document.addEventListener("keydown", self.keydown, false);
+            }
+
+            self.typing = !self.typing;
+        });
         
         callback_complete();
         
     });
     
 };
+
+Avatar.prototype.keydown = function (e) {
+    
+    var letter = '';
+    
+    // Backspace
+    if (e.keyCode == 8) {
+        engine.avatar.blurb = engine.avatar.blurb.substring(0, engine.avatar.blurb.length - 1);
+    } else if (e.keyCode == 32) {
+        engine.avatar.blurb += ' ';
+    } else if ((e.keyCode > 64) && (e.keyCode < 91)) {
+        // Letter     
+        letter = String.fromCharCode(e.keyCode);
+        if (!e.shiftKey) {
+            letter = letter.toLowerCase();
+        }
+        engine.avatar.blurb += letter;
+    } else if ((e.keyCode > 47) && (e.keyCode < 58)) {
+        // Numbers
+        letter = String.fromCharCode(e.keyCode);
+        if (e.shiftKey) {
+            switch (letter) {
+                case '1':
+                    letter = '!';
+                    break;
+                case '2':
+                    letter = '@';
+                    break;
+                case '3':
+                    letter = '#';
+                    break;
+                case '4':
+                    letter = '$';
+                    break;
+                case '5':
+                    letter = '%';
+                    break;
+                case '6':
+                    letter = '^';
+                    break;
+                case '7':
+                    letter = '&';
+                    break;
+                case '8':
+                    letter = '*';
+                    break;
+                case '9':
+                    letter = '(';
+                    break;
+                case '0':
+                    letter = ')';
+                    break;
+                default:
+                    letter = '';
+                    break;
+            }
+        }
+        engine.avatar.blurb += letter;
+    } else if ((e.keyCode > 185) && (e.keyCode < 193)) {
+        switch (e.keyCode) {
+            case 186:
+                letter = e.shiftKey ? ':' : ';';
+                break;
+            case 187:
+                letter = e.shiftKey ? '+' : '=';
+                break;
+            case 188:
+                letter = e.shiftKey ? '<' : ',';
+                break;
+            case 189:
+                letter = e.shiftKey ? '_' : '-';
+                break;
+            case 190:
+                letter = e.shiftKey ? '>' : '.';
+                break;
+            case 191:
+                letter = e.shiftKey ? '?' : '/';
+                break;
+            case 192:
+                letter = e.shiftKey ? '~' : '`';
+                break;
+        }
+        engine.avatar.blurb += letter;
+    } else if ((e.keyCode > 218) && (e.keyCode < 223)) {
+        switch (e.keyCode) {
+            case 219:
+                letter = e.shiftKey ? '{' : '[';
+                break;
+            case 220:
+                letter = e.shiftKey ? '|' : '\\';
+                break;
+            case 221:
+                letter = e.shiftKey ? '}' : ']';
+                break;
+            case 222:
+                letter = e.shiftKey ? '"' : '\'';
+                break;
+        }
+        engine.avatar.blurb += letter;
+    }
+    
+    engine.text_input.text = engine.avatar.blurb;
+};
 		
 Avatar.prototype.tick = function () {
     var self = this;
     
-    if (self.attacking) {
+    if (self.attacking || self.typing) {
         return;
     }
     
