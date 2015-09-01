@@ -97,6 +97,26 @@ Actors.prototype.update = function (actors) {
 	
 };
 
+Actors.prototype.text = function (actors) {
+    if (actors.player) {
+        this.players[actors.player.id].text(actors.player.blurb);
+    }
+};
+
+Actors.prototype.tick = function (actors) {
+    
+    //  tick() is the client side animation loop.
+    // This function updates non-gameplay elements, e.g. text fading out, effects, etc 
+    
+    var keys = Object.keys(actors.players);
+    for (var i = 0; i < keys.length; i++) {
+		if (keys[i] == this.player_id) {
+			continue;
+		}		
+		this.players[keys[i]].tick(actors.players[keys[i]]);
+	}
+};
+
 var Player = function (data) {
 	
 	// Public properties
@@ -104,8 +124,9 @@ var Player = function (data) {
 	this.sprite.position 	= data.position;
 	
 	this.text               = new PIXI.extras.BitmapText('Hello, just testing!', { font: '16px UO Classic (rough)', align: 'center' });
-    this.text.position.x    = 0;
-    this.text.position.y    = 0;
+    this.text.position.x    = -1 * Math.round(this.text.textWidth / 2);
+    this.text.position.y    = -32;
+    this.text.alpha         = 0;
 	
 	this.direction  = DIRECTION_S;
 	this.health     = 100;
@@ -198,6 +219,18 @@ Player.prototype.move = function(player) {
 	}
 	
 	
+};
+
+Player.prototype.text = function(data) {
+    this.text.text          = data;
+    this.text.position.x    = -1 * Math.round(this.text.textWidth / 2);
+    this.text.alpha         = 1;
+};
+
+Player.prototype.tick = function(data) {
+    if (this.text.alpha > 0) {
+        this.text.alpha -= 0.002;
+    }
 };
 
 var NPC = function (npc, renderer) {

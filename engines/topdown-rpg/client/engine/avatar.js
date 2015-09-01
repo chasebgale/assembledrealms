@@ -10,7 +10,8 @@ var Avatar = function (engine) {
     this.stamina    = 100;
     this.experience = 0;
 	this.id			= "";
-	this.engine 	= engine;
+	this.engine     = engine;
+    this.text       = undefined;
 };
 
 Avatar.prototype.update = function (avatar) {
@@ -19,6 +20,13 @@ Avatar.prototype.update = function (avatar) {
     this.stamina    = avatar.stamina;
     this.experience = avatar.experience;
 	this.id			= avatar.id;
+	
+	this.text               = new PIXI.extras.BitmapText('Hello, just testing!', { font: '16px UO Classic (rough)', align: 'left' });
+    this.text.position.x    = -1 * Math.round(this.text.textWidth / 2);
+    this.text.position.y    = -32;
+    //this.text.alpha         = 0;
+    
+    this.sprite.addChild(this.text);
 };
     
 Avatar.prototype.load = function (callback_complete) {
@@ -125,7 +133,6 @@ Avatar.prototype.load = function (callback_complete) {
             });
         }
     ],
-    // optional callback
     function(err, results){
         if (err) {
             console.log('error loading assets');
@@ -142,8 +149,14 @@ Avatar.prototype.load = function (callback_complete) {
             if (self.typing) {
                 // Send our text string, then clear it
                 self.engine.socket.emit('text', self.blurb);
-                self.blurb = ""; 
+                
+                self.text.text          = self.blurb;
+                self.text.position.x    = -1 * Math.round(self.text.textWidth / 2);
+                self.text.alpha         = 1;
+                self.blurb              = ""; 
+                
                 self.engine.text_input.text = self.blurb;
+                
                 document.removeEventListener("keydown", self.keydown, false);
             } else {
                 // Stop our avatar and show the carrot blinking for input
@@ -161,6 +174,8 @@ Avatar.prototype.load = function (callback_complete) {
 
             self.typing = !self.typing;
         });
+        
+        
         
         callback_complete();
         
@@ -270,6 +285,7 @@ Avatar.prototype.keydown = function (e) {
     
     engine.text_input.text = engine.avatar.blurb;
 };
+
 		
 Avatar.prototype.tick = function () {
     var self = this;
@@ -277,6 +293,12 @@ Avatar.prototype.tick = function () {
     if (self.attacking || self.typing) {
         return;
     }
+    
+    /*
+    if (this.text.alpha > 0) {
+        this.text.alpha -= 0.002;
+    }
+    */
     
     var amount 				= 2;
     var animationSpeed 		= .2;

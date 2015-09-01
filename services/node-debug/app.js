@@ -62,6 +62,7 @@ app.post('/launch', function (req, res, next) {
                 console.log('checking: ' + proc.name);
                 if (proc.name == realmID) {
                     found_proc.push(proc);
+					continue;
                 }
                 
                 redisClient.get(realmID + "-clients",  function (error, reply) {

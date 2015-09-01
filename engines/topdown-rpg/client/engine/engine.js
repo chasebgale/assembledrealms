@@ -68,7 +68,7 @@ enemies are sparse, think human dovakhins, must be taken down by multiple skelli
 	});
 	
 	this.socket.on('text', function (data) {
-	    console.log(data);
+        self.actors.text(data);
 	});
         
 };
@@ -122,41 +122,39 @@ Engine.prototype.load = function (map) {
     self.map = map;
     
     self.terrain.load(map.terrain.source, self.renderer, function (error) {
-
-        self.layer_terrain = new PIXI.Sprite(self.terrain.texture_ground);
-        self.stage.addChild(self.layer_terrain);
         
-        self.stage.addChild(self.actors.layer);
-		self.stage.addChild(self.avatar.sprite);
+        var loader = new PIXI.loaders.Loader();
+        loader.add('UO Classic (rough)', ROOT + 'client/resource/uo.xml');
+        loader.once('complete', function () {
         
-        self.layer_air = new PIXI.Sprite(self.terrain.texture_air);
-        self.stage.addChild(self.layer_air);
+            self.layer_terrain = new PIXI.Sprite(self.terrain.texture_ground);
+            self.stage.addChild(self.layer_terrain);
+            
+            self.stage.addChild(self.actors.layer);
+    		self.stage.addChild(self.avatar.sprite);
+            
+            self.layer_air = new PIXI.Sprite(self.terrain.texture_air);
+            self.stage.addChild(self.layer_air);
         
-        self.avatar.load(function (error) {
-           
-            self.actors.load(function (error) {
-                
-                var loader = new PIXI.loaders.Loader();
-                loader.add('UO', ROOT + 'client/resource/uo.xml');
-                loader.once('complete', function () {
-                    self.layer_text = new PIXI.Container(); 
-                    self.text_input = new PIXI.extras.BitmapText('', { font: '16px UO Classic (rough)', align: 'left' });
+            self.avatar.load(function (error) {
+               
+                self.actors.load(function (error) {
+                    
+                    //self.layer_text = new PIXI.Container(); 
+                    self.text_input = new PIXI.extras.BitmapText('TEST', { font: '16px UO Classic (rough)', align: 'left' });
                     self.text_input.position.x = 0;
                     self.text_input.position.y = CANVAS_HEIGHT - 16;
-                    self.layer_text.addChild(self.text_input);
-                    self.stage.addChild(self.layer_text);
+                    //self.layer_text.addChild(self.text_input);
+                    self.stage.addChild(self.text_input);
                     
                     // Tell the realm we are ready for the initial data pack to setup actors, avatar position, etc
                     self.socket.emit('ready', 'ready');
+                    
                 });
-                loader.load();
-                
-                
                 
             });
-            
         });
-        
+        loader.load();
         
         
     });
@@ -171,6 +169,17 @@ Engine.prototype.render = function () {
     }
     
     self.avatar.tick();
+	
+	// Sort actors from front to back
+	// TODO: Merge objects into the same layer as actors, same with avatar
+	self.actors.layer.children.sort(function (a, b) {
+        if (a.position.y < b.position.y)
+            return -1;
+        if (a.position.y > b.position.y)
+            return 1;
+        return 0; 
+	});
+	
 	
 	self.actors.layer.position = {x: -self.position.x + CANVAS_WIDTH_HALF, y: -self.position.y + CANVAS_HEIGHT_HALF};
     

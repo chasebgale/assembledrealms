@@ -1,13 +1,14 @@
 var express 	= require('express');
+var Engine 		= require('./engine');
 var cookieParse = require('cookie-parser');
 var app 		= express();
 var http        = require('http').Server(app);
 var io 			= require('socket.io')(http);
 var redis       = require('redis');
+//var memwatch 	= require('memwatch-next');
 var fs			= require('fs');
 var pm2         = require('pm2');
 var db     		= redis.createClient();
-var Engine 		= require('./engine');
 
 // If second argument is passed, we are in debug mode:
 var debug 			= (process.argv[2] !== undefined);
@@ -18,9 +19,6 @@ var realmID			= directory_arr[directory_arr.length - 2];
 
 // Increment and assign the smallest ids to clients
 var counter = 0;
-
-// Keep a connected client count:
-var clients = 0;
 
 // Grab the map and parse into an object
 var map = JSON.parse( fs.readFileSync(__dirname + '/../client/maps/town.json') );
@@ -123,10 +121,6 @@ io.on('connection', function (socket) {
 		}
 		
 		engine.addPlayer(player);
-        clients++;
-        
-        // Update the last access time so it doesn't get shutdown for inactivity:
-        redisClient.set(req.params.id + '-time', new Date().toString());
 		
 		var data = {};
 		data.players = {};
@@ -159,6 +153,9 @@ io.on('connection', function (socket) {
 			engine.addBroadcast(player);
 			
 			// Store change:
+			// TODO: Do this only when we ping the full player position, so we send updates that look like amount:direction, so small, like 1:3 insted of {x: 12800.22, y: 200.1},
+			// however, every <interval> we should send the full player position in case the client is out of sync, maybe every second or so
+			/*
 			db.set(socket.request.session.key, JSON.stringify(player), function (error) {
 				
 				if (error) {
@@ -166,6 +163,11 @@ io.on('connection', function (socket) {
 				}
 				
 			});
+			*/
+		});
+		
+		socket.on('text', function (data) {
+            io.emit('text', {id: player.id, blurb: data});
 		});
         
         socket.on('join_debug', function (data) {
@@ -177,15 +179,6 @@ io.on('connection', function (socket) {
         });
 		
 	});
-    
-    socket.on('disconnect', function() {
-        // Update the last access time so it doesn't get shutdown for inactivity:
-        db.set(req.params.id + '-time', new Date().toString());
-        
-        // Maintain connected client count:
-        clients--;
-        db.set(req.params.id + '-clients', clients);
-    });
     
 });	
 
@@ -267,10 +260,7 @@ pm2.connect(function(err) {
                 });
                 
                 db.set(realmID, http.address().port);
-                db.set(realmID + '-time', new Date().toString());
-                
-                // Connected client count
-                db.set(req.params.id + '-clients', 0);
+                db.set(realmID + 'time', new Date().toString());
                 
             });
         } else {
