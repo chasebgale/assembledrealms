@@ -502,14 +502,6 @@ function resetToolBar() {
     }
 }
 
-function isImageFile(name) {
-	var ext = name.split('.').pop();
-	if ($.inArray(ext, ["png", "jpg", "jpeg"]) > -1) {
-		return true;
-	}
-	return false;
-}
-
 function addToExplorer(path, name, sha) {
     
     var root;
@@ -833,6 +825,16 @@ function displayImage() {
     $('#tab-nav-image a:first').tab('show');
 }
 
+function isImageFile(name) {
+	var ext = name.split('.').pop();
+	if ($.inArray(ext, ["png", "jpg", "jpeg"]) > -1) {
+		return true;
+	}
+	return false;
+}
+
+var __editSessions = {};
+
 function loadEditor(filename, content, displayRendered) {
 
     __editor.off("change", editor_onChange);
@@ -846,92 +848,97 @@ function loadEditor(filename, content, displayRendered) {
 
         $("#tab-nav-image").css('display', 'block');
 		$('#tab-nav-image a:first').tab('show');
-		return;
+		return;   
+    }
         
-    } else {
+    $("#tab-nav-editor").css('display', 'block');
     
-        $("#tab-nav-editor").css('display', 'block');
-
-    }
+    if (!__editSessions[filename]) {
     
-    switch (ext) {
-        case "js":
-            __editor.getSession().setMode("ace/mode/javascript");
-            break;
-        case "json":
-            __editor.getSession().setMode("ace/mode/json");
-			
-			if (displayRendered === undefined) {
-				displayRendered = true;
-			}
-            
-            try {
-                var parsed = JSON.parse(content);
+        switch (ext) {
+            case "js":
+                //__editor.getSession().setMode("ace/mode/javascript");
+                __editSessions[filename] = ace.createEditSession(content, "ace/mode/javascript");
+                break;
+            case "json":
+                //__editor.getSession().setMode("ace/mode/json");
                 
-                // TODO: This is a horrible, horrible test for 'are we looking at a map?'
-                if (parsed.terrain) {
-                    Map.init("mapContainer", parsed);
-                    Map.save = function () {
-                        var worker = {};
-                        worker.settings = Map.settings;
-                        worker.terrain = Map.terrain;
-                        worker.objects = Map.objects;
-                        worker.actors = Map.actors;
-
-                        sessionStorage[__fileId] = JSON.stringify(worker);
-						
-						// Format the JSON so a human can read it:
-						content = JSON.stringify(parsed, function(key, value) { 
-							if (key === "index") { 
-								return '(tile locations ommitted for readability)'; 
-							} else { 
-								return value; 
-							} 
-						}, '\t');
-						
-						__editor.setValue(content);
-                    };
-                    
-                    // Format the JSON so a human can read it:
-                    content = JSON.stringify(parsed, function(key, value) { 
-                        if (key === "index") { 
-                            return '(tile locations ommitted for readability)'; 
-                        } else { 
-                            return value; 
-                        } 
-                    }, '\t');
-                    
-                    $("#mapToolbar [data-toggle='tooltip']").tooltip();
-                    $("#tab-nav-map").css('display', 'block');
-					renderTarget = $("#tab-nav-map a:first");
+                if (displayRendered === undefined) {
+                    displayRendered = true;
                 }
-            } catch (e) {
-                console.log(e);
-            }
-            
-            break;
-        case "html":
-            __editor.getSession().setMode("ace/mode/html");
-            break;
-        case "md":
-			if (displayRendered === undefined) {
-				displayRendered = true;
-			}
-            __editor.getSession().setMode("ace/mode/plain_text");
-            $("#tab-nav-markdown").css('display', 'block');
-			renderTarget = $("#tab-nav-markdown a:first");
-            $("#markdown").html(marked(content));
-            break;
-            break;
-        default:
-            __editor.getSession().setMode("ace/mode/plain_text");
-            break;
-    }
+                
+                try {
+                    var parsed = JSON.parse(content);
+                    
+                    // TODO: This is a horrible, horrible test for 'are we looking at a map?'
+                    if (parsed.terrain) {
+                        Map.init("mapContainer", parsed);
+                        Map.save = function () {
+                            var worker = {};
+                            worker.settings = Map.settings;
+                            worker.terrain = Map.terrain;
+                            worker.objects = Map.objects;
+                            worker.actors = Map.actors;
 
-	__editor.setValue(content);
-	__editor.clearSelection();
-	__editor.moveCursorTo(0, 0);
-	
+                            sessionStorage[__fileId] = JSON.stringify(worker);
+                            
+                            // Format the JSON so a human can read it:
+                            content = JSON.stringify(parsed, function(key, value) { 
+                                if (key === "index") { 
+                                    return '(tile locations ommitted for readability)'; 
+                                } else { 
+                                    return value; 
+                                } 
+                            }, '\t');
+                            
+                            __editor.setValue(content);
+                        };
+                        
+                        // Format the JSON so a human can read it:
+                        content = JSON.stringify(parsed, function(key, value) { 
+                            if (key === "index") { 
+                                return '(tile locations ommitted for readability)'; 
+                            } else { 
+                                return value; 
+                            } 
+                        }, '\t');
+                        
+                        $("#mapToolbar [data-toggle='tooltip']").tooltip();
+                        $("#tab-nav-map").css('display', 'block');
+                        renderTarget = $("#tab-nav-map a:first");
+                    }
+                    
+                    __editSessions[filename] = ace.createEditSession(content, "ace/mode/json");
+                    
+                } catch (e) {
+                    console.log(e);
+                }
+                
+                break;
+            case "html":
+                //__editor.getSession().setMode("ace/mode/html");
+                __editSessions[filename] = ace.createEditSession(content, "ace/mode/html");
+                break;
+            case "md":
+                if (displayRendered === undefined) {
+                    displayRendered = true;
+                }
+                
+                //__editor.getSession().setMode("ace/mode/plain_text");
+                __editSessions[filename] = ace.createEditSession(content, "ace/mode/plain_text");
+                
+                $("#tab-nav-markdown").css('display', 'block');
+                renderTarget = $("#tab-nav-markdown a:first");
+                $("#markdown").html(marked(content));
+                break;
+            default:
+                __editSessions[filename] = ace.createEditSession(content, "ace/mode/plain_text");
+                break;
+        }
+    }
+    
+    __editor.setSession(__editSessions[filename]);
+    
 	$("#tabs .tab-pane").hide();
 	
 	if (displayRendered) {
@@ -943,8 +950,6 @@ function loadEditor(filename, content, displayRendered) {
 		$("#btnView").html('<i class="fa fa-eye"></i> ' + $('#tab-nav-editor a:first').text() + ' <span class="caret"></span>');
 	}
 	
-	
-    
     __editor.on("change", editor_onChange);
 }
 

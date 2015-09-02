@@ -2,7 +2,7 @@ var Actors = function () {
 	
     this.players    = {};
     this.npcs       = {};
-	this.layer 		= new PIXI.Container();
+    this.layer      = new PIXI.Container();
 	this.player_id	= -1;
 
 };
@@ -58,7 +58,7 @@ Actors.prototype.create = function (actors, renderer) {
 				}
 			}
 
-			var player 	= new Player( actors.players[keys[i]] );
+            var player = new Player( actors.players[keys[i]] );
 			
 			this.players[player.id] = player;
 			this.layer.addChild(player.sprite);
@@ -103,6 +103,7 @@ Actors.prototype.text = function (actors) {
     }
 };
 
+/*
 Actors.prototype.tick = function (actors) {
     
     //  tick() is the client side animation loop.
@@ -116,6 +117,27 @@ Actors.prototype.tick = function (actors) {
 		this.players[keys[i]].tick(actors.players[keys[i]]);
 	}
 };
+*/
+
+Actors.prototype.tick = function () {
+    
+    //  tick() is the client side animation loop.
+    // This function updates non-gameplay elements, e.g. text fading out, effects, etc 
+    
+    var keys = Object.keys(this.players);
+    for (var i = 0; i < keys.length; i++) {
+		if (keys[i] == this.player_id) {
+			continue;
+		}		
+		this.players[keys[i]].tick();
+	}
+	
+	var keys = Object.keys(this.npcs);
+    for (var i = 0; i < keys.length; i++) {
+		this.npcs[keys[i]].tick();
+	}
+};
+
 
 var Player = function (data) {
 	
@@ -239,9 +261,10 @@ var NPC = function (npc, renderer) {
 	this.sprite     		= new PIXI.Container();
 	this.sprite.position 	= npc.position;
 	
-	this.text               = new PIXI.extras.BitmapText('Hello, just testing!', { font: '16px UO Classic (rough)', align: 'left' });
+	this.text               = new PIXI.extras.BitmapText(EMOTES_NPC_CREATED[getRandomInt(0, EMOTES_NPC_CREATED.length-1)], { font: '16px UO Classic (rough)', align: 'left' });
     this.text.position.x    = -1 * Math.round(this.text.textWidth / 2);
     this.text.position.y    = -32;
+    this.text.alpha         = 1;
 	
 	this.direction  = DIRECTION_S;
 	this.health     = 100;
@@ -349,4 +372,16 @@ NPC.prototype.move = function(npc) {
 	}
 	
 	
+};
+
+NPC.prototype.text = function(data) {
+    this.text.text          = data;
+    this.text.position.x    = -1 * Math.round(this.text.textWidth / 2);
+    this.text.alpha         = 1;
+};
+
+NPC.prototype.tick = function(data) {
+    if (this.text.alpha > 0) {
+        this.text.alpha -= 0.002;
+    }
 };

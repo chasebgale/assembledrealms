@@ -21,10 +21,10 @@ Avatar.prototype.update = function (avatar) {
     this.experience = avatar.experience;
 	this.id			= avatar.id;
 	
-	this.text               = new PIXI.extras.BitmapText('Hello, just testing!', { font: '16px UO Classic (rough)', align: 'left' });
-    this.text.position.x    = -1 * Math.round(this.text.textWidth / 2);
+	this.text               = new PIXI.extras.BitmapText('Hello, just testing!', { font: '16px UO Classic (rough)', align: 'center' });
+    this.text.position.x    = 0; //-1 * Math.round(this.text.textWidth / 2);
     this.text.position.y    = -32;
-    //this.text.alpha         = 0;
+    this.text.alpha         = 0;
     
     this.sprite.addChild(this.text);
 };
@@ -74,9 +74,9 @@ Avatar.prototype.load = function (callback_complete) {
                 for (i = 0; i < directions; i++) {
                     clip = new PIXI.extras.MovieClip(textures[i]);
 
-                    clip.position.x = (CANVAS_WIDTH / 2) - 32;
-                    clip.position.y = (CANVAS_HEIGHT / 2) - 32;
-                    clip.animationSpeed = .2;
+                    clip.position.x = -32; //(CANVAS_WIDTH / 2) - 32;
+                    clip.position.y = -32; //(CANVAS_HEIGHT / 2) - 32;
+                    clip.animationSpeed = 0.2;
                     clip.visible = false;
 
                     self.sprite.addChild(clip);
@@ -120,9 +120,9 @@ Avatar.prototype.load = function (callback_complete) {
                 for (i = 0; i < directions; i++) {
                     clip = new PIXI.extras.MovieClip(textures[i]);
 
-                    clip.position.x = (CANVAS_WIDTH / 2) - 32;
-                    clip.position.y = (CANVAS_HEIGHT / 2) - 32;
-                    clip.animationSpeed = .2;
+                    clip.position.x = -32; //(CANVAS_WIDTH / 2) - 32;
+                    clip.position.y = -32; //(CANVAS_HEIGHT / 2) - 32;
+                    clip.animationSpeed = 0.2;
                     clip.loop = false;
                     clip.visible = false;
 
@@ -151,7 +151,7 @@ Avatar.prototype.load = function (callback_complete) {
                 self.engine.socket.emit('text', self.blurb);
                 
                 self.text.text          = self.blurb;
-                self.text.position.x    = -1 * Math.round(self.text.textWidth / 2);
+                //self.text.position.x    = -1 * Math.round((self.blurb.length / 2) * 16);
                 self.text.alpha         = 1;
                 self.blurb              = ""; 
                 
@@ -294,14 +294,12 @@ Avatar.prototype.tick = function () {
         return;
     }
     
-    /*
     if (this.text.alpha > 0) {
-        this.text.alpha -= 0.002;
+        this.text.alpha -= 0.003;
     }
-    */
     
     var amount 				= 2;
-    var animationSpeed 		= .2;
+    var animationSpeed 		= 0.2;
     
     var wasMoving 		= self.moving;
     var oldDirection 	= self.direction;
@@ -353,6 +351,8 @@ Avatar.prototype.tick = function () {
         }
         
         self.sprite.children[self.direction].animationSpeed = animationSpeed;
+        
+        self.sprite.position = self.engine.position; 
 		
 		self.engine.socket.emit('move', {position: self.engine.position, direction: self.direction});
         

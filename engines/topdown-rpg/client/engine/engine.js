@@ -11,7 +11,6 @@ enemies are sparse, think human dovakhins, must be taken down by multiple skelli
     
     this.stage          = undefined;
     this.renderer       = undefined;
-    this.buffer         = undefined;
     this.map            = undefined;
     this.matrix         = undefined;
     this.layer_terrain  = undefined;
@@ -92,7 +91,7 @@ Engine.prototype.initialize = function (target) {
     
     self.renderer   = PIXI.autoDetectRenderer(CANVAS_WIDTH, CANVAS_HEIGHT, rendererOptions);
     self.stage      = new PIXI.Container();
-    self.buffer     = new PIXI.ParticleContainer();
+    //self.buffer     = new PIXI.ParticleContainer();
     
     target.appendChild(self.renderer.view);
     
@@ -131,21 +130,24 @@ Engine.prototype.load = function (map) {
             self.stage.addChild(self.layer_terrain);
             
             self.stage.addChild(self.actors.layer);
-    		self.stage.addChild(self.avatar.sprite);
+    		//self.stage.addChild(self.avatar.sprite);
+            self.actors.layer.addChild(self.avatar.sprite);
             
             self.layer_air = new PIXI.Sprite(self.terrain.texture_air);
             self.stage.addChild(self.layer_air);
+            
+            self.layer_text = new PIXI.Container();
+            self.text_input = new PIXI.extras.BitmapText('', { font: '16px UO Classic (rough)', align: 'left' });
+            self.text_input.position.x = 0;
+            self.text_input.position.y = CANVAS_HEIGHT - 16;
+            self.layer_text.addChild(self.text_input);
+            self.stage.addChild(self.layer_text);
         
             self.avatar.load(function (error) {
                
                 self.actors.load(function (error) {
                     
-                    //self.layer_text = new PIXI.Container(); 
-                    self.text_input = new PIXI.extras.BitmapText('TEST', { font: '16px UO Classic (rough)', align: 'left' });
-                    self.text_input.position.x = 0;
-                    self.text_input.position.y = CANVAS_HEIGHT - 16;
-                    //self.layer_text.addChild(self.text_input);
-                    self.stage.addChild(self.text_input);
+                    
                     
                     // Tell the realm we are ready for the initial data pack to setup actors, avatar position, etc
                     self.socket.emit('ready', 'ready');
@@ -169,6 +171,7 @@ Engine.prototype.render = function () {
     }
     
     self.avatar.tick();
+    self.actors.tick();
 	
 	// Sort actors from front to back
 	// TODO: Merge objects into the same layer as actors, same with avatar
