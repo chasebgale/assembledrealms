@@ -130,7 +130,7 @@ Engine.prototype.load = function (map) {
             self.stage.addChild(self.layer_terrain);
             
             self.stage.addChild(self.actors.layer);
-    		//self.stage.addChild(self.avatar.sprite);
+            //self.stage.addChild(self.avatar.sprite);
             self.actors.layer.addChild(self.avatar.sprite);
             
             self.layer_air = new PIXI.Sprite(self.terrain.texture_air);

@@ -22,11 +22,12 @@ Avatar.prototype.update = function (avatar) {
 	this.id			= avatar.id;
 	
 	this.text               = new PIXI.extras.BitmapText('Hello, just testing!', { font: '16px UO Classic (rough)', align: 'center' });
-    this.text.position.x    = 0; //-1 * Math.round(this.text.textWidth / 2);
-    this.text.position.y    = -32;
+    this.text.position.x    = 0;
+    this.text.position.y    = -34;
     this.text.alpha         = 0;
     
     this.sprite.addChild(this.text);
+    this.sprite.position = this.engine.position; 
 };
     
 Avatar.prototype.load = function (callback_complete) {
@@ -150,12 +151,22 @@ Avatar.prototype.load = function (callback_complete) {
                 // Send our text string, then clear it
                 self.engine.socket.emit('text', self.blurb);
                 
-                self.text.text          = self.blurb;
-                //self.text.position.x    = -1 * Math.round((self.blurb.length / 2) * 16);
-                self.text.alpha         = 1;
-                self.blurb              = ""; 
+                if (self.blurb.substring(0, 4) == '/me ') {
+                    self.blurb = '*' + self.blurb.substring(4) + '*';
+                    self.text.font.tint = 11184810;
+                } else {
+                    self.text.font.tint = 16777215;
+                }
                 
-                self.engine.text_input.text = self.blurb;
+                self.text.text          = self.blurb;
+                
+                // Get the start position from engine input string as occasionally a race condition occurs where 
+                // if I set the text of self.text then request it's textWidth property, it would give an
+                // old measurement as the text hasn't been rastered yet before I ask for the value
+                self.text.position.x        = -1 * Math.round(self.engine.text_input.textWidth / 2);
+                self.text.alpha             = 1;
+                self.blurb                  = ""; 
+                self.engine.text_input.text = "";
                 
                 document.removeEventListener("keydown", self.keydown, false);
             } else {
@@ -283,19 +294,20 @@ Avatar.prototype.keydown = function (e) {
         engine.avatar.blurb += letter;
     }
     
-    engine.text_input.text = engine.avatar.blurb;
+    engine.text_input.text  = engine.avatar.blurb;
+    //engine.avatar.text.text = engine.avatar.blurb;
 };
 
 		
 Avatar.prototype.tick = function () {
     var self = this;
     
-    if (self.attacking || self.typing) {
-        return;
-    }
-    
     if (this.text.alpha > 0) {
         this.text.alpha -= 0.003;
+    }
+    
+    if (self.attacking || self.typing) {
+        return;
     }
     
     var amount 				= 2;

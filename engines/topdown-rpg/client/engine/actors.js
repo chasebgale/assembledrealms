@@ -103,22 +103,6 @@ Actors.prototype.text = function (actors) {
     }
 };
 
-/*
-Actors.prototype.tick = function (actors) {
-    
-    //  tick() is the client side animation loop.
-    // This function updates non-gameplay elements, e.g. text fading out, effects, etc 
-    
-    var keys = Object.keys(actors.players);
-    for (var i = 0; i < keys.length; i++) {
-		if (keys[i] == this.player_id) {
-			continue;
-		}		
-		this.players[keys[i]].tick(actors.players[keys[i]]);
-	}
-};
-*/
-
 Actors.prototype.tick = function () {
     
     //  tick() is the client side animation loop.
@@ -244,6 +228,13 @@ Player.prototype.move = function(player) {
 };
 
 Player.prototype.text = function(data) {
+    if (data.substring(0, 4) == '/me ') {
+        data = '*' + data.substring(4) + '*';
+        this.text.font.tint = 11184810;
+    } else {
+        this.text.font.tint = 16777215;
+    }
+    
     this.text.text          = data;
     this.text.position.x    = -1 * Math.round(this.text.textWidth / 2);
     this.text.alpha         = 1;
@@ -375,6 +366,13 @@ NPC.prototype.move = function(npc) {
 };
 
 NPC.prototype.text = function(data) {
+    if (data.substring(0, 4) == '/me ') {
+        data = '*' + data.substring(4) + '*';
+        this.text.font.tint = 11184810;
+    } else {
+        this.text.font.tint = 16777215;
+    }
+    
     this.text.text          = data;
     this.text.position.x    = -1 * Math.round(this.text.textWidth / 2);
     this.text.alpha         = 1;

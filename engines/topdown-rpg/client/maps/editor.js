@@ -446,7 +446,7 @@ var Map = {
         var layers;
         var i;
 		
-		console.log('draw called: ' + Map.coordinates.row + ', ' + Map.coordinates.col + ', ' + full);
+		// console.log('draw called: ' + Map.coordinates.row + ', ' + Map.coordinates.col + ', ' + full);
 		
 		for (var row = Map.coordinates.row; row < Map.coordinates.row + Map.VIEWPORT_HEIGHT_TILES; row++) {
 			for (var col = Map.coordinates.col; col < Map.coordinates.col + Map.VIEWPORT_WIDTH_TILES; col++) {

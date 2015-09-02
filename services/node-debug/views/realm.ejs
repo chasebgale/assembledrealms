@@ -96,18 +96,23 @@
         <a href="http://www.assembledrealms.com" style="float: right;"><img src="//www.assembledrealms.com/build/img/logo.png"></a>
     </div>
     
-    <div id="realm" style="margin: 20px auto; width: 896px; padding: 0;"></div>
+    <div id="container" style="display: none;">
     
-    <div id="realmStats" class="center-block">
-        <div id="serverStats">
-            <div style="display: inline-block; font-size: 0.75em; vertical-align: top; margin-top: 6px;">
-                <span style="color: #ffffff;"><span id="cpu_display"></span> CPU <i class="fa fa-square"></i></span>
-                <br />
-                <span style="color: #00ff00;"><span id="mem_display"></span> MB <i class="fa fa-square"></i></span>
+        <div id="realm" style="margin: 20px auto; width: 896px; padding: 0;"></div>
+        
+        <div id="realmStats" class="center-block">
+            <div id="serverStats">
+                <div style="display: inline-block; font-size: 0.75em; vertical-align: top; margin-top: 6px;">
+                    <span style="color: #ffffff;"><span id="cpu_display"></span> CPU <i class="fa fa-square"></i></span>
+                    <br />
+                    <span style="color: #00ff00;"><span id="mem_display"></span> MB <i class="fa fa-square"></i></span>
+                </div>
+                <canvas id="chart-server" width="300" height="48" style="display: inline-block;"></canvas>
             </div>
-            <canvas id="chart-server" width="300" height="48" style="display: inline-block;"></canvas>
         </div>
+    
     </div>
+    
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
     <script src="//<%= host %>:<%= port %>/socket.io/socket.io.js"></script>
@@ -195,6 +200,8 @@
 					engine.debug(true);
 				}
 			
+                $("#container").fadeIn();
+            
 				animate();
 			};
 			

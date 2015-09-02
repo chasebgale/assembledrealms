@@ -955,7 +955,7 @@ function loadEditor(filename, content, displayRendered) {
 
 function editor_onChange(e) {
     
-    if (sessionStorage[__fileId + "-path"].indexOf("/maps/") > -1) {
+    if ((sessionStorage[__fileId + "-path"].indexOf("/maps/") > -1) && (sessionStorage[__fileId + "-path"].indexOf(".json") > -1)) {
         
         // TODO: Special handling is needed for json under the '/maps/' directory, the sessionStorage value
         // is the full value of the map; however, the displayed value in the editor has the 'index' property of each

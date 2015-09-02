@@ -25,7 +25,6 @@ Terrain.prototype.load = function (source, renderer, callback) {
 
     });
 
-    //var loader = new PIXI.AssetLoader(worker, true);
     PIXI.loader
 		.add(worker)
 	
