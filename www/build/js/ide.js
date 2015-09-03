@@ -764,7 +764,7 @@ function loadRealmFile(id, path, name, rendered) {
 
     if (sessionStorage[tracking_id + '-name']) {
 
-        loadEditor(name, sessionStorage[tracking_id], rendered);
+        loadEditor(tracking_id, sessionStorage[tracking_id], rendered);
         __fileId = tracking_id;
                 
     } else {
@@ -795,7 +795,7 @@ function loadRealmFile(id, path, name, rendered) {
                 __trackedFiles.push(tracking_id);
                 sessionStorage[__trackedStorageId] = JSON.stringify(__trackedFiles);
     
-                loadEditor(name, data, rendered);
+                loadEditor(tracking_id, data, rendered); // (name,
                 __fileId = tracking_id;
                 
             })
