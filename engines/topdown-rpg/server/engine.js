@@ -34,7 +34,8 @@ Engine.prototype.tick = function (map) {
 		
 	tick_count++;
     
-    var npc_keys = Object.keys(npcs);
+    var npc_keys    = Object.keys(npcs);
+    var player_keys = Object.keys(players);
 	
 	if (tick_count > 1800) {
         // Every minute fire and reset
@@ -46,17 +47,102 @@ Engine.prototype.tick = function (map) {
         }
 	}
 	
-	//var direction 	= weightedDirection[ Math.floor(Math.random() * weightedDirection.length) ];
 	var direction   = -1;
-	var i 			= 0;
-	var j 			= 0;
+	var distance    = 0;
+    var i   		= 0;
+    var j 			= 0;
+    var npc         = undefined;
+    var player      = undefined;
+    var difference  = 0;
+    
+    var attack_bounding = 32
 	
 	for (i = 0; i < npc_keys.length; i++) {
         
         direction = -1;
+        npc = npcs[npc_keys[i]];
         
-        if (npcs[npc_keys[i]].sleep > 0) {
-            npcs[npc_keys[i]].sleep--;
+        // Is this npc in attack mode?
+        if (npc.attacking) {
+            
+            player = players[npc.target];
+            npc.counter++;
+            
+            if (npc.counter > 45) {
+                // Once per second and a half we check if the player has ran out of range
+                npc.counter = 0;
+                distance = Math.sqrt( (npc.position.x-player.position.x)*(npc.position.x-player.position.x) + (npc.position.y-player.position.y)*(npc.position.y-player.position.y) );
+                if (distance > 300) {
+                    npc.attacking = false;  
+                    continue;
+                }
+            }
+            
+            // Y calculations
+            difference = Math.abs(npc.position.y - player.position.y);
+            if (difference > attack_bounding) {
+                if (difference > attack_bounding + 2) {
+                    difference = 3;   
+                }
+                
+                if (npc.position.y < player.position.y) {
+                    npc.position.y += difference;
+                    npc.direction   = DIRECTION_S;
+                } else {
+                    npc.position.y -= difference; 
+                    npc.direction   = DIRECTION_N;
+                }
+            }
+            
+            // X calculations
+            difference = Math.abs(npc.position.x - player.position.x);
+            if (difference > attack_bounding) {
+                if (difference > attack_bounding + 2) {
+                    difference = 3;   
+                }
+                
+                if (npc.position.x < player.position.x) {
+                    npc.position.x += difference;
+                    npc.direction   = DIRECTION_E;
+                } else {
+                    npc.position.x -= difference; 
+                    npc.direction   = DIRECTION_W;
+                }
+            }
+            
+            broadcast.npcs[npc_keys[i]] = {position: npc.position,
+                                            direction: npc.direction};
+            
+            this.emit('debug', 'NPC[' + npc_keys[i] + '] is already attacking, updated...');
+            
+            continue;
+        }
+        
+        // Can this NPC can see a player?
+        for (j = 0; j < player_keys.length; j++) {
+            player = players[player_keys[j]];
+            
+            // Distance between two points using pythagorean theorem
+            distance = Math.sqrt( (npc.position.x-player.position.x)*(npc.position.x-player.position.x) + (npc.position.y-player.position.y)*(npc.position.y-player.position.y) );
+            
+            if (distance < 300) {
+                npcs[npc_keys[i]].attacking = true;
+                npcs[npc_keys[i]].target    = player_keys[j];
+                
+                this.emit('debug', 'NPC[' + npc_keys[i] + '] spotted a player...');
+                
+                break;
+            }
+        }
+        
+        // If this npc spotted an player, move on to the next npc
+        if (npc.attacking) {
+            continue;   
+        }
+        
+        // If we got this far, the counter is a sleep counter
+        if (npc.counter > 0) {
+            npc.counter--;
             continue;
         }
 		
@@ -84,7 +170,7 @@ Engine.prototype.tick = function (map) {
 					options.length 	= 0;
 					
 					// Add either our first or an additional tile step (having diminishing odds)
-					if (randomizer > (40 + (12 * j))) {
+					if (randomizer > (16 + (12 * j))) {
 						
 						// Can we walk north? (and also was our last direction not south, to avoid walking in circles)
 						if ((this.walkable( map, row - 1, col )) && ( direction !== DIRECTION_S )) {
@@ -145,7 +231,7 @@ Engine.prototype.tick = function (map) {
 				}
 			} else {
                 // If we aren't resuming our walk, sleep for a second or two
-                npcs[npc_keys[i]].sleep = Math.floor( Math.random() * 100 );
+                npcs[npc_keys[i]].counter = Math.floor( Math.random() * 100 );
                 broadcast.npcs[npc_keys[i]] = {position: npcs[npc_keys[i]].position,
                                                direction: npcs[npc_keys[i]].direction};
             }
@@ -200,7 +286,7 @@ Engine.prototype.walkable = function (map, row, col) {
 	}
 	
 	return false;
-}
+};
 
 Engine.prototype.addBroadcast = function (player) {
 	broadcast.players[player.id] = {position: player.position,
@@ -242,7 +328,9 @@ Engine.prototype.spawn = function() {
 		layers: [0],
 		step: 0,
 		steps: [], // Pathfinding
-        sleep: 0
+        counter: 0, // generic counter used for a variety of functions
+        attacking: false,
+        target: -1
 	};
 	
 	// Head: 1, 2, 3

@@ -29,6 +29,10 @@ engine.on('create', function (actors) {
 	io.emit('create', actors);
 });
 
+engine.on('debug', function (message) {
+    io.to('debug').emit('debug', message);
+});
+
 var allowCrossDomain = function(req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
