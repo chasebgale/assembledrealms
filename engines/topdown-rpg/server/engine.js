@@ -55,7 +55,33 @@ Engine.prototype.tick = function (map) {
     var player      = undefined;
     var difference  = 0;
     
-    var attack_bounding = 32
+    var attack_bounding = 32;
+    
+    for (i = 0; i < player_keys.length; i++) {
+        player = players[player_keys[i]];
+        
+        // Is this player triggering an unfortunate NPC?
+        for (j = 0; j < npc_keys.length; j++) {
+            npc = npcs[npc_keys[j]];
+            
+            // If this npc is attacking a player, move on to the next npc
+            if (npc.attacking) {
+                continue;   
+            }
+            
+            // Distance between two points using pythagorean theorem
+            distance = Math.sqrt( (npc.position.x-player.position.x)*(npc.position.x-player.position.x) + (npc.position.y-player.position.y)*(npc.position.y-player.position.y) );
+            
+            if (distance < 300) {
+                npc.attacking = true;
+                npc.target    = player_keys[i];
+                
+                this.emit('debug', 'NPC[' + npc_keys[j] + '] spotted a player...');
+                
+                break;
+            }
+        }
+    }
 	
 	for (i = 0; i < npc_keys.length; i++) {
         
@@ -113,31 +139,7 @@ Engine.prototype.tick = function (map) {
             broadcast.npcs[npc_keys[i]] = {position: npc.position,
                                             direction: npc.direction};
             
-            this.emit('debug', 'NPC[' + npc_keys[i] + '] is already attacking, updated...');
-            
             continue;
-        }
-        
-        // Can this NPC can see a player?
-        for (j = 0; j < player_keys.length; j++) {
-            player = players[player_keys[j]];
-            
-            // Distance between two points using pythagorean theorem
-            distance = Math.sqrt( (npc.position.x-player.position.x)*(npc.position.x-player.position.x) + (npc.position.y-player.position.y)*(npc.position.y-player.position.y) );
-            
-            if (distance < 300) {
-                npcs[npc_keys[i]].attacking = true;
-                npcs[npc_keys[i]].target    = player_keys[j];
-                
-                this.emit('debug', 'NPC[' + npc_keys[i] + '] spotted a player...');
-                
-                break;
-            }
-        }
-        
-        // If this npc spotted an player, move on to the next npc
-        if (npc.attacking) {
-            continue;   
         }
         
         // If we got this far, the counter is a sleep counter
