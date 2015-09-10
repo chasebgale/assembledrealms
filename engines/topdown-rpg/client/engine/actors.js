@@ -1,29 +1,51 @@
-var Actors = function () {
+var Actors = function (engine) {
 	
     this.players    = {};
     this.npcs       = {};
     this.layer      = new PIXI.Container();
 	this.player_id	= -1;
+	this.engine     = engine;
 
 };
 
 Actors.prototype.load = function (callback_complete) {
     
+    /*
     var load_count = 0;
     
     // Load base assets and textures for all possible NPCs as other player 
     // assets have already been loaded by the Avatar class
     PIXI.loader
-		.add(ROOT + "client/resource/actors_walkcycle_BODY_male.png")
-        .add(ROOT + "client/resource/HEAD_chain_armor_helmet.png")
-        .add(ROOT + "client/resource/HEAD_chain_armor_hood.png")
-        .add(ROOT + "client/resource/HEAD_plate_armor_helmet.png")
-        .add(ROOT + "client/resource/TORSO_chain_armor_torso.png")
-        .add(ROOT + "client/resource/TORSO_plate_armor_arms_shoulders.png")
-        .add(ROOT + "client/resource/TORSO_plate_armor_torso.png")
-        .add(ROOT + "client/resource/LEGS_plate_armor_pants.png")
-        .add(ROOT + "client/resource/HANDS_plate_armor_gloves.png")
-        .add(ROOT + "client/resource/FEET_plate_armor_shoes.png")
+		.add(ROOT + "client/resource/actors/walkcycle/BODY_human.png")
+        .add(ROOT + "client/resource/actors/walkcycle/HEAD_chain_armor_helmet.png")
+        .add(ROOT + "client/resource/actors/walkcycle/HEAD_chain_armor_hood.png")
+        .add(ROOT + "client/resource/actors/walkcycle/HEAD_plate_armor_helmet.png")
+        .add(ROOT + "client/resource/actors/walkcycle/TORSO_chain_armor_torso.png")
+        .add(ROOT + "client/resource/actors/walkcycle/TORSO_plate_armor_arms_shoulders.png")
+        .add(ROOT + "client/resource/actors/walkcycle/TORSO_plate_armor_torso.png")
+        .add(ROOT + "client/resource/actors/walkcycle/LEGS_plate_armor_pants.png")
+        .add(ROOT + "client/resource/actors/walkcycle/HANDS_plate_armor_gloves.png")
+        .add(ROOT + "client/resource/actors/walkcycle/FEET_plate_armor_shoes.png")
+        .add(ROOT + "client/resource/actors/slash/BODY_human.png")
+        .add(ROOT + "client/resource/actors/slash/HEAD_chain_armor_helmet.png")
+        .add(ROOT + "client/resource/actors/slash/HEAD_chain_armor_hood.png")
+        .add(ROOT + "client/resource/actors/slash/HEAD_plate_armor_helmet.png")
+        .add(ROOT + "client/resource/actors/slash/TORSO_chain_armor_torso.png")
+        .add(ROOT + "client/resource/actors/slash/TORSO_plate_armor_arms_shoulders.png")
+        .add(ROOT + "client/resource/actors/slash/TORSO_plate_armor_torso.png")
+        .add(ROOT + "client/resource/actors/slash/LEGS_plate_armor_pants.png")
+        .add(ROOT + "client/resource/actors/slash/HANDS_plate_armor_gloves.png")
+        .add(ROOT + "client/resource/actors/slash/FEET_plate_armor_shoes.png")
+        .add(ROOT + "client/resource/actors/hurt/BODY_human.png")
+        .add(ROOT + "client/resource/actors/hurt/HEAD_chain_armor_helmet.png")
+        .add(ROOT + "client/resource/actors/hurt/HEAD_chain_armor_hood.png")
+        .add(ROOT + "client/resource/actors/hurt/HEAD_plate_armor_helmet.png")
+        .add(ROOT + "client/resource/actors/hurt/TORSO_chain_armor_torso.png")
+        .add(ROOT + "client/resource/actors/hurt/TORSO_plate_armor_arms_shoulders.png")
+        .add(ROOT + "client/resource/actors/hurt/TORSO_plate_armor_torso.png")
+        .add(ROOT + "client/resource/actors/hurt/LEGS_plate_armor_pants.png")
+        .add(ROOT + "client/resource/actors/hurt/HANDS_plate_armor_gloves.png")
+        .add(ROOT + "client/resource/actors/hurt/FEET_plate_armor_shoes.png")
 	
     // TODO: The way this works right now, the actual integer indices located in the map file
     // for tile locations assume the same load order of images. Make sure they are the same by adding an
@@ -32,7 +54,7 @@ Actors.prototype.load = function (callback_complete) {
         
 			load_count++;
             
-            if (load_count > 9) {
+            if (load_count > 10) {
                 // It's never called normally 
                 // TODO: Figure out why 'complete' is never firing!!!
                 callback_complete();
@@ -43,6 +65,9 @@ Actors.prototype.load = function (callback_complete) {
 		})
 		.once('complete', callback_complete)
 		.load();
+	*/
+	
+	callback_complete();
 };
 
 Actors.prototype.create = function (actors, renderer) {
@@ -85,6 +110,7 @@ Actors.prototype.update = function (actors) {
 	var keys = Object.keys(actors.players);
     for (var i = 0; i < keys.length; i++) {
 		if (keys[i] == this.player_id) {
+		    this.engine.avatar.update(actors.players[keys[i]]);
 			continue;
 		}		
 		this.players[keys[i]].move(actors.players[keys[i]]);
@@ -92,7 +118,7 @@ Actors.prototype.update = function (actors) {
 	
 	var keys = Object.keys(actors.npcs);
     for (var i = 0; i < keys.length; i++) {
-		this.npcs[keys[i]].move(actors.npcs[keys[i]]);
+		this.npcs[keys[i]].update(actors.npcs[keys[i]]);
 	}
 	
 };
@@ -264,18 +290,38 @@ var NPC = function (npc, renderer) {
     this.attacking  = false;
 	this.id			= npc.id;
 	
+	this.health_bar = new PIXI.Graphics();
+    this.health_bar.position.x = -16;
+    this.health_bar.position.y = 36;
+    // set a fill and line style
+    this.health_bar.beginFill(0x00FF00);
+    this.health_bar.lineStyle(2, 0x000000, 1);
+    this.health_bar.drawRect(0, 0, 32, 5);
+	
 	// Server response will create npcs with: npc.layers = [0, 4, 7, 8, 9];
 	this.npc_assets = [
-		ROOT + "client/resource/actors_walkcycle_BODY_male.png",		// 0
-        ROOT + "client/resource/HEAD_chain_armor_helmet.png",			// 1
-        ROOT + "client/resource/HEAD_chain_armor_hood.png",				// 2
-        ROOT + "client/resource/HEAD_plate_armor_helmet.png",			// 3
-        ROOT + "client/resource/TORSO_chain_armor_torso.png",			// 4
-        ROOT + "client/resource/TORSO_plate_armor_arms_shoulders.png",	// 5
-        ROOT + "client/resource/TORSO_plate_armor_torso.png",			// 6
-        ROOT + "client/resource/LEGS_plate_armor_pants.png",			// 7
-        ROOT + "client/resource/HANDS_plate_armor_gloves.png",			// 8
-        ROOT + "client/resource/FEET_plate_armor_shoes.png"				// 9
+		"BELT_leather.png",		                // 0
+		"BELT_rope.png",		                // 1
+		"FEET_plate_armor_shoes.png",           // 2
+		"FEET_shoes_brown.png",                 // 3
+		"HANDS_plate_armor_gloves.png",			// 4
+        "HEAD_chain_armor_helmet.png",			// 5
+        "HEAD_chain_armor_hood.png",			// 6
+        "HEAD_hair_blonde.png",			        // 7
+        "HEAD_leather_armor_hat.png",			// 8
+        "HEAD_plate_armor_helmet.png",			// 9
+        "HEAD_robe_hood.png",                   // 10
+        "LEGS_pants_greenish.png",			    // 11
+        "LEGS_plate_armor_pants.png",			// 12
+        "TORSO_chain_armor_jacket_purple.png",	// 13
+        "TORSO_chain_armor_torso.png",			// 14
+        "TORSO_leather_armor_shirt_white.png",	// 15
+        "TORSO_leather_armor_torso.png",		// 16
+        "TORSO_plate_armor_torso.png",	        // 17
+        "TORSO_robe_shirt_brown.png",			// 18
+        "TORSO_leather_armor_bracers.png",		// 19
+        "TORSO_leather_armor_shoulders.png",    // 20
+        "TORSO_plate_armor_arms_shoulders.png"	// 21
 	];
 	
 	// Constructor variables
@@ -286,16 +332,21 @@ var NPC = function (npc, renderer) {
 	var i;
 	var j;
 	
+	// WALKING / STANDING
 	var model 			= new PIXI.Container();
-	var modelSprite		= undefined;
-	var modelTextures	= [];
 	var modelTexture	= new PIXI.RenderTexture(renderer, 576, 256);
+	
+	model.addChild( 
+		new PIXI.Sprite( 
+			PIXI.utils.TextureCache[ROOT + "client/resource/actors/walkcycle/BODY_human.png"]
+		)
+	);
 	
 	// RenderTexture the layers:
 	for (i = 0; i < npc.layers.length; i++) {
 		model.addChild( 
 			new PIXI.Sprite( 
-				PIXI.utils.TextureCache[self.npc_assets[npc.layers[i]]]
+				PIXI.utils.TextureCache[ROOT + "client/resource/actors/walkcycle/" + self.npc_assets[npc.layers[i]]]
 			)
 		);
 	}
@@ -325,43 +376,133 @@ var NPC = function (npc, renderer) {
 
 		self.sprite.addChild(clip);
 	}
-        
+	///////////////////////////////////
+	
+	var attack 			= new PIXI.Container();
+	var attackTexture	= new PIXI.RenderTexture(renderer, 576, 256);
+	
+	// RenderTexture the layers:
+	attack.addChild( 
+		new PIXI.Sprite( 
+			PIXI.utils.TextureCache[ROOT + "client/resource/actors/slash/BODY_human.png"]
+		)
+	);
+
+	for (i = 0; i < npc.layers.length; i++) {
+		attack.addChild( 
+			new PIXI.Sprite( 
+				PIXI.utils.TextureCache[ROOT + "client/resource/actors/slash/" + self.npc_assets[npc.layers[i]]]
+			)
+		);
+	}
+	
+	attackTexture.render(attack);
+	
+	// Create animations from the render texture
+	for (i = 0; i < directions; i++) {
+		
+		// Walking animation
+		textures = [];
+		
+		for (j = 0; j < 6; j++) {
+			textures[j] = new PIXI.Texture(attackTexture.baseTexture, {
+                            x: j * 64,
+                            y: i * 64,
+                            width: 64,
+                            height: 64
+			});
+		}
+		
+		clip = new PIXI.extras.MovieClip(textures);
+		clip.position.x = -32;
+		clip.position.y = -32;
+		clip.animationSpeed = 0.2;
+		clip.loop   = false;
+		clip.visible = false;
+
+		self.sprite.addChild(clip);
+	}
+	
+	///////////////////////////////////
 	self.sprite.children[self.direction].visible = true;
 	self.sprite.children[self.direction].gotoAndStop(0);
 	
-	self.sprite.addChild(this.text);
+	self.sprite.addChild(self.text);
+	self.sprite.addChild(self.health_bar);
 	
 };
 
-NPC.prototype.move = function(npc) {
+NPC.prototype.update = function(npc) {
 	
 	var self = this;
 	
-	if (!self.moving) {
-		self.sprite.children[self.direction].play();
+	if (npc.position) {
+	    
+	    if (self.sprite.children[self.direction + 4].visible) {
+    	    self.sprite.children[self.direction + 4].visible = false;
+            self.sprite.children[self.direction + 4].gotoAndStop(0);
+            self.sprite.children[self.direction].visible = true;
+    	}
+	    
+    	if (!self.moving) {
+    		self.sprite.children[self.direction].play();
+    	}
+    	
+    	if (self.direction !== npc.direction) {
+    		self.sprite.children[self.direction].visible = false;
+    		self.sprite.children[self.direction].stop();
+    
+    		self.sprite.children[npc.direction].visible = true;
+    		self.sprite.children[npc.direction].play();
+    	}
+    	
+    	self.direction = npc.direction;
+    	
+    	if ((self.sprite.position.x == npc.position.x) && 
+    		(self.sprite.position.y == npc.position.y)) {
+    		self.moving = false;
+    		self.sprite.children[self.direction].gotoAndStop(0);
+    	} else {
+    		self.moving = true;
+    		self.sprite.position = npc.position;
+    		//self.sprite.position.x -= 32;
+    		//self.sprite.position.y -= 32;
+    	}
 	}
 	
-	if (self.direction !== npc.direction) {
-		self.sprite.children[self.direction].visible = false;
-		self.sprite.children[self.direction].stop();
-
-		self.sprite.children[npc.direction].visible = true;
-		self.sprite.children[npc.direction].play();
+	if (npc.health !== undefined) {
+	    self.health = npc.health;
+	    
+	    if (self.health < 1) {
+	        self.sprite.alpha = 0;
+	    } else {
+    	    self.health_bar.clear();
+            self.health_bar.lineStyle(2, 0x000000, 1);
+            self.health_bar.drawRect(0, 0, 32, 5);
+            self.health_bar.beginFill(0x00FF00);
+            self.health_bar.lineStyle(0);
+            self.health_bar.drawRect(1, 1, Math.floor(32 * (self.health / 100)) - 1, 4);
+	    }
 	}
 	
-	self.direction = npc.direction;
-	
-	if ((self.sprite.position.x == npc.position.x) && 
-		(self.sprite.position.y == npc.position.y)) {
-		self.moving = false;
-		self.sprite.children[self.direction].gotoAndStop(0);
-	} else {
-		self.moving = true;
-		self.sprite.position = npc.position;
-		//self.sprite.position.x -= 32;
-		//self.sprite.position.y -= 32;
+	if (npc.attack === true) {
+	    self.sprite.children[self.direction].visible = false;
+    	self.sprite.children[self.direction].stop();
+    /*
+        self.sprite.children[self.direction + 4].onComplete = function () {
+            console.log('CALLBACK');
+            self.sprite.children[self.direction + 4].visible = false;
+            self.sprite.children[self.direction + 4].gotoAndStop(0);
+            self.sprite.children[self.direction].visible = true;
+            
+            if (self.moving) {
+                self.sprite.children[self.direction].play();   
+            }
+        };
+    */
+        self.sprite.children[self.direction + 4].visible = true;
+        self.sprite.children[self.direction + 4].gotoAndPlay(0);
 	}
-	
 	
 };
 

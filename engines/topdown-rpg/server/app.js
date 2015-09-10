@@ -107,8 +107,10 @@ io.on('connection', function (socket) {
                 id: counter,
                 position: {x: 220, y: 220},
 				direction: 0,
-                life: 100,
-                experience: 0
+                health: 100,
+                stamina: 100,
+                experience: 0,
+                counter: 0
             };
             
             counter++;
@@ -168,6 +170,12 @@ io.on('connection', function (socket) {
 				
 			});
 			*/
+		});
+		
+		socket.on('attack', function () {
+		    
+		    engine.attack(player);
+		    
 		});
 		
 		socket.on('text', function (data) {

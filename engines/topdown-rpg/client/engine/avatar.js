@@ -14,7 +14,7 @@ var Avatar = function (engine) {
     this.text       = undefined;
 };
 
-Avatar.prototype.update = function (avatar) {
+Avatar.prototype.create = function (avatar) {
     // Update avatar stats (from realm)
     this.health     = avatar.health;
     this.stamina    = avatar.stamina;
@@ -26,8 +26,37 @@ Avatar.prototype.update = function (avatar) {
     this.text.position.y    = -34;
     this.text.alpha         = 0;
     
+    this.stats_bar = new PIXI.Graphics();
+    this.stats_bar.alpha = 0.5;
+    this.stats_bar.position.x = -16;
+    this.stats_bar.position.y = 36;
+    // set a fill and line style
+    this.stats_bar.beginFill(0x00FF00);
+    this.stats_bar.lineStyle(2, 0x000000, 1);
+    this.stats_bar.drawRect(0, 0, 32, 5);
+    this.stats_bar.drawRect(0, 6, 32, 5);
+    
     this.sprite.addChild(this.text);
+    this.sprite.addChild(this.stats_bar);
     this.sprite.position = this.engine.position; 
+};
+
+Avatar.prototype.update = function (avatar) {
+    var self = this;
+    
+    if (avatar.stamina !== undefined) {
+        self.stamina = avatar.stamina;
+        
+        self.stats_bar.clear();
+        self.stats_bar.lineStyle(2, 0x000000, 1);
+        self.stats_bar.drawRect(0, 0, 32, 5);
+        self.stats_bar.drawRect(0, 6, 32, 5);
+        self.stats_bar.beginFill(0x00FF00);
+        self.stats_bar.lineStyle(0);
+        self.stats_bar.drawRect(1, 1, Math.floor(32 * (self.health / 100)) - 1, 4);
+        self.stats_bar.drawRect(1, 7, Math.floor(32 * (self.stamina / 100)) - 1, 4);
+        self.stats_bar.alpha = 0.5;
+    }
 };
     
 Avatar.prototype.load = function (callback_complete) {
@@ -43,7 +72,7 @@ Avatar.prototype.load = function (callback_complete) {
     async.series([
         function(callback){
             // First we load the base walking spritesheet
-            var spritesheet = PIXI.BaseTexture.fromImage(ROOT + "client/resource/actors_walkcycle_BODY_skeleton.png");
+            var spritesheet = PIXI.BaseTexture.fromImage(ROOT + "client/resource/actors/walkcycle/BODY_skeleton.png");
             spritesheet.on('loaded', function() {
                 var index   = 0;
                 var row     = 0;
@@ -88,7 +117,7 @@ Avatar.prototype.load = function (callback_complete) {
         },
         function(callback){
             // Next we load the attack spritesheet
-            var spritesheet = PIXI.BaseTexture.fromImage(ROOT + "client/resource/actors_slash_BODY_skeleton.png");
+            var spritesheet = PIXI.BaseTexture.fromImage(ROOT + "client/resource/actors/slash/BODY_skeleton.png");
             spritesheet.on('loaded', function() {
             
                 var index   = 0;
@@ -151,6 +180,7 @@ Avatar.prototype.load = function (callback_complete) {
                 // Send our text string, then clear it
                 self.engine.socket.emit('text', self.blurb);
                 
+                /*
                 if (self.blurb.substring(0, 4) == '/me ') {
                     self.blurb = '*' + self.blurb.substring(4) + '*';
                     self.text.font.tint = 11184810;
@@ -165,6 +195,10 @@ Avatar.prototype.load = function (callback_complete) {
                 // old measurement as the text hasn't been rastered yet before I ask for the value
                 self.text.position.x        = -1 * Math.round(self.engine.text_input.textWidth / 2);
                 self.text.alpha             = 1;
+                */
+                
+                self.emote(self.blurb);
+                
                 self.blurb                  = ""; 
                 self.engine.text_input.text = "";
                 
@@ -298,12 +332,38 @@ Avatar.prototype.keydown = function (e) {
     //engine.avatar.text.text = engine.avatar.blurb;
 };
 
+
+Avatar.prototype.emote = function(blurb) {
+    
+    var self = this;
+    
+    if (blurb.substring(0, 4) == '/me ') {
+        blurb = '*' + blurb.substring(4) + '*';
+        self.text.font.tint = 11184810;
+    } else {
+        self.text.font.tint = 16777215;
+    }
+    
+    self.text.text          = blurb;
+    
+    // Get the start position from engine input string as occasionally a race condition occurs where 
+    // if I set the text of self.text then request it's textWidth property, it would give an
+    // old measurement as the text hasn't been rastered yet before I ask for the value
+    self.text.position.x        = -1 * Math.round(self.engine.text_input.textWidth / 2);
+    self.text.alpha             = 1;  
+};
 		
 Avatar.prototype.tick = function () {
     var self = this;
     
-    if (this.text.alpha > 0) {
-        this.text.alpha -= 0.003;
+    if (self.text.alpha > 0) {
+        self.text.alpha -= 0.003;
+    }
+    
+    if (self.stats_bar.alpha > 0) {
+        if ((self.stamina == 100) && (self.health == 100)) {
+            self.stats_bar.alpha -= 0.003;
+        }
     }
     
     if (self.attacking || self.typing) {
@@ -371,6 +431,12 @@ Avatar.prototype.tick = function () {
     };
     
     if ($.inArray('space', keys) > -1) {
+        
+        if (self.stamina < 10) {
+            self.emote('/me oof');
+            return;
+        }
+        
         self.sprite.children[self.direction].stop();
         self.sprite.children[self.direction].visible = false;
         
@@ -389,6 +455,8 @@ Avatar.prototype.tick = function () {
         self.sprite.children[self.direction + 4].gotoAndPlay(0);
         
         self.attacking = true;
+        
+        self.engine.socket.emit('attack');
         return;
     }
     

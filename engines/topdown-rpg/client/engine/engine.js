@@ -1,7 +1,7 @@
 var Engine = function () {
     
 /*
-Weak skelly born in crypt or something, weak, must team up with other player skellys to destroy 
+Weak skelly born in crypt or something, must team up with other player skellys to destroy 
 difficult, lone, npc 'adventurers' exploring the dungeon, etc, fast pace
 
 enemies are sparse, think human dovakhins, must be taken down by multiple skellies, difficulty scales with skellies online
@@ -35,7 +35,7 @@ enemies are sparse, think human dovakhins, must be taken down by multiple skelli
         //  data.avatar = {position: {x: xx, y: xx}, health: 100};
         //
         
-		self.avatar.update(actors.player);
+		self.avatar.create(actors.player);
 		self.actors.create(actors, self.renderer); //data.players, data.player.id);
 		
 		self.position = actors.player.position;
@@ -120,11 +120,99 @@ Engine.prototype.load = function (map) {
     var self = this;
     self.map = map;
     
+    var i = 0;
+    var j = 0;
+    
+    var actor_actions = [
+        "walkcycle",
+        "slash",
+        "hurt"
+    ];
+    
+    var actor_assets = [
+        "BODY_human.png",
+        "BELT_leather.png",		                
+    	"BELT_rope.png",		                
+    	"FEET_plate_armor_shoes.png",           
+    	"FEET_shoes_brown.png",                 
+    	"HANDS_plate_armor_gloves.png",			
+        "HEAD_chain_armor_helmet.png",		
+        "HEAD_chain_armor_hood.png",		
+        "HEAD_hair_blonde.png",			        
+        "HEAD_leather_armor_hat.png",			
+        "HEAD_plate_armor_helmet.png",			
+        "HEAD_robe_hood.png",                   
+        "LEGS_pants_greenish.png",			    
+        "LEGS_plate_armor_pants.png",			
+        "TORSO_chain_armor_jacket_purple.png",	
+        "TORSO_chain_armor_torso.png",			
+        "TORSO_leather_armor_shirt_white.png",	
+        "TORSO_leather_armor_torso.png",		
+        "TORSO_plate_armor_torso.png",	        
+        "TORSO_robe_shirt_brown.png",			
+        "TORSO_leather_armor_bracers.png",		
+        "TORSO_leather_armor_shoulders.png",
+        "TORSO_plate_armor_arms_shoulders.png"
+    ];
+    
+    var loader = PIXI.loader;
+    
+    for (i = 0; i < actor_actions.length; i++) {
+        for (j = 0; j < actor_assets.length; j++) {
+            loader.add(ROOT + "client/resource/actors/" + actor_actions[i] + "/" + actor_assets[j]);
+        }
+    }
+    
+    loader.add('UO Classic (rough)', ROOT + 'client/resource/uo.xml');
+        
+    loader.on('progress', function (e) {
+        console.log('Loader progress...');
+	});
+	
+	loader.on('error', function (e) {
+		console.log(e);
+	});
+	
+	loader.once('complete', function () {
+        self.terrain.load(map.terrain.source, self.renderer, function (error) {
+            self.layer_terrain = new PIXI.Sprite(self.terrain.texture_ground);
+            self.stage.addChild(self.layer_terrain);
+            
+            self.stage.addChild(self.actors.layer);
+            //self.stage.addChild(self.avatar.sprite);
+            self.actors.layer.addChild(self.avatar.sprite);
+            
+            self.layer_air = new PIXI.Sprite(self.terrain.texture_air);
+            self.stage.addChild(self.layer_air);
+            
+            self.layer_text = new PIXI.Container();
+            self.text_input = new PIXI.extras.BitmapText('', { font: '16px UO Classic (rough)', align: 'left' });
+            self.text_input.position.x = 0;
+            self.text_input.position.y = CANVAS_HEIGHT - 16;
+            self.layer_text.addChild(self.text_input);
+            self.stage.addChild(self.layer_text);
+        
+            self.avatar.load(function (error) {
+               
+                self.actors.load(function (error) {
+                    
+                    // Tell the realm we are ready for the initial data pack to setup actors, avatar position, etc
+                    self.socket.emit('ready', 'ready');
+                    
+                });
+                
+            });
+        });
+	});
+	
+	loader.load();
+    
+    /*
     self.terrain.load(map.terrain.source, self.renderer, function (error) {
         
-        var loader = new PIXI.loaders.Loader();
-        loader.add('UO Classic (rough)', ROOT + 'client/resource/uo.xml');
-        loader.once('complete', function () {
+        //var loader = new PIXI.loaders.Loader();
+        //loader.add('UO Classic (rough)', ROOT + 'client/resource/uo.xml');
+        //loader.once('complete', function () {
         
             self.layer_terrain = new PIXI.Sprite(self.terrain.texture_ground);
             self.stage.addChild(self.layer_terrain);
@@ -155,11 +243,12 @@ Engine.prototype.load = function (map) {
                 });
                 
             });
-        });
-        loader.load();
+        // });
+        //loader.load();
         
         
     });
+    */
 };
 
 Engine.prototype.render = function () {
