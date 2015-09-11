@@ -96,6 +96,15 @@
         <a href="http://www.assembledrealms.com" style="float: right;"><img src="//www.assembledrealms.com/build/img/logo.png"></a>
     </div>
     
+    <div id="loading" style="margin: 40px auto; width: 896px; padding: 0;">
+        <h4 id="loading_text" style="text-align: center;">Initializing <i class="fa fa-spinner fa-pulse"></i></h4>
+        <div class="progress">
+            <div id="loading_progress" class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
+                0%
+            </div>
+        </div>
+    </div>
+    
     <div id="container" style="display: none;">
     
         <div id="realm" style="margin: 20px auto; width: 896px; padding: 0;"></div>
@@ -147,6 +156,7 @@
         var __cpu_span        = undefined;
 		var __display_fps	  = true;
 		var __display_server  = true;
+        var __loading         = false;
 		
 		$("#btnFPS").on("click", function (e) {
 		
@@ -199,8 +209,10 @@
 					
 					engine.debug(true);
 				}
-			
-                $("#container").fadeIn();
+                
+                $("#loading").fadeOut(function () {
+                    $("#container").fadeIn();
+                });
             
 				animate();
 			};
@@ -212,6 +224,23 @@
                 __cpu_series.append(new Date().getTime(), data.cpu);
                 __cpu_span.textContent = data.cpu + ' %';
 			};
+            
+            engine.loading = function (e) {
+                /*
+                    _numToLoad: 70
+                    _progressChunk: 1.4285714285714286
+                */
+                if (!__loading) {
+                    __loading = true;
+                    $("#loading_text").text("Downloading realm assets...");
+                }
+                
+                var string_width = Math.floor(e.progress) + "%";
+                
+                $("#loading_progress").width(string_width);
+                $("#loading_progress").text(string_width)
+                $("#loading_progress").attr("aria-valuenow", Math.floor(e.progress));
+            }
 			
 			
 			
