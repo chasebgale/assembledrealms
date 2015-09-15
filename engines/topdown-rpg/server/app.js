@@ -189,6 +189,10 @@ io.on('connection', function (socket) {
         socket.on('leave_debug', function (data) {
             socket.leave('debug');
         });
+        
+        socket.on('disconnect', function () {
+            engine.removePlayer(player);
+        });
 		
 	});
     

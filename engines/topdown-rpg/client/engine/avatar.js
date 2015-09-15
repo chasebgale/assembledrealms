@@ -5,6 +5,7 @@ var Avatar = function (engine) {
     this.moving     = false;
     this.attacking  = false;
     this.typing     = false;
+    this.death      = false;
     this.blurb      = "";
     this.health     = 100;
     this.stamina    = 100;
@@ -43,10 +44,58 @@ Avatar.prototype.create = function (avatar) {
 
 Avatar.prototype.update = function (avatar) {
     var self = this;
+    var draw = false;
     
     if (avatar.stamina !== undefined) {
         self.stamina = avatar.stamina;
+        draw = true;
+    }
+    
+    if (avatar.health !== undefined) {
+        self.health = avatar.health;
+        draw = true;
+    }
+    
+    if (avatar.death === true) {
+        // We have been killed
         
+        self.sprite.children[self.direction].stop();
+        self.sprite.children[self.direction].visible = false;
+        self.sprite.children[self.direction + 4].visible = false;
+    	
+    	self.direction  = avatar.direction;
+    	self.position   = avatar.position;
+    	self.moving     = false;
+    	self.attacking  = false;
+    	self.typing     = false;
+    	self.death      = true;
+    	self.health     = 0;
+        
+        self.sprite.children[8].onComplete = function () {
+            self.engine.stage.alpha -= 0.01;
+        };
+        
+        self.sprite.children[8].loop = false;
+        self.sprite.children[8].visible = true;
+        self.sprite.children[8].gotoAndPlay(0);
+    	
+    	/*
+    	self.sprite.position = self.position; 
+    	self.engine.position = self.position;
+    	*/
+    } else if (avatar.death === false) {
+        self.position           = avatar.position;
+        self.engine.position    = avatar.position;
+        self.sprite.position    = avatar.position;
+        self.death              = false;
+        
+        self.sprite.children[8].visible                 = false;
+        self.sprite.children[self.direction].visible    = true;
+        
+        self.engine.stage.alpha = 1.0;
+    }
+    
+    if (draw) {
         self.stats_bar.clear();
         self.stats_bar.lineStyle(2, 0x000000, 1);
         self.stats_bar.drawRect(0, 0, 32, 5);
@@ -61,170 +110,110 @@ Avatar.prototype.update = function (avatar) {
     
 Avatar.prototype.load = function (callback_complete) {
 
-    var clip;
-    var directions = 4;
-    var i = 0;
-    var prefix = "skeleton";
     var self = this;
-    
-    // Load our avatar sprites in order, still using async xfer, utilizing Caolan McMahon's async library:
-    // https://github.com/caolan/async
-    async.series([
-        function(callback){
-            // First we load the base walking spritesheet
-            var spritesheet = PIXI.BaseTexture.fromImage(ROOT + "client/resource/actors/walkcycle/BODY_skeleton.png");
-            spritesheet.on('loaded', function() {
-                var index   = 0;
-                var row     = 0;
-                var col     = 0;
-                
-                var textures = [];
-                var frameTexture;
-                
-                var cols = Math.floor(spritesheet.width / 64);
-                
-                for (row = 0; row < directions; row++) {
-                    textures[row] = [];
-                    for (col = 0; col < cols; col++) {
-                        frameTexture = new PIXI.Texture(spritesheet, {
-                            x: col * 64,
-                            y: row * 64,
-                            width: 64,
-                            height: 64
-                        });
-                        
-                        textures[row][col] = frameTexture;
-                        
-                        PIXI.Texture.addTextureToCache(frameTexture, prefix + "_walk_" + row + "_" + col + ".png");
-                        index++;
-                    }
-                }
-                
-                // Add/create animated clips:
-                for (i = 0; i < directions; i++) {
-                    clip = new PIXI.extras.MovieClip(textures[i]);
 
-                    clip.position.x = -32; //(CANVAS_WIDTH / 2) - 32;
-                    clip.position.y = -32; //(CANVAS_HEIGHT / 2) - 32;
-                    clip.animationSpeed = 0.2;
-                    clip.visible = false;
-
-                    self.sprite.addChild(clip);
-                }
-                
-                callback(null);
-            });
-        },
-        function(callback){
-            // Next we load the attack spritesheet
-            var spritesheet = PIXI.BaseTexture.fromImage(ROOT + "client/resource/actors/slash/BODY_skeleton.png");
-            spritesheet.on('loaded', function() {
-            
-                var index   = 0;
-                var row     = 0;
-                var col     = 0;
-                
-                var textures = [];
-                var frameTexture;
-                
-                var cols = Math.floor(spritesheet.width / 64);
-                
-                for (row = 0; row < directions; row++) {
-                    textures[row] = [];
-                    for (col = 0; col < cols; col++) {
-                        frameTexture = new PIXI.Texture(spritesheet, {
-                            x: col * 64,
-                            y: row * 64,
-                            width: 64,
-                            height: 64
-                        });
-                        
-                        textures[row][col] = frameTexture;
-                        
-                        PIXI.Texture.addTextureToCache(frameTexture, prefix + "_slash_" + row + "_" + col + ".png");
-                        index++;
-                    }
-                }
-                
-                // Add/create animated clips:
-                for (i = 0; i < directions; i++) {
-                    clip = new PIXI.extras.MovieClip(textures[i]);
-
-                    clip.position.x = -32; //(CANVAS_WIDTH / 2) - 32;
-                    clip.position.y = -32; //(CANVAS_HEIGHT / 2) - 32;
-                    clip.animationSpeed = 0.2;
-                    clip.loop = false;
-                    clip.visible = false;
-
-                    self.sprite.addChild(clip);
-                }
-                
-                callback(null);
-            });
-        }
-    ],
-    function(err, results){
-        if (err) {
-            console.log('error loading assets');
-            return;
-        }
+    var process_layer = function (resource, action) {
         
-        self.direction = DIRECTION_S;
+        var index       = 0;
+        var row         = 0;
+        var col         = 0;
+        var textures    = [];
+        var directions  = 4;
+        var i           = 0;
+        var prefix      = "skeleton";
+        var spritesheet = PIXI.utils.TextureCache[resource].baseTexture;
+        var cols        = Math.floor(spritesheet.width / 64);
+        var rows        = Math.floor(spritesheet.height / 64);
         
-		self.sprite.children[self.direction].visible = true;
-		self.sprite.children[self.direction].gotoAndStop(0);
-		
-		KeyboardJS.on('enter', function() {
-
-            if (self.typing) {
-                // Send our text string, then clear it
-                self.engine.socket.emit('text', self.blurb);
+        var frameTexture;
+        var clip;
+        
+        for (row = 0; row < rows; row++) {
+            textures[row] = [];
+            for (col = 0; col < cols; col++) {
+                frameTexture = new PIXI.Texture(spritesheet, {
+                    x: col * 64,
+                    y: row * 64,
+                    width: 64,
+                    height: 64
+                });
                 
-                /*
-                if (self.blurb.substring(0, 4) == '/me ') {
-                    self.blurb = '*' + self.blurb.substring(4) + '*';
-                    self.text.font.tint = 11184810;
-                } else {
-                    self.text.font.tint = 16777215;
-                }
+                textures[row][col] = frameTexture;
                 
-                self.text.text          = self.blurb;
-                
-                // Get the start position from engine input string as occasionally a race condition occurs where 
-                // if I set the text of self.text then request it's textWidth property, it would give an
-                // old measurement as the text hasn't been rastered yet before I ask for the value
-                self.text.position.x        = -1 * Math.round(self.engine.text_input.textWidth / 2);
-                self.text.alpha             = 1;
-                */
-                
-                self.emote(self.blurb);
-                
-                self.blurb                  = ""; 
-                self.engine.text_input.text = "";
-                
-                document.removeEventListener("keydown", self.keydown, false);
-            } else {
-                // Stop our avatar and show the carrot blinking for input
-                if (self.moving) {
-                    self.moving = false;
-                    self.sprite.children[self.direction].gotoAndStop(0);
-
-                    // Sending one more 'move' with duplicate coords as the last update will tell all clients this
-                    // actor has stopped moving
-                    self.engine.socket.emit('move', {position: self.engine.position, direction: self.direction});
-                }
-                
-                document.addEventListener("keydown", self.keydown, false);
+                PIXI.Texture.addTextureToCache(frameTexture, prefix + "_" + action + "_" + row + "_" + col + ".png");
+                index++;
             }
+        }
+        
+        // Add/create animated clips:
+        for (i = 0; i < rows; i++) {
+            clip = new PIXI.extras.MovieClip(textures[i]);
+    
+            clip.position.x = -32; //(CANVAS_WIDTH / 2) - 32;
+            clip.position.y = -32; //(CANVAS_HEIGHT / 2) - 32;
+            clip.animationSpeed = 0.2;
+            clip.visible = false;
+    
+            self.sprite.addChild(clip);
+        }
+    };
 
-            self.typing = !self.typing;
-        });
+    process_layer(ROOT + "client/resource/actors/walkcycle/BODY_skeleton.png", "walk");
+    process_layer(ROOT + "client/resource/actors/slash/BODY_skeleton.png", "slash");
+    process_layer(ROOT + "client/resource/actors/hurt/BODY_skeleton.png", "hurt");
+                
+    self.direction = DIRECTION_S;
         
-        
-        
-        callback_complete();
-        
+	self.sprite.children[self.direction].visible = true;
+	self.sprite.children[self.direction].gotoAndStop(0);
+	
+	KeyboardJS.on('enter', function() {
+
+        if (self.typing) {
+            // Send our text string, then clear it
+            self.engine.socket.emit('text', self.blurb);
+            
+            /*
+            if (self.blurb.substring(0, 4) == '/me ') {
+                self.blurb = '*' + self.blurb.substring(4) + '*';
+                self.text.font.tint = 11184810;
+            } else {
+                self.text.font.tint = 16777215;
+            }
+            
+            self.text.text          = self.blurb;
+            
+            // Get the start position from engine input string as occasionally a race condition occurs where 
+            // if I set the text of self.text then request it's textWidth property, it would give an
+            // old measurement as the text hasn't been rastered yet before I ask for the value
+            self.text.position.x        = -1 * Math.round(self.engine.text_input.textWidth / 2);
+            self.text.alpha             = 1;
+            */
+            
+            self.emote(self.blurb);
+            
+            self.blurb                  = ""; 
+            self.engine.text_input.text = "";
+            
+            document.removeEventListener("keydown", self.keydown, false);
+        } else {
+            // Stop our avatar and show the carrot blinking for input
+            if (self.moving) {
+                self.moving = false;
+                self.sprite.children[self.direction].gotoAndStop(0);
+
+                // Sending one more 'move' with duplicate coords as the last update will tell all clients this
+                // actor has stopped moving
+                self.engine.socket.emit('move', {position: self.engine.position, direction: self.direction});
+            }
+            
+            document.addEventListener("keydown", self.keydown, false);
+        }
+
+        self.typing = !self.typing;
     });
+    
+    callback_complete();
     
 };
 
@@ -366,11 +355,11 @@ Avatar.prototype.tick = function () {
         }
     }
     
-    if (self.attacking || self.typing) {
+    if (self.attacking || self.typing || self.death) {
         return;
     }
     
-    var amount 				= 2;
+    var amount 				= 4;
     var animationSpeed 		= 0.2;
     
     var wasMoving 		= self.moving;
@@ -451,6 +440,7 @@ Avatar.prototype.tick = function () {
             }
         };
         
+        self.sprite.children[self.direction + 4].loop = false;
         self.sprite.children[self.direction + 4].visible = true;
         self.sprite.children[self.direction + 4].gotoAndPlay(0);
         

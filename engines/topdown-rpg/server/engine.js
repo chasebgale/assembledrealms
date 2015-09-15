@@ -31,7 +31,7 @@ module.exports = Engine;
 Engine.prototype.initialize = function () {
 	this.spawn();
 };
-	
+
 Engine.prototype.tick = function (map) {
 		
 	tick_count++;
@@ -56,11 +56,30 @@ Engine.prototype.tick = function (map) {
     var npc         = undefined;
     var player      = undefined;
     var difference  = 0;
+    var modified    = false;
     
     var attack_bounding = 32;
     
     for (i = 0; i < player_keys.length; i++) {
-        player = players[player_keys[i]];
+        player      = players[player_keys[i]];
+        modified    = false;
+        
+        player.counter++;
+        
+        if (player.death) {
+            if (player.counter > 220) {
+                player.position     = {x: 220, y: 220};
+    			player.direction    = 0;
+                player.health       = 100;
+                player.stamina      = 100;
+                player.experience   = 0;
+                player.death        = false;
+                player.counter      = 0;
+                
+                broadcast.players[player.id] = player;
+            }
+            continue;
+        }
         
         // Is this player triggering an unfortunate NPC?
         for (j = 0; j < npc_keys.length; j++) {
@@ -84,18 +103,28 @@ Engine.prototype.tick = function (map) {
             }
         }
         
-        if (player.stamina < 100) {
-            player.counter++;
-            if (player.counter > 6) {
+        if (player.counter > 12) {
+            if (player.stamina < 100) {
                 player.stamina++;
-                player.counter = 0;
+                modified = true;
+            }
+            if (player.health < 100) {
+                player.health++;
+                modified = true;
+            }
+            
+            player.counter = 0;
+            
+            if (modified) {
                 if (broadcast.players[player.id]) {
-                    broadcast.players[player.id].stamina = player.stamina;   
+                    broadcast.players[player.id].stamina = player.stamina;
+                    broadcast.players[player.id].health = player.health;   
                 } else {
-                    broadcast.players[player.id] = {stamina: player.stamina};
+                    broadcast.players[player.id] = {stamina: player.stamina, health: player.health};
                 }
             }
         }
+        
     }
 	
 	for (i = 0; i < npc_keys.length; i++) {
@@ -107,6 +136,12 @@ Engine.prototype.tick = function (map) {
         if (npc.attacking) {
             
             player = players[npc.target];
+            
+            if (player.death) {
+                npc.attacking = false;
+                continue;
+            }
+            
             npc.counter++;
             
             if (npc.cooldown > 0) {
@@ -121,12 +156,31 @@ Engine.prototype.tick = function (map) {
             if (npc.counter % 2) {
                 distance = Math.sqrt( (npc.position.x-player.position.x)*(npc.position.x-player.position.x) + (npc.position.y-player.position.y)*(npc.position.y-player.position.y) );
                 if (distance < 33) {
+                    
                     npc.cooldown = 1;
+                    
                     if (broadcast.npcs[npc_keys[i]]) {
                         broadcast.npcs[npc_keys[i]].attack = true;
                     } else {
                         broadcast.npcs[npc_keys[i]] = {attack: true};
                     }
+                    
+                    player.health -= 10;
+                    
+                    if (player.health > 0) {
+                        if (broadcast.players[player.id]) {
+                            broadcast.players[player.id].health = player.health;   
+                        } else {
+                            broadcast.players[player.id] = {health: player.health};
+                        }
+                    } else {
+                        // Player dies, oh no
+                        player.counter      = 0;
+                        player.death        = true;
+                        
+                        broadcast.players[player.id] = player;
+                    }
+                    
                     continue;
                 }
             }
@@ -415,6 +469,11 @@ Engine.prototype.players = function () {
 	
 Engine.prototype.addPlayer = function (player) {
 	players[player.id] = player;
+	player_keys = Object.keys(players);
+};
+
+Engine.prototype.removePlayer = function (player) {
+	delete players[player.id];
 	player_keys = Object.keys(players);
 };
 

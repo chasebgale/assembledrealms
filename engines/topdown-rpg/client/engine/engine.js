@@ -23,6 +23,7 @@ enemies are sparse, think human dovakhins, must be taken down by multiple skelli
     this.actors     = new Actors(this);
 
     this.position       = {x: 220, y: 220};
+    this.alternator     = false;
     
     this.socket = io(HOST);
     
@@ -123,13 +124,19 @@ Engine.prototype.load = function (map) {
     var i = 0;
     var j = 0;
     
+    var loader = PIXI.loader;
+    
     var actor_actions = [
         "walkcycle",
         "slash",
         "hurt"
     ];
     
-    var actor_assets = [
+    var avatar_assets = [
+        "BODY_skeleton.png"
+    ];
+    
+    var npc_assets = [
         "BODY_human.png",
         "BELT_leather.png",		                
     	"BELT_rope.png",		                
@@ -155,18 +162,21 @@ Engine.prototype.load = function (map) {
         "TORSO_plate_armor_arms_shoulders.png"
     ];
     
-    var loader = PIXI.loader;
-    
     for (i = 0; i < actor_actions.length; i++) {
-        for (j = 0; j < actor_assets.length; j++) {
-            loader.add(ROOT + "client/resource/actors/" + actor_actions[i] + "/" + actor_assets[j]);
+        for (j = 0; j < npc_assets.length; j++) {
+            loader.add(ROOT + "client/resource/actors/" + actor_actions[i] + "/" + npc_assets[j]);
+        }
+        
+        for (j = 0; j < avatar_assets.length; j++) {
+            loader.add(ROOT + "client/resource/actors/" + actor_actions[i] + "/" + avatar_assets[j]);
         }
     }
     
     loader.add('UO Classic (rough)', ROOT + 'client/resource/uo.xml');
+    loader.add(ROOT + 'client/resource/actors/slash/WEAPON_dagger.png');
         
     loader.on('progress', function (e) {
-        console.log('Loader progress...');
+        self.loading(e);
 	});
 	
 	loader.on('error', function (e) {
@@ -257,6 +267,18 @@ Engine.prototype.render = function () {
 
     if (!self.initialized) {
         return;
+    }
+    
+    self.alternator = !self.alternator;
+    
+    if (self.alternator) {
+        return;
+    }
+    
+    if (self.stage.alpha < 1.0) {
+        if (self.stage.alpha > 0) {
+            self.stage.alpha -= 0.01;
+        }
     }
     
     self.avatar.tick();
