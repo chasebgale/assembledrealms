@@ -2,13 +2,13 @@ var express 		= require('express');
 var bodyParser 		= require('body-parser');
 var cookieParser 	= require('cookie-parser');
 var app 			= express();
-var morgan			= require('morgan');
 var moment 		    = require('moment');
 var pm2             = require('pm2');
 var walk            = require('walk');
 var path            = require('path');
 var redis 			= require('redis');
 var http 			= require('http');
+var fs              = require('fs');
 var uuid 			= require('node-uuid');
 var redisClient 	= redis.createClient();
 var server			= http.Server(app);
@@ -39,14 +39,14 @@ redisClient.on("error", function (err) {
     console.log("Error " + err);
 });
 
-// Log to console
-app.use(morgan('dev')); 	
 app.set('view engine', 'ejs'); // set up EJS for templating
 
 app.post('/launch', function (req, res, next) {
 
 	var realmID     = req.body.id;
 	var realmApp    = '/var/www/realms/' + realmID + '/server/app.js';
+    var realmErr    = '/var/www/logs/' + realmID + '-err.log';
+    var realmOut    = '/var/www/logs/' + realmID + '-out.log';
     var found_proc  = [];
     var close_proc  = [];
 	
@@ -62,13 +62,13 @@ app.post('/launch', function (req, res, next) {
                 console.log('checking: ' + proc.name);
                 if (proc.name == realmID) {
                     found_proc.push(proc);
-					continue;
+					return;
                 }
                 
                 redisClient.get(realmID + "-clients",  function (error, reply) {
 		
                     if (error) {
-                        continue;
+                        return;
                     }
                     
                     // If the server is empty, shut it down:
@@ -93,33 +93,42 @@ app.post('/launch', function (req, res, next) {
                 });
             });
             
-            if (found_proc.length === 0) {
-                // No existing realm server running, spool up new one:
-                pm2.start(realmApp, { name: realmID, scriptArgs: ['debug'] }, function(err, proc) {
-					
-					pm2.disconnect();
-					
-                    if (err) {
-                        console.log(e.stack);
-                        return res.send('ERROR BOOTING: ' + err.message);
-                    }
+            fs.truncate(realmErr, 0, function(){
+                fs.truncate(realmOut, 0, function(){
+                    if (found_proc.length === 0) {
+                        // No existing realm server running, spool up new one:
+                        var options = { name: realmID, scriptArgs: ['debug'], error_file: realmErr, out_file: realmOut};
+                        
+                        console.log("Starting app with the following options: " + JSON.stringify(options));
+                        
+                        pm2.start(realmApp, options, function(err, proc) {
+                            
+                            pm2.disconnect();
+                            
+                            if (err) {
+                                console.log(e.stack);
+                                return res.send('ERROR BOOTING: ' + err.message);
+                            }
 
-                    res.send('OK');
-                });
-            } else {
-                // Existing realm server found, restart it
-                pm2.restart(realmApp, function(err, proc) {
-					
-					pm2.disconnect();
-					
-                    if (err) {
-                        console.log(e.stack);
-                        return res.send('ERROR BOOTING: ' + err.message);
-                    }
+                            res.send('OK');
+                        });
+                    } else {
+                        // Existing realm server found, restart it
+                        pm2.restart(realmApp, function(err, proc) {
+                            
+                            pm2.disconnect();
+                            
+                            if (err) {
+                                console.log(e.stack);
+                                return res.send('ERROR BOOTING: ' + err.message);
+                            }
 
-                    res.send('OK');
+                            res.send('OK');
+                        });
+                    }
                 });
-            }
+            });
+            
         });
         
     });
