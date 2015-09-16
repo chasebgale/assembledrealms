@@ -91,6 +91,7 @@ Avatar.prototype.update = function (avatar) {
         
         self.sprite.children[8].visible                 = false;
         self.sprite.children[self.direction].visible    = true;
+        self.sprite.children[self.direction].gotoAndStop(0);
         
         self.engine.stage.alpha = 1.0;
     }

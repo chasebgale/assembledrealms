@@ -467,3 +467,86 @@ exports.debug = function(req, res, next) {
   archive.finalize();
 
 }
+
+exports.publish = function(req, res, next) {
+    
+  // TODO: This should really be accomplished using git remote pull from the realm...
+  
+  utilities.logMessage('PUBLISHING: ' + req.params.id + ' to ' + req.body.address);
+  
+  var address = req.body.address;
+  
+  var conn  = new ssh2();
+  var project   = __dirname + "/../projects/" + req.params.id + "/";
+  var zip = __dirname + "/../archive/" + req.params.id + ".zip";
+  var destination = "/var/www/realms/"+ req.params.id + ".zip";
+  var files = [];
+  
+  var output = fs.createWriteStream(zip);
+  var archive = archiver('zip');
+  
+  output.on('close', function() {
+    console.log('ZIP :: ' + archive.pointer() + ' total bytes after compression.');
+    
+    conn.on('ready', function() {
+      console.log('SSH2 :: Connection established.');
+      conn.sftp(function(error, sftp) {
+        if (error) return next(error);
+        
+        sftp.fastPut(zip, destination, function (error) {
+          if (error) return next(error);
+          console.log('SSH2 :: Zip upload complete.');
+          
+          conn.exec('unzip -o /var/www/realms/' + req.params.id + ' -d /var/www/realms/' + req.params.id, function(error, stream) {
+            if (error) return next(error);
+            
+            stream.on('exit', function(code, signal) {
+              
+			  conn.exec('rm -f /var/www/realms/' + req.params.id + '.zip', function(error, stream) {
+			    if (error) return next(error);
+				
+				stream.on('exit', function(code, signal) {
+				  // Hmm
+				}).on('close', function() {
+				  console.log('SSH2 - DELETE :: Success.');
+				  conn.end();
+				}).stderr.on('data', function(data) {
+				  console.log('DELETE STDERR: ' + data);
+				});
+				
+			  });
+			  
+              res.send('OK');
+            }).on('close', function() {
+              console.log('SSH2 - UNZIP :: Decompressed successfully.');
+            }).stderr.on('data', function(data) {
+              console.log('STDERR: ' + data);
+            });
+            
+          });
+          
+        });
+        
+      });
+    }).connect({
+      host: address, //'104.131.114.6',
+      port: 22,
+      username: 'web',
+      password: '0S0Wjf4vYvJ3QJx6yBci'
+    });
+    
+  });
+  
+  archive.on('error', function(error) {
+    if (error) return next(error);
+  });
+  
+  archive.pipe(output);
+  
+  archive.bulk([
+    { expand: true, cwd: project, src: ['**', '!.git']}
+  ]);
+  
+  archive.finalize();
+
+}

@@ -57,6 +57,9 @@ Engine.prototype.tick = function (map) {
     var player      = undefined;
     var difference  = 0;
     var modified    = false;
+    var row         = 0;
+    var col         = 0;
+    var original    = 0;
     
     var attack_bounding = 32;
     
@@ -202,6 +205,8 @@ Engine.prototype.tick = function (map) {
                     difference = 3;   
                 }
                 
+                original = npc.position.y;
+                
                 if (npc.position.y < player.position.y) {
                     npc.position.y += difference;
                     npc.direction   = DIRECTION_S;
@@ -209,6 +214,13 @@ Engine.prototype.tick = function (map) {
                     npc.position.y -= difference; 
                     npc.direction   = DIRECTION_N;
                 }
+                
+                col = Math.floor( npc.position.x / TILE_WIDTH );
+				row = Math.floor( npc.position.y / TILE_HEIGHT );
+				
+				if (!this.walkable( map, row, col )) {
+				    npc.position.y = original;
+				}
             }
             
             // X calculations
@@ -218,6 +230,8 @@ Engine.prototype.tick = function (map) {
                     difference = 3;   
                 }
                 
+                original = npc.position.x;
+                
                 if (npc.position.x < player.position.x) {
                     npc.position.x += difference;
                     npc.direction   = DIRECTION_E;
@@ -225,6 +239,13 @@ Engine.prototype.tick = function (map) {
                     npc.position.x -= difference; 
                     npc.direction   = DIRECTION_W;
                 }
+                
+                col = Math.floor( npc.position.x / TILE_WIDTH );
+				row = Math.floor( npc.position.y / TILE_HEIGHT );
+				
+				if (!this.walkable( map, row, col )) {
+				    npc.position.x = original;
+				}
             }
             
             if (broadcast.npcs[npc_keys[i]]) {
