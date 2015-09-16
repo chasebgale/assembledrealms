@@ -762,53 +762,52 @@ function loadRealmFile(id, path, name, rendered) {
 
     var tracking_id = __projectId + '-' + path;
 
+    // Resource already loaded? If so, skip straight to displaying it
     if (sessionStorage[tracking_id + '-name']) {
-
         loadEditor(tracking_id, sessionStorage[tracking_id], rendered);
         __fileId = tracking_id;
-                
-    } else {
+        return;
+    } 
 
-        if (isImageFile(name)) {
-                    
-            $('#image').children('img').each(function(i) { 
-                $(this).hide();
-            });
-            
-            $("#image").append("<img src='" + __projectURL + '/file/raw/' + encodeURIComponent(path) + "' id='" + id + "' style='background-image: url(/build/img/transparent_display.gif);' />");
-			
-            displayImage();
-            
-        } else {
-            $.ajax({
-                url: __projectURL + '/file/raw/' + encodeURIComponent(path),
-                type: 'get',
-                dataType: 'text'
-            })
-            .done(function (data) {
+    // Binary formats (like images and audio) only have 'viewers' right now, no editors
+    if (isImageFile(name)) {
                 
-                sessionStorage[tracking_id] = data;
-                sessionStorage[tracking_id + '-name'] = name;
-                sessionStorage[tracking_id + '-path'] = path;
-                sessionStorage[tracking_id + '-commit-md5'] = md5(data);
-    
-                __trackedFiles.push(tracking_id);
-                sessionStorage[__trackedStorageId] = JSON.stringify(__trackedFiles);
-    
-                loadEditor(tracking_id, data, rendered); // (name,
-                __fileId = tracking_id;
-                
-            })
-            .fail(function(data, param1, param2) {
-                console.log(data);
-                    // Update DOM to reflect we messed up:
-                    //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
-            });
-        }
+        $('#image').children('img').each(function(i) { 
+            $(this).hide();
+        });
         
+        $("#image").append("<img src='" + __projectURL + '/file/raw/' + encodeURIComponent(path) + "' id='" + id + "' style='background-image: url(/build/img/transparent_display.gif);' />");
         
-
+        displayImage();
+        return;
     }
+    
+    // If we're this far, we need to load up some ascii
+    $.ajax({
+        url: __projectURL + '/file/raw/' + encodeURIComponent(path),
+        type: 'get',
+        dataType: 'text'
+    })
+    .done(function (data) {
+        
+        sessionStorage[tracking_id] = data;
+        sessionStorage[tracking_id + '-name'] = name;
+        sessionStorage[tracking_id + '-path'] = path;
+        sessionStorage[tracking_id + '-commit-md5'] = md5(data);
+
+        __trackedFiles.push(tracking_id);
+        sessionStorage[__trackedStorageId] = JSON.stringify(__trackedFiles);
+
+        loadEditor(tracking_id, data, rendered); // (name,
+        __fileId = tracking_id;
+        
+    })
+    .fail(function(data, param1, param2) {
+        console.log(data);
+            // Update DOM to reflect we messed up:
+            //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
+    });
+        
 }
 
 function realmResourceURL(path) {
@@ -821,8 +820,11 @@ function realmResourceURL(path) {
 
 function displayImage() {
     $("#ulView li").css('display', 'none');
+    $("#tabs .tab-pane").hide();
+    $("#btnView").html('<i class="fa fa-eye"></i> Raw Image <span class="caret"></span>');
+    
     $("#tab-nav-image").css('display', 'block');
-    $('#tab-nav-image a:first').tab('show');
+    $('#image').show();
 }
 
 function isImageFile(name) {
@@ -853,46 +855,43 @@ function loadEditor(filename, content, displayRendered) {
         
     $("#tab-nav-editor").css('display', 'block');
     
-    if (!__editSessions[filename]) {
+    var extension_to_mode = {
+        'js':   'ace/mode/javascript',
+        'json': 'ace/mode/json',
+        'html': 'ace/mode/html',
+        'md':   'ace/mode/plain_text'
+    };
     
-        switch (ext) {
-            case "js":
-                //__editor.getSession().setMode("ace/mode/javascript");
-                __editSessions[filename] = ace.createEditSession(content, "ace/mode/javascript");
-                break;
-            case "json":
-                //__editor.getSession().setMode("ace/mode/json");
+    if (!__editSessions[filename]) {
+        __editSessions[filename] = ace.createEditSession(content, extension_to_mode[ext] ? extension_to_mode[ext] : 'ace/mode/plain_text');
+    }
+    
+    switch (ext) {
+        case "js":
+            //__editor.getSession().setMode("ace/mode/javascript");
+            __editSessions[filename] = ace.createEditSession(content, "ace/mode/javascript");
+            break;
+        case "json":
+            //__editor.getSession().setMode("ace/mode/json");
+            
+            if (displayRendered === undefined) {
+                displayRendered = true;
+            }
+            
+            try {
+                var parsed = JSON.parse(content);
                 
-                if (displayRendered === undefined) {
-                    displayRendered = true;
-                }
-                
-                try {
-                    var parsed = JSON.parse(content);
-                    
-                    // TODO: This is a horrible, horrible test for 'are we looking at a map?'
-                    if (parsed.terrain) {
-                        Map.init("mapContainer", parsed);
-                        Map.save = function () {
-                            var worker = {};
-                            worker.settings = Map.settings;
-                            worker.terrain = Map.terrain;
-                            worker.objects = Map.objects;
-                            worker.actors = Map.actors;
+                // TODO: This is a horrible, horrible test for 'are we looking at a map?'
+                if (parsed.terrain) {
+                    Map.init("mapContainer", parsed);
+                    Map.save = function () {
+                        var worker = {};
+                        worker.settings = Map.settings;
+                        worker.terrain = Map.terrain;
+                        worker.objects = Map.objects;
+                        worker.actors = Map.actors;
 
-                            sessionStorage[__fileId] = JSON.stringify(worker);
-                            
-                            // Format the JSON so a human can read it:
-                            content = JSON.stringify(parsed, function(key, value) { 
-                                if (key === "index") { 
-                                    return '(tile locations ommitted for readability)'; 
-                                } else { 
-                                    return value; 
-                                } 
-                            }, '\t');
-                            
-                            __editor.setValue(content);
-                        };
+                        sessionStorage[__fileId] = JSON.stringify(worker);
                         
                         // Format the JSON so a human can read it:
                         content = JSON.stringify(parsed, function(key, value) { 
@@ -903,39 +902,51 @@ function loadEditor(filename, content, displayRendered) {
                             } 
                         }, '\t');
                         
-                        $("#mapToolbar [data-toggle='tooltip']").tooltip();
-                        $("#tab-nav-map").css('display', 'block');
-                        renderTarget = $("#tab-nav-map a:first");
-                    }
+                        __editor.setValue(content);
+                    };
                     
-                    __editSessions[filename] = ace.createEditSession(content, "ace/mode/json");
+                    // Format the JSON so a human can read it:
+                    content = JSON.stringify(parsed, function(key, value) { 
+                        if (key === "index") { 
+                            return '(tile locations ommitted for readability)'; 
+                        } else { 
+                            return value; 
+                        } 
+                    }, '\t');
                     
-                } catch (e) {
-                    console.log(e);
+                    $("#mapToolbar [data-toggle='tooltip']").tooltip();
+                    $("#tab-nav-map").css('display', 'block');
+                    renderTarget = $("#tab-nav-map a:first");
                 }
                 
-                break;
-            case "html":
-                //__editor.getSession().setMode("ace/mode/html");
-                __editSessions[filename] = ace.createEditSession(content, "ace/mode/html");
-                break;
-            case "md":
-                if (displayRendered === undefined) {
-                    displayRendered = true;
-                }
+                __editSessions[filename] = ace.createEditSession(content, "ace/mode/json");
                 
-                //__editor.getSession().setMode("ace/mode/plain_text");
-                __editSessions[filename] = ace.createEditSession(content, "ace/mode/plain_text");
-                
-                $("#tab-nav-markdown").css('display', 'block');
-                renderTarget = $("#tab-nav-markdown a:first");
-                $("#markdown").html(marked(content));
-                break;
-            default:
-                __editSessions[filename] = ace.createEditSession(content, "ace/mode/plain_text");
-                break;
-        }
+            } catch (e) {
+                console.log(e);
+            }
+            
+            break;
+        case "html":
+            //__editor.getSession().setMode("ace/mode/html");
+            __editSessions[filename] = ace.createEditSession(content, "ace/mode/html");
+            break;
+        case "md":
+            if (displayRendered === undefined) {
+                displayRendered = true;
+            }
+            
+            //__editor.getSession().setMode("ace/mode/plain_text");
+            __editSessions[filename] = ace.createEditSession(content, "ace/mode/plain_text");
+            
+            $("#tab-nav-markdown").css('display', 'block');
+            renderTarget = $("#tab-nav-markdown a:first");
+            $("#markdown").html(marked(content));
+            break;
+        default:
+            __editSessions[filename] = ace.createEditSession(content, "ace/mode/plain_text");
+            break;
     }
+    
     
     __editor.setSession(__editSessions[filename]);
     
