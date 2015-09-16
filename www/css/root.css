@@ -63,6 +63,20 @@ div#funding {
     
 }
 
+@media (max-width: 994px) {
+	.header-link {
+		font-size: 0.75em;
+	}
+}
+
+@media (max-width: 767px) {
+	.header-link {
+		font-size: 1.25em;
+	}
+}
+
+
+
 .header-link {
     text-align: center;
 }
@@ -244,7 +258,10 @@ div#funding {
 }
 
 .nav>li>a {
-	padding: 10px 15px !important;
+	padding-bottom: 0 !important;
+    padding-top: 12px !important;
+    padding-right: 10px !important;
+    padding-left: 10px !important;
 }
 
 .panel {
