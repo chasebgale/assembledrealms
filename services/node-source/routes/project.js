@@ -383,20 +383,24 @@ exports.destroy = function(req, res, next){
 }
 
 exports.debug = function(req, res, next) {
-  
-  // FOR NOW USING HARD-CODED INTERNAL IP ADDY.
-  // TODO: IN THE FUTURE, MAYBE LOOK UP THIS INTERNAL
-  // IP ADDRESS USING THE DIGITAL OCEAN API? MAYBE DO IT
-  // EVERY HOUR AND UPDATE A VARIABLE SO IT'S NOT HIT FOR
-  // EVERY REQUEST? MAYBE IT ONLY CHECKS THE D/O API IF IT
-  // FAILS? THINK ABOUT ALL THIS STUFF.
-  
+
   utilities.logMessage('PUSHING TO DEBUG - ' + req.params.id);
+  
+  // TODO: Implement this:
+  
+  // The caller to this url (source-XX.assembledrealms.com/api/project/:id/debug) also passes a post:
+  // -- ip: either the ip of the least used debug-xx server OR if the user has a server up for this realm, 
+  //        it would be that realm's ip
+  // -- hosted: true if the user has a private realm server up, this is used to change the destination folders
+  var internal_ip   = req.body.ip;
+  var realm_hosted  = req.body.hosted;
+  
+  // END TODO
   
   var conn  = new ssh2();
   var project   = __dirname + "/../projects/" + req.params.id + "/";
   var zip = __dirname + "/../archive/" + req.params.id + ".zip";
-  var destination = "/var/www/realms/"+ req.params.id + ".zip";
+  var destination = realm_hosted ? "/var/www/realm-debug/realm.zip" : "/var/www/realms/"+ req.params.id + ".zip";
   var files = [];
   
   var output = fs.createWriteStream(zip);
@@ -446,7 +450,7 @@ exports.debug = function(req, res, next) {
         
       });
     }).connect({
-      host: '10.132.227.95', //'104.131.114.6',
+      host: '10.132.227.95', // internal IP of debug-01, TODO: choose internal ip of least loaded debug server
       port: 22,
       username: 'web',
       password: '87141eeda7861e0b41801ad48ff19904'
@@ -479,7 +483,7 @@ exports.publish = function(req, res, next) {
   var conn  = new ssh2();
   var project   = __dirname + "/../projects/" + req.params.id + "/";
   var zip = __dirname + "/../archive/" + req.params.id + ".zip";
-  var destination = "/var/www/realms/"+ req.params.id + ".zip";
+  var destination = "/var/www/realm/"+ req.params.id + ".zip";
   var files = [];
   
   var output = fs.createWriteStream(zip);

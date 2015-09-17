@@ -131,15 +131,16 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                 <button type="button" id="btnNewFolder" class="btn btn-default btn-xs"><i class="fa fa-folder-o fa-fw"></i> New Folder</button>
                 <button type="button" id="btnUploadResource" class="btn btn-default btn-xs"><i class="fa fa-upload fa-fw"></i> Upload File</button>
                 <div class="spacer"></div>
-                <button type="button" id="btnDebug" class="btn btn-default btn-xs"><i class="fa fa-caret-square-o-right fa-fw"></i> Debug</button>
                 <button type="button" id="btnCommit" class="btn btn-default btn-xs"><i class="fa fa-cloud-upload fa-fw"></i> Commit</button>
+                <div class="spacer"></div>
+                <button type="button" id="btnDebug" class="btn btn-default btn-xs"><i class="fa fa-caret-square-o-right fa-fw"></i> Debug</button>
 				<div class="spacer"></div>
 				<div class="btn-group">
 					<button type="button" id="btnView" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 					<i class="fa fa-eye"></i> Rendered Markdown <span class="caret"></span>
 					</button>
 					<ul id="ulView" class="dropdown-menu">
-						<li id="tab-nav-editor" class="display: none;"><a href="#editor">Raw Text</a></li>
+						<li id="tab-nav-editor" style="display: none;"><a href="#editor">Raw Text</a></li>
 						<li id="tab-nav-image" style="display: none;"><a href="#image">Raw Image</a></li>
 						<li id="tab-nav-map" style="display: none;"><a href="#map">Map Editor</a></li>
 						<li id="tab-nav-markdown" style="display: none;"><a href="#markdown">Rendered Markdown</a></li>

@@ -1,10 +1,4 @@
 <!DOCTYPE html>
-
-<!--
-    PLEASE NOTE: This file is ignored by the build server, it is included with the source to illustrate
-    how the game is loaded when running in the 'live' environment, i.e. on assembledrealms.com/play
--->
-
 <html lang="en">
     <head>
 
@@ -31,7 +25,7 @@
         </div>
 
         <!-- Your realm hosts up it's own copy of socket.io -->
-        <script type="text/javascript" src="//<%= host %>:<%= port %>/socket.io/socket.io.js"></script>
+        <script type="text/javascript" src="/socket.io/socket.io.js"></script>
         
         <!-- All of the realms' scripts are served up dynamically... -->
         <% for(var i=0; i<scripts.length; i++) { %>

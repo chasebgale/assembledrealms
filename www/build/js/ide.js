@@ -36,8 +36,6 @@ function initialize(projectID, projectDomain) {
         __trackedFiles = JSON.parse(sessionStorage[__trackedStorageId]);
     }
     
-    
-    
     $( window ).resize(function() {
         resize();
     });
@@ -75,137 +73,6 @@ function initialize(projectID, projectDomain) {
 		
 		$("#btnView").html('<i class="fa fa-eye"></i> ' + $(this).text() + ' <span class="caret"></span>');
     });
-
-/*
-    
-    
-    $("#terrain").on("click", ".terrain", function () {
-        var tileKey = $(this).attr('data-id');
-        Map.setBrush(Map.terrain, tileKey);
-        Map.setMode(Map.MODE_PAINT);
-
-        var offset_x = parseInt($(this).attr('data-offset-x'));
-        var offset_y = parseInt($(this).attr('data-offset-y'));
-        var frame = Map.frames[tileKey];
-        
-        var canvas = document.getElementById('brush');
-        var context = canvas.getContext('2d');
-
-        var imageObj = new Image();
-        imageObj.onload = function() {
-            
-            context.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // draw cropped image
-            var sourceX = offset_x;
-            var sourceY = offset_y;
-            var sourceWidth = frame.frame.w;
-            var sourceHeight = frame.frame.h;
-            var destWidth = 0;
-            var destHeight = 0;
-            
-            if (sourceWidth >= sourceHeight) {
-                destWidth = canvas.width;
-                destHeight = sourceHeight * (canvas.width / sourceWidth);
-            } else {
-                destHeight = canvas.height;
-                destWidth = sourceWidth * (canvas.height / sourceHeight);
-            }
-            
-            var destX = canvas.width / 2 - destWidth / 2;
-            var destY = canvas.height / 2 - destHeight / 2;
-    
-            context.drawImage(imageObj, sourceX, sourceY, sourceWidth, sourceHeight, destX, destY, destWidth, destHeight);
-        };
-        imageObj.src = $(this).css('background-image').slice(4, -1);
-
-        $('#modalTerrain').modal('hide');
-        $('#addBrush').fadeIn().css("display","inline-block");
-    });
-
-    $("#objects").on("click", ".objects", function () {
-        var tileKey = $(this).attr('data-id');
-        Map.setBrush(Map.objects, tileKey);
-        Map.setMode(Map.MODE_PAINT);
-
-        var offset_x = parseInt($(this).attr('data-offset-x'));
-        var offset_y = parseInt($(this).attr('data-offset-y'));
-        var frame = Map.frames[tileKey];
-        
-        var canvas = document.getElementById('brush');
-        var context = canvas.getContext('2d');
-
-        var imageObj = new Image();
-        imageObj.onload = function() {
-            
-            context.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // draw cropped image
-            var sourceX = offset_x;
-            var sourceY = offset_y;
-            var sourceWidth = frame.frame.w;
-            var sourceHeight = frame.frame.h;
-            var destWidth = 0;
-            var destHeight = 0;
-            
-            if (sourceWidth >= sourceHeight) {
-                destWidth = canvas.width;
-                destHeight = sourceHeight * (canvas.width / sourceWidth);
-            } else {
-                destHeight = canvas.height;
-                destWidth = sourceWidth * (canvas.height / sourceHeight);
-            }
-            
-            var destX = canvas.width / 2 - destWidth / 2;
-            var destY = canvas.height / 2 - destHeight / 2;
-    
-            context.drawImage(imageObj, sourceX, sourceY, sourceWidth, sourceHeight, destX, destY, destWidth, destHeight);
-        };
-        imageObj.src = $(this).css('background-image').slice(4, -1);
-
-        $('#modalTerrain').modal('hide');
-        $('#addBrush').fadeIn().css("display","inline-block");
-    });
-    
-    $("#moveButton").on("click", function () {
-        
-        
-        Map.setCursor('cursor_hand');
-        Map.setMode(Map.MODE_MOVE);
-        
-        resetToolBar();
-        $(this).addClass('active');
-    
-    });
-    
-    $("#eraserButton").on("click", function () {
-       
-        Map.setCursor('cursor_eraser');
-        Map.setMode(Map.MODE_DELETE);
-       
-        resetToolBar();
-        $(this).addClass('active');
-       
-    });
-
-    $("#addButton").on("click", function () {
-       
-        Map.setCursor('cursor_pencil');
-        Map.setMode(Map.MODE_PAINT);
-        
-        resetToolBar();
-        $(this).addClass('active');
-        
-        if (Map.brush.tile === undefined) {
-            $("#modalTerrain").modal("show");
-        } else {
-            if ($("#addBrush").is(':hidden')) {
-                $("#addBrush").fadeIn();
-            }
-        }
-        
-    });
-    */
     
     $("#categorySelection").on('change', function () {
        var category = '#' + $(this).find(":selected").attr('data-id');
@@ -845,14 +712,6 @@ function loadEditor(filename, content, displayRendered) {
 	var renderTarget;
 
     $("#ulView li").css('display', 'none');
-    
-    if (isImageFile(filename)) {
-
-        $("#tab-nav-image").css('display', 'block');
-		$('#tab-nav-image a:first').tab('show');
-		return;   
-    }
-        
     $("#tab-nav-editor").css('display', 'block');
     
     var extension_to_mode = {
@@ -862,14 +721,10 @@ function loadEditor(filename, content, displayRendered) {
         'md':   'ace/mode/plain_text'
     };
     
-    if (!__editSessions[filename]) {
-        __editSessions[filename] = ace.createEditSession(content, extension_to_mode[ext] ? extension_to_mode[ext] : 'ace/mode/plain_text');
-    }
-    
     switch (ext) {
         case "js":
             //__editor.getSession().setMode("ace/mode/javascript");
-            __editSessions[filename] = ace.createEditSession(content, "ace/mode/javascript");
+            //__editSessions[filename] = ace.createEditSession(content, "ace/mode/javascript");
             break;
         case "json":
             //__editor.getSession().setMode("ace/mode/json");
@@ -928,7 +783,7 @@ function loadEditor(filename, content, displayRendered) {
             break;
         case "html":
             //__editor.getSession().setMode("ace/mode/html");
-            __editSessions[filename] = ace.createEditSession(content, "ace/mode/html");
+            //__editSessions[filename] = ace.createEditSession(content, "ace/mode/html");
             break;
         case "md":
             if (displayRendered === undefined) {
@@ -936,18 +791,17 @@ function loadEditor(filename, content, displayRendered) {
             }
             
             //__editor.getSession().setMode("ace/mode/plain_text");
-            __editSessions[filename] = ace.createEditSession(content, "ace/mode/plain_text");
+            //__editSessions[filename] = ace.createEditSession(content, "ace/mode/plain_text");
             
             $("#tab-nav-markdown").css('display', 'block');
             renderTarget = $("#tab-nav-markdown a:first");
             $("#markdown").html(marked(content));
             break;
-        default:
-            __editSessions[filename] = ace.createEditSession(content, "ace/mode/plain_text");
-            break;
     }
     
-    
+    if (!__editSessions[filename]) {
+        __editSessions[filename] = ace.createEditSession(content, extension_to_mode[ext] ? extension_to_mode[ext] : 'ace/mode/plain_text');
+    }
     __editor.setSession(__editSessions[filename]);
     
 	$("#tabs .tab-pane").hide();
