@@ -435,8 +435,9 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                             </div>
                             <ul class="list-group">
                                 <li class="list-group-item">Max simultaneous users: 10</li>
-                                <li class="list-group-item">Resources shared among all realms</li>
+                                <li class="list-group-item">Resources shared among all online realms on server</li>
                                 <li class="list-group-item">Players will queue globally</li>
+                                <li class="list-group-item">Realm background processing will stop if no players are online</li>
                             </ul>
                         </div>
                     </div>

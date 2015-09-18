@@ -199,7 +199,7 @@ class loggedInUser {
 		$stmt->fetch();
 		$stmt->close();
         
-		// Bring the server online, if not on the free tier
+		// Bring the server offline, if not on the free tier
 		if ($realm_level > 0) {
 			$curl 					= curl_init();
 			$gatekeeper_token 	    = "2f15adf29c930d8281b0fb076b0a14062ef93d4d142f6f19f4cdbed71fff3394";
@@ -234,7 +234,17 @@ class loggedInUser {
                 $stmt->close();
                 return true;
             }
-		}
+		} else {
+            // Bring the free tier offline
+            $stmt = $mysqli->prepare("UPDATE realms
+								  SET status = 0, address = NULL
+								  WHERE
+								  id = ?");
+            $stmt->bind_param("i", $realm_id);
+            $stmt->execute();
+            $stmt->close();
+            return true;
+        }
 	}
     
     public function onlineRealm($realm_id, $realm_level)
