@@ -13,7 +13,6 @@ var app 		= express();
 var http        = require('http').Server(app);
 var io 			= require('socket.io')(http);
 var redis       = require('redis');
-//var memwatch 	= require('memwatch-next');
 var fs			= require('fs');
 var pm2         = require('pm2');
 var db     		= redis.createClient();
@@ -29,6 +28,9 @@ var realmID			= directory_arr[directory_arr.length - 2];
 var counter = 0;
 
 // Grab the map and parse into an object
+// This is a really terrible way to grab the default map
+// This should be dynamic and really open ended as the user may
+// have several maps...
 var map = JSON.parse( fs.readFileSync(__dirname + '/../client/maps/town.json') );
 
 var engine = new Engine();

@@ -30,9 +30,15 @@ module.exports = Engine;
 
 Engine.prototype.initialize = function () {
 	this.spawn();
+	// TODO: Load all possible maps into an indexed array to be looked up
+	// when the actor needs to validate walking or pathfinding...
 };
 
 Engine.prototype.tick = function (map) {
+		
+	// TODO: Rather than pass the map in here, each actor should have
+	// have reference to the map they are on, or perhaps an index, then we
+	// look up the isWalkable() stuff on the map that they are currently on...
 		
 	tick_count++;
     
