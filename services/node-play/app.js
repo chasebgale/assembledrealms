@@ -142,6 +142,9 @@ var queue			= [];
 
 app.get('/realms/:id', function (req, res, next) {
 	
+	// Testing
+	return res.json(req.headers);
+	
 	// TODO: How many connected clients can the server handle? Between all hosted realms?
 	if ((client_count > 5) || (queue.length > 0)) {
 		return res.render('queue', {id: req.params.id, host: req.headers.host, position: queue.length + 1});
