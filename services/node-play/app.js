@@ -135,9 +135,17 @@ app.post('/launch', function (req, res, next) {
     
 });
 
-var scripts   = [];
+var scripts   		= [];
+var clients			= {};
+var client_count	= 0;
+var queue			= [];
 
 app.get('/realms/:id', function (req, res, next) {
+	
+	// TODO: How many connected clients can the server handle? Between all hosted realms?
+	if ((client_count > 5) || (queue.length > 0)) {
+		return res.render('queue', {id: req.params.id, host: req.headers.host, position: queue.length + 1});
+	}
 
 	redisClient.get(req.params.id, function (error, reply) {
 		
@@ -211,6 +219,37 @@ app.get('/realms/:id', function (req, res, next) {
     });
 
 	
+});
+
+app.get('/internal/disconnect/:id', function (req, res, next) {
+	if (clients[req.params.id] == undefined) {
+		clients[req.params.id] = 0;
+	} else {
+		if (clients[req.params.id] > 0) {
+			clients[req.params.id] = clients[req.params.id] - 1;
+			client_count--;
+		}
+	}
+	
+	return res.send(client_count);
+});
+
+app.get('/internal/connect/:id', function (req, res, next) {
+	if (clients[req.params.id] == undefined) {
+		clients[req.params.id] = 1;
+	} else {
+		clients[req.params.id] = clients[req.params.id] + 1;
+	}
+	client_count++;
+	return res.send(client_count);
+});
+
+io.on('connection', function (socket) {
+	
+	queue.push(socket);
+	
+	socket.on('disconnect', function () {
+	});
 });
 
 // Serve up the realm files, when requested:

@@ -428,12 +428,12 @@ Engine.prototype.attack = function (player) {
     
     player.stamina -= 10;
     
+	// TODO: Different hitboxes based up direction the npc is looking
     //if (player.direction == DIRECTION_N) {
-        tw = 64;
-        th = 64;
-        tx = player.position.x - 32;
-        ty = player.position.y - 32;
-    //}   
+	tw = 64;
+	th = 64;
+	tx = player.position.x - 32;
+	ty = player.position.y - 32; // }
     
     this.emit('debug', 'Player ' + player.id + ' is attacking: ' + tx + ', ' + ty);
     
@@ -493,6 +493,20 @@ Engine.prototype.npcs = function () {
 Engine.prototype.players = function () {
 	return players;
 };
+
+Engine.prototype.createPlayer = function () {
+	var player = {
+		id: 0, // Note: This value will be overwritten
+		position: {x: 220, y: 220},
+		direction: 0,
+		health: 100,
+		stamina: 100,
+		experience: 0,
+		counter: 0
+	};
+	
+	return player;
+}
 	
 Engine.prototype.addPlayer = function (player) {
 	players[player.id] = player;
