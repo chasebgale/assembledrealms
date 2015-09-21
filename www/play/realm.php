@@ -83,7 +83,50 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 		
 		Actually, the more I am thinking about it, address in the db should be an integer of the id on a realm_address table, containing realm_id, host, secret-key
         */
-        if ($realm['address']) {
+        
+        if ($realm['level'] == 0) {
+            // Free realm hosting
+            $host       = "http://play-" . $realm['address'] . ".assembledrealms.com";
+            $session_id = session_id();
+            
+            $post_body  = http_build_query(array('session' => $session_id,
+                                                 'user_id' => $loggedInUser->user_id,
+                                                 'user_name' => $loggedInUser->displayname,
+                                                 'user_image' => $loggedInUser->user_image,
+                                                 'realm_id' => $realmID
+            ));
+            
+            $curl 					= curl_init();
+			$play_token 	        = "e61f933bcc07050385b8cc08f9deee61de228b2ba31b8523bdc78230d1a72eb2";
+
+			curl_setopt_array($curl, array(
+				CURLOPT_HTTPHEADER 		=> array('Authorization: ' . $play_token),
+                CURLOPT_HEADER          => true,
+				CURLOPT_RETURNTRANSFER 	=> true,
+                CURLOPT_POST            => true,
+                CURLOPT_POSTFIELDS      => $post_body,
+				CURLOPT_SSL_VERIFYHOST 	=> 0,
+				CURLOPT_SSL_VERIFYPEER 	=> false,
+				CURLOPT_URL 			=> $host . '/auth'
+			));
+
+			$resp       = curl_exec($curl);
+            $httpcode   = intval(curl_getinfo($curl, CURLINFO_HTTP_CODE));
+            
+			curl_close($curl);
+            
+            if (($httpcode < 200) && ($httpcode > 299)) {
+                // We have an error:
+                error_log($httpcode . ": " . $resp, 3, $logfile);
+                echo "Auth fail.";
+                die();
+            } else {
+                $url_from_auth = $host . "/realms/" . $realmID;
+            }
+            
+        } else {
+            // Paid realm hosting has an IP, not a subdomain of assembledrealms.com, so we won't get php sesh info in the headers,
+            // so we generate a GUID and use that...
             $guid = GUID();
             
             $curl = curl_init();
@@ -94,7 +137,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
             $url_from_auth = curl_exec($curl);
         }
-        
+
     }
     
 } else {

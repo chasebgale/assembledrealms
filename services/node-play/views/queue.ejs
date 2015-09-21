@@ -29,18 +29,11 @@
 
 <div id="wrapper">
     
-    <h3 id="position">Position: <%= position %></h3>
+    <h3 id="position">Position: <i class="fa fa-spinner fa-spin"></i></h3>
     
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
-    <script src="//<%= host %>:<%= port %>/socket.io/socket.io.js"></script>
-	
-	<!--<script src="//cdn.socket.io/socket.io-1.2.0.js"></script>-->
-    
-<% for(var i=0; i<scripts.length; i++) { %>
-    <script src="<%= scripts[i] %>"></script>
-<% } %>
-
+    <script src="//<%= host %>/socket.io/socket.io.js"></script>
     <script src="//www.assembledrealms.com/build/js/utilities.js"></script>
 	
     <script>

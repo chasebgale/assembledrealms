@@ -14,6 +14,8 @@ var redisClient 	= redis.createClient();
 var server			= http.Server(app);
 var io 				= require('socket.io')(server);
 
+var self_token      = "e61f933bcc07050385b8cc08f9deee61de228b2ba31b8523bdc78230d1a72eb2";
+
 var allowCrossDomain = function(req, res, next) {
     res.header('Access-Control-Allow-Origin', '*'); //'http://www.assembledrealms.com');
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
@@ -23,7 +25,30 @@ var allowCrossDomain = function(req, res, next) {
     if ('OPTIONS' == req.method) return res.send(200);
     
     next();
-}
+};
+
+var queue_position = function (phpsession) {
+    // Find our place in the queue
+    var position = -1;
+    for (var q = 0; q < queue.length; q++) {
+        if (queue[q].session == phpsession) {
+            position = q + 1;
+            break;
+        }
+    }
+    
+    return position;
+};
+
+var queue_insert = function (phpsession, user_id, user_name, user_image, realm_id) {
+    queue.push({
+        session: phpsession, 
+        user_id: user_id, 
+        user_name: user_name, 
+        user_image: user_image,
+        realm: realm_id
+    });
+};
 
 redisClient.flushdb();
 
@@ -97,7 +122,8 @@ app.post('/launch', function (req, res, next) {
                 fs.truncate(realmOut, 0, function(){
                     if (found_proc.length === 0) {
                         // No existing realm server running, spool up new one:
-                        var options = { name: realmID, scriptArgs: ['debug'], error_file: realmErr, out_file: realmOut};
+                        // var options = { name: realmID, scriptArgs: ['debug'], error_file: realmErr, out_file: realmOut};
+                        var options = { name: realmID, error_file: realmErr, out_file: realmOut};
                         
                         console.log("Starting app with the following options: " + JSON.stringify(options));
                         
@@ -135,21 +161,53 @@ app.post('/launch', function (req, res, next) {
     
 });
 
+app.post('/auth', function (req, res, next) {
+    
+    var auth = req.get('Authorization');
+
+    if (auth !== self_token) {
+        return res.status(401).send("Please don't try to break things :/");
+    }
+    
+    var phpsession  = req.body.session;
+    var user_id     = req.body.user_id;
+    var user_name   = req.body.user_name;
+    var user_image  = req.body.user_image;
+    var realm_id    = req.body.realm_id;
+    
+    console.log('AUTH REQUEST: ' + JSON.stringify(req.body));
+    
+    queue_insert(phpsession, user_id, user_name, user_image, realm_id);
+    
+    res.send('OK');
+});
+
 var scripts   		= [];
 var clients			= {};
-var client_count	= 0;
+var client_count	= 6;
 var queue			= [];
 
 app.get('/realms/:id', function (req, res, next) {
-	
-	// Testing
-	return res.json(req.headers);
+    
+    var phpsession = req.cookies["PHPSESSID"];
+    
+    // Are we missing an assembledrealms.com sesh?
+    if ((phpsession == undefined) || (phpsession == "")) {
+        return res.render('error', {message: "Not authorized..."});
+    }
+    
+    // /auth gets called by assembledrealms.com php and injects the user into the queue, if it's
+    // missing, call shennanigans 
+    if (queue_position(phpsession) == -1) {
+        return res.render('error', {message: "Not authorized...."});
+    }
 	
 	// TODO: How many connected clients can the server handle? Between all hosted realms?
 	if ((client_count > 5) || (queue.length > 0)) {
-		return res.render('queue', {id: req.params.id, host: req.headers.host, position: queue.length + 1});
+		return res.render('queue', {id: req.params.id, host: req.headers.host});
 	}
 	
+    // If we got this far, we have a free spot so redirect the user to the real realm play
 	res.redirect('/realms/play/' + req.params.id);
 
 });
@@ -260,9 +318,25 @@ app.get('/internal/connect/:id', function (req, res, next) {
 
 io.on('connection', function (socket) {
 	
-	queue.push(socket);
+    // Grab our PHP Sesh key, if it exists
+    var phpsession = '';
+    var cookies = "; " + socket.request.headers.cookie;
+    var parts = cookies.split("; PHPSESSID=");
+    
+    if (parts.length == 2) {
+        phpsession = parts.pop().split(";").shift();
+    } else {
+        // If the client is missing our phpsesh, kill it
+        socket.emit({error: "Missing auth..."});
+        return socket.close();
+    }
+    
+	// Find our place in the queue
+    var position = queue_position(phpsession); 
+    socket.emit("stats", {position: position});
 	
 	socket.on('disconnect', function () {
+        
 	});
 });
 
