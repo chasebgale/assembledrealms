@@ -146,7 +146,16 @@ app.get('/realms/:id', function (req, res, next) {
 	if ((client_count > 5) || (queue.length > 0)) {
 		return res.render('queue', {id: req.params.id, host: req.headers.host, position: queue.length + 1});
 	}
+	
+	res.redirect('/realms/play/' + req.params.id);
 
+});
+
+// Redirected here by queue js inside iframe
+app.get('/realms/play/:id', function (req, res, next) {
+	
+	// TODO: Ensure client id is the same as the first in the queue, if thier is one
+	
 	redisClient.get(req.params.id, function (error, reply) {
 		
 		if (error) {
@@ -217,8 +226,6 @@ app.get('/realms/:id', function (req, res, next) {
         });
 		
     });
-
-	
 });
 
 app.get('/internal/disconnect/:id', function (req, res, next) {
@@ -229,6 +236,10 @@ app.get('/internal/disconnect/:id', function (req, res, next) {
 			clients[req.params.id] = clients[req.params.id] - 1;
 			client_count--;
 		}
+	}
+	
+	if (queue.length > 0) {
+		queue[0].emit("enter");
 	}
 	
 	return res.send(client_count);
