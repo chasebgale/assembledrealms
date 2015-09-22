@@ -56,13 +56,6 @@ var allowCrossDomain = function(req, res, next) {
 app.use(allowCrossDomain);
 app.use(cookieParse());
 
-// Catch memory leaks
-/*
-memwatch.on('leak', function(info) {
-	console.log(JSON.stringify(info));
-});
-*/
-
 // Catch redis errors
 db.on("error", function (err) {
     console.log("Error " + err);
@@ -303,15 +296,19 @@ var worldLoop = setInterval(function () {
     
 }, 32);
 
-var debugLoop = setInterval(function () {
-	//var room = io.sockets.adapter.rooms['debug']; Object.keys(room).length;
-    pm2.describe(realmID, function (err, list) {
-        if (err) {
-            return;
-        } 
-        io.to('debug').emit('stats', {cpu: list[0].monit.cpu, memory: list[0].monit.memory});
-    });
-}, 1000);
+if (debug) {
+
+    var debugLoop = setInterval(function () {
+        //var room = io.sockets.adapter.rooms['debug']; Object.keys(room).length;
+        pm2.describe(realmID, function (err, list) {
+            if (err) {
+                return;
+            } 
+            io.to('debug').emit('stats', {cpu: list[0].monit.cpu, memory: list[0].monit.memory});
+        });
+    }, 1000);
+
+}
 
 pm2.connect(function(err) {
 	

@@ -75,90 +75,119 @@ app.post('/launch', function (req, res, next) {
     var found_proc  = [];
     var close_proc  = [];
 	
-    pm2.connect(function(err) {
+    // Get all processes running
+    pm2.list(function(err, process_list) {
         
-        // Get all processes running
-        pm2.list(function(err, process_list) {
+        console.log('/launch called, running processes:');
+        
+        // Search for running instance of requested realm
+        process_list.forEach(function(proc) {
+            console.log('checking: ' + proc.name);
+            if (proc.name == realmID) {
+                found_proc.push(proc);
+                return;
+            }
             
-            console.log('/launch called, running processes:');
-            
-            // Search for running instance of requested realm
-            process_list.forEach(function(proc) {
-                console.log('checking: ' + proc.name);
-                if (proc.name == realmID) {
-                    found_proc.push(proc);
-					return;
+            db.get(realmID + "-clients",  function (error, reply) {
+    
+                if (error) {
+                    return;
                 }
                 
-                db.get(realmID + "-clients",  function (error, reply) {
-		
-                    if (error) {
-                        return;
-                    }
-                    
-                    // If the server is empty, shut it down:
-                    // TODO: Maybe check the last activity time and only shudown proc if it's been idle for
-                    // over 5-10 minutes or something...
-                    if (reply == 0) {
-                        close_proc.push(proc);
-                    }
-                    
-                });
+                // If the server is empty, shut it down:
+                // TODO: Maybe check the last activity time and only shudown proc if it's been idle for
+                // over 5-10 minutes or something...
+                if (reply == 0) {
+                    close_proc.push(proc);
+                }
                 
-            });
-            
-            console.log('found ' + found_proc.length);
-            console.log('idle ' + close_proc.length);
-            
-            close_proc.forEach(function(proc) {
-                pm2.stop(proc, function(err, proc) {
-                    if (err) {
-                        console.log("Attempted to stop " + proc + " but errored: " + err.stack);
-                    }                   
-                });
-            });
-            
-            fs.truncate(realmErr, 0, function(){
-                fs.truncate(realmOut, 0, function(){
-                    if (found_proc.length === 0) {
-                        // No existing realm server running, spool up new one:
-                        // var options = { name: realmID, scriptArgs: ['debug'], error_file: realmErr, out_file: realmOut};
-                        var options = { name: realmID, error_file: realmErr, out_file: realmOut};
-                        
-                        console.log("Starting app with the following options: " + JSON.stringify(options));
-                        
-                        pm2.start(realmApp, options, function(err, proc) {
-                            
-                            pm2.disconnect();
-                            
-                            if (err) {
-                                console.log(e.stack);
-                                return res.send('ERROR BOOTING: ' + err.message);
-                            }
-
-                            res.send('OK');
-                        });
-                    } else {
-                        // Existing realm server found, restart it
-                        pm2.restart(realmApp, function(err, proc) {
-                            
-                            pm2.disconnect();
-                            
-                            if (err) {
-                                console.log(e.stack);
-                                return res.send('ERROR BOOTING: ' + err.message);
-                            }
-
-                            res.send('OK');
-                        });
-                    }
-                });
             });
             
         });
         
+        console.log('found ' + found_proc.length);
+        console.log('idle ' + close_proc.length);
+        
+        close_proc.forEach(function(proc) {
+            pm2.stop(proc, function(err, proc) {
+                if (err) {
+                    console.log("Attempted to stop " + proc + " but errored: " + err.stack);
+                }                   
+            });
+        });
+        
+        fs.truncate(realmErr, 0, function(){
+            fs.truncate(realmOut, 0, function(){
+                if (found_proc.length === 0) {
+                    // No existing realm server running, spool up new one:
+                    // var options = { name: realmID, scriptArgs: ['debug'], error_file: realmErr, out_file: realmOut};
+                    var options = { name: realmID, error_file: realmErr, out_file: realmOut};
+                    
+                    console.log("Starting app with the following options: " + JSON.stringify(options));
+                    
+                    pm2.start(realmApp, options, function(err, proc) {
+                        
+                        //pm2.disconnect();
+                        
+                        if (err) {
+                            console.log(e.stack);
+                            return res.send('ERROR BOOTING: ' + err.message);
+                        }
+
+                        res.send('OK');
+                    });
+                } else {
+                    // Existing realm server found, restart it
+                    pm2.restart(realmApp, function(err, proc) {
+                        
+                        //pm2.disconnect();
+                        
+                        if (err) {
+                            console.log(e.stack);
+                            return res.send('ERROR BOOTING: ' + err.message);
+                        }
+
+                        res.send('OK');
+                    });
+                }
+            });
+        });
+        
     });
     
+});
+
+app.post('/shutdown', function (req, res, next) {
+
+	var realmID     = req.body.id;
+    var realmApp    = '/var/www/realms/' + realmID + '/server/app.js';
+
+    pm2.stop(realmApp, function(err, proc) {
+        if (err) {
+            console.log("Attempted to stop " + realmID + " but errored: " + err.stack);
+            return res.send(err.stack);
+        }                  
+        return res.send('OK');
+    });
+    
+    /*
+    pm2.list(function(err, process_list) {
+        
+        process_list.forEach(function(proc) {
+            if (proc.name == realmID) {
+                console.log('/shutdown proc.name = ' + proc.name + ', realmID = ' + realmID + ', pm2 id = ' + proc.pm_id);
+                pm2.stop(proc.pm_id, function(err, proc) {
+                    if (err) {
+                        console.log("Attempted to stop " + realmID + " but errored: " + err.stack);
+                        return res.send(err.stack);
+                    }                  
+                    return res.send('OK');
+                });
+            }
+        });
+
+    });
+    */
 });
 
 app.post('/auth', function (req, res, next) {
