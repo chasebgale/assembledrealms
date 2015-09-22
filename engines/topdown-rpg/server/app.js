@@ -68,8 +68,30 @@ db.on("error", function (err) {
     console.log("Error " + err);
 });
 
+
 io.use(function(socket, next) {
 	
+	// Grab our PHP Sesh key, if it exists
+    var phpsession = '';
+    var cookies = "; " + socket.request.headers.cookie;
+    var parts = cookies.split("; PHPSESSID=");
+    
+    if (parts.length == 2) {
+        phpsession = "s_" + parts.pop().split(";").shift();
+		
+		// Grab the player object in redis for this user
+		db.get(phpsession, function(error, reply) {
+			if (reply !== null) {
+				
+				// Set the content of the session object to the redis/cookie key
+				socket.request.session = {player_key: reply};
+				
+				next();
+			}
+		});
+    }
+	
+/* METHOD USED FOR PRIVATE REALMS
 	if ( socket.request.headers.cookie ){
 		
 		// TODO: target should be different not on debug mode
@@ -101,18 +123,25 @@ io.use(function(socket, next) {
 		}
 		
 	}
-	
+*/
+
 	next(new Error('not authorized'));
   
 });
 
+
 io.on('connection', function (socket) {
 	
 	// Retrieve the key set earlier
-	var uuid = socket.request.session.key;
+	var uuid = socket.request.session.player_key;
+	
+	var player;
 	
 	var enterGame = function () {
-		db.get(uuid, function(error, player) {
+		db.get(uuid, function(error, data) {
+			
+			player = data;
+			
 			if (player == "new") {
 				
 				counter++;
@@ -138,6 +167,16 @@ io.on('connection', function (socket) {
 			
 			// Tell other clients this client has connected
 			socket.broadcast.emit('create', data);
+			
+			socket.on('ready', function (data) {
+				// Send initial data with all npc/pc locations, stats, etc
+				var data        = {};
+				data.player     = player;
+				data.players    = engine.players();
+				data.npcs       = engine.npcs();
+				
+				socket.emit('sync', data);
+			});
 			
 			// Wire up events:
 			socket.on('move', function (data) {
@@ -192,16 +231,11 @@ io.on('connection', function (socket) {
 		});
 	}
 	
-	socket.on('ready', function (data) {
-		// Send initial data with all npc/pc locations, stats, etc
-		var data        = {};
-		data.player     = player;
-		data.players    = engine.players();
-		data.npcs       = engine.npcs();
-		
-		socket.emit('sync', data);
-	});
 	
+	
+	enterGame();
+	
+	/*
 	// TODO: Have two different queue methods, one more traditional where only
 	// 10 or so players can be online at one time. When a player disconnects, the first 
 	// person in the queue is allowed to enter; alternatively, implement a second method
@@ -212,6 +246,7 @@ io.on('connection', function (socket) {
 	} else {
 		enterGame();
 	}
+	*/
     
 });	
 
@@ -219,6 +254,7 @@ app.get('/stats', function(req, res, next) {
 	return res.send(io.sockets.sockets.length);
 });
 
+/*
 app.get('/auth/:id/:uuid', function(req, res, next) {
     // TODO: Check the server calling this function is, in fact, assembledrealms.com
     
@@ -243,6 +279,7 @@ app.get('/auth/:id/:uuid', function(req, res, next) {
         }
     });
 });
+*/
 
 engine.initialize();
 
@@ -281,26 +318,29 @@ pm2.connect(function(err) {
     if (err) {
         console.log(err.message);
     } else {
-        if (debug) {
+//        if (debug) {
             // Listen on random port because lots (hopefully) of other nodes are running too!
             http.listen(0, function(){
                 // Log the port to the console
                 console.log("port: " + http.address().port);
 
-                // In debug mode, trash any DB entries on (re)start so we don't get into trouble
-                db.keys(realmID + "-*", function (err, keys) {
-                    keys.forEach(function (key, pos) {
-                        db.del(key, function (err) {
-                            console.log("Deleted key: " + key);
-                        });
-                    });
-                });
+				if (debug) {
+					// In debug mode, trash any DB entries on (re)start so we don't get into trouble
+					db.keys(realmID + "-*", function (err, keys) {
+						keys.forEach(function (key, pos) {
+							db.del(key, function (err) {
+								console.log("Deleted key: " + key);
+							});
+						});
+					});
+				}
                 
                 db.set(realmID, http.address().port);
                 db.set(realmID + 'time', new Date().toString());
                 
             });
-        } else {
+/*
+		} else {
             // In a purchased realm node, the realm instance serves up all it's files:
             app.use(express.static(__dirname + '/../'));
 
@@ -309,6 +349,7 @@ pm2.connect(function(err) {
                 console.log("Express server listening on port 3000, request to port 80 are redirected to 3000 by Fedora.");
             });
         }
+*/
     }
     
 });

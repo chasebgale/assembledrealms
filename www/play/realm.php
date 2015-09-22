@@ -101,7 +101,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
 			curl_setopt_array($curl, array(
 				CURLOPT_HTTPHEADER 		=> array('Authorization: ' . $play_token),
-                CURLOPT_HEADER          => true,
+                CURLOPT_HEADER          => false,
 				CURLOPT_RETURNTRANSFER 	=> true,
                 CURLOPT_POST            => true,
                 CURLOPT_POSTFIELDS      => $post_body,
@@ -121,7 +121,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                 echo "Auth fail.";
                 die();
             } else {
-                $url_from_auth = $host . "/realms/" . $realmID;
+                $url_from_auth = $host . "/realms/play/" . $realmID;
             }
             
         } else {
@@ -153,8 +153,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
         <div class="container-fluid">
 
 			<div class="row">
-				<div class="col-md-2">&nbsp;</div>
-				<div class="col-md-8"><h2 class="text-center" style="margin-top: 0;"><?=$realm['title']?></h2></div>
+				<div class="col-md-10" style="padding-left: 0;"><h1 style="margin-top: 0;"><?=$realm['title']?></h1></div>
 				<div class="col-md-2" style="padding-right: 0;">
 					<h4 class="text-right"><small>
 						<i class="fa fa-heart"></i>&nbsp;<span id="loveCount"><?=$realm['loves']?></span>
@@ -193,9 +192,10 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     if ($alert) {
         echo '<div style="background-color: #eee; ' . $style . '"><div class="absoluteCenter text-danger" style="margin-top: 215px; text-align: center; width: 400px;">' . $alert . '</div></div>';
     } else {
-        echo '<iframe style="' . $style . '" src="' . $url_from_auth . '"></iframe>';   
-    }
+		echo '<div id="realm-container" style="' . $style . '">' . $resp . '</div>';
+	}
     ?>
+    
     
     <div>
         
@@ -308,6 +308,11 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 </script>
 
 <script src="/play/js/marked.js"></script>
+<script src="/build/js/utilities.js"></script>
+<script src="/js/keyboard.js"></script>
+<script src="/js/pixi.min.js"></script>
+<script src="/js/bigscreen.min.js"></script>
+<script src="/js/async.js"></script>
 
 <?php require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php"); ?>
 
@@ -315,6 +320,9 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     
     var __renderer;
     
+	var engine 		= undefined;		
+	var	loading		= false;
+	
     function fundingMarkdown(data) {
        var variables = {};
        variables.funds = "$12.45";
@@ -332,6 +340,43 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     }
     
     $(document).ready(function () {
+		
+		engine = new Engine();
+
+		engine.loaded = function () {
+			
+			$("#loading").fadeOut(function () {
+				$("#container").fadeIn();
+			});
+		
+			animate();
+		};
+		
+		engine.loading = function (e) {
+			/*
+				_numToLoad: 70
+				_progressChunk: 1.4285714285714286
+			*/
+			if (!loading) {
+				loading = true;
+				$("#loading_text").text("Downloading realm assets...");
+			}
+			
+			var string_width = Math.floor(e.progress) + "%";
+			
+			$("#loading_progress").width(string_width);
+			$("#loading_progress").text(string_width)
+			$("#loading_progress").attr("aria-valuenow", Math.floor(e.progress));
+		}
+		
+		function animate() {
+			
+			engine.render();
+			requestAnimationFrame(animate);
+
+		}
+	
+		engine.initialize( document.getElementById("realm") );
         
         __renderer = new marked.Renderer();
    
@@ -346,9 +391,9 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
         
         var templateFn = _.template($('#comments_template').html());
         var templateReplyFn = _.template($('#comment_reply_template').html());
-
-		<?php if ($realm['address']) { ?>
-        $.post( "realm.php", { directive: "markdown", realmID: "<?=$realmID?>" })
+		
+		/*
+        $.post("realm.php", { directive: "markdown", realmID: "<?=$realmID?>" })
         .done(function( data ) {
             if (data !== "null") {
                 
@@ -364,7 +409,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
             }
         });
-		<?php } ?>
+		*/
         
         $.post( "realm.php", { directive: "comment", realmID: "<?=$realmID?>" })
         .done(function( data ) {

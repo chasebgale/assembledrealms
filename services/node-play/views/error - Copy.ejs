@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Assembled Realms</title>
+    <title>Assembled Realms DEBUG</title>
 
     <link rel="shortcut icon" href="//www.assembledrealms.com/img/favicon.png">
 
@@ -20,6 +20,9 @@
     <style>
         html, body {
             height:100%;
+			background-color: #777;
+			padding-top: 60px;
+			color: #fff;
         }
     </style>
     
@@ -29,28 +32,16 @@
 
 <div id="wrapper">
     
-    <h3 id="position" style="margin: 0; text-align: center;">Position: <i class="fa fa-spinner fa-spin"></i></h3>
+	<div>
+        <a href="http://www.assembledrealms.com">
+			<img src="//www.assembledrealms.com/build/img/logo.png" class="center-block">
+		</a>
+    </div>
+
+	<h4 class="text-center" style="margin-top: 60px;"><%= message %></h4>
     
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
-    <script src="//<%= host %>/socket.io/socket.io.js"></script>
-    <script src="//www.assembledrealms.com/build/js/utilities.js"></script>
-	
-    <script>
-        
-        $(document).ready(function () {  
-	
-            var socket = io('http://<%= host %>');
-            socket.on('connect', function () {
-                //socket.emit('subscribe', {id: <%= id %>});
-            });
-            socket.on('stats', function (data) {
-                $("#position").text("Position: " + data.position);
-            });
-            
-            
-        });
-    </script>
     
 </div>
 </body>

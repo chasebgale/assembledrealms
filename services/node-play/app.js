@@ -10,7 +10,7 @@ var redis 			= require('redis');
 var http 			= require('http');
 var fs              = require('fs');
 var uuid 			= require('node-uuid');
-var redisClient 	= redis.createClient();
+var db 				= redis.createClient();
 var server			= http.Server(app);
 var io 				= require('socket.io')(server);
 
@@ -50,7 +50,7 @@ var queue_insert = function (phpsession, user_id, user_name, user_image, realm_i
     });
 };
 
-redisClient.flushdb();
+db.flushdb();
 
 app.use(allowCrossDomain);
 
@@ -60,7 +60,7 @@ app.use( bodyParser.urlencoded() ); // to support URL-encoded bodies
 app.use(cookieParser('Assembled Realms is a land without secrets...'));
 
 // Catch redis errors
-redisClient.on("error", function (err) {
+db.on("error", function (err) {
     console.log("Error " + err);
 });
 
@@ -90,7 +90,7 @@ app.post('/launch', function (req, res, next) {
 					return;
                 }
                 
-                redisClient.get(realmID + "-clients",  function (error, reply) {
+                db.get(realmID + "-clients",  function (error, reply) {
 		
                     if (error) {
                         return;
@@ -177,14 +177,155 @@ app.post('/auth', function (req, res, next) {
     
     console.log('AUTH REQUEST: ' + JSON.stringify(req.body));
     
-    queue_insert(phpsession, user_id, user_name, user_image, realm_id);
+	var pos = queue_position(phpsession);
+	
+	if (pos == -1) {
+		queue_insert(phpsession, user_id, user_name, user_image, realm_id);
+		
+		// uuid needs to be a combo of realm and user as user can have characters on multiple realms
+		var uuid = "r_" + realm_id + "u_" + user_id;
+		var sess = "s_" + phpsession;
+		
+		db.get(uuid, function(error, reply) {
+			
+			if (error) {
+				console.error(error);
+				return res.status(500).send(error.message);
+			}
+			
+			if (reply === null) {
+				db.set(uuid, "new", function (error) {
+					if (error) {
+						console.error(error);
+						return res.status(500).send(error.message);
+					}
+				});
+			}
+				
+			db.get(sess, function(error, reply) {
+				
+				if (error) {
+					console.error(error);
+					return res.status(500).send(error.message);
+				}
+				
+				if (reply === null) {
+					db.set(sess, uuid, function (error) {
+			
+						if (error) {
+							console.error(error);
+							return res.status(500).send(error.message);
+						}
+						
+						
+						
+						db.get(realm_id, function (error, reply) {
+		
+							if (error) {
+								return res.render('error', {message: "REDIS appears to be down or unresponsive..."});
+							}
+							
+							if (reply == null) {
+								return res.render('error', {message: "REDIS has no knowledge of this realm..."});
+							}
+							
+							var scripts   = [];
+							
+							var port = reply.toString().replace(/(\r\n|\n|\r)/gm,"");
+							
+							// Update the last access time so it doesn't get shutdown for inactivity:
+							// (NOW WE ARE DOING THIS IN THE APP ITSELF)
+							// redisClient.set(req.params.id + '-time', new Date().toString());
+							
+							// For now, grab all the required libs each time we prep the view, in the future,
+							// do this once when '/launch' is called and store the array in redis...
+							var walker  = walk.walk('./realms/' + realm_id + '/client/', { followLinks: false });
+
+							walker.on('file', function(root, stat, next) {
+								
+								if (path.extname(stat.name) == '.js') {
+									// Add this file to the list of files
+									console.log("root: " + root + " , stat.name: " + stat.name);
+									scripts.push("//" + req.headers.host + "/" + path.join(root, stat.name));
+								}
+								next();
+								
+							});
+
+							walker.on('end', function() {
+								res.render('realm', {id: realm_id, host: req.headers.host, port: port, scripts: scripts});
+							});
+						});
+						
+						
+						
+						
+						
+						
+					});
+				}
+			});
+		});
+		
+    } else {
+		queue[pos] = {
+			session: phpsession, 
+			user_id: user_id, 
+			user_name: user_name, 
+			user_image: user_image,
+			realm: realm_id
+		};
+		
+		
+		
+		db.get(realm_id, function (error, reply) {
+		
+			if (error) {
+				return res.render('error', {message: "REDIS appears to be down or unresponsive..."});
+			}
+			
+			if (reply == null) {
+				return res.render('error', {message: "REDIS has no knowledge of this realm..."});
+			}
+			
+			var scripts   = [];
+			
+			var port = reply.toString().replace(/(\r\n|\n|\r)/gm,"");
+			
+			// Update the last access time so it doesn't get shutdown for inactivity:
+			// (NOW WE ARE DOING THIS IN THE APP ITSELF)
+			// redisClient.set(req.params.id + '-time', new Date().toString());
+			
+			// For now, grab all the required libs each time we prep the view, in the future,
+			// do this once when '/launch' is called and store the array in redis...
+			var walker  = walk.walk('./realms/' + realm_id + '/client/', { followLinks: false });
+
+			walker.on('file', function(root, stat, next) {
+				
+				if (path.extname(stat.name) == '.js') {
+					// Add this file to the list of files
+					console.log("root: " + root + " , stat.name: " + stat.name);
+					scripts.push("//" + req.headers.host + "/" + path.join(root, stat.name));
+				}
+				next();
+				
+			});
+
+			walker.on('end', function() {
+				res.render('realm', {id: realm_id, host: req.headers.host, port: port, scripts: scripts});
+			});
+		});
+		
+		
+		
+		
+	}
     
-    res.send('OK');
 });
 
-var scripts   		= [];
+//var scripts   		= [];
 var clients			= {};
-var client_count	= 6;
+var client_count	= 0;
 var queue			= [];
 
 app.get('/realms/:id', function (req, res, next) {
@@ -203,7 +344,7 @@ app.get('/realms/:id', function (req, res, next) {
     }
 	
 	// TODO: How many connected clients can the server handle? Between all hosted realms?
-	if ((client_count > 5) || (queue.length > 0)) {
+	if (client_count > 5) {
 		return res.render('queue', {id: req.params.id, host: req.headers.host});
 	}
 	
@@ -215,78 +356,21 @@ app.get('/realms/:id', function (req, res, next) {
 // Redirected here by queue js inside iframe
 app.get('/realms/play/:id', function (req, res, next) {
 	
-	// TODO: Ensure client id is the same as the first in the queue, if thier is one
+	var phpsession 	= req.cookies["PHPSESSID"];
+	var pos 		= queue_position(phpsession);
 	
-	redisClient.get(req.params.id, function (error, reply) {
-		
-		if (error) {
-			return res.render('error', {message: "REDIS appears to be down or unresponsive..."});
-        }
-		
-		if (reply == null) {
-            return res.render('error', {message: "REDIS has no knowledge of this realm..."});
-        }
-        
-        scripts   = [];
-        
-        var port = reply.toString().replace(/(\r\n|\n|\r)/gm,"");
-        
-        // Update the last access time so it doesn't get shutdown for inactivity:
-        // (NOW WE ARE DOING THIS IN THE APP ITSELF)
-        // redisClient.set(req.params.id + '-time', new Date().toString());
-        
-        // For now, grab all the required libs each time we prep the view, in the future,
-        // do this once when '/launch' is called and store the array in redis...
-        var walker  = walk.walk('./realms/' + req.params.id + '/client/', { followLinks: false });
-
-        walker.on('file', function(root, stat, next) {
-            
-            if (path.extname(stat.name) == '.js') {
-                // Add this file to the list of files
-                console.log("root: " + root + " , stat.name: " + stat.name);
-                scripts.push("/" + path.join(root, stat.name));
-            }
-            next();
-            
-        });
-
-        walker.on('end', function() {
-            
-			// Generate GUID and set cookie:
-			var guid        = uuid.v1();
-            var target      = 'realm-' + req.params.id + '-debug';
-            var hour_milli  = 3600000;
-            
-            if (req.cookies[target]) {
-                // If we already have a guid cookie, use it so we get our existing character in the realm
-                guid = req.cookies[target];
-            }
-			
-			http.get({port: port, path: "/auth/new/" + guid}, function(realm_response) {
-				if (realm_response.statusCode == 200) {
-					
-					res.cookie('realm-' + req.params.id + '-debug', guid, {domain: '.assembledrealms.com', maxAge: (hour_milli * 72)});
-					res.render('realm', {id: req.params.id, host: req.headers.host, port: port, scripts: scripts});
-				
-				} else {
-					
-					var body = '';
-					response.on('data', function(d) {
-						body += d;
-					});
-					response.on('end', function() {
-						return res.status(500).send(body);
-					});
-					
-				}
-			}).on('error', function(e) {
-				console.log("Got error: " + e.message);
-				return res.status(500).send(e.message);
-			});
-			
-        });
-		
-    });
+	// Are we missing an assembledrealms.com sesh?
+    if ((phpsession == undefined) || (phpsession == "")) {
+        return res.render('error', {message: "Not authorized..."});
+    }
+	
+	if (pos == -1) {
+        return res.render('error', {message: "Not authorized... (" + phpsession + ")"});
+    }
+	
+	queue.splice(pos, 1);
+	
+	
 });
 
 app.get('/internal/disconnect/:id', function (req, res, next) {
