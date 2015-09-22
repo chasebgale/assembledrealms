@@ -190,56 +190,53 @@ class loggedInUser {
 	{
 		global $mysqli,$db_table_prefix;
         
-        $stmt = $mysqli->prepare("SELECT level
+        $stmt = $mysqli->prepare("SELECT level, address
 			FROM realms
 			WHERE id = ?");
 		$stmt->bind_param("i", $realm_id);
 		$stmt->execute();
-		$stmt->bind_result($realm_level);
+		$stmt->bind_result($realm_level, $realm_address);
 		$stmt->fetch();
 		$stmt->close();
         
-		// Bring the server offline, if not on the free tier
+        $curl 	= curl_init();
+        
+		// Paid tier
 		if ($realm_level > 0) {
-			$curl 					= curl_init();
-			$gatekeeper_token 	    = "2f15adf29c930d8281b0fb076b0a14062ef93d4d142f6f19f4cdbed71fff3394";
-
-			curl_setopt_array($curl, array(
-				CURLOPT_HTTPHEADER 		=> array('Authorization: ' . $gatekeeper_token),
-                CURLOPT_HEADER          => true,
-				CURLOPT_RETURNTRANSFER 	=> true,
-				CURLOPT_SSL_VERIFYHOST 	=> 0,
-				CURLOPT_SSL_VERIFYPEER 	=> false,
-				CURLOPT_URL 			=> 'http://gatekeeper.assembledrealms.com/shutdown/' . $realm_id
-			));
-
-			$resp       = curl_exec($curl);
-            $httpcode   = intval(curl_getinfo($curl, CURLINFO_HTTP_CODE));
-            
-			curl_close($curl);
-			
-			$decoded = json_decode($resp, true);
-			
-            if (($httpcode < 200) && ($httpcode > 299)) {
-                // We have an error:
-                error_log($httpcode . ": " . $resp, 3, $logfile);
-                return false;
-            } else {
-                $stmt = $mysqli->prepare("UPDATE realms
-								  SET status = 0, address = NULL
-								  WHERE
-								  id = ?");
-                $stmt->bind_param("i", $realm_id);
-                $stmt->execute();
-                $stmt->close();
-                return true;
-            }
+            // gatekeeper
+			$auth_token     = "2f15adf29c930d8281b0fb076b0a14062ef93d4d142f6f19f4cdbed71fff3394";
+            $target_url     = "http://gatekeeper.assembledrealms.com/shutdown/" . $realm_id;
 		} else {
-            // Bring the free tier offline
+            // play-XX
+			$auth_token     = "e61f933bcc07050385b8cc08f9deee61de228b2ba31b8523bdc78230d1a72eb2";
+            $target_url     = "http://play-" . $realm_address . ".assembledrealms.com/shutdown/" . $realm_id;
+        }
+        
+        curl_setopt_array($curl, array(
+            CURLOPT_HTTPHEADER 		=> array('Authorization: ' . $auth_token),
+            CURLOPT_HEADER          => true,
+            CURLOPT_RETURNTRANSFER 	=> true,
+            CURLOPT_SSL_VERIFYHOST 	=> 0,
+            CURLOPT_SSL_VERIFYPEER 	=> false,
+            CURLOPT_URL 			=> 
+        ));
+
+        $resp       = curl_exec($curl);
+        $httpcode   = intval(curl_getinfo($curl, CURLINFO_HTTP_CODE));
+        
+        curl_close($curl);
+        
+        $decoded = json_decode($resp, true);
+        
+        if (($httpcode < 200) && ($httpcode > 299)) {
+            // We have an error:
+            error_log($httpcode . ": " . $resp, 3, $logfile);
+            return false;
+        } else {
             $stmt = $mysqli->prepare("UPDATE realms
-								  SET status = 0, address = NULL
-								  WHERE
-								  id = ?");
+                              SET status = 0, address = NULL
+                              WHERE
+                              id = ?");
             $stmt->bind_param("i", $realm_id);
             $stmt->execute();
             $stmt->close();
