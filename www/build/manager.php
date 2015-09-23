@@ -97,9 +97,12 @@ if ($method == 'POST') {
     }
     
     if ($directive == 'offline') {
-        // TODO: Bring down droplet if not on free-tier
-        $loggedInUser->offlineRealm($realm_id);
-        echo json_encode( (object) ['message' => 'OK'] );
+        $success = $loggedInUser->offlineRealm($realm_id);
+        if ($success !== false) {
+            echo json_encode( (object) ['message' => 'OK'] );
+        } else {
+            echo json_encode( (object) ['message' => 'FAILURE'] );
+        }
         die();
     }
     
@@ -279,7 +282,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 			<div class="col-md-1">
 				<p class="text-muted"><strong>Balance</strong></p>
 			</div>
-			<div class="col-md-4">
+			<div class="col-md-3">
 				<span class="h3" id="realmFunds">$ <?php echo $realm_funds ?></span>
 			</div>
 			<div class="col-md-3">
@@ -290,7 +293,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 			<div class="col-md-1">
 				<p class="text-muted"><strong>Server</strong></p>
 			</div>
-			<div class="col-md-4">
+			<div class="col-md-3">
 				<span class="h3" id="realmStatus">
                 <?php if ($realm["status"] == 0) { ?>
                     Offline
@@ -309,18 +312,19 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 						echo '<button id="onlineOfflineBtn" class="btn btn-default" data-toggle="modal" data-target="#modalTakeRealmOffline">Take Realm Offline</button>';
 					}
 				?>
-				<button style="margin-left: 12px;" class="btn btn-danger" id="button-destroy-realm" data-toggle="modal" data-target="#modalDestroy"><i class="fa fa-exclamation-triangle"></i> Destroy Realm</button>
+				<button class="btn btn-danger" id="button-destroy-realm" data-toggle="modal" data-target="#modalDestroy"><i class="fa fa-exclamation-triangle"></i> Destroy Realm</button>
 			</div>
 		</div>
 		<div class="row">
 			<div class="col-md-1">
 				<p class="text-muted"><strong>Code</strong></p>
 			</div>
-			<div class="col-md-4">
-				<span>Published 03/22/2015 02:22 PM<br/>"Commit Message"</span>
+			<div class="col-md-3">
+				<span>03/22/2015 02:22 PM<br/>"Commit Message"</span>
 			</div>
-			<div class="col-md-2">
+			<div class="col-md-6">
 				<button class="btn btn-default">Publish Latest Code</button>
+				<button class="btn btn-default" disabled><i class="fa fa-reply"></i> Restore to Version</button>
 			</div>
 		</div>
 	</div>

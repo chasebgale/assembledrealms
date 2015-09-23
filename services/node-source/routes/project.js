@@ -474,20 +474,30 @@ exports.debug = function(req, res, next) {
 
 exports.publish = function(req, res, next) {
     
-  // TODO: This should really be accomplished using git remote pull from the realm...
+  // TODO: Should this be accomplished using git remote pull from the realm...?
   
-  utilities.logMessage('PUBLISHING: ' + req.params.id + ' to ' + req.body.address);
+  var realm_id		= req.params.id;
+  var address 		= req.body.address; // play-**.assembledrealms.com or IP of realm droplet
+  var shared  		= req.body.shared;	// true if destination is play-**.assembledrealms.com, false if droplet
   
-  var address = req.body.address;
+  utilities.logMessage('PUBLISHING: ' + realm_id + ' to ' + address);
   
-  var conn  = new ssh2();
-  var project   = __dirname + "/../projects/" + req.params.id + "/";
-  var zip = __dirname + "/../archive/" + req.params.id + ".zip";
-  var destination = "/var/www/realm/"+ req.params.id + ".zip";
-  var files = [];
+  if ((address == undefined) || (shared == undefined)) {
+	  return next(new Error("Missing parameters..."));
+  }
   
-  var output = fs.createWriteStream(zip);
-  var archive = archiver('zip');
+  var conn  		= new ssh2();
+  var project   	= __dirname + "/../projects/" + realm_id + "/";
+  var zip 			= __dirname + "/../archive/" + realm_id + ".zip";
+  var destination 	= shared ? "/var/www/realms/"+ realm_id + ".zip" : "/var/www/realm-debug/realm.zip";
+  var output 		= fs.createWriteStream(zip);
+  var archive 		= archiver('zip');
+  var files			= [];
+  
+  var usr			= "web";
+  var pwd			= shared ? "87141eeda7861e0b41801ad48ff19904" : "0S0Wjf4vYvJ3QJx6yBci";
+  
+  utilities.logMessage('pwd: ' + pwd);
   
   output.on('close', function() {
     console.log('ZIP :: ' + archive.pointer() + ' total bytes after compression.');
@@ -501,12 +511,12 @@ exports.publish = function(req, res, next) {
           if (error) return next(error);
           console.log('SSH2 :: Zip upload complete.');
           
-          conn.exec('unzip -o /var/www/realms/' + req.params.id + ' -d /var/www/realms/' + req.params.id, function(error, stream) {
+          conn.exec('unzip -o /var/www/realms/' + realm_id + ' -d /var/www/realms/' + realm_id, function(error, stream) {
             if (error) return next(error);
             
             stream.on('exit', function(code, signal) {
               
-			  conn.exec('rm -f /var/www/realms/' + req.params.id + '.zip', function(error, stream) {
+			  conn.exec('rm -f /var/www/realms/' + realm_id + '.zip', function(error, stream) {
 			    if (error) return next(error);
 				
 				stream.on('exit', function(code, signal) {
@@ -535,8 +545,8 @@ exports.publish = function(req, res, next) {
     }).connect({
       host: address, //'104.131.114.6',
       port: 22,
-      username: 'web',
-      password: '0S0Wjf4vYvJ3QJx6yBci'
+      username: usr,
+      password: pwd
     });
     
   });

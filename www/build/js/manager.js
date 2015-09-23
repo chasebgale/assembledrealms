@@ -105,7 +105,11 @@ $(document).ready(function () {
             if (data.message == "OK") {
                 $("#onlineOfflineBtn").attr('data-target', '#modalTakeRealmOffline');
                 $("#onlineOfflineBtn").text('Take Realm Offline');
-                $("#realmStatus").html("<span class='label label-warning'><i class='fa fa-cog fa-spin'></i> Booting</span>");
+				if (server_type > 0) {
+					$("#realmStatus").html("<span class='label label-warning'><i class='fa fa-cog fa-spin'></i>  Booting</span>");
+				} else {
+					$("#realmStatus").html("<span class='label label-success'><i class='fa fa-power-off'></i> Online</span>");
+				}
                 $("#modalTakeRealmOnline").modal('hide');
             } else {
                 alert("FAILURE!");

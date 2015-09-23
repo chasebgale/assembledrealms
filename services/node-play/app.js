@@ -66,9 +66,15 @@ db.on("error", function (err) {
 
 app.set('view engine', 'ejs'); // set up EJS for templating
 
-app.post('/launch', function (req, res, next) {
+app.get('/launch/:id', function (req, res, next) {
 
-	var realmID     = req.body.id;
+	var auth = req.get('Authorization');
+
+    if (auth !== self_token) {
+        return res.status(401).send("Please don't try to break things :/");
+    }
+
+	var realmID     = req.params.id;
 	var realmApp    = '/var/www/realms/' + realmID + '/server/app.js';
     var realmErr    = '/var/www/logs/' + realmID + '-err.log';
     var realmOut    = '/var/www/logs/' + realmID + '-out.log';
@@ -157,9 +163,18 @@ app.post('/launch', function (req, res, next) {
     
 });
 
-app.post('/shutdown', function (req, res, next) {
+app.get('/shutdown/:id', function (req, res, next) {
 
-	var realmID     = req.body.id;
+	var auth = req.get('Authorization');
+
+    if (auth !== self_token) {
+		console.log('/shutdown auth failure...');
+        return res.status(401).send("Please don't try to break things :/");
+    }
+	
+	console.log('/shutdown/' + req.params.id + ' called...');
+
+	var realmID     = req.params.id;
     var realmApp    = '/var/www/realms/' + realmID + '/server/app.js';
 
     pm2.stop(realmApp, function(err, proc) {
@@ -169,25 +184,6 @@ app.post('/shutdown', function (req, res, next) {
         }                  
         return res.send('OK');
     });
-    
-    /*
-    pm2.list(function(err, process_list) {
-        
-        process_list.forEach(function(proc) {
-            if (proc.name == realmID) {
-                console.log('/shutdown proc.name = ' + proc.name + ', realmID = ' + realmID + ', pm2 id = ' + proc.pm_id);
-                pm2.stop(proc.pm_id, function(err, proc) {
-                    if (err) {
-                        console.log("Attempted to stop " + realmID + " but errored: " + err.stack);
-                        return res.send(err.stack);
-                    }                  
-                    return res.send('OK');
-                });
-            }
-        });
-
-    });
-    */
 });
 
 app.post('/auth', function (req, res, next) {
