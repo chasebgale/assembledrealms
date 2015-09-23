@@ -1,4 +1,5 @@
 var util 			= require('util');
+var fs			    = require('fs');
 var EventEmitter 	= require('events').EventEmitter;
 
 var DIRECTION_N = 0;
@@ -17,9 +18,7 @@ var npc_spawn_count = 0;
 var tick_count		= 0;
 var player_keys     = [];
 var npc_keys        = [];
-
-// Double the odds of walking north / east, so the npc naturally heads towards player spawn
-var weightedDirection = [DIRECTION_N, DIRECTION_N, DIRECTION_E, DIRECTION_E, DIRECTION_S, DIRECTION_W];
+var maps            = [];
 
 function Engine () {
 	EventEmitter.call(this);
@@ -28,29 +27,31 @@ function Engine () {
 util.inherits(Engine, EventEmitter);
 module.exports = Engine;
 
-Engine.prototype.initialize = function () {
-	this.spawn();
-	// TODO: Load all possible maps into an indexed array to be looked up
-	// when the actor needs to validate walking or pathfinding...
+Engine.prototype.initialize = function (callback) {
+    
+    var self = this;
+    
+    fs.readFile(__dirname + '/../client/maps/town.json', function (err, data) {
+        if (err) throw err;
+        
+        maps.push(JSON.parse(data));
+        
+        self.spawn();
+        
+    });
+
 };
 
-Engine.prototype.tick = function (map) {
-		
-	// TODO: Rather than pass the map in here, each actor should have
-	// have reference to the map they are on, or perhaps an index, then we
-	// look up the isWalkable() stuff on the map that they are currently on...
+Engine.prototype.tick = function () {
 		
 	tick_count++;
     
-    // var npc_keys    = Object.keys(npcs);
-    // var player_keys = Object.keys(players);
-	
 	if (tick_count > 1800) {
         // Every minute fire and reset
         tick_count = 0;
         
-        // If we have less than 10 npc's, spawn a new one:
-        if (npc_keys.length < 10) {
+        // If we have less npc's than players, spawn a new one:
+        if (npc_keys.length < player_keys.length + 2) {
             this.spawn();
         }
 	}
@@ -61,6 +62,7 @@ Engine.prototype.tick = function (map) {
     var j 			= 0;
     var npc         = undefined;
     var player      = undefined;
+    var map         = undefined;
     var difference  = 0;
     var modified    = false;
     var row         = 0;
@@ -71,6 +73,7 @@ Engine.prototype.tick = function (map) {
     
     for (i = 0; i < player_keys.length; i++) {
         player      = players[player_keys[i]];
+        map         = maps[player.map];
         modified    = false;
         
         player.counter++;
@@ -140,6 +143,7 @@ Engine.prototype.tick = function (map) {
         
         direction = -1;
         npc = npcs[npc_keys[i]];
+        map = maps[npc.map];
         
         // Is this npc in attack mode?
         if (npc.attacking) {
@@ -497,12 +501,13 @@ Engine.prototype.players = function () {
 Engine.prototype.createPlayer = function () {
 	var player = {
 		id: 0, // Note: This value will be overwritten
-		position: {x: 220, y: 220},
-		direction: 0,
-		health: 100,
-		stamina: 100,
+		position:   {x: 220, y: 220},
+		direction:  0,
+		health:     100,
+		stamina:    100,
 		experience: 0,
-		counter: 0
+		counter:    0,
+        map:        0
 	};
 	
 	return player;
@@ -521,18 +526,19 @@ Engine.prototype.removePlayer = function (player) {
 Engine.prototype.spawn = function() {
 	
 	npcs[npc_spawn_count] = {
-		id: npc_spawn_count,
-		position: {x: -41 * 32, y: 41 * 32},
-		direction: 0,
-		health: 100,
+		id:         npc_spawn_count,
+		position:   {x: -41 * 32, y: 41 * 32},
+		direction:  0,
+		health:     100,
 		experience: 0,
-		layers: [],
-		step: 0,
-		steps: [], // Pathfinding
-        counter: 0, // generic counter used for a variety of functions
-        attacking: false,
-        cooldown: 0,
-        target: -1
+		layers:     [],
+		step:       0,
+		steps:      [],     // Pathfinding
+        counter:    0,      // Generic counter used for a variety of functions
+        attacking:  false,
+        cooldown:   0,
+        target:     -1,
+        map:        0       // Index of map in map array this npc is on
 	};
 	
 	// NPC assets are loaded into the movieclip (client-side) in the same order

@@ -477,7 +477,7 @@ exports.publish = function(req, res, next) {
   // TODO: Should this be accomplished using git remote pull from the realm...?
   
   var realm_id		= req.params.id;
-  var address 		= req.body.address; // play-**.assembledrealms.com or IP of realm droplet
+  var address 		= req.body.address; // play-**/debug-**.assembledrealms.com or IP of realm droplet
   var shared  		= req.body.shared;	// true if destination is play-**.assembledrealms.com, false if droplet
   
   utilities.logMessage('PUBLISHING: ' + realm_id + ' to ' + address);
@@ -489,7 +489,8 @@ exports.publish = function(req, res, next) {
   var conn  		= new ssh2();
   var project   	= __dirname + "/../projects/" + realm_id + "/";
   var zip 			= __dirname + "/../archive/" + realm_id + ".zip";
-  var destination 	= shared ? "/var/www/realms/"+ realm_id + ".zip" : "/var/www/realm-debug/realm.zip";
+//var destination 	= shared ? "/var/www/realms/"+ realm_id + ".zip" : "/var/www/realm-debug/realm.zip";
+  var destination 	= "/var/www/realms/"+ realm_id + ".zip";
   var output 		= fs.createWriteStream(zip);
   var archive 		= archiver('zip');
   var files			= [];

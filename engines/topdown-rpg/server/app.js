@@ -31,7 +31,7 @@ var counter = 0;
 // This is a really terrible way to grab the default map
 // This should be dynamic and really open ended as the user may
 // have several maps...
-var map = JSON.parse( fs.readFileSync(__dirname + '/../client/maps/town.json') );
+//var map = JSON.parse( fs.readFileSync(__dirname + '/../client/maps/town.json') );
 
 var engine = new Engine();
 

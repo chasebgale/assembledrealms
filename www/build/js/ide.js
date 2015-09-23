@@ -104,11 +104,11 @@ function initialize(projectID, projectDomain) {
 		var debugURL = 'http://debug-01.assembledrealms.com/realms/' + __projectId;
 		var launchURL = 'http://debug-01.assembledrealms.com/launch';
 		
-		//debugProgressList
 		$.ajax({
-            url: __projectURL + '/debug',
+            url: __projectURL + '/publish',
             type: 'post',
-            dataType: 'text'
+            dataType: 'text',
+            data: {address: 'debug-01.assembledrealms.com', shared: true}
         })
         .done(function (data) {
             if (data === "OK") {
