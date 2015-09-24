@@ -6,6 +6,7 @@ var moment 		    = require('moment');
 var pm2             = require('pm2');
 var walk            = require('walk');
 var path            = require('path');
+var querystring     = require('querystring');
 var redis 			= require('redis');
 var http 			= require('http');
 var fs              = require('fs');
@@ -66,7 +67,7 @@ db.on("error", function (err) {
 
 app.set('view engine', 'ejs'); // set up EJS for templating
 
-app.get('/launch/:id', function (req, res, next) {
+app.post('/launch/:id', function (req, res, next) {
 
 	var auth = req.get('Authorization');
 
@@ -80,86 +81,123 @@ app.get('/launch/:id', function (req, res, next) {
     var realmOut    = '/var/www/logs/' + realmID + '-out.log';
     var found_proc  = [];
     var close_proc  = [];
-	
-    // Get all processes running
-    pm2.list(function(err, process_list) {
-        
-        console.log('/launch called, running processes:');
-        
-        // Search for running instance of requested realm
-        process_list.forEach(function(proc) {
-            console.log('checking: ' + proc.name);
-            if (proc.name == realmID) {
-                found_proc.push(proc);
-                return;
-            }
-            
-            db.get(realmID + "-clients",  function (error, reply) {
     
-                if (error) {
+    var destination 	= req.body.destination; // 01, 02, XX, etc... inserted here: play-XX.assembledrealms.com
+    var source  		= req.body.source;	    // 01, 02, XX, etc... inserted here: source-XX.assembledrealms.com
+    
+    if ((address == undefined) || (shared == undefined)) {
+        console.log("/launch called with missing body...");
+        return res.status(500).send("Please don't tinker...");
+    }
+    
+    var pm2_launch = function (callback) {
+        // Get all processes running
+        pm2.list(function(err, process_list) {
+            
+            // Search for running instance of requested realm
+            process_list.forEach(function(proc) {
+                console.log('checking: ' + proc.name);
+                if (proc.name == realmID) {
+                    found_proc.push(proc);
                     return;
                 }
                 
-                // If the server is empty, shut it down:
-                // TODO: Maybe check the last activity time and only shudown proc if it's been idle for
-                // over 5-10 minutes or something...
-                if (reply == 0) {
-                    close_proc.push(proc);
-                }
+                db.get(realmID + "-clients",  function (error, reply) {
+        
+                    if (error) {
+                        return;
+                    }
+                    
+                    // If the server is empty, shut it down:
+                    // TODO: Maybe check the last activity time and only shudown proc if it's been idle for
+                    // over 5-10 minutes or something...
+                    if (reply == 0) {
+                        close_proc.push(proc);
+                    }
+                    
+                });
                 
             });
             
-        });
-        
-        console.log('found ' + found_proc.length);
-        console.log('idle ' + close_proc.length);
-        
-        close_proc.forEach(function(proc) {
-            pm2.stop(proc, function(err, proc) {
-                if (err) {
-                    console.log("Attempted to stop " + proc + " but errored: " + err.stack);
-                }                   
+            close_proc.forEach(function(proc) {
+                pm2.stop(proc, function(err, proc) {
+                    if (err) {
+                        console.log("Attempted to stop " + proc + " but errored: " + err.stack);
+                    }                   
+                });
             });
-        });
-        
-        fs.truncate(realmErr, 0, function(){
-            fs.truncate(realmOut, 0, function(){
-                if (found_proc.length === 0) {
-                    // No existing realm server running, spool up new one:
-                    // var options = { name: realmID, scriptArgs: ['debug'], error_file: realmErr, out_file: realmOut};
-                    var options = { name: realmID, error_file: realmErr, out_file: realmOut};
-                    
-                    console.log("Starting app with the following options: " + JSON.stringify(options));
-                    
-                    pm2.start(realmApp, options, function(err, proc) {
+            
+            fs.truncate(realmErr, 0, function(){
+                fs.truncate(realmOut, 0, function(){
+                    if (found_proc.length === 0) {
+                        // No existing realm server running, spool up new one:
+                        // var options = { name: realmID, scriptArgs: ['debug'], error_file: realmErr, out_file: realmOut};
+                        var options = { name: realmID, error_file: realmErr, out_file: realmOut};
                         
-                        //pm2.disconnect();
+                        console.log("Starting app with the following options: " + JSON.stringify(options));
                         
-                        if (err) {
-                            console.log(e.stack);
-                            return res.send('ERROR BOOTING: ' + err.message);
-                        }
+                        pm2.start(realmApp, options, function(err, proc) {
+                           
+                            if (err) {
+                                callback(err);
+                            }
 
-                        res.send('OK');
-                    });
-                } else {
-                    // Existing realm server found, restart it
-                    pm2.restart(realmApp, function(err, proc) {
-                        
-                        //pm2.disconnect();
-                        
-                        if (err) {
-                            console.log(e.stack);
-                            return res.send('ERROR BOOTING: ' + err.message);
-                        }
+                            callback();
+                        });
+                    } else {
+                        // Existing realm server found, restart it
+                        pm2.restart(realmApp, function(err, proc) {
+                            
+                            if (err) {
+                                callback(err);
+                            }
 
-                        res.send('OK');
-                    });
-                }
+                            callback();
+                        });
+                    }
+                });
             });
+            
         });
-        
+    };
+                
+    var post_data = querystring.stringify({
+        'address':  'play-' + destination + '.assembledrealms.com',
+        'shared':   true
     });
+    
+    var options = {
+        hostname: 'source-' + source + '.assembledrealms.com',
+        port: 80,
+        path: '/api/project/' + realmID + '/publish',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Length': post_data.length
+        }
+    };
+
+    var req = http.request(options, function(res) {
+        res.setEncoding('utf8');
+        
+        res.on('end', function() {
+            pm2_launch(function (err) {
+                if (err) {
+                    return res.status(500).send(err.stack);
+                }
+                
+                return res.send('OK');
+            });
+        });
+    });
+
+    req.on('error', function(err) {
+        return res.status(500).send(err.stack);
+    });
+
+    // write data to request body
+    req.write(post_data);
+    req.end();
     
 });
 
