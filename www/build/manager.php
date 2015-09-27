@@ -583,6 +583,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     var __realmID = <?php echo $_SERVER['QUERY_STRING'] ?>;
     var __realmFunds = parseFloat("<?php echo $realm["funds"] ?>");
     var __realmOnline = parseInt(<?php echo $realm["status"] ?>);
+	var __realmLevel = parseInt(<?php echo $realm["level"] ?>);
     var __existingState = {
 	description: "<?php echo $realm["description"] ?>",
 	show_funding: <?php echo $realm["show_funding"] ?>

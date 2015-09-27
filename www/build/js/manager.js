@@ -326,7 +326,7 @@ $(document).ready(function () {
 	__chart.addTimeSeries(__memory_series, {lineWidth:2.3,strokeStyle:'#00ff00',fillStyle:'rgba(0,255,0,0.11)'});
 	__chart.addTimeSeries(__cpu_series, {lineWidth:2.3,strokeStyle:'#ffffff',fillStyle:'rgba(255,255,255,0.11)'});
    
-    if (__realmOnline) {
+    if (__realmOnline && (__realmLevel > 0)) {
         enableChart();
     }
    
