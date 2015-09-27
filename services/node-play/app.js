@@ -14,6 +14,7 @@ var uuid 			= require('node-uuid');
 var db 				= redis.createClient();
 var server			= http.Server(app);
 var io 				= require('socket.io')(server);
+var request			= require('request');
 
 var self_token      = "e61f933bcc07050385b8cc08f9deee61de228b2ba31b8523bdc78230d1a72eb2";
 
@@ -85,7 +86,7 @@ app.post('/launch/:id', function (req, res, next) {
     var destination 	= req.body.destination; // 01, 02, XX, etc... inserted here: play-XX.assembledrealms.com
     var source  		= req.body.source;	    // 01, 02, XX, etc... inserted here: source-XX.assembledrealms.com
     
-    if ((address == undefined) || (shared == undefined)) {
+    if ((destination === undefined) || (source === undefined)) {
         console.log("/launch called with missing body...");
         return res.status(500).send("Please don't tinker...");
     }
@@ -161,44 +162,30 @@ app.post('/launch/:id', function (req, res, next) {
         });
     };
                 
-    var post_data = querystring.stringify({
-        'address':  'play-' + destination + '.assembledrealms.com',
-        'shared':   true
-    });
-    
-    var options = {
-        hostname: 'source-' + source + '.assembledrealms.com',
-        port: 80,
-        path: '/api/project/' + realmID + '/publish',
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Content-Length': post_data.length
-        }
-    };
+				
+	request.post('http://source-' + source + '.assembledrealms.com/api/project/' + realmID + '/publish',
+				{ form: { address: 'play-' + destination + '.assembledrealms.com', shared: true} },
+				function (error, response, body) {
+			
+		if (error) {
+			return res.status(500).send(error.stack);
+		}
+		
+		if (response.statusCode !== 200) {
+			return res.status(500).send(body);
+		}
+		
+		console.log("Got valid response, calling pm2_launch");
+		
+		pm2_launch(function (err) {
+			if (err) {
+				return res.status(500).send(err.stack);
+			}
+			
+			return res.send('OK');
+		});
+	});
 
-    var req = http.request(options, function(res) {
-        res.setEncoding('utf8');
-        
-        res.on('end', function() {
-            pm2_launch(function (err) {
-                if (err) {
-                    return res.status(500).send(err.stack);
-                }
-                
-                return res.send('OK');
-            });
-        });
-    });
-
-    req.on('error', function(err) {
-        return res.status(500).send(err.stack);
-    });
-
-    // write data to request body
-    req.write(post_data);
-    req.end();
-    
 });
 
 app.get('/shutdown/:id', function (req, res, next) {

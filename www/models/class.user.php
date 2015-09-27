@@ -310,6 +310,8 @@ class loggedInUser {
 		
 		curl_close($curl);
 		
+		error_log($httpcode . ": " . $resp, 3, $logfile);
+		
 		if (($httpcode < 200) && ($httpcode > 299)) {
 			// We have an error:
 			error_log($httpcode . ": " . $resp, 3, $logfile);
