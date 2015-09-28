@@ -13,10 +13,10 @@ function resize() {
     $("#editor").height( $("#tree").height() );
 }
 
-function initialize(projectID, projectDomain) {
+function initialize(projectID) {
     
     __projectId = projectID;
-    __projectURL = 'http://' + projectDomain + '/api/project/' + __projectId;
+    // __projectURL = 'http://' + projectDomain + '/api/project/' + __projectId;
     __trackedStorageId = __projectId + "-tracking";
     
     __editor = ace.edit("editor");
@@ -102,40 +102,23 @@ function initialize(projectID, projectDomain) {
         $('#modalDebug').modal('show');
 		$('#debugProgressList').append('<li>Establishing a connection to your debug server...</li>');
 		var debugURL = 'http://debug-01.assembledrealms.com/realms/' + __projectId;
-		var launchURL = 'http://debug-01.assembledrealms.com/launch';
 		
 		$.ajax({
-            url: __projectURL + '/publish',
+            url: 'editor.php',
             type: 'post',
-            dataType: 'text',
-            data: {address: 'debug-01.assembledrealms.com', shared: true}
+            dataType: 'json',
+            data: {
+                directive: 'debug',
+                realm_id: __projectId
+            }
         })
         .done(function (data) {
-            if (data === "OK") {
+            if (data.message === "OK") {
            
                 $('#debugProgressList').append('<li>Published to debug server successfully!</li>');
 				$('#debugProgressList').append('<li>Launching realm on your debug server...</li>');
-				
-				$.ajax({
-					url: launchURL,
-					type: 'post',
-					dataType: 'text',
-					data: {id: __projectId}
-				})
-				.done(function (data) {
-					if (data.substr(0, 2) === "OK") {
-						$('#debugProgressList').append('<li>Your debug URL is <a href="' + debugURL + '">' + debugURL + '</a>!</li>');
-					} else {
-                        $('#debugProgressList').append('<li class="text-danger"><strong><i class="fa fa-exclamation-triangle"></i> ' + data + '</strong> Please try again in a few minutes, monkeys are furiously typing away to fix this problem.</li>');
-                    }
-				})
-                .fail(function(data) {
-                    $('#debugProgressList').append('<li class="text-danger"><strong><i class="fa fa-exclamation-triangle"></i> Fatal Error!</strong> Please try again in a few minutes, monkeys are furiously typing away to fix this problem.</li>');
-                })
-				.always(function() {
-					$('#debugClose').attr('disabled', false);
-                    $('#debugProgressbar').removeClass('active');
-				});
+				$('#debugProgressList').append('<li>Your debug URL is <a href="' + debugURL + '">' + debugURL + '</a>!</li>');
+
             }
         })
         .fail(function(d, textStatus, error) {
@@ -554,41 +537,19 @@ function commit() {
 
 function loadRealmRoot() {
             
-    var resp = $.ajax({
-        url: __projectURL + '/open',
-        type: 'get',
+    $.ajax({
+        url: '/build/editor.php',
+        type: 'POST',
         dataType: 'json',
-        async: false
-    });
-    
-    // Server is up, error in server code
-    if (resp.status == 500) {
-        $('#loading').fadeOut();
-        $('#errorMessage').text(resp.responseText);
-        $('#errorMessage').fadeIn();
-        return;
-    }
-    
-    // Server is down, GET failed
-    if (resp.status == 0) {
-        $('#loading').fadeOut();
-        $('#errorMessage').text(resp.statusText);
-        $('#errorMessage').fadeIn();
-        return;
-    }
-    
-    if ((resp.responseText === null) || (resp.responseText === undefined)) {
-        // Retry:
-        
-        // __waitTime = __waitTime * 2;
-        // setTimeout(loadRealmRoot, __waitTime);
-        
-    } else {
-        
-        var json = resp.responseJSON;
+        data: {
+            directive: 'open',
+            realm_id: __projectId
+        }
+    })
+    .done(function (data) {
         
         // Process folders first:
-        json = _.sortBy(json, function (item) {
+        var json = _.sortBy(data, function (item) {
             return !item.hasChildren;
         });
         
@@ -614,7 +575,7 @@ function loadRealmRoot() {
         if (welcomeDOM) {
             welcomeDOM.addClass('activefile');
         
-            loadRealmFile(welcomeDOM.attr('data-id'), 'WELCOME.md', 'WELCOME.md', true);
+            //loadRealmFile(welcomeDOM.attr('data-id'), 'WELCOME.md', 'WELCOME.md', true);
         }
         
         $("#loading").fadeOut(500, function () {
@@ -622,7 +583,13 @@ function loadRealmRoot() {
             resize();
         });
         
-    }
+    })
+    .fail(function(d, textStatus, error) {
+        $('#loading').fadeOut();
+        $('#errorMessage').text(textStatus);
+        $('#errorMessage').fadeIn();
+    });
+        
 }
 
 function loadRealmFile(id, path, name, rendered) {

@@ -8,36 +8,107 @@ if(!isUserLoggedIn()) {
     die();
 }
 
-$realmID = -1;
-$sourceURL = '';
+$realm_id    = -1;
+$sourceURL  = '';
+$method     = $_SERVER['REQUEST_METHOD'];
 
 if ($method == 'POST') {
-    $directive = $_POST['directive'];
-    $realmID  = $_POST['realm_id'];
+    $directive      = $_POST['directive'];
+    $realm_id       = $_POST['realm_id'];
+    $auth_token     = "1e4651af36b170acdec7ede7268cbd63b490a57b1ccd4d4ddd8837c8eff2ddb9";
+    $logfile 	    = '/home/tmp/editor.log';
+    
+    if ($loggedInUser->isRealmOwner($realm_id) === false) {
+        http_response_code(401);
+        echo "You are not the owner of this realm. " . $realm_id;
+        die();
+    }
+    
+    $realm = $loggedInUser->fetchRealm($realm_id);
+    
+    if ($directive == 'open') {
+            
+        $curl = curl_init();
+        
+        $realm_source   = $realm['source'];
+        $target_url     = "http://source-" . $realm_source . ".assembledrealms.com/api/project/" . $realm_id . "/open";
+        
+        curl_setopt_array($curl, array(
+            CURLOPT_HTTPHEADER 		=> array('Authorization: ' . $auth_token),
+            CURLOPT_HEADER          => false,
+            CURLOPT_RETURNTRANSFER 	=> true,
+            CURLOPT_POST            => false,
+            CURLOPT_SSL_VERIFYHOST 	=> 0,
+            CURLOPT_SSL_VERIFYPEER 	=> false,
+            CURLOPT_URL 			=> $target_url
+        ));
+
+		$resp       = curl_exec($curl);
+		$httpcode   = intval(curl_getinfo($curl, CURLINFO_HTTP_CODE));
+		
+		curl_close($curl);
+        
+        error_log($httpcode . ": " . $resp, 3, $logfile);
+		
+		if (($httpcode < 200) && ($httpcode > 299)) {
+			// We have an error:
+			error_log($httpcode . ": " . $resp, 3, $logfile);
+			echo json_encode( (object) ['message' => 'Failure at source.'] );
+            die();
+		} else {
+			echo $resp;
+            die();
+		}
+    }
     
     if ($directive == 'debug') {
             
         $curl = curl_init();
+        
+        // TODO: Pick least congested play server, but for now:
+        $realm_address 	= "01";
+        $target_url     = "http://debug-" . $realm_address . ".assembledrealms.com/launch/" . $realm_id;
+        $realm_source   = $realm['source'];
+        
+        $post_body  = http_build_query(array('destination' => $realm_address,
+                                             'source' => $realm_source
+        ));
+        
         curl_setopt_array($curl, array(
-            CURLOPT_RETURNTRANSFER => 1,
-            CURLOPT_URL => $realm['address'] . '/auth/' . $loggedInUser->user_id . '/' . session_id()
+            CURLOPT_HTTPHEADER 		=> array('Authorization: ' . $auth_token),
+            CURLOPT_HEADER          => false,
+            CURLOPT_RETURNTRANSFER 	=> true,
+            CURLOPT_POST            => true,
+            CURLOPT_POSTFIELDS      => $post_body,
+            CURLOPT_SSL_VERIFYHOST 	=> 0,
+            CURLOPT_SSL_VERIFYPEER 	=> false,
+            CURLOPT_URL 			=> $target_url
         ));
 
-        $url_from_auth = curl_exec($curl);
-        
-        echo $url_from_auth;
-        die();
+		$resp       = curl_exec($curl);
+		$httpcode   = intval(curl_getinfo($curl, CURLINFO_HTTP_CODE));
+		
+		curl_close($curl);
+		
+		if (($httpcode < 200) && ($httpcode > 299)) {
+			// We have an error:
+			error_log($httpcode . ": " . $resp, 3, $logfile);
+			echo json_encode( (object) ['message' => 'Failure at source.'] );
+            die();
+		} else {
+			echo json_encode( (object) ['message' => 'OK'] );
+            die();
+		}
     }
-    
-    return;
 }
+
 if (is_numeric($_SERVER['QUERY_STRING'])) {
-    $realmID = $_SERVER['QUERY_STRING'];
-    $realm = $loggedInUser->fetchRealm($realmID);
+    $realm_id = $_SERVER['QUERY_STRING'];
+    $realm = $loggedInUser->fetchRealm($realm_id);
 	$sourceURL = "source-" . $realm['source'] . ".assembledrealms.com";
 
-	if (($realmID < 0) || ($sourceURL == '')) {
-		echo "realmID: " . $realmID;
+	if (($realm_id < 0) || ($sourceURL == '')) {
+		echo "realmID: " . $realm_id;
 		echo "sourceURL: " . $sourceURL;
 		die();
 	}
@@ -408,13 +479,13 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     
     <script type="text/javascript">
         $(document).ready(function () {
-            initialize(<?php echo $realmID; ?>);
+            initialize(<?php echo $realm_id; ?>);
         });
     </script>
 
     <script src="/build/js/utilities.js"></script>
     <script src="/build/js/stats.min.js"></script>
-    <script src="<?php echo 'http://' . $sourceURL . '/api/project/' . $realmID . '/file/raw/client/maps/editor.js'; ?>"></script>
+    <script src="<?php echo 'http://' . $sourceURL . '/api/project/' . $realm_id . '/file/raw/client/maps/editor.js'; ?>"></script>
     <script src="/build/js/ide.js"></script>
     <script src="/build/js/jquery.treeview.js"></script>
     <script src="/build/js/md5.js"></script>
