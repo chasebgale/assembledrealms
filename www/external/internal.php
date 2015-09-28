@@ -3,16 +3,16 @@
     // Set this to 0 once you go live or don't require logging.
     define("DEBUG", 1);
     // Set to 0 once you're ready to go live
-    define("USE_SANDBOX", 1);
+    define("USE_SANDBOX", 0);
 
     define("LOG_FILE", "./failures.log");
 
-    $db_host = "assembledrealms.db"; //Host address (most likely localhost)
-    $db_name = "www"; //Name of Database
-    $db_user = "chasegale"; //Name of database user
-    $db_pass = "iBWYeezUwM1lMXb9cDET"; //Password for database user
-
     function update_system($user_id, $transaction_id, $deposit, $source) {
+		
+		$db_host = "assembledrealms.db"; //Host address (most likely localhost)
+		$db_name = "www"; //Name of Database
+		$db_user = "web"; //Name of database user
+		$db_pass = "fPvsDdSGwoMZVf7F0dC3"; //Password for database user
         
         $mysqli = new mysqli($db_host, $db_user, $db_pass, $db_name);
         
