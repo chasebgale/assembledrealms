@@ -279,7 +279,7 @@ engine.initialize();
 // 16ms is 60fps, updating at half that
 var worldLoop = setInterval(function () {
 	
-	engine.tick(map);
+	engine.tick();
     
     var broadcast = engine.broadcast();
     

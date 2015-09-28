@@ -489,7 +489,6 @@ exports.publish = function(req, res, next) {
   var conn  		= new ssh2();
   var project   	= __dirname + "/../projects/" + realm_id + "/";
   var zip 			= __dirname + "/../archive/" + realm_id + ".zip";
-//var destination 	= shared ? "/var/www/realms/"+ realm_id + ".zip" : "/var/www/realm-debug/realm.zip";
   var destination 	= "/var/www/realms/"+ realm_id + ".zip";
   var output 		= fs.createWriteStream(zip);
   var archive 		= archiver('zip');

@@ -10,9 +10,12 @@ var redis 			= require('redis');
 var http 			= require('http');
 var fs              = require('fs');
 var uuid 			= require('node-uuid');
-var redisClient 	= redis.createClient();
+var db 	            = redis.createClient();
 var server			= http.Server(app);
 var io 				= require('socket.io')(server);
+var request			= require('request');
+
+var self_token      = "1e4651af36b170acdec7ede7268cbd63b490a57b1ccd4d4ddd8837c8eff2ddb9";
 
 var allowCrossDomain = function(req, res, next) {
     res.header('Access-Control-Allow-Origin', '*'); //'http://www.assembledrealms.com');
@@ -25,7 +28,7 @@ var allowCrossDomain = function(req, res, next) {
     next();
 }
 
-redisClient.flushdb();
+db.flushdb();
 
 app.use(allowCrossDomain);
 
@@ -35,38 +38,49 @@ app.use( bodyParser.urlencoded() ); // to support URL-encoded bodies
 app.use(cookieParser('Assembled Realms is a land without secrets...'));
 
 // Catch redis errors
-redisClient.on("error", function (err) {
+db.on("error", function (err) {
     console.log("Error " + err);
 });
 
 app.set('view engine', 'ejs'); // set up EJS for templating
 
-app.post('/launch', function (req, res, next) {
+app.post('/launch/:id', function (req, res, next) {
 
-	var realmID     = req.body.id;
+    var auth = req.get('Authorization');
+
+    if (auth !== self_token) {
+        return res.status(401).send("Please don't try to break things :/");
+    }
+
+	var realmID     = req.params.id;
 	var realmApp    = '/var/www/realms/' + realmID + '/server/app.js';
     var realmErr    = '/var/www/logs/' + realmID + '-err.log';
     var realmOut    = '/var/www/logs/' + realmID + '-out.log';
     var found_proc  = [];
     var close_proc  = [];
+    
+    var destination 	= req.body.destination; // 01, 02, XX, etc... inserted here: debug-XX.assembledrealms.com
+    var source  		= req.body.source;	    // 01, 02, XX, etc... inserted here: source-XX.assembledrealms.com
 	
-    pm2.connect(function(err) {
-        
+    if ((destination === undefined) || (source === undefined)) {
+        console.log("/launch called with missing body...");
+        return res.status(500).send("Please don't tinker...");
+    }
+    
+    var pm2_launch = function (callback) {
         // Get all processes running
         pm2.list(function(err, process_list) {
-            
-            console.log('/launch called, running processes:');
             
             // Search for running instance of requested realm
             process_list.forEach(function(proc) {
                 console.log('checking: ' + proc.name);
                 if (proc.name == realmID) {
                     found_proc.push(proc);
-					return;
+                    return;
                 }
                 
-                redisClient.get(realmID + "-clients",  function (error, reply) {
-		
+                db.get(realmID + "-clients",  function (error, reply) {
+        
                     if (error) {
                         return;
                     }
@@ -82,9 +96,6 @@ app.post('/launch', function (req, res, next) {
                 
             });
             
-            console.log('found ' + found_proc.length);
-            console.log('idle ' + close_proc.length);
-            
             close_proc.forEach(function(proc) {
                 pm2.stop(proc, function(err, proc) {
                     if (err) {
@@ -97,41 +108,58 @@ app.post('/launch', function (req, res, next) {
                 fs.truncate(realmOut, 0, function(){
                     if (found_proc.length === 0) {
                         // No existing realm server running, spool up new one:
-                        var options = { name: realmID, scriptArgs: ['debug'], error_file: realmErr, out_file: realmOut};
+                        // var options = { name: realmID, scriptArgs: ['debug'], error_file: realmErr, out_file: realmOut};
+                        var options = { name: realmID, error_file: realmErr, out_file: realmOut};
                         
                         console.log("Starting app with the following options: " + JSON.stringify(options));
                         
                         pm2.start(realmApp, options, function(err, proc) {
-                            
-                            pm2.disconnect();
-                            
+                           
                             if (err) {
-                                console.log(e.stack);
-                                return res.send('ERROR BOOTING: ' + err.message);
+                                callback(err);
                             }
 
-                            res.send('OK');
+                            callback();
                         });
                     } else {
                         // Existing realm server found, restart it
                         pm2.restart(realmApp, function(err, proc) {
                             
-                            pm2.disconnect();
-                            
                             if (err) {
-                                console.log(e.stack);
-                                return res.send('ERROR BOOTING: ' + err.message);
+                                callback(err);
                             }
 
-                            res.send('OK');
+                            callback();
                         });
                     }
                 });
             });
             
         });
-        
-    });
+    };
+    
+    request.post('http://source-' + source + '.assembledrealms.com/api/project/' + realmID + '/publish',
+				{ form: { address: 'debug-' + destination + '.assembledrealms.com', shared: true} },
+				function (error, response, body) {
+			
+		if (error) {
+			return res.status(500).send(error.stack);
+		}
+		
+		if (response.statusCode !== 200) {
+			return res.status(500).send(body);
+		}
+		
+		console.log("Got valid response, calling pm2_launch");
+		
+		pm2_launch(function (err) {
+			if (err) {
+				return res.status(500).send(err.stack);
+			}
+			
+			return res.send('OK');
+		});
+	});
     
 });
 
@@ -139,7 +167,7 @@ var scripts   = [];
 
 app.get('/realms/:id', function (req, res, next) {
 
-	redisClient.get(req.params.id, function (error, reply) {
+	db.get(req.params.id, function (error, reply) {
 		
 		if (error) {
 			return res.render('error', {message: "REDIS appears to be down or unresponsive..."});
@@ -155,7 +183,7 @@ app.get('/realms/:id', function (req, res, next) {
         
         // Update the last access time so it doesn't get shutdown for inactivity:
         // (NOW WE ARE DOING THIS IN THE APP ITSELF)
-        // redisClient.set(req.params.id + '-time', new Date().toString());
+        // db.set(req.params.id + '-time', new Date().toString());
         
         // For now, grab all the required libs each time we prep the view, in the future,
         // do this once when '/launch' is called and store the array in redis...

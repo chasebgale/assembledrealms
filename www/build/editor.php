@@ -408,7 +408,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     
     <script type="text/javascript">
         $(document).ready(function () {
-            initialize(<?php echo $realmID; ?>, "<?php echo $sourceURL; ?>");
+            initialize(<?php echo $realmID; ?>);
         });
     </script>
 
