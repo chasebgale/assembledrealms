@@ -537,15 +537,8 @@ function commit() {
 
 function loadRealmRoot() {
             
-    $.ajax({
-        url: '/build/editor.php',
-        type: 'POST',
-        dataType: 'json',
-        data: {
-            directive: 'open',
-            realm_id: __projectId
-        }
-    })
+    // DROPPING SESSION COOKIE WTF
+    $.get(__projectURL + '/open')
     .done(function (data) {
         
         // Process folders first:

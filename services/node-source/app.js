@@ -1,5 +1,6 @@
 var express         = require('express')
 var bodyParser      = require('body-parser')
+var cookieParser 	= require('cookie-parser');
 var project         = require('./routes/project')
 var file            = require('./routes/file')
 var busboy          = require('connect-busboy')
@@ -37,6 +38,8 @@ app.use(bodyParser.urlencoded({
 // parse application/json
 app.use(bodyParser.json())
 
+app.use(cookieParser('Assembled Realms is a land without secrets...'));
+
 app.get('/', function(req, res){
   res.send("assembledrealms api 0.1");  
 });
@@ -53,6 +56,7 @@ app.post('/api/auth', function (req, res, next) {
     var auth = req.get('Authorization');
 
     if (auth !== self_token) {
+        console.log('/api/auth - Bad auth token')
         return res.status(401).send("Please don't try to break things :/");
     }
     
@@ -60,7 +64,8 @@ app.post('/api/auth', function (req, res, next) {
     var user_id     = req.body.user_id;
     var realms      = req.body.realms;
     
-    if ((php_sess === undefined) || (user_id === undefined) || (realm_id === undefined)) {
+    if ((php_sess === undefined) || (user_id === undefined) || (realms === undefined)) {
+        console.log('/api/auth - Missing params: ' + JSON.stringify(req.body));
         return res.status(500).send("Missing parameters, bruh.");
     }
   
@@ -69,6 +74,8 @@ app.post('/api/auth', function (req, res, next) {
         realms: realms,
         activity: Date.now()
     };
+    
+    console.log('Authorized [' + php_sess + ']: ' + JSON.stringify(sessions[php_sess]));
     
     return res.send('OK');
     
@@ -81,6 +88,7 @@ app.use(function(req, res, next){
     
     // Are we missing an assembledrealms.com sesh?
     if ((phpsession == undefined) || (phpsession == "")) {
+        console.log(req.url + " - Missing phpsession...");
         return res.status(401).send("Please don't try to break things :/");
     }
     
@@ -88,11 +96,12 @@ app.use(function(req, res, next){
     // missing, call shennanigans 
     var php_sess = sessions[phpsession];
     if (php_sess === undefined) {
+        console.log(req.url + " - Missing php_sess...");
         return res.status(401).send("Please don't try to break things :/");
     }
     
-    var realm_id = parseInt(req.params.id);
-    console.log("Testing against " + realm_id);
+    var realm_id = parseInt(req.url.split('/')[3]);
+    console.log(req.url + " - Testing against " + realm_id);
     
     // Is this user authorized to modify the realm source?
     if (php_sess.realms.indexOf(realm_id) === -1) {

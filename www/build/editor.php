@@ -10,13 +10,13 @@ if(!isUserLoggedIn()) {
 
 $realm_id       = -1;
 $sourceURL      = '';
+$logfile 	    = '/home/tmp/editor.log';
 $method         = $_SERVER['REQUEST_METHOD'];
-$auth_token     = "1e4651af36b170acdec7ede7268cbd63b490a57b1ccd4d4ddd8837c8eff2ddb9";
 
 if ($method == 'POST') {
     $directive      = $_POST['directive'];
     $realm_id       = $_POST['realm_id'];
-    $logfile 	    = '/home/tmp/editor.log';
+    $auth_token     = "1e4651af36b170acdec7ede7268cbd63b490a57b1ccd4d4ddd8837c8eff2ddb9";
     
     if ($loggedInUser->isRealmOwner($realm_id) === false) {
         http_response_code(401);
@@ -103,6 +103,7 @@ if ($method == 'POST') {
 }
 
 if (is_numeric($_SERVER['QUERY_STRING'])) {
+    
     $realm_id = $_SERVER['QUERY_STRING'];
     
     if ($loggedInUser->isRealmOwner($realm_id) === false) {
@@ -115,14 +116,17 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     $realms     = $loggedInUser->fetchRealmIDs();
 	$sourceURL  = "source-" . $realm['source'] . ".assembledrealms.com";
     $target_url = "http://" . $sourceURL . "/api/auth";
+    $auth_token = "fb25e93db6100b687614730f8f317653bb53374015fc94144bd82c69dc4e6ea0";
     
-    $post_body  = http_build_query(array('php_sess' => $realm_address,
-                                         'user_id' => $realm_source,
+    $post_body  = json_encode(array('php_sess' => session_id(),
+                                         'user_id' => $loggedInUser->user_id,
                                          'realms' => $realms
     ));
     
+    $curl = curl_init();
+    
     curl_setopt_array($curl, array(
-        CURLOPT_HTTPHEADER 		=> array('Authorization: ' . $auth_token),
+        CURLOPT_HTTPHEADER 		=> array('Authorization: ' . $auth_token, 'Content-Type: application/json'),
         CURLOPT_HEADER          => false,
         CURLOPT_RETURNTRANSFER 	=> true,
         CURLOPT_POST            => true,
@@ -135,20 +139,20 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     $resp       = curl_exec($curl);
     $httpcode   = intval(curl_getinfo($curl, CURLINFO_HTTP_CODE));
     
+    error_log($httpcode . ": " . $resp, 3, $logfile);
+    
     curl_close($curl);
     
     if (($httpcode < 200) && ($httpcode > 299)) {
-        // We have an error:
         error_log($httpcode . ": " . $resp, 3, $logfile);
-        echo json_encode( (object) ['message' => 'Failure at source.'] );
+        http_response_code(500);
+        echo "Bad response from source...";
         die();
     }
-
-	if (($realm_id < 0) || ($sourceURL == '')) {
-		echo "realmID: " . $realm_id;
-		echo "sourceURL: " . $sourceURL;
-		die();
-	}
+} else {
+    http_response_code(500);
+    echo "Malformed request...";
+    die();
 }
     
 ?>
