@@ -1,18 +1,13 @@
+var express         = require('express')
+var bodyParser      = require('body-parser')
+var project         = require('./routes/project')
+var file            = require('./routes/file')
+var busboy          = require('connect-busboy')
+var util            = require('util');
+var app             = express();
 
-/**
- * Module dependencies.
- */
-
-var express = require('express')
-  , bodyParser =  require('body-parser')
-  , project =     require('./routes/project')
-  , file =        require('./routes/file')
-  , busboy =      require('connect-busboy')
-  , util =        require('util');
-
-var app = express();
-
-// CORS
+var self_token  = "fb25e93db6100b687614730f8f317653bb53374015fc94144bd82c69dc4e6ea0";
+var sessions    = {};
 
 var allowCrossDomain = function(req, res, next) {
     res.header('Access-Control-Allow-Origin', 'http://www.assembledrealms.com');
@@ -24,11 +19,6 @@ var allowCrossDomain = function(req, res, next) {
     
     next();
 }
-
-// Configuration
-
-//app.set('views', __dirname + '/views');
-//app.set('view engine', 'jade');
 
 app.use(allowCrossDomain);
 
@@ -47,10 +37,69 @@ app.use(bodyParser.urlencoded({
 // parse application/json
 app.use(bodyParser.json())
 
-// Routes
-
 app.get('/', function(req, res){
   res.send("assembledrealms api 0.1");  
+});
+
+// Monitor:
+app.get('/api/stats', function (req, res, next) {
+    var memory = process.memoryUsage();
+    memory.uptime = process.uptime();
+    
+    res.json(memory);
+});
+
+app.post('/api/auth', function (req, res, next) {
+    var auth = req.get('Authorization');
+
+    if (auth !== self_token) {
+        return res.status(401).send("Please don't try to break things :/");
+    }
+    
+    var php_sess    = req.body.php_sess;
+    var user_id     = req.body.user_id;
+    var realms      = req.body.realms;
+    
+    if ((php_sess === undefined) || (user_id === undefined) || (realm_id === undefined)) {
+        return res.status(500).send("Missing parameters, bruh.");
+    }
+  
+    sessions[php_sess] = {
+        user_id: user_id,
+        realms: realms,
+        activity: Date.now()
+    };
+    
+    return res.send('OK');
+    
+});
+
+// PHP session wall
+app.use(function(req, res, next){
+    
+    var phpsession = req.cookies["PHPSESSID"];
+    
+    // Are we missing an assembledrealms.com sesh?
+    if ((phpsession == undefined) || (phpsession == "")) {
+        return res.status(401).send("Please don't try to break things :/");
+    }
+    
+    // /api/auth gets called by assembledrealms.com php and injects the user sesh, if it's
+    // missing, call shennanigans 
+    var php_sess = sessions[phpsession];
+    if (php_sess === undefined) {
+        return res.status(401).send("Please don't try to break things :/");
+    }
+    
+    var realm_id = parseInt(req.params.id);
+    console.log("Testing against " + realm_id);
+    
+    // Is this user authorized to modify the realm source?
+    if (php_sess.realms.indexOf(realm_id) === -1) {
+        return res.status(401).send("Please don't try to break things :/");
+    }
+    
+    next();
 });
 
 app.get('/api/project/:id/create/:engine', project.create);
@@ -66,14 +115,6 @@ app.get('/api/project/:id/file/raw/*', file.raw);
 
 app.post('/api/project/:id/file/create', file.create);
 app.post('/api/project/:id/file/upload', file.upload);
-
-// Monitor:
-app.get('/api/stats', function (req, res, next) {
-    var memory = process.memoryUsage();
-    memory.uptime = process.uptime();
-    
-    res.json(memory);
-});
 
 app.use(function(err, req, res, next){
     console.error(err.message);

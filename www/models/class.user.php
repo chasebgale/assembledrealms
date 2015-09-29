@@ -536,6 +536,25 @@ class loggedInUser {
 		return ($row);
 	}
 	
+    public function fetchRealmIDs()
+	{
+		global $mysqli,$db_table_prefix;
+		$stmt = $mysqli->prepare("SELECT
+			id
+			FROM realms
+			WHERE user_id = ? AND status > -1");
+		$stmt->bind_param("i", $this->user_id);
+		$stmt->execute();
+        
+		$stmt->bind_result($id);
+        
+		while ($stmt->fetch()){
+		    $row[] = $id;
+		}
+		$stmt->close();
+		return ($row);
+	}
+    
 	public function lovesRealm($realm_id)
 	{
 		global $mysqli,$db_table_prefix;

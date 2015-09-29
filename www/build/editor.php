@@ -8,14 +8,14 @@ if(!isUserLoggedIn()) {
     die();
 }
 
-$realm_id    = -1;
-$sourceURL  = '';
-$method     = $_SERVER['REQUEST_METHOD'];
+$realm_id       = -1;
+$sourceURL      = '';
+$method         = $_SERVER['REQUEST_METHOD'];
+$auth_token     = "1e4651af36b170acdec7ede7268cbd63b490a57b1ccd4d4ddd8837c8eff2ddb9";
 
 if ($method == 'POST') {
     $directive      = $_POST['directive'];
     $realm_id       = $_POST['realm_id'];
-    $auth_token     = "1e4651af36b170acdec7ede7268cbd63b490a57b1ccd4d4ddd8837c8eff2ddb9";
     $logfile 	    = '/home/tmp/editor.log';
     
     if ($loggedInUser->isRealmOwner($realm_id) === false) {
@@ -104,8 +104,45 @@ if ($method == 'POST') {
 
 if (is_numeric($_SERVER['QUERY_STRING'])) {
     $realm_id = $_SERVER['QUERY_STRING'];
-    $realm = $loggedInUser->fetchRealm($realm_id);
-	$sourceURL = "source-" . $realm['source'] . ".assembledrealms.com";
+    
+    if ($loggedInUser->isRealmOwner($realm_id) === false) {
+        http_response_code(401);
+        echo "You are not the owner of this realm. " . $realm_id;
+        die();
+    }
+    
+    $realm      = $loggedInUser->fetchRealm($realm_id);
+    $realms     = $loggedInUser->fetchRealmIDs();
+	$sourceURL  = "source-" . $realm['source'] . ".assembledrealms.com";
+    $target_url = "http://" . $sourceURL . "/api/auth";
+    
+    $post_body  = http_build_query(array('php_sess' => $realm_address,
+                                         'user_id' => $realm_source,
+                                         'realms' => $realms
+    ));
+    
+    curl_setopt_array($curl, array(
+        CURLOPT_HTTPHEADER 		=> array('Authorization: ' . $auth_token),
+        CURLOPT_HEADER          => false,
+        CURLOPT_RETURNTRANSFER 	=> true,
+        CURLOPT_POST            => true,
+        CURLOPT_POSTFIELDS      => $post_body,
+        CURLOPT_SSL_VERIFYHOST 	=> 0,
+        CURLOPT_SSL_VERIFYPEER 	=> false,
+        CURLOPT_URL 			=> $target_url
+    ));
+
+    $resp       = curl_exec($curl);
+    $httpcode   = intval(curl_getinfo($curl, CURLINFO_HTTP_CODE));
+    
+    curl_close($curl);
+    
+    if (($httpcode < 200) && ($httpcode > 299)) {
+        // We have an error:
+        error_log($httpcode . ": " . $resp, 3, $logfile);
+        echo json_encode( (object) ['message' => 'Failure at source.'] );
+        die();
+    }
 
 	if (($realm_id < 0) || ($sourceURL == '')) {
 		echo "realmID: " . $realm_id;
@@ -479,7 +516,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     
     <script type="text/javascript">
         $(document).ready(function () {
-            initialize(<?php echo $realm_id; ?>);
+            initialize(<?php echo $realm_id; ?>, "<?php echo $sourceURL; ?>");
         });
     </script>
 

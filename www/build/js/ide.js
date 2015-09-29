@@ -13,10 +13,10 @@ function resize() {
     $("#editor").height( $("#tree").height() );
 }
 
-function initialize(projectID) {
+function initialize(projectID, projectDomain) {
     
     __projectId = projectID;
-    // __projectURL = 'http://' + projectDomain + '/api/project/' + __projectId;
+    __projectURL = 'http://' + projectDomain + '/api/project/' + __projectId;
     __trackedStorageId = __projectId + "-tracking";
     
     __editor = ace.edit("editor");
@@ -575,7 +575,7 @@ function loadRealmRoot() {
         if (welcomeDOM) {
             welcomeDOM.addClass('activefile');
         
-            //loadRealmFile(welcomeDOM.attr('data-id'), 'WELCOME.md', 'WELCOME.md', true);
+            loadRealmFile(welcomeDOM.attr('data-id'), 'WELCOME.md', 'WELCOME.md', true);
         }
         
         $("#loading").fadeOut(500, function () {
