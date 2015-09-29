@@ -10,7 +10,7 @@ var app             = express();
 var self_token  = "fb25e93db6100b687614730f8f317653bb53374015fc94144bd82c69dc4e6ea0";
 var sessions    = {};
 
-var allowCrossDomain = function(req, res, next) {
+app.use(function(req, res, next) {
     res.header('Access-Control-Allow-Origin', 'http://www.assembledrealms.com');
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
     res.header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type');
@@ -19,9 +19,7 @@ var allowCrossDomain = function(req, res, next) {
     if ('OPTIONS' == req.method) return res.send(200);
     
     next();
-}
-
-app.use(allowCrossDomain);
+});
 
 app.use(busboy({
   highWaterMark: 2 * 1024 * 1024,

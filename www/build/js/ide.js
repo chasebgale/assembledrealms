@@ -537,8 +537,12 @@ function commit() {
 
 function loadRealmRoot() {
             
-    // DROPPING SESSION COOKIE WTF
-    $.get(__projectURL + '/open')
+    $.ajax({
+        url: __projectURL + '/open',
+        xhrFields: {
+            withCredentials: true // AJAX DROPS SESSION COOKIE WITHOUT THIS, DO NOT REMOVE
+        }
+    })
     .done(function (data) {
         
         // Process folders first:
