@@ -82,10 +82,18 @@ app.post('/api/auth', function (req, res, next) {
 // GET'ing raw file doesn't need auth protection
 app.get('/api/project/:id/file/raw/*', file.raw);
 
-// PHP session wall
+// PHP-session/auth wall
 app.use(function(req, res, next){
-    
-    var phpsession = req.cookies["PHPSESSID"];
+
+    // Is this a server-to-server request?
+    var auth = req.get('Authorization');
+    if (auth === self_token) {
+        // If the request is authorized, skip further checks:
+        next();
+    }
+
+    // Looks like we have a request from a user
+    var phpsession  = req.cookies["PHPSESSID"];
     
     // Are we missing an assembledrealms.com sesh?
     if ((phpsession == undefined) || (phpsession == "")) {

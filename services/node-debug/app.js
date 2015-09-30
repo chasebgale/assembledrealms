@@ -16,6 +16,7 @@ var io 				= require('socket.io')(server);
 var request			= require('request');
 
 var self_token      = "1e4651af36b170acdec7ede7268cbd63b490a57b1ccd4d4ddd8837c8eff2ddb9";
+var sessions        = {};
 
 var allowCrossDomain = function(req, res, next) {
     res.header('Access-Control-Allow-Origin', 'http://www.assembledrealms.com');
@@ -43,6 +44,34 @@ db.on("error", function (err) {
 });
 
 app.set('view engine', 'ejs'); // set up EJS for templating
+
+app.post('/api/auth', function (req, res, next) {
+    var auth = req.get('Authorization');
+
+    if (auth !== self_token) {
+        console.log('/api/auth - Bad auth token')
+        return res.status(401).send("Please don't try to break things :/");
+    }
+    
+    var php_sess    = req.body.php_sess;
+    var user_id     = req.body.user_id;
+    
+    if ((php_sess === undefined) || (user_id === undefined)) {
+        console.log('/api/auth - Missing params: ' + JSON.stringify(req.body));
+        return res.status(500).send("Missing parameters, bruh.");
+    }
+  
+    sessions[php_sess] = {
+        user_id: user_id,
+        activity: Date.now()
+    };
+    
+    console.log('Authorized [' + php_sess + ']: ' + JSON.stringify(sessions[php_sess]));
+    
+    return res.send('OK');
+    
+});
+
 
 app.post('/launch/:id', function (req, res, next) {
 
@@ -178,6 +207,16 @@ var scripts   = [];
 
 app.get('/realms/:id', function (req, res, next) {
 
+    var php_sess = req.cookies["PHPSESSID"];
+    
+    if (php_sess === undefined) {
+        return res.status(401).send("Please don't try to break things :/");
+    }
+    
+    if (sessions[php_sess] === undefined) {
+        return res.status(401).send("Please don't try to break things :/");
+    }
+
 	db.get(req.params.id, function (error, reply) {
 		
 		if (error) {
@@ -223,6 +262,9 @@ app.get('/realms/:id', function (req, res, next) {
                 guid = req.cookies[target];
             }
 			
+            res.render('realm', {id: req.params.id, host: req.headers.host, port: port, scripts: scripts});
+            
+            /*
 			http.get({port: port, path: "/auth/new/" + guid}, function(realm_response) {
 				if (realm_response.statusCode == 200) {
 					
@@ -244,7 +286,7 @@ app.get('/realms/:id', function (req, res, next) {
 				console.log("Got error: " + e.message);
 				return res.status(500).send(e.message);
 			});
-			
+			*/
         });
 		
     });

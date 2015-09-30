@@ -420,7 +420,6 @@ app.get('/realms/play/:id', function (req, res, next) {
 	
 	queue.splice(pos, 1);
 	
-	
 });
 
 app.get('/internal/disconnect/:id', function (req, res, next) {
