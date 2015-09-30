@@ -15,6 +15,13 @@ function resize() {
 
 function initialize(projectID, projectDomain) {
     
+    $.ajaxSetup({
+        crossDomain: true,
+        xhrFields: {
+            withCredentials: true
+        }
+    });
+    
     __projectId = projectID;
     __projectURL = 'http://' + projectDomain + '/api/project/' + __projectId;
     __trackedStorageId = __projectId + "-tracking";
@@ -102,22 +109,40 @@ function initialize(projectID, projectDomain) {
         $('#modalDebug').modal('show');
 		$('#debugProgressList').append('<li>Establishing a connection to your debug server...</li>');
 		var debugURL = 'http://debug-01.assembledrealms.com/realms/' + __projectId;
+        var launchURL = 'http://debug-01.assembledrealms.com/launch';
 		
 		$.ajax({
-            url: 'editor.php',
+            url: __projectURL + '/publish',
             type: 'post',
-            dataType: 'json',
-            data: {
-                directive: 'debug',
-                realm_id: __projectId
-            }
+            dataType: 'text',
+            data: {address: 'debug-01.assembledrealms.com', shared: true}
         })
         .done(function (data) {
-            if (data.message === "OK") {
+            if (data === "OK") {
            
                 $('#debugProgressList').append('<li>Published to debug server successfully!</li>');
 				$('#debugProgressList').append('<li>Launching realm on your debug server...</li>');
-				$('#debugProgressList').append('<li>Your debug URL is <a href="' + debugURL + '">' + debugURL + '</a>!</li>');
+                
+                $.ajax({
+					url: 'editor.php',
+					type: 'post',
+					dataType: 'json',
+					data: {directive: 'debug', realm_id: __projectId}
+				})
+				.done(function (data) {
+					if (data.message === "OK") {
+						$('#debugProgressList').append('<li>Your debug URL is <a href="' + debugURL + '">' + debugURL + '</a>!</li>');
+					} else {
+                        $('#debugProgressList').append('<li class="text-danger"><strong><i class="fa fa-exclamation-triangle"></i> ' + data + '</strong> Please try again in a few minutes, monkeys are furiously typing away to fix this problem.</li>');
+                    }
+				})
+                .fail(function(data) {
+                    $('#debugProgressList').append('<li class="text-danger"><strong><i class="fa fa-exclamation-triangle"></i> Fatal Error!</strong> Please try again in a few minutes, monkeys are furiously typing away to fix this problem.</li>');
+                })
+				.always(function() {
+					$('#debugClose').attr('disabled', false);
+                    $('#debugProgressbar').removeClass('active');
+				});
 
             }
         })
@@ -538,10 +563,7 @@ function commit() {
 function loadRealmRoot() {
             
     $.ajax({
-        url: __projectURL + '/open',
-        xhrFields: {
-            withCredentials: true // AJAX DROPS SESSION COOKIE WITHOUT THIS, DO NOT REMOVE
-        }
+        url: __projectURL + '/open'
     })
     .done(function (data) {
         

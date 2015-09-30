@@ -79,6 +79,9 @@ app.post('/api/auth', function (req, res, next) {
     
 });
 
+// GET'ing raw file doesn't need auth protection
+app.get('/api/project/:id/file/raw/*', file.raw);
+
 // PHP session wall
 app.use(function(req, res, next){
     
@@ -99,12 +102,14 @@ app.use(function(req, res, next){
     }
     
     var realm_id = parseInt(req.url.split('/')[3]);
-    console.log(req.url + " - Testing against " + realm_id);
     
     // Is this user authorized to modify the realm source?
     if (php_sess.realms.indexOf(realm_id) === -1) {
         return res.status(401).send("Please don't try to break things :/");
     }
+    
+    // If we are this far along, we are going to clear access, so update the activity
+    php_sess.activity = Date.now();
     
     next();
 });
@@ -118,7 +123,6 @@ app.post('/api/project/:id/debug', project.debug);
 app.post('/api/project/:id/publish', project.publish);
 
 app.get('/api/project/:id/file/open/:path', file.open);
-app.get('/api/project/:id/file/raw/*', file.raw);
 
 app.post('/api/project/:id/file/create', file.create);
 app.post('/api/project/:id/file/upload', file.upload);
@@ -129,6 +133,21 @@ app.use(function(err, req, res, next){
     res.send(500, err.message);
 });
 
+var minute      = 60000;
+var sixhours    = minute * 60 * 6;
+
 app.listen(3000, function(){
-  console.log("Express server listening on port 3000, request to port 80 are redirected to 3000 by Fedora.");
+    console.log("Express server listening on port 3000, request to port 80 are redirected to 3000 by Fedora.");
+    
+    // Run once a minute and check the sessions for inactivity
+    var sessionLoop = setInterval(function () {
+        var keys = Object.keys(sessions);
+        var now  = Date.now();
+        for (var i = 0; i < keys.length; i++) {
+            // If the session has been inactive for 6 hours, kill it
+            if ((now - sessions[keys[i]].activity) > sixhours) {
+                delete sessions[keys[i]];
+            }
+        }
+    }, minute);
 });

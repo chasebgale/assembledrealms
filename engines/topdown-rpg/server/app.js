@@ -332,8 +332,22 @@ pm2.connect(function(err) {
 					});
 				}
                 
-                db.set(realmID, http.address().port);
-                db.set(realmID + 'time', new Date().toString());
+                db.set(realmID, http.address().port, function(err, reply) {
+                    if (err) {
+                        console.log(err);
+                    }
+                    console.log(reply);
+                    
+                    db.set(realmID + 'time', new Date().toString(), function(err, reply) {
+                        if (err) {
+                            console.log(err);
+                        }
+                        console.log(reply);
+                    });
+                    
+                });
+                
+                
                 
             });
 /*

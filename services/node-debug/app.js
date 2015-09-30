@@ -18,7 +18,7 @@ var request			= require('request');
 var self_token      = "1e4651af36b170acdec7ede7268cbd63b490a57b1ccd4d4ddd8837c8eff2ddb9";
 
 var allowCrossDomain = function(req, res, next) {
-    res.header('Access-Control-Allow-Origin', '*'); //'http://www.assembledrealms.com');
+    res.header('Access-Control-Allow-Origin', 'http://www.assembledrealms.com');
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
     res.header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type');
     res.header('Access-Control-Allow-Credentials', 'true');
@@ -51,6 +51,8 @@ app.post('/launch/:id', function (req, res, next) {
     if (auth !== self_token) {
         return res.status(401).send("Please don't try to break things :/");
     }
+    
+    console.log(req.url + " called");
 
 	var realmID     = req.params.id;
 	var realmApp    = '/var/www/realms/' + realmID + '/server/app.js';
@@ -109,7 +111,7 @@ app.post('/launch/:id', function (req, res, next) {
                     if (found_proc.length === 0) {
                         // No existing realm server running, spool up new one:
                         // var options = { name: realmID, scriptArgs: ['debug'], error_file: realmErr, out_file: realmOut};
-                        var options = { name: realmID, error_file: realmErr, out_file: realmOut};
+                        var options = { name: realmID, scriptArgs: ['debug'], error_file: realmErr, out_file: realmOut};
                         
                         console.log("Starting app with the following options: " + JSON.stringify(options));
                         
@@ -138,6 +140,15 @@ app.post('/launch/:id', function (req, res, next) {
         });
     };
     
+    pm2_launch(function (err) {
+        if (err) {
+            return res.status(500).send(err.stack);
+        }
+        
+        return res.send('OK');
+    });
+    
+    /*
     request.post('http://source-' + source + '.assembledrealms.com/api/project/' + realmID + '/publish',
 				{ form: { address: 'debug-' + destination + '.assembledrealms.com', shared: true} },
 				function (error, response, body) {
@@ -160,7 +171,7 @@ app.post('/launch/:id', function (req, res, next) {
 			return res.send('OK');
 		});
 	});
-    
+    */
 });
 
 var scripts   = [];
