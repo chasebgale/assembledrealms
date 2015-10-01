@@ -45,11 +45,11 @@ db.on("error", function (err) {
 
 app.set('view engine', 'ejs'); // set up EJS for templating
 
-app.post('/api/auth', function (req, res, next) {
+app.post('/auth/:id', function (req, res, next) {
     var auth = req.get('Authorization');
 
     if (auth !== self_token) {
-        console.log('/api/auth - Bad auth token')
+        console.log('/api/auth - Bad auth token');
         return res.status(401).send("Please don't try to break things :/");
     }
     
@@ -61,26 +61,183 @@ app.post('/api/auth', function (req, res, next) {
         return res.status(500).send("Missing parameters, bruh.");
     }
   
+/*
     sessions[php_sess] = {
         user_id: user_id,
+		realm_id: req.params.id,
         activity: Date.now()
     };
-    
-    console.log('Authorized [' + php_sess + ']: ' + JSON.stringify(sessions[php_sess]));
-    
-    return res.send('OK');
+*/	
+	var sess = "session_" + php_sess;
+	
+	db.set(sess, user_id, function (error) {
+		if (error) {
+			console.error(error);
+			return res.status(500).send(error.message);
+		}
+		
+		console.log('Authorized [' + php_sess + ']: ' + JSON.stringify(sessions[php_sess]));
+		return res.send('OK');
+		
+	});
     
 });
 
 
-app.post('/launch/:id', function (req, res, next) {
+var scripts   = [];
 
+app.get('/realms/:id', function (req, res, next) {
+
+    var php_sess = req.cookies["PHPSESSID"];
+    
+    if (php_sess === undefined) {
+        return res.status(401).send("Please don't try to break things :/");
+    }
+/*
+    if (sessions[php_sess] === undefined) {
+        return res.status(401).send("Please don't try to break things :/");
+    }
+*/	
+
+	db.get(req.params.id, function (error, reply) {
+		
+		if (error) {
+			return res.render('error', {message: "REDIS appears to be down or unresponsive..."});
+        }
+		
+		if (reply == null) {
+            return res.render('error', {message: "REDIS has no knowledge of this realm..."});
+        }
+        
+        scripts   = [];
+        
+        var port = reply.toString().replace(/(\r\n|\n|\r)/gm,"");
+        
+        db.get("session_" + php_sess, function (error, reply) {
+		
+			if (error) {
+				return res.render('error', {message: "REDIS appears to be down or unresponsive..."});
+			}
+			
+			if (reply == null) {
+				return res.render('error', {message: "REDIS has no knowledge of this realm..."});
+			}
+			
+		});
+        
+        // For now, grab all the required libs each time we prep the view, in the future,
+        // do this once when '/launch' is called and store the array in redis...
+        var walker  = walk.walk('./realms/' + req.params.id + '/client/', { followLinks: false });
+
+        walker.on('file', function(root, stat, next) {
+            
+            if (path.extname(stat.name) == '.js') {
+                // Add this file to the list of files
+                console.log("root: " + root + " , stat.name: " + stat.name);
+                scripts.push("/" + path.join(root, stat.name));
+            }
+            next();
+            
+        });
+
+        walker.on('end', function() {
+            
+			// Generate GUID and set cookie:
+			var guid        = uuid.v1();
+            var target      = 'realm-' + req.params.id + '-debug';
+            var hour_milli  = 3600000;
+            
+            if (req.cookies[target]) {
+                // If we already have a guid cookie, use it so we get our existing character in the realm
+                guid = req.cookies[target];
+            }
+			
+            res.render('realm', {id: req.params.id, host: req.headers.host, port: port, scripts: scripts});
+            
+            /*
+			http.get({port: port, path: "/auth/new/" + guid}, function(realm_response) {
+				if (realm_response.statusCode == 200) {
+					
+					res.cookie('realm-' + req.params.id + '-debug', guid, {domain: '.assembledrealms.com', maxAge: (hour_milli * 72)});
+					res.render('realm', {id: req.params.id, host: req.headers.host, port: port, scripts: scripts});
+				
+				} else {
+					
+					var body = '';
+					response.on('data', function(d) {
+						body += d;
+					});
+					response.on('end', function() {
+						return res.status(500).send(body);
+					});
+					
+				}
+			}).on('error', function(e) {
+				console.log("Got error: " + e.message);
+				return res.status(500).send(e.message);
+			});
+			*/
+        });
+		
+    });
+
+	
+});
+
+// Serve up the realm files, when requested:
+app.use('/realms', express.static(__dirname + '/realms'));
+
+// PHP-session/auth wall
+app.use(function(req, res, next){
+
+    // Is this a server-to-server request?
+    var auth = req.get('Authorization');
+    if (auth === self_token) {
+        // If the request is authorized, skip further checks:
+        next();
+    }
+
+    // Looks like we have a request from a user
+    var phpsession  = req.cookies["PHPSESSID"];
+    
+    // Are we missing an assembledrealms.com sesh?
+    if ((phpsession == undefined) || (phpsession == "")) {
+        console.log(req.url + " - Missing phpsession...");
+        return res.status(401).send("Please don't try to break things :/");
+    }
+    
+    // /api/auth gets called by assembledrealms.com php and injects the user sesh, if it's
+    // missing, call shennanigans 
+    var php_sess = sessions[phpsession];
+    if (php_sess === undefined) {
+        console.log(req.url + " - Missing php_sess...");
+        return res.status(401).send("Please don't try to break things :/");
+    }
+    
+    var realm_id = req.url.split('/')[2];
+    
+    // Is this user authorized to modify the realm?
+    if (php_sess.realm_id !== realm_id) {
+		console.log(php_sess.realm_id + " !== " + realm_id + " from " + req.url);
+        return res.status(401).send("Please don't try to break things :/");
+    }
+    
+    // If we are this far along, we are going to clear access, so update the activity
+    php_sess.activity = Date.now();
+    
+    next();
+});
+
+app.get('/launch/:id', function (req, res, next) {
+
+	/*
     var auth = req.get('Authorization');
 
     if (auth !== self_token) {
         return res.status(401).send("Please don't try to break things :/");
     }
-    
+	*/
+	
     console.log(req.url + " called");
 
 	var realmID     = req.params.id;
@@ -89,7 +246,8 @@ app.post('/launch/:id', function (req, res, next) {
     var realmOut    = '/var/www/logs/' + realmID + '-out.log';
     var found_proc  = [];
     var close_proc  = [];
-    
+	
+	/*
     var destination 	= req.body.destination; // 01, 02, XX, etc... inserted here: debug-XX.assembledrealms.com
     var source  		= req.body.source;	    // 01, 02, XX, etc... inserted here: source-XX.assembledrealms.com
 	
@@ -97,6 +255,7 @@ app.post('/launch/:id', function (req, res, next) {
         console.log("/launch called with missing body...");
         return res.status(500).send("Please don't tinker...");
     }
+	*/
     
     var pm2_launch = function (callback) {
         // Get all processes running
@@ -203,99 +362,7 @@ app.post('/launch/:id', function (req, res, next) {
     */
 });
 
-var scripts   = [];
 
-app.get('/realms/:id', function (req, res, next) {
-
-    var php_sess = req.cookies["PHPSESSID"];
-    
-    if (php_sess === undefined) {
-        return res.status(401).send("Please don't try to break things :/");
-    }
-    
-    if (sessions[php_sess] === undefined) {
-        return res.status(401).send("Please don't try to break things :/");
-    }
-
-	db.get(req.params.id, function (error, reply) {
-		
-		if (error) {
-			return res.render('error', {message: "REDIS appears to be down or unresponsive..."});
-        }
-		
-		if (reply == null) {
-            return res.render('error', {message: "REDIS has no knowledge of this realm..."});
-        }
-        
-        scripts   = [];
-        
-        var port = reply.toString().replace(/(\r\n|\n|\r)/gm,"");
-        
-        // Update the last access time so it doesn't get shutdown for inactivity:
-        // (NOW WE ARE DOING THIS IN THE APP ITSELF)
-        // db.set(req.params.id + '-time', new Date().toString());
-        
-        // For now, grab all the required libs each time we prep the view, in the future,
-        // do this once when '/launch' is called and store the array in redis...
-        var walker  = walk.walk('./realms/' + req.params.id + '/client/', { followLinks: false });
-
-        walker.on('file', function(root, stat, next) {
-            
-            if (path.extname(stat.name) == '.js') {
-                // Add this file to the list of files
-                console.log("root: " + root + " , stat.name: " + stat.name);
-                scripts.push("/" + path.join(root, stat.name));
-            }
-            next();
-            
-        });
-
-        walker.on('end', function() {
-            
-			// Generate GUID and set cookie:
-			var guid        = uuid.v1();
-            var target      = 'realm-' + req.params.id + '-debug';
-            var hour_milli  = 3600000;
-            
-            if (req.cookies[target]) {
-                // If we already have a guid cookie, use it so we get our existing character in the realm
-                guid = req.cookies[target];
-            }
-			
-            res.render('realm', {id: req.params.id, host: req.headers.host, port: port, scripts: scripts});
-            
-            /*
-			http.get({port: port, path: "/auth/new/" + guid}, function(realm_response) {
-				if (realm_response.statusCode == 200) {
-					
-					res.cookie('realm-' + req.params.id + '-debug', guid, {domain: '.assembledrealms.com', maxAge: (hour_milli * 72)});
-					res.render('realm', {id: req.params.id, host: req.headers.host, port: port, scripts: scripts});
-				
-				} else {
-					
-					var body = '';
-					response.on('data', function(d) {
-						body += d;
-					});
-					response.on('end', function() {
-						return res.status(500).send(body);
-					});
-					
-				}
-			}).on('error', function(e) {
-				console.log("Got error: " + e.message);
-				return res.status(500).send(e.message);
-			});
-			*/
-        });
-		
-    });
-
-	
-});
-
-// Serve up the realm files, when requested:
-app.use('/realms', express.static(__dirname + '/realms'));
 
 pm2.connect(function(err) {
 	

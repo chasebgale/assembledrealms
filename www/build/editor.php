@@ -66,12 +66,11 @@ if ($method == 'POST') {
         $curl = curl_init();
         
         // TODO: Pick least congested play server, but for now:
-        $realm_address 	= "01";
-        $target_url     = "http://debug-" . $realm_address . ".assembledrealms.com/launch/" . $realm_id;
-        $realm_source   = $realm['source'];
+        $realm_address 	= "debug-01.assembledrealms.com";
+        $target_url     = "http://" . $realm_address . "/auth/" . $realm_id;
         
-        $post_body  = http_build_query(array('destination' => $realm_address,
-                                             'source' => $realm_source
+        $post_body  = http_build_query(array('php_sess' => session_id(),
+                                             'user_id' => $loggedInUser->user_id
         ));
         
         curl_setopt_array($curl, array(
@@ -96,7 +95,7 @@ if ($method == 'POST') {
 			echo json_encode( (object) ['message' => 'Failure at source.'] );
             die();
 		} else {
-			echo json_encode( (object) ['message' => 'OK'] );
+			echo json_encode( (object) ['message' => 'OK', 'address' => $realm_address] );
             die();
 		}
     }
