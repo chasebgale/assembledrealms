@@ -188,13 +188,15 @@ exports.open = function(req, res, next){
   */
 }
 
-
 exports.save = function(req, res, next) {
     
     var destination = __dirname + "/../projects/" + req.params.id;
     var commit_message = '';
     var files = [];
-
+    var repository;
+    var index;
+    var oid;
+    
     req.busboy.on('file', function (fieldname, file, filename, encoding, mimetype) {
         console.log('File [' + fieldname + ']: filename: ' + filename + ', encoding: ' + encoding + ', mimetype: ' + mimetype);
         
@@ -222,6 +224,7 @@ exports.save = function(req, res, next) {
             */
         }
     });
+    
     req.busboy.on('field', function(fieldname, val, fieldnameTruncated, valTruncated) {
         console.log('Field [' + fieldname + ']: value: ' + val);
         
@@ -233,64 +236,53 @@ exports.save = function(req, res, next) {
 		}
       
     });
+    
     req.busboy.on('finish', function() {
         console.log('Done parsing form, now committing...');
         
-        git.Repo.open(__dirname + "/../projects/" + req.params.id, function(error, repo) {
-            if (error) return next(error);
-        
-            repo.openIndex(function(openIndexError, index) {
-                if (openIndexError) return next(openIndexError);
-
-                index.read(function(readError) {
-                    if (readError) return next(readError);
-
-                    files.forEach(function (entry) {
-                        index.addByPath(entry, function(addByPathError) {
-                            if (addByPathError) return next(addByPathError);
-                        });
-                    });
-        
-                    index.write(function(writeError) {
-                        if (writeError) return next(writeError);
-
-                        index.writeTree(function(writeTreeError, oid) {
-                            if (writeTreeError) return next(writeTreeError);
-
-                            //get HEAD
-                            git.Reference.oidForName(repo, 'HEAD', function(oidForName, head) {
-                                if (oidForName) return next(oidForName);
-
-                                //get latest commit (will be the parent commit)
-                                repo.getCommit(head, function(getCommitError, parent) {
-                                    if (getCommitError) return next(getCommitError);
-                                    
-                                    var author = git.Signature.now("Chase Gale", "chase.b.gale@gmail.com");
-                                    var committer = git.Signature.now("Chase Gale", "chase.b.gale@gmail.com");
-
-                                    //commit
-                                    repo.createCommit('HEAD', author, committer, commit_message, oid, [parent], function(error, commitId) {
-                                        if (error) return next(error);
-
-                                        utilities.logMessage('Commit (' + commitId.sha() + ') to REPO: ' + __dirname + "/../projects/" + req.params.id);
-                                        console.log('Files: ' + files.toString());
-
-                                        var formatted = {};
-                                        formatted.commit = commitId.sha();
-                                        formatted.message = "OK";
-
-                                        res.json(formatted);
-                                    });
-                                });
-                            });
-                        });
-                    });
+        git.Repository.open(__dirname + '/../projects/' + req.params.id)
+            .then(function(repo) {
+                repository = repo;
+                return repo.openIndex();
+            })
+            .then(function(idx) {
+                index = idx;
+                return idx.read();
+            })
+            .then(function() {
+                async.forEach(files, function(file, callback) { 
+                    index.addByPath(file);
+                    callback();
+                }, function (error) {
+                    if (error) return next(error);
+                    
+                    return index.write();
                 });
+            })
+            .then(function() {
+                return index.writeTree();
             });
+            .then(function(oidResult) {
+                oid = oidResult;
+                return git.Reference.nameToId(repository, "HEAD");
+            })
+            .then(function(head) {
+                return repo.getCommit(head);
+            })
+            .then(function(parent) {
+                var author = git.Signature.now("Chase Gale", "chase.b.gale@gmail.com");
+                var committer = git.Signature.now("Chase Gale", "chase.b.gale@gmail.com");
+
+                return repo.createCommit("HEAD", author, committer, commit_message, oid, [parent]);
+            })
+        .done(function(commitId) {
+            console.log("New Commit: ", commitId);
+            var formatted = {};
+            formatted.commit = commitId.sha();
+            formatted.message = "OK";
+
+            res.json(formatted);
         });
-        
-        //res.writeHead(303, { Connection: 'close', Location: '/' });
-        //res.end();
     });
     req.pipe(req.busboy);
 }
