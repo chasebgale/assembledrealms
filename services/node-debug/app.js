@@ -91,13 +91,9 @@ app.get('/realms/:id', function (req, res, next) {
     var php_sess = req.cookies["PHPSESSID"];
     
     if (php_sess === undefined) {
+		// TODO: Redirect to assembled realms login
         return res.status(401).send("Please don't try to break things :/");
     }
-/*
-    if (sessions[php_sess] === undefined) {
-        return res.status(401).send("Please don't try to break things :/");
-    }
-*/	
 
 	db.get(req.params.id, function (error, reply) {
 		
@@ -120,7 +116,11 @@ app.get('/realms/:id', function (req, res, next) {
 			}
 			
 			if (reply == null) {
-				return res.render('error', {message: "REDIS has no knowledge of this realm..."});
+				// TODO
+				// If a user has hit debug-01.assembledrealms.com/realms/103 but their sesh
+				// is missing, redirect them to assembledrealms.com/debug/103, which will call
+				// this server's /auth method, passing in the correct user_id to match with the sesh,
+				// but with lower rights than the creator, which will then redirect 360 back to here
 			}
 			
 		});
