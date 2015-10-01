@@ -14,8 +14,16 @@ if ($method == 'POST') {
     $directive = $_POST['directive'];
     
     if ($directive == 'create') {
-        list($project_id, $source) = $loggedInUser->createRealm($_POST['title'], $_POST['description'], $_POST['engine']);
-        echo json_encode(array ('project_id' => $project_id, 'source' => $source));
+        $result = $loggedInUser->createRealm($_POST['title'], $_POST['description'], $_POST['engine']);
+        
+        if ($result) {
+            list($project_id, $source) = $result;
+            echo json_encode(array ('project_id' => $project_id, 'source' => $source));
+        } else {
+            http_response_code(500);
+            echo "Bad response from source...";
+            die();
+        }
     }
     
     if ($directive == 'list') {

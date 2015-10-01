@@ -159,6 +159,37 @@ class loggedInUser {
 		$stmt->close();
 		
         // TODO!!! TODO!!! Update source-xx auth to allow user access to new realm id
+        $realms     = $this->fetchRealmIDs();
+        $sourceURL  = "source-" . $source_server . ".assembledrealms.com";
+        $target_url = "http://" . $sourceURL . "/api/auth";
+        $auth_token = "fb25e93db6100b687614730f8f317653bb53374015fc94144bd82c69dc4e6ea0";
+        
+        $post_body  = json_encode(array('php_sess' => session_id(),
+                                             'user_id' => $loggedInUser->user_id,
+                                             'realms' => $realms
+        ));
+        
+        $curl = curl_init();
+        
+        curl_setopt_array($curl, array(
+            CURLOPT_HTTPHEADER 		=> array('Authorization: ' . $auth_token, 'Content-Type: application/json'),
+            CURLOPT_HEADER          => false,
+            CURLOPT_RETURNTRANSFER 	=> true,
+            CURLOPT_POST            => true,
+            CURLOPT_POSTFIELDS      => $post_body,
+            CURLOPT_SSL_VERIFYHOST 	=> 0,
+            CURLOPT_SSL_VERIFYPEER 	=> false,
+            CURLOPT_URL 			=> $target_url
+        ));
+
+        $resp       = curl_exec($curl);
+        $httpcode   = intval(curl_getinfo($curl, CURLINFO_HTTP_CODE));
+        
+        curl_close($curl);
+        
+        if (($httpcode < 200) && ($httpcode > 299)) {
+            return false;
+        }
         
 		return array($inserted_id, $source_server);
 	}

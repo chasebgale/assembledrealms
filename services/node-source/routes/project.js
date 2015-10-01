@@ -70,7 +70,7 @@ exports.create = function(req, res, next){
                         return file.substring(removeIdx);
                     });
           
-                    git.Repository.init(__dirname + "/../projects/" + req.params.id, false)
+                    git.Repository.init(__dirname + "/../projects/" + req.params.id, 0)
                         .then(function(repo) {
                             repository = repo;
                             return repo.openIndex();
