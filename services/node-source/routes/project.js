@@ -1,15 +1,17 @@
-var ncp 		= require('ncp').ncp,
-    async 		= require('async'),
-    git 		= require('nodegit'),
-    fs 			= require('fs'),
-    path 		= require('path'),
-    utilities 	= require('../utilities'),
-    dir 		= require('node-dir'),
-    rimraf 		= require('rimraf'),
-    ssh2 		= require("ssh2"),
-    lz4         = require('lz4'),
-    busboy      = require('connect-busboy'),
-    archiver 	= require('archiver');
+var ncp 		= require('ncp').ncp;
+var async 		= require('async');
+var git 		= require('nodegit');
+var Promise     = require("nodegit-promise");
+var fs 			= require('fs');
+var path 		= require('path');
+var utilities 	= require('../utilities');
+var dir 		= require('node-dir');
+var rimraf 		= require('rimraf');
+var ssh2 		= require("ssh2");
+var lz4         = require('lz4');
+var busboy      = require('connect-busboy');
+var archiver 	= require('archiver');
+var compressor  = require('node-minify');
 
 var engines = [__dirname + "/../projects/assembledrealms-topdown",
                __dirname + "/../projects/assembledrealms-isometric"];
@@ -30,125 +32,126 @@ var writeFileAsync = function (file, done) {
 
 exports.create = function(req, res, next){
   
-  var dirs = [];
-  
-  var destination = __dirname + '/../projects/' + req.params.id;
-  var source = engines[req.params.engine];
-  
-  
-  fs.mkdir(destination, 0777, function (error) {
+    var dirs = [];
 
-    if (error) return next(error);
-    
-    fs.readdir(source, function (error, files) {
-      
-      if (error) return next(error);
+    var destination = __dirname + '/../projects/' + req.params.id;
+    var source = engines[req.params.engine];
+    var repository;
+    var index;
   
-      var items = files.filter(function (file) {
-        
-        // TODO: Don't use SYNC file operations!
-        //if (fs.statSync(import_local + '/' + file).isFile()) {
-        //  return false;
-        //}
-        
-        if (file == '.git') {
-          return false;
-        }
-        
-        return true;
-        
-      }).forEach(function (file) {
-          dirs.push([
+    fs.mkdir(destination, 0777, function (error) {
+        if (error) return next(error);
+    
+        fs.readdir(source, function (error, files) {
+            if (error) return next(error);
+  
+            var items = files.filter(function (file) {
+                if (file == '.git') {
+                    return false;
+                }
+                return true;
+            }).forEach(function (file) {
+                dirs.push([
                     source + '/' + file,
                     destination + '/' + file
-                    ]);
-      });
+                ]);
+            });
       
-      async.each(dirs, copyDirAsync, function(error){
-        if (error) return next(error);
-        
-        dir.files(__dirname + "/../projects/" + req.params.id, function(error, files) {
-          if (error) return next(error);
-          
-          var remove = '/var/www/projects/' + req.params.id + '/';
-          var removeIdx = remove.length;
-          
-          files = files.map(function(file) {
-            return file.substring(removeIdx);
-          });
-          
-          git.Repo.init(__dirname + "/../projects/" + req.params.id, false, function(error, repo) {
-            if (error) return next(error);
-            
-            repo.openIndex(function(error, index) {
-              if (error) return next(error);
-        
-              index.read(function(error) {
+            async.each(dirs, copyDirAsync, function(error){
                 if (error) return next(error);
-                
-                // Stage the files with 'git add' (equivalant)
-                async.forEach(files, function(file, callback) { 
-                  
-                  index.addByPath(file, function(error) {
-                    if (error) return next(error);
-                    
-                    callback();
-                  });
-                  
-                }, function (error) {
-                  if (error) return next(error);
-                  
-                  index.write(function(error) {
-                    if (error) return next(error);
         
-                    index.writeTree(function(error, oid) {
-                      if (error) return next(error);
-                      
-                      var author = git.Signature.now("Chase Gale", "chase.b.gale@gmail.com");
-                      var committer = git.Signature.now("Chase Gale", "chase.b.gale@gmail.com");
-    
-                      //commit
-                      repo.createCommit('HEAD', author, committer, 'message', oid, [], function(error, commitId) {
-                        
-                        if (error) return next(error);
-                        
-                        utilities.logMessage('Created REPO: ' + __dirname + "/../projects/" + req.params.id);
-                        
+                dir.files(__dirname + "/../projects/" + req.params.id, function(error, files) {
+                    if (error) return next(error);
+          
+                    var remove = '/var/www/projects/' + req.params.id + '/';
+                    var removeIdx = remove.length;
+
+                    files = files.map(function(file) {
+                        return file.substring(removeIdx);
+                    });
+          
+                    git.Repository.init(__dirname + "/../projects/" + req.params.id, false)
+                        .then(function(repo) {
+                            repository = repo;
+                            return repo.openIndex();
+                        })
+                        .then(function(idx) {
+                            index = idx;
+                            return idx.read();
+                        })
+                        .then(function() {
+                            async.forEach(files, function(file, callback) { 
+                                index.addByPath(file);
+                                callback();
+                            }, function (error) {
+                                if (error) return next(error);
+                                
+                                return index.write();
+                            });
+                        })
+                        .then(function() {
+                            return index.writeTree();
+                        })
+                        .then(function(oid) {
+                            var author = git.Signature.now("Chase Gale", "chase.b.gale@gmail.com");
+                            var committer = git.Signature.now("Chase Gale", "chase.b.gale@gmail.com");
+                            // Since we're creating an inital commit, it has no parents. Note that unlike
+                            // normal we don't get the head either, because there isn't one yet.
+                            return repository.createCommit("HEAD", author, committer, "message", oid, []);
+                        })
+                    .done(function(commitId) {
+                        utilities.logMessage('Created REPO: ' + __dirname + "/../projects/" + req.params.id + " with commit id: " + commitId);
+                                
                         var formatted = {};
                         formatted.message = "OK";
                         
                         res.json(formatted);
-                        
-                      });
-                      
                     });
-                    
-                  });
-                  
-                });
-                
-                
-              });
-              
-            });
             
-          });
-          
-        });
-        
-      });
-      
-    });
-    
-  });
+                }); // dir.files
+            }); // async
+        }); // fs.readdir
+    }); // fx.mkdir
 }
 
 exports.open = function(req, res, next){
   
-  var files = [];
-  var file = {};
+    var files = [];
+    var file = {};
+    var repo;
+
+    git.Repository.open(__dirname + '/../projects/' + req.params.id)
+        .then(function(repo) {
+            return repo.getMasterCommit();
+        })
+        .then(function(firstCommitOnMaster) {
+          return firstCommitOnMaster.getTree();
+        })
+        .then(function(tree) {
+            // `walk()` returns an event.
+            var walker = tree.walk(false);
+            walker.on('entry', function(entry) {
+                file = {};
+                file.path = entry.path();
+                file.name = entry.filename();
+                file.sha = entry.sha();
+                file.hasChildren = entry.isTree();
+
+                files.push(file);
+            });
+
+            walker.on('end', function(errors, entries) {
+                utilities.logMessage('Opened REPO: ' + __dirname + "/../projects/" + req.params.id);
+                res.json(files);
+            });
+            
+            // Don't forget to call `start()`!
+            walker.start();
+        })
+    .done();
   
-  git.Repo.open(__dirname + "/../projects/" + req.params.id, function(error, repo) {
+  /*
+  git.Repository.open(__dirname + "/../projects/" + req.params.id, function(error, repo) {
     if (error) return next(error);
   
     repo.getMaster(function(error, branch) {
@@ -182,6 +185,7 @@ exports.open = function(req, res, next){
     });
     
   });
+  */
 }
 
 
@@ -479,6 +483,7 @@ exports.publish = function(req, res, next) {
   var realm_id		= req.params.id;
   var address 		= req.body.address; // play-**/debug-**.assembledrealms.com or IP of realm droplet
   var shared  		= req.body.shared;	// true if destination is play-**.assembledrealms.com, false if droplet
+  var minify        = (req.body.minify === undefined) ? false : req.body.minify;
   
   utilities.logMessage('PUBLISHING: ' + realm_id + ' to ' + address);
   
@@ -551,16 +556,38 @@ exports.publish = function(req, res, next) {
     
   });
   
+  
+  
   archive.on('error', function(error) {
     if (error) return next(error);
   });
   
   archive.pipe(output);
   
-  archive.bulk([
-    { expand: true, cwd: project, src: ['**', '!.git']}
-  ]);
-  
-  archive.finalize();
+    if (minify) {
+        new compressor.minify({
+            type: 'gcc',
+            fileIn: project + 'client/**/*.js',
+            fileOut: project + 'client/engine.min.js',
+            callback: function(err, min){
+                if (err) {
+                    console.log(err);
+                }
+                
+                archive.bulk([
+                    { expand: true, cwd: project, src: ['**', '!.git']}
+                ]);
+
+                archive.finalize();
+                
+            }
+        });
+    } else {
+        archive.bulk([
+            { expand: true, cwd: project, src: ['**', '!.git']}
+        ]);
+
+        archive.finalize();
+    }
 
 }

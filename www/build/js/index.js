@@ -1,5 +1,13 @@
 $(document).ready(function () {
 
+    // TODO: maybe put this in the page footer so it's done for every page?
+    $.ajaxSetup({
+        crossDomain: true,
+        xhrFields: {
+            withCredentials: true
+        }
+    });
+
     // VIEWS
     var templateFn = _.template($('#realms_template').html());
 

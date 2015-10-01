@@ -158,6 +158,8 @@ class loggedInUser {
 		$inserted_id = $mysqli->insert_id;
 		$stmt->close();
 		
+        // TODO!!! TODO!!! Update source-xx auth to allow user access to new realm id
+        
 		return array($inserted_id, $source_server);
 	}
 	
