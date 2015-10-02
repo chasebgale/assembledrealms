@@ -447,7 +447,7 @@ exports.publish = function(req, res, next) {
   
     if (minify) {
         new compressor.minify({
-            type: 'yui-js',
+            type: 'uglifyjs',
             fileIn: project + 'client/**/*.js',
             fileOut: project + 'client/engine.min.js',
             callback: function(err, min){

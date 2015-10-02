@@ -89,7 +89,7 @@ app.use(function(req, res, next){
     var auth = req.get('Authorization');
     if (auth === self_token) {
         // If the request is authorized, skip further checks:
-        next();
+        return next();
     }
 
     // Looks like we have a request from a user
