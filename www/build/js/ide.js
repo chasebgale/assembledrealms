@@ -526,7 +526,7 @@ function commit() {
             error: function (response) {
                 
                 // Update DOM to reflect we messed up:
-                $('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
+                $('#commitProgressMessage').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseText);
                 
             }
         });
