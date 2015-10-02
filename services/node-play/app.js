@@ -164,7 +164,12 @@ app.post('/launch/:id', function (req, res, next) {
                 
 				
 	request.post('http://source-' + source + '.assembledrealms.com/api/project/' + realmID + '/publish',
-				{ form: { address: 'play-' + destination + '.assembledrealms.com', shared: true} },
+				{ 
+                    form: { address: 'play-' + destination + '.assembledrealms.com', shared: true, minify: true},
+                    headers: {
+                        'Authorization': 'fb25e93db6100b687614730f8f317653bb53374015fc94144bd82c69dc4e6ea0'
+                    }
+                },
 				function (error, response, body) {
 			
 		if (error) {
