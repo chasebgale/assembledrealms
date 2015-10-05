@@ -55,31 +55,53 @@ app.post('/auth/:id', function (req, res, next) {
     
     var php_sess    = req.body.php_sess;
     var user_id     = req.body.user_id;
+    var owner       = req.body.owner;
+    var realm_id    = req.params.id;
     
-    if ((php_sess === undefined) || (user_id === undefined)) {
+    if ((php_sess === undefined) || (user_id === undefined) || (owner === undefined)) {
         console.log('/api/auth - Missing params: ' + JSON.stringify(req.body));
         return res.status(500).send("Missing parameters, bruh.");
     }
   
-/*
-    sessions[php_sess] = {
-        user_id: user_id,
-		realm_id: req.params.id,
-        activity: Date.now()
-    };
-*/	
-	var sess = "session_" + php_sess;
-	
+	var sess    = "session_" + php_sess;
+    var realm   = "realm_" + realm_id + "_access";
+    
+    db.multi()
+        .set(sess, user_id)     // Set session key to point to the user
+        .expires(sess, 3600)    // Expire the session key after an hour
+        .zadd([realm, 1, user_id]) // Add the user as an owner (the 1 is the user score, 0 being regular user, 1 being owner)
+        .exec(function (err, replies) {
+            if (err) {
+                console.log(err);
+            }
+            console.log("MULTI got " + replies.length + " replies");
+        });
+    
+    
+	/*
 	db.set(sess, user_id, function (error) {
 		if (error) {
 			console.error(error);
 			return res.status(500).send(error.message);
 		}
-		
-		console.log('Authorized [' + php_sess + ']: ' + JSON.stringify(sessions[php_sess]));
-		return res.send('OK');
+        
+        db.expires(sess, 3600, function (error) {
+            
+        });
+        
+        db.set("user_" + user_id + "_rights", "1", function (error) {
+            if (error) {
+                console.error(error);
+                return res.status(500).send(error.message);
+            }
+            
+            console.log('Authorized [' + php_sess + ']';
+            return res.send('OK');
+            
+        });
 		
 	});
+    */
     
 });
 
@@ -194,7 +216,7 @@ app.use(function(req, res, next){
     var auth = req.get('Authorization');
     if (auth === self_token) {
         // If the request is authorized, skip further checks:
-        next();
+        return next();
     }
 
     // Looks like we have a request from a user
@@ -208,24 +230,29 @@ app.use(function(req, res, next){
     
     // /api/auth gets called by assembledrealms.com php and injects the user sesh, if it's
     // missing, call shennanigans 
-    var php_sess = sessions[phpsession];
-    if (php_sess === undefined) {
-        console.log(req.url + " - Missing php_sess...");
-        return res.status(401).send("Please don't try to break things :/");
-    }
-    
-    var realm_id = req.url.split('/')[2];
-    
-    // Is this user authorized to modify the realm?
-    if (php_sess.realm_id !== realm_id) {
-		console.log(php_sess.realm_id + " !== " + realm_id + " from " + req.url);
-        return res.status(401).send("Please don't try to break things :/");
-    }
-    
-    // If we are this far along, we are going to clear access, so update the activity
-    php_sess.activity = Date.now();
-    
-    next();
+    var sess = "session_" + phpsession;
+
+	db.get(sess, function (error, reply) {
+		if (error) {
+			return res.status(500).send(error.message);
+		}
+        
+        if (reply) {
+            
+            var realm_id = req.url.split('/')[2];
+            // TODO: implement 'access level' and check it here from redis response
+            // TODO: add time to redis with Date.now();
+            
+            next();
+            
+        } else {
+            console.log(req.url + " - Blank redis reply...");
+            return res.status(401).send("Please don't try to break things :/");
+        }
+		
+		
+		
+	});
 });
 
 app.get('/launch/:id', function (req, res, next) {

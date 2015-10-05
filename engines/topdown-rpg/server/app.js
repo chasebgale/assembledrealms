@@ -323,31 +323,28 @@ pm2.connect(function(err) {
 
 				if (debug) {
 					// In debug mode, trash any DB entries on (re)start so we don't get into trouble
-					db.keys(realmID + "-*", function (err, keys) {
-						keys.forEach(function (key, pos) {
-							db.del(key, function (err) {
-								console.log("Deleted key: " + key);
-							});
-						});
+					db.keys("realm_" + realmID + "*", function (err, keys) {
+                        if ((err === undefined) && (keys)) {
+                            keys.forEach(function (key, pos) {
+                                db.del(key, function (err) {
+                                    console.log("Deleted key: " + key);
+                                });
+                            });
+                        }
 					});
 				}
                 
-                db.set(realmID, http.address().port, function(err, reply) {
+                var data = {
+                    "port": http.address().port,
+                    "time": Date.now()
+                };
+                
+                db.hmset("realm_" + realmID, data, function(err, reply) {
                     if (err) {
                         console.log(err);
                     }
                     console.log(reply);
-                    
-                    db.set(realmID + 'time', new Date().toString(), function(err, reply) {
-                        if (err) {
-                            console.log(err);
-                        }
-                        console.log(reply);
-                    });
-                    
                 });
-                
-                
                 
             });
 /*

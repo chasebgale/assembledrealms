@@ -70,7 +70,8 @@ if ($method == 'POST') {
         $target_url     = "http://" . $realm_address . "/auth/" . $realm_id;
         
         $post_body  = http_build_query(array('php_sess' => session_id(),
-                                             'user_id' => $loggedInUser->user_id
+                                             'user_id' => $loggedInUser->user_id,
+                                             'owner' => true
         ));
         
         curl_setopt_array($curl, array(

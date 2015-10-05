@@ -122,7 +122,7 @@ function initialize(projectID, projectDomain) {
 			var debug_url 	= 'http://' + address + '/realms/' + __projectId;
 			
 			$('#debugProgressList').append('<li>Compressing latest commit and delivering it to ' + address + '</li>');
-			
+
 			$.ajax({
 				url: __projectURL + '/publish',
 				type: 'post',
