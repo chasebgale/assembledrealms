@@ -70,14 +70,16 @@ io.use(function(socket, next) {
     var parts = cookies.split("; PHPSESSID=");
     
     if (parts.length == 2) {
-        phpsession = "s_" + parts.pop().split(";").shift();
+        phpsession = "session_" + parts.pop().split(";").shift();
 		
 		// Grab the player object in redis for this user
 		db.get(phpsession, function(error, reply) {
 			if (reply !== null) {
 				
+				var key = "realm_" + realmID + ":" + reply;
+				
 				// Set the content of the session object to the redis/cookie key
-				socket.request.session = {player_key: reply};
+				socket.request.session = {player_key: key};
 				
 				next();
 			}
@@ -126,22 +128,21 @@ io.use(function(socket, next) {
 io.on('connection', function (socket) {
 	
 	// Retrieve the key set earlier
-	var uuid = socket.request.session.player_key;
-	
+	var player_key = socket.request.session.player_key;
 	var player;
 	
 	var enterGame = function () {
-		db.get(uuid, function(error, data) {
+		db.get(player_key, function(error, data) {
 			
 			player = data;
 			
-			if (player == "new") {
+			if (player === null) {
 				
 				counter++;
 				player = engine.createPlayer();
 				player.id = counter;
 				
-				db.set(uuid, JSON.stringify(player), function (error) {
+				db.set(player_key, JSON.stringify(player), function (error) {
 				
 					if (error) {
 						console.error(error);

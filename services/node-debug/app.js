@@ -67,14 +67,16 @@ app.post('/auth/:id', function (req, res, next) {
     var realm   = "realm_" + realm_id + "_access";
     
     db.multi()
-        .set(sess, user_id)     // Set session key to point to the user
-        .expires(sess, 3600)    // Expire the session key after an hour
-        .zadd([realm, 1, user_id]) // Add the user as an owner (the 1 is the user score, 0 being regular user, 1 being owner)
+        .set(sess, user_id)     	// Set session key to point to the user
+        .expire(sess, 3600)    		// Expire the session key after an hour
+        .zadd([realm, 1, user_id]) 	// Add the user as an owner (1 = privileged)
         .exec(function (err, replies) {
             if (err) {
-                console.log(err);
+                console.error(err);
+				return res.status(500).send(err.message);
             }
             console.log("MULTI got " + replies.length + " replies");
+			return res.send('OK');
         });
     
     
@@ -105,6 +107,65 @@ app.post('/auth/:id', function (req, res, next) {
     
 });
 
+// Serve up the realm files, when requested:
+app.use('/realms', express.static(__dirname + '/realms'));
+
+// PHP-session/auth wall
+app.use(function(req, res, next){
+
+    // Is this a server-to-server request?
+    var auth = req.get('Authorization');
+    if (auth === self_token) {
+        // If the request is authorized, skip further checks:
+        return next();
+    }
+
+    // Looks like we have a request from a user
+    var phpsession  = req.cookies["PHPSESSID"];
+    
+    // Are we missing an assembledrealms.com sesh?
+    if ((phpsession == undefined) || (phpsession == "")) {
+        console.log(req.url + " - Missing phpsession...");
+        return res.status(401).send("Please don't try to break things :/");
+    }
+    
+    // /api/auth gets called by assembledrealms.com php and injects the user sesh, if it's
+    // missing, call shennanigans 
+    var sess = "session_" + phpsession;
+
+	db.get(sess, function (error, reply) {
+		if (error) {
+			console.error(error);
+			return res.status(500).send(error.message);
+		}
+        
+        if (reply) {
+            
+            var realm_id 	= req.url.split('/')[2];
+			var realm   	= "realm_" + realm_id + "_access";
+            // TODO: implement 'access level' and check it here from redis response
+            // TODO: add time to redis with Date.now();
+			
+			db.zscore([realm, reply], function (error, reply) {
+				if (error) {
+					console.error(error);
+					return res.status(500).send(error.message);
+				}
+				console.log("owner: " + reply);
+				req.owner = (reply == "1") ? true : false;				
+			});
+            
+            next();
+            
+        } else {
+            console.log(req.url + " - Blank redis reply...");
+            return res.status(401).send("Please don't try to break things :/");
+        }
+		
+		
+		
+	});
+});
 
 var scripts   = [];
 
@@ -117,20 +178,23 @@ app.get('/realms/:id', function (req, res, next) {
         return res.status(401).send("Please don't try to break things :/");
     }
 
-	db.get(req.params.id, function (error, reply) {
+	var realm_key = "realm_" + req.params.id;
+	
+	db.hgetall(realm_key, function (error, realm) {
 		
 		if (error) {
 			return res.render('error', {message: "REDIS appears to be down or unresponsive..."});
         }
 		
-		if (reply == null) {
+		if (realm == null) {
             return res.render('error', {message: "REDIS has no knowledge of this realm..."});
         }
         
         scripts   = [];
         
-        var port = reply.toString().replace(/(\r\n|\n|\r)/gm,"");
+        var port = realm.port.toString().replace(/(\r\n|\n|\r)/gm,"");
         
+		/*
         db.get("session_" + php_sess, function (error, reply) {
 		
 			if (error) {
@@ -146,7 +210,8 @@ app.get('/realms/:id', function (req, res, next) {
 			}
 			
 		});
-        
+        */
+		
         // For now, grab all the required libs each time we prep the view, in the future,
         // do this once when '/launch' is called and store the array in redis...
         var walker  = walk.walk('./realms/' + req.params.id + '/client/', { followLinks: false });
@@ -165,6 +230,7 @@ app.get('/realms/:id', function (req, res, next) {
         walker.on('end', function() {
             
 			// Generate GUID and set cookie:
+			/*
 			var guid        = uuid.v1();
             var target      = 'realm-' + req.params.id + '-debug';
             var hour_milli  = 3600000;
@@ -173,6 +239,7 @@ app.get('/realms/:id', function (req, res, next) {
                 // If we already have a guid cookie, use it so we get our existing character in the realm
                 guid = req.cookies[target];
             }
+			*/
 			
             res.render('realm', {id: req.params.id, host: req.headers.host, port: port, scripts: scripts});
             
@@ -204,55 +271,6 @@ app.get('/realms/:id', function (req, res, next) {
     });
 
 	
-});
-
-// Serve up the realm files, when requested:
-app.use('/realms', express.static(__dirname + '/realms'));
-
-// PHP-session/auth wall
-app.use(function(req, res, next){
-
-    // Is this a server-to-server request?
-    var auth = req.get('Authorization');
-    if (auth === self_token) {
-        // If the request is authorized, skip further checks:
-        return next();
-    }
-
-    // Looks like we have a request from a user
-    var phpsession  = req.cookies["PHPSESSID"];
-    
-    // Are we missing an assembledrealms.com sesh?
-    if ((phpsession == undefined) || (phpsession == "")) {
-        console.log(req.url + " - Missing phpsession...");
-        return res.status(401).send("Please don't try to break things :/");
-    }
-    
-    // /api/auth gets called by assembledrealms.com php and injects the user sesh, if it's
-    // missing, call shennanigans 
-    var sess = "session_" + phpsession;
-
-	db.get(sess, function (error, reply) {
-		if (error) {
-			return res.status(500).send(error.message);
-		}
-        
-        if (reply) {
-            
-            var realm_id = req.url.split('/')[2];
-            // TODO: implement 'access level' and check it here from redis response
-            // TODO: add time to redis with Date.now();
-            
-            next();
-            
-        } else {
-            console.log(req.url + " - Blank redis reply...");
-            return res.status(401).send("Please don't try to break things :/");
-        }
-		
-		
-		
-	});
 });
 
 app.get('/launch/:id', function (req, res, next) {
