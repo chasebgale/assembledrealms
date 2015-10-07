@@ -113,7 +113,7 @@ var Map = {
 			Map.stage.addChild(Map.mouse_sprite_highlight);
 			
 			// Map.renderer.plugins.interaction
-			
+			Map.setMode(Map.modes.MOVE);
 			
 			Map.invalidate = true;
 			requestAnimationFrame(Map.render);
