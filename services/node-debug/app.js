@@ -78,33 +78,6 @@ app.post('/auth/:id', function (req, res, next) {
             console.log("MULTI got " + replies.length + " replies");
 			return res.send('OK');
         });
-    
-    
-	/*
-	db.set(sess, user_id, function (error) {
-		if (error) {
-			console.error(error);
-			return res.status(500).send(error.message);
-		}
-        
-        db.expires(sess, 3600, function (error) {
-            
-        });
-        
-        db.set("user_" + user_id + "_rights", "1", function (error) {
-            if (error) {
-                console.error(error);
-                return res.status(500).send(error.message);
-            }
-            
-            console.log('Authorized [' + php_sess + ']';
-            return res.send('OK');
-            
-        });
-		
-	});
-    */
-    
 });
 
 // Serve up the realm files, when requested:
@@ -275,32 +248,14 @@ app.get('/realms/:id', function (req, res, next) {
 
 app.get('/launch/:id', function (req, res, next) {
 
-	/*
-    var auth = req.get('Authorization');
-
-    if (auth !== self_token) {
-        return res.status(401).send("Please don't try to break things :/");
-    }
-	*/
-	
-    console.log(req.url + " called");
+	console.log(req.url + " called");
 
 	var realmID     = req.params.id;
-	var realmApp    = '/var/www/realms/' + realmID + '/server/app.js';
+	var realmApp    = '/var/www/realms/realm-server.js';
     var realmErr    = '/var/www/logs/' + realmID + '-err.log';
     var realmOut    = '/var/www/logs/' + realmID + '-out.log';
     var found_proc  = [];
     var close_proc  = [];
-	
-	/*
-    var destination 	= req.body.destination; // 01, 02, XX, etc... inserted here: debug-XX.assembledrealms.com
-    var source  		= req.body.source;	    // 01, 02, XX, etc... inserted here: source-XX.assembledrealms.com
-	
-    if ((destination === undefined) || (source === undefined)) {
-        console.log("/launch called with missing body...");
-        return res.status(500).send("Please don't tinker...");
-    }
-	*/
     
     var pm2_launch = function (callback) {
         // Get all processes running
@@ -343,8 +298,8 @@ app.get('/launch/:id', function (req, res, next) {
                 fs.truncate(realmOut, 0, function(){
                     if (found_proc.length === 0) {
                         // No existing realm server running, spool up new one:
-                        // var options = { name: realmID, scriptArgs: ['debug'], error_file: realmErr, out_file: realmOut};
-                        var options = { name: realmID, scriptArgs: ['debug'], error_file: realmErr, out_file: realmOut};
+                        // scriptArgs: [realm_id, debug]
+                        var options = { name: realmID, scriptArgs: [realmID, 'true'], error_file: realmErr, out_file: realmOut};
                         
                         console.log("Starting app with the following options: " + JSON.stringify(options));
                         
@@ -380,31 +335,6 @@ app.get('/launch/:id', function (req, res, next) {
         
         return res.send('OK');
     });
-    
-    /*
-    request.post('http://source-' + source + '.assembledrealms.com/api/project/' + realmID + '/publish',
-				{ form: { address: 'debug-' + destination + '.assembledrealms.com', shared: true} },
-				function (error, response, body) {
-			
-		if (error) {
-			return res.status(500).send(error.stack);
-		}
-		
-		if (response.statusCode !== 200) {
-			return res.status(500).send(body);
-		}
-		
-		console.log("Got valid response, calling pm2_launch");
-		
-		pm2_launch(function (err) {
-			if (err) {
-				return res.status(500).send(err.stack);
-			}
-			
-			return res.send('OK');
-		});
-	});
-    */
 });
 
 

@@ -1,22 +1,13 @@
 var Engine = function () {
     
-/*
-Weak skelly born in crypt or something, must team up with other player skellys to destroy 
-difficult, lone, npc 'adventurers' exploring the dungeon, etc, fast pace
-
-enemies are sparse, think human dovakhins, must be taken down by multiple skellies, difficulty scales with skellies online
-*/
-
-    this.initialized    = false;
-    
-    this.stage          = undefined;
-    this.renderer       = undefined;
-    this.map            = undefined;
-    this.matrix         = undefined;
-    this.layer_terrain  = undefined;
-    this.layer_air      = undefined;
-    this.layer_text     = undefined;
-    this.text_input     = undefined;
+    this.stage;
+    this.renderer;
+    this.map;
+    this.matrix;
+    this.layer_terrain;
+    this.layer_air;
+    this.layer_text;
+    this.text_input;
     
     this.avatar     = new Avatar(this);
     this.terrain    = new Terrain(this);
@@ -24,6 +15,7 @@ enemies are sparse, think human dovakhins, must be taken down by multiple skelli
 
     this.position       = {x: 220, y: 220};
     this.alternator     = false;
+    this.initialized    = false;
     
     this.socket = io(HOST);
     
