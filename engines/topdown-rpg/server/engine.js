@@ -39,6 +39,13 @@ Engine.prototype.initialize = function (callback) {
   
   var self = this;
   
+  // TODO: Implement a 'readJSON' function outside of here so the user doesn't have access to 'fs' to read any file they want,
+  // 'readJSON' would be restricted to thier directory and would only read .json and return the parsed object
+  
+  // Perhaps first scan the engine file and remove any occurance of 'fs.' then append the engine.js file with 
+  //   var fs = require('fs');
+  //   function readJSON { fs. etc etc
+  
   fs.readFile(__dirname + '/../client/maps/town.json', function (err, data) {
     if (err) throw err;
     
