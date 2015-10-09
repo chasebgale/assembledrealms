@@ -17,6 +17,9 @@ var request			  = require('request');
 
 var self_token    = "1e4651af36b170acdec7ede7268cbd63b490a57b1ccd4d4ddd8837c8eff2ddb9";
 
+var MAX_CLIENTS_GLOBAL = 100;
+var MAX_CLIENTS_REALM  = 5; // 10 on play, 5 on debug, pass as params
+
 db.flushdb();
 
 app.use(function(req, res, next) {
@@ -30,9 +33,8 @@ app.use(function(req, res, next) {
   next();
 });
 
-app.use( bodyParser.json() );       // to support JSON-encoded bodies
-app.use( bodyParser.urlencoded() ); // to support URL-encoded bodies
-
+app.use(bodyParser.json());       // to support JSON-encoded bodies
+app.use(bodyParser.urlencoded()); // to support URL-encoded bodies
 app.use(cookieParser('Assembled Realms is a land without secrets...'));
 
 // Catch redis errors
@@ -134,15 +136,36 @@ app.use(function(req, res, next){
 
 app.get('/realms/:id', function httpGetRealm(req, res, next) {
 
-  var php_sess = req.cookies["PHPSESSID"];
+  var realm_key = "realm_" + req.params.id;
   
-  if (php_sess === undefined) {
-    // TODO: Redirect to assembled realms login
-    return res.status(401).send("Please don't try to break things :/");
-  }
-
-	var realm_key = "realm_" + req.params.id;
+  db.incr('total_clients', function redisGetGlobalClientCount(error, globalCount) {
+    if (error) {
+			return res.render('error', {message: "REDIS appears to be down or unresponsive..."});
+    }
+    
+    if (globalCount < MAX_CLIENTS_GLOBAL) {
+      db.get(realm_key + '_clients', function redisGetRealmClientCount(error, realmCount) {
+        if (error) {
+          return res.render('error', {message: "REDIS appears to be down or unresponsive..."});
+        }
+        
+        if (realmCount === null) {
+          // First user on this realm
+          realmCount = 0;
+        }
+        
+        if (realmCount < MAX_CLIENTS_REALM) {
+          // If we get to here, set queue = false on client response, allowing the client
+          // to connect to the realm's port
+        }
+      });
+    }
+    
+    // If we fall down to this line, set queue = true on client response so it displays the queue
+  });
 	
+  
+  // TODO: only do the below afterrrrr the above logic
 	db.hgetall(realm_key, function redisGetRealm(error, realm) {
 		
 		if (error) {
@@ -237,6 +260,8 @@ app.get('/launch/:id', function httpGetLaunch(req, res, next) {
             
             console.log("Starting app with the following options: " + JSON.stringify(options));
             
+            // TODO!!!! Check if the server has ~150 or so mb free before launching, if not,
+            // add this realm to the REALM QUEUE
             pm2.start(realmApp, options, function onPmStart(err, proc) {
                
               if (err) {
