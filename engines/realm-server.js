@@ -1,207 +1,209 @@
 require('app-module-path').addPath(__dirname);
-console.log(__dirname);
 
-var express 	= require('express');
+var express     = require('express');
 var cookieParse = require('cookie-parser');
-var app 		= express();
+var app         = express();
 var http        = require('http').Server(app);
-var io 			= require('socket.io')(http);
+var io          = require('socket.io')(http);
 var redis       = require('redis');
-var fs			= require('fs');
+var fs          = require('fs');
 var pm2         = require('pm2');
-var db     		= redis.createClient();
+var db          = redis.createClient();
 
 var realm_id    = process.argv[2];
-var debug 		= (process.argv[3] == 'true');
+var debug       = (process.argv[3] == 'true');
 
-var Engine 		= require(realm_id + '/server/engine');
+var Engine      = require(realm_id + '/server/engine');
 
 // Increment and assign the smallest ids to clients
 var counter = 0;
 var engine  = new Engine();
 
-engine.on('create', function (actors) {
-	io.emit('create', actors);
+engine.on('create', function engineCreate(actors) {
+  io.emit('create', actors);
 });
 
-engine.on('debug', function (message) {
-    io.to('debug').emit('debug', message);
+engine.on('debug', function engineDebug(message) {
+  io.to('debug').emit('debug', message);
 });
 
 app.use(function(req, res, next) {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
-    res.header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type');
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+  res.header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type');
 
-    if ('OPTIONS' == req.method) return res.send(200);
-    
-    next();
+  if ('OPTIONS' == req.method) return res.send(200);
+  
+  next();
 });
 
 app.use(cookieParse());
 
 // Catch redis errors
-db.on("error", function (err) {
+db.on("error", function redisError(err) {
     console.log("Error " + err);
 });
 
 // Sesh wall
 io.use(function(socket, next) {
-	
-	// Grab our PHP Sesh key, if it exists
-    var phpsession = '';
-    var cookies = "; " + socket.request.headers.cookie;
-    var parts = cookies.split("; PHPSESSID=");
+  
+  // Grab our PHP Sesh key, if it exists
+  var phpsession = '';
+  var cookies = "; " + socket.request.headers.cookie;
+  var parts = cookies.split("; PHPSESSID=");
+  
+  if (parts.length == 2) {
+    phpsession = "session_" + parts.pop().split(";").shift();
     
-    if (parts.length == 2) {
-        phpsession = "session_" + parts.pop().split(";").shift();
-		
-		// Grab the player object in redis for this user
-		db.get(phpsession, function(error, reply) {
-			if (reply !== null) {
-				
-				var key = "realm_" + realm_id + ":" + reply;
-				
-				// Set the content of the session object to the redis/cookie key
-				socket.request.session = {player_key: key};
-				
-				next();
-			}
-		});
-    }
+    // Grab the player object in redis for this user
+    db.get(phpsession, function redisGetSession(error, reply) {
+      if (reply !== null) {
+        
+        var key = "realm_" + realm_id + ":" + reply;
+        
+        // Set the content of the session object to the redis/cookie key
+        socket.request.session = {player_key: key};
+        
+        next();
+      }
+    });
+  }
 
-	next(new Error('not authorized'));
+  next(new Error('not authorized'));
   
 });
 
 
-io.on('connection', function (socket) {
-	
-	// Retrieve the key set earlier
-	var player_key = socket.request.session.player_key;
-	var player;
-	
-	var enterGame = function () {
-		db.get(player_key, function(error, data) {
-			
-			player = data;
-			
-			if (player === null) {
-				
-				counter++;
-				player = engine.createPlayer();
-				player.id = counter;
-				
-				db.set(player_key, JSON.stringify(player), function (error) {
-				
-					if (error) {
-						console.error(error);
-					}
-					
-				});
-			} else {
-				player = JSON.parse(player);
-			}
-			
-			engine.addPlayer(player);
-			
-			var data = {};
-			data.players = {};
-			data.players[player.id] = player;
-			
-			// Tell other clients this client has connected
-			socket.broadcast.emit('create', data);
-			
-			socket.on('ready', function (data) {
-				// Send initial data with all npc/pc locations, stats, etc
-				var data        = {};
-				data.player     = player;
-				data.players    = engine.players();
-				data.npcs       = engine.npcs();
-				
-				socket.emit('sync', data);
-			});
-			
-			// Wire up events:
-			socket.on('move', function (data) {
-				// Update position in memory:
-				player.position.x = data.position.x;
-				player.position.y = data.position.y;
-				
-				player.direction = data.direction;
-				
-				// TODO: Validate player move here
-				
-				// Broadcast change:
-				//socket.broadcast.emit('move', {id: player.id, position: player.position, direction: player.direction});
-				engine.addBroadcast(player);
-				
-				// Store change:
-				// TODO: Do this only when we ping the full player position, so we send updates that look like amount:direction, so small, like 1:3 insted of {x: 12800.22, y: 200.1},
-				// however, every <interval> we should send the full player position in case the client is out of sync, maybe every second or so
-				/*
-				db.set(socket.request.session.key, JSON.stringify(player), function (error) {
-					
-					if (error) {
-						console.error(error);
-					}
-					
-				});
-				*/
-			});
-			
-			socket.on('attack', function () {
-				
-				engine.attack(player);
-				
-			});
-			
-			socket.on('text', function (data) {
-				io.emit('text', {id: player.id, blurb: data});
-			});
-			
-			socket.on('join_debug', function (data) {
-				socket.join('debug');
-			});
-			
-			socket.on('leave_debug', function (data) {
-				socket.leave('debug');
-			});
-			
-			socket.on('disconnect', function () {
-				engine.removePlayer(player);
-			});
-			
-		});
-	}
-	
-	enterGame();
-	
-	/*
-	// TODO: Have two different queue methods, one more traditional where only
-	// 10 or so players can be online at one time. When a player disconnects, the first 
-	// person in the queue is allowed to enter; alternatively, implement a second method
-	// where users queue and when a player dies, they enter the queue at the end and the 
-	// first person in queue enters until they die...
-	if (io.sockets.sockets.length > 1) {
-		// Enter queue
-	} else {
-		enterGame();
-	}
-	*/
+io.on('connection', function socketConnected(socket) {
+  
+  // Retrieve the key set earlier
+  var player_key = socket.request.session.player_key;
+  var player;
+  
+  var enterGame = function () {
     
-});	
+    // First, check total_clients < MAX_GLOBAL_CLIENTS in redis
+    // Second, check realm_{ID}_clients < MAX_REALM_CLIENTS in redis
+    // THEN:
+    db.get(player_key, function redisGetPlayer(error, data) {
+      
+      player = data;
+      if (player === null) {
+        
+        counter++;
+        player = engine.createPlayer();
+        player.id = counter;
+        
+        db.set(player_key, JSON.stringify(player), function redisSetPlayer(error) {
+        
+          if (error) {
+            console.error(error);
+          }
+          
+        });
+      } else {
+        player = JSON.parse(player);
+      }
+      
+      engine.addPlayer(player);
+      
+      var data = {};
+      data.players = {};
+      data.players[player.id] = player;
+      
+      // Tell other clients this client has connected
+      socket.broadcast.emit('create', data);
+      
+      socket.on('ready', function (data) {
+        // Send initial data with all npc/pc locations, stats, etc
+        var data        = {};
+        data.player     = player;
+        data.players    = engine.players();
+        data.npcs       = engine.npcs();
+        
+        socket.emit('sync', data);
+      });
+      
+      // Wire up events:
+      socket.on('move', function (data) {
+        // Update position in memory:
+        player.position.x = data.position.x;
+        player.position.y = data.position.y;
+        
+        player.direction = data.direction;
+        
+        // TODO: Validate player move here
+        
+        // Broadcast change:
+        //socket.broadcast.emit('move', {id: player.id, position: player.position, direction: player.direction});
+        engine.addBroadcast(player);
+        
+        // Store change:
+        // TODO: Do this only when we ping the full player position, so we send updates that look like amount:direction, so small, like 1:3 insted of {x: 12800.22, y: 200.1},
+        // however, every <interval> we should send the full player position in case the client is out of sync, maybe every second or so
+        /*
+        db.set(socket.request.session.key, JSON.stringify(player), function (error) {
+          
+          if (error) {
+            console.error(error);
+          }
+          
+        });
+        */
+      });
+      
+      socket.on('attack', function () {
+        
+        engine.attack(player);
+        
+      });
+      
+      socket.on('text', function (data) {
+        io.emit('text', {id: player.id, blurb: data});
+      });
+      
+      socket.on('join_debug', function (data) {
+        socket.join('debug');
+      });
+      
+      socket.on('leave_debug', function (data) {
+        socket.leave('debug');
+      });
+      
+      socket.on('disconnect', function () {
+        engine.removePlayer(player);
+      });
+      
+    });
+  }
+  
+  enterGame();
+  
+  /*
+  // TODO: Have two different queue methods, one more traditional where only
+  // 10 or so players can be online at one time. When a player disconnects, the first 
+  // person in the queue is allowed to enter; alternatively, implement a second method
+  // where users queue and when a player dies, they enter the queue at the end and the 
+  // first person in queue enters until they die...
+  if (io.sockets.sockets.length > 1) {
+    // Enter queue
+  } else {
+    enterGame();
+  }
+  */
+    
+}); 
 
 app.get('/stats', function(req, res, next) {
-	return res.send(io.sockets.sockets.length);
+  return res.send(io.sockets.sockets.length);
 });
 
 engine.initialize();
 
 // 16ms is 60fps, updating at half that
 var worldLoop = setInterval(function () {
-	
-	engine.tick();
+  
+  engine.tick();
     
     var broadcast = engine.broadcast();
     
@@ -211,8 +213,8 @@ var worldLoop = setInterval(function () {
         io.emit('update', broadcast);
         
     }
-	
-	engine.broadcastComplete();
+  
+  engine.broadcastComplete();
     
     
     
@@ -233,7 +235,7 @@ if (debug) {
 }
 
 pm2.connect(function(err) {
-	
+  
     if (err) {
         console.log(err.message);
     } else {

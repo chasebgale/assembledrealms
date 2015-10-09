@@ -6,7 +6,6 @@ var moment 		    = require('moment');
 var pm2             = require('pm2');
 var walk            = require('walk');
 var path            = require('path');
-var querystring     = require('querystring');
 var redis 			= require('redis');
 var http 			= require('http');
 var fs              = require('fs');
