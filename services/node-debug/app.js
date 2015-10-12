@@ -18,13 +18,12 @@ var request			  = require('request');
 var SECURITY_TOKEN     = process.env.SECURITY_TOKEN;
 var MAX_CLIENTS_GLOBAL = parseInt(process.env.MAX_CLIENTS_GLOBAL);
 var MAX_CLIENTS_REALM  = parseInt(process.env.MAX_CLIENTS_REALM);
-
 var SESSION_LIST       = "sessions";              // Sessions added via /auth allowing access
 var SESSION_MAP        = "session_to_user_map";   // Sessions mapped to user_id via ZSCORE
 var ACTIVE_SESSIONS    = "sessions_active";       // Sessions actually connected via SOCKET
 var QUEUE              = "queue";
 
-
+// TODO: Don't flush the DB on restart in production...
 db.flushdb();
 
 app.use(function(req, res, next) {
