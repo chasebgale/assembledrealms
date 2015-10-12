@@ -15,9 +15,9 @@ var server			  = http.Server(app);
 var io 				    = require('socket.io')(server);
 var request			  = require('request');
 
-var SELF_TOKEN         = process.argv[2];
-var MAX_CLIENTS_GLOBAL = parseInt(process.argv[3]);
-var MAX_CLIENTS_REALM  = parseInt(process.argv[4]); // 10 on play, 5 on debug, pass as params
+var SECURITY_TOKEN     = process.env.SECURITY_TOKEN;
+var MAX_CLIENTS_GLOBAL = parseInt(process.env.MAX_CLIENTS_GLOBAL);
+var MAX_CLIENTS_REALM  = parseInt(process.env.MAX_CLIENTS_REALM);
 
 var SESSION_LIST       = "sessions";              // Sessions added via /auth allowing access
 var SESSION_MAP        = "session_to_user_map";   // Sessions mapped to user_id via ZSCORE
@@ -52,7 +52,7 @@ app.set('view engine', 'ejs'); // set up EJS for templating
 app.post('/auth/:id', function httpPostAuth(req, res, next) {
   var auth = req.get('Authorization');
 
-  if (auth !== SELF_TOKEN) {
+  if (auth !== SECURITY_TOKEN) {
     console.log('/api/auth - Bad auth token');
     return res.status(401).send("Please don't try to break things :/");
   }
@@ -93,7 +93,7 @@ app.use(function(req, res, next){
 
   // Is this a server-to-server request?
   var auth = req.get('Authorization');
-  if (auth === SELF_TOKEN) {
+  if (auth === SECURITY_TOKEN) {
     // If the request is authorized, skip further checks:
     return next();
   }
