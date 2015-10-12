@@ -15,6 +15,8 @@ var debug       = (process.argv[3] == 'true');
 
 var Engine      = require(realm_id + '/server/engine');
 
+var SESSION_MAP = "session_to_user_map";
+
 // Increment and assign the smallest ids to clients
 var counter = 0;
 var engine  = new Engine();
@@ -53,10 +55,10 @@ io.use(function(socket, next) {
   var parts = cookies.split("; PHPSESSID=");
   
   if (parts.length == 2) {
-    phpsession = "session_" + parts.pop().split(";").shift();
+    phpsession = parts.pop().split(";").shift();
     
     // Grab the player object in redis for this user
-    db.get(phpsession, function redisGetSession(error, reply) {
+    db.zscore([SESSION_MAP, phpsession], function redisGetUserID(error, reply) {
       if (reply !== null) {
         
         var key = "realm_" + realm_id + ":" + reply;

@@ -52,7 +52,7 @@ app.post('/auth/:id', function httpPostAuth(req, res, next) {
   var auth = req.get('Authorization');
 
   if (auth !== SECURITY_TOKEN) {
-    console.log('/api/auth - Bad auth token');
+    console.log('/api/auth - Bad auth token - ' + SECURITY_TOKEN);
     return res.status(401).send("Please don't try to break things :/");
   }
   
@@ -90,14 +90,6 @@ app.use('/realms', express.static(__dirname + '/realms'));
 // PHP-session/auth wall
 app.use(function(req, res, next){
 
-  // Is this a server-to-server request?
-  var auth = req.get('Authorization');
-  if (auth === SECURITY_TOKEN) {
-    // If the request is authorized, skip further checks:
-    return next();
-  }
-
-  // Looks like we have a request from a user
   var phpsession  = req.cookies["PHPSESSID"];
   
   // Are we missing an assembledrealms.com sesh?
@@ -115,6 +107,8 @@ app.use(function(req, res, next){
 		}
         
     if (reply) {
+      
+      req.user_id = reply;
       
       // Authorized
       next();
@@ -234,6 +228,8 @@ app.use(function(req, res, next){
   var realm   	= "realm_" + realm_id + "_access";
   var user_id   = req.user_id;
   
+  console.log("checking " + realm + " for user: " + user_id);
+  
   db.zscore([realm, user_id], function redisGetPermission(error, reply) {
     if (error) {
       console.error(error);
@@ -257,7 +253,7 @@ app.get('/launch/:id', function httpGetLaunch(req, res, next) {
   var realmErr    = '/var/www/logs/' + realmID + '-err.log';
   var realmOut    = '/var/www/logs/' + realmID + '-out.log';
   var found_proc  = [];
-  var close_proc  = [];
+//  var close_proc  = [];
     
   var realmLaunch = function (callback) {
     // Get all processes running
@@ -269,7 +265,8 @@ app.get('/launch/:id', function httpGetLaunch(req, res, next) {
           found_proc.push(proc);
           return;
         }
-          
+ 
+/* 
         db.get(realmID + "_clients",  function redisGetClients(error, reply) {
           if (error) {
               return;
@@ -281,8 +278,10 @@ app.get('/launch/:id', function httpGetLaunch(req, res, next) {
               close_proc.push(proc);
           }
         });
+*/
       });
           
+/*
       close_proc.forEach(function(proc) {
         pm2.stop(proc, function onPmStop(err, proc) {
           if (err) {
@@ -290,6 +289,7 @@ app.get('/launch/:id', function httpGetLaunch(req, res, next) {
           }                   
         });
       });
+*/
           
       fs.truncate(realmErr, 0, function onTruncateErrorLog(){
         fs.truncate(realmOut, 0, function onTruncateOutLog(){
@@ -334,6 +334,7 @@ app.get('/launch/:id', function httpGetLaunch(req, res, next) {
   
   realmLaunch(function (err) {
     if (err) {
+      console.error(err);
       return res.status(500).send(err.stack);
     }
     return res.send('OK');
