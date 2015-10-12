@@ -22,6 +22,7 @@ var SESSION_LIST       = "sessions";              // Sessions added via /auth al
 var SESSION_MAP        = "session_to_user_map";   // Sessions mapped to user_id via ZSCORE
 var ACTIVE_SESSIONS    = "sessions_active";       // Sessions actually connected via SOCKET
 var QUEUE              = "queue";
+var QUEUE_LOOKUP       = "queue_lookup";          // Quickly determine if user is in queue
 
 // TODO: Don't flush the DB on restart in production...
 db.flushdb();
@@ -88,7 +89,7 @@ app.post('/auth/:id', function httpPostAuth(req, res, next) {
 app.use('/realms', express.static(__dirname + '/realms'));
 
 // PHP-session/auth wall
-app.use(function(req, res, next){
+app.use(function(req, res, next) {
 
   var phpsession  = req.cookies["PHPSESSID"];
   
@@ -101,7 +102,8 @@ app.use(function(req, res, next){
   // /api/auth gets called by assembledrealms.com php and injects the user sesh, if it's
   // missing, call shennanigans 
 	db.zscore([SESSION_MAP, phpsession], function redisGetUserID(error, reply) {
-		if (error) {
+		
+    if (error) {
 			console.error(error);
 			return res.status(500).send(error.message);
 		}
@@ -109,84 +111,102 @@ app.use(function(req, res, next){
     if (reply) {
       
       req.user_id = reply;
+      var now     = Date.now();
       
-      // Authorized
-      next();
+      db.zadd([SESSION_LIST, now, phpsession], function redisUpdateSessionTime(error, reply) {
+        // Authorized
+        next();
+      });
       
     } else {
       console.log(req.url + " - Blank redis reply...");
       return res.status(401).send("Please don't try to break things :/");
     }
+    
 	});
 });
 
 app.get('/realms/:id', function httpGetRealm(req, res, next) {
 
-  var realm_key = "realm_" + req.params.id;
+  var realmKey = "realm_" + req.params.id;
+  var userID   = req.user_id;
   
-  db.llen(ACTIVE_SESSIONS, function redisGetActiveCount(error, activeCount) {
-    if (error) {
-			return res.render('error', {message: "REDIS appears to be down or unresponsive..."});
-    }
-    
-    if (activeCount < MAX_CLIENTS_GLOBAL) {
-      db.get(realm_key + '_clients', function redisGetRealmClientCount(error, realmUserCount) {
-        if (error) {
-          return res.render('error', {message: "REDIS appears to be down or unresponsive..."});
-        }
-        
-        if (realmUserCount === null) {
-          // First user on this realm
-          realmUserCount = 0;
-        }
-        
-        if (realmUserCount < MAX_CLIENTS_REALM) {
-          // If we get to here, set queue = false on client response, allowing the client
-          // to connect to the realm's port
-        }
-      });
-    }
-    
-    // If we fall down to this line, set queue = true on client response so it displays the queue
-  });
-	
-  
-  // TODO: only do the below afterrrrr the above logic
-	db.hgetall(realm_key, function redisGetRealm(error, realm) {
-		
-		if (error) {
-			return res.render('error', {message: "REDIS appears to be down or unresponsive..."});
-    }
-		
-		if (realm == null) {
-      return res.render('error', {message: "REDIS has no knowledge of this realm..."});
-    }
-    
-    var scripts  = [];
-    var port     = realm.port.toString().replace(/(\r\n|\n|\r)/gm,"");
-
-    // For now, grab all the required libs each time we prep the view, in the future,
-    // do this once when '/launch' is called and store the array in redis...
-    var walker  = walk.walk('./realms/' + req.params.id + '/client/', { followLinks: false });
-
-    walker.on('file', function onWalkerFile(root, stat, next) {
-      if (path.extname(stat.name) == '.js') {
-          // Add this file to the list of files
-          console.log("root: " + root + " , stat.name: " + stat.name);
-          scripts.push("/" + path.join(root, stat.name));
+  var queueUser = function (callback) {
+    // First, is the user already in the queue? (user refreshed browser, etc)
+    db.sismember([QUEUE_LOOKUP, userID], function redisCheckQueue(error, found) {
+      if (found === null) {
+        // Not in the queue
+        db.multi()
+          .llen(ACTIVE_SESSIONS)        // Total active sessions across realms and queue
+          .get(realmKey + '_clients')   // Total sessions active on requested realm
+          .exec(function (err, replies) {
+            if (err) {
+              console.error(err);
+              return res.status(500).send(err.message);
+            }
+            if ((parseInt(replies[0]) >= MAX_CLIENTS_GLOBAL) || (parseInt(replies[1]) >= MAX_CLIENTS_REALM)) {
+              
+              db.multi()
+                .sadd([QUEUE_LOOKUP, userID])
+                .rpush([QUEUE, userID])
+                .exec(function (err, replies) {
+                  // Successfully added to queue
+                  return callback(true);
+                });
+              
+            } else {
+              // No need for queue
+              return callback(false);
+            }
+          });
+      } else {
+        // Already queued
+        return callback(true);
       }
-      next();
     });
+  };
+	
+  queueUser(function(queued) {
+    db.hgetall(realmKey, function redisGetRealm(error, realm) {
+		
+      if (error) {
+        return res.render('error', {message: "REDIS appears to be down or unresponsive..."});
+      }
+      
+      if (realm == null) {
+        return res.render('error', {message: "REDIS has no knowledge of this realm..."});
+      }
+      
+      var scripts  = [];
+      var port     = realm.port.toString().replace(/(\r\n|\n|\r)/gm,"");
 
-    walker.on('end', function onWalkerEnd() {
-      res.render('realm', {
-        id: req.params.id,
-        host: req.headers.host,
-        port: port,
-        scripts: scripts
+      // For now, grab all the required libs each time we prep the view, in the future,
+      // do this once when '/launch' is called and store the array in redis...
+      var walker  = walk.walk('./realms/' + req.params.id + '/client/', { followLinks: false });
+
+      walker.on('file', function onWalkerFile(root, stat, next) {
+        if (path.extname(stat.name) == '.js') {
+            // Add this file to the list of files
+            console.log("root: " + root + " , stat.name: " + stat.name);
+            scripts.push("/" + path.join(root, stat.name));
+        }
+        next();
       });
+
+      walker.on('end', function onWalkerEnd() {
+        res.render('realm', {
+          id: req.params.id,
+          host: req.headers.host,
+          port: port,
+          scripts: scripts,
+          queue: queued
+        });
+      });
+      
     });
   });
+  
+	
 });
 
 // Sesh wall for sockets
@@ -341,7 +361,17 @@ app.get('/launch/:id', function httpGetLaunch(req, res, next) {
   });
 });
 
-
+var tickTock = setInterval(function () {
+  var expired = Date.now() - 1800000; // 1.8 million milliseconds = 30 minutes
+  
+  db.zrange([SESSION_LIST, 0, expired], function redisGetExpiredSessions(error, replies) {
+    console.log("Expired sessions: " + JSON.stringify(replies));
+    // TODO: Loop through replies, killing the SESSION_MAP entry for the session as well, then
+    // calling zremrangebyscore
+  });
+  
+  //db.zremrangebyscore(
+}, 30000);
 
 pm2.connect(function(err) {
 	
