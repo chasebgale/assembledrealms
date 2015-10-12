@@ -15,10 +15,15 @@ var server			  = http.Server(app);
 var io 				    = require('socket.io')(server);
 var request			  = require('request');
 
-var self_token    = "1e4651af36b170acdec7ede7268cbd63b490a57b1ccd4d4ddd8837c8eff2ddb9";
+var SELF_TOKEN         = process.argv[2];
+var MAX_CLIENTS_GLOBAL = parseInt(process.argv[3]);
+var MAX_CLIENTS_REALM  = parseInt(process.argv[4]); // 10 on play, 5 on debug, pass as params
 
-var MAX_CLIENTS_GLOBAL = 100;
-var MAX_CLIENTS_REALM  = 5; // 10 on play, 5 on debug, pass as params
+var SESSION_LIST       = "sessions";              // Sessions added via /auth allowing access
+var SESSION_MAP        = "session_to_user_map";   // Sessions mapped to user_id via ZSCORE
+var ACTIVE_SESSIONS    = "sessions_active";       // Sessions actually connected via SOCKET
+var QUEUE              = "queue";
+
 
 db.flushdb();
 
@@ -47,7 +52,7 @@ app.set('view engine', 'ejs'); // set up EJS for templating
 app.post('/auth/:id', function httpPostAuth(req, res, next) {
   var auth = req.get('Authorization');
 
-  if (auth !== self_token) {
+  if (auth !== SELF_TOKEN) {
     console.log('/api/auth - Bad auth token');
     return res.status(401).send("Please don't try to break things :/");
   }
@@ -61,15 +66,15 @@ app.post('/auth/:id', function httpPostAuth(req, res, next) {
     console.log('/api/auth - Missing params: ' + JSON.stringify(req.body));
     return res.status(500).send("Missing parameters, bruh.");
   }
-  
-	var sess      = "session_" + php_sess;
+
   var realm     = "realm_" + realm_id + "_access";
   var privilege = (owner == true) ? 1 : 0;
+  var now       = Date.now();
   
   db.multi()
-    .set(sess, user_id)     	           // Set session key to point to the user
-    .expire(sess, 3600)    		           // Expire the session key after an hour
-    .zadd([realm, privilege, user_id]) 	 // Add the user as an owner (1 = privileged)
+    .zadd([SESSION_LIST, now, php_sess])     	   // Set session key and activity time for it
+    .zadd([SESSION_MAP, user_id, php_sess])      // Map session key to user id
+    .zadd([realm, privilege, user_id]) 	         // Add the user permission (1 = privileged)
     .exec(function (err, replies) {
       if (err) {
         console.error(err);
@@ -88,7 +93,7 @@ app.use(function(req, res, next){
 
   // Is this a server-to-server request?
   var auth = req.get('Authorization');
-  if (auth === self_token) {
+  if (auth === SELF_TOKEN) {
     // If the request is authorized, skip further checks:
     return next();
   }
@@ -104,29 +109,17 @@ app.use(function(req, res, next){
   
   // /api/auth gets called by assembledrealms.com php and injects the user sesh, if it's
   // missing, call shennanigans 
-  var sess = "session_" + phpsession;
-
-	db.get(sess, function redisGetSession(error, reply) {
+	db.zscore([SESSION_MAP, phpsession], function redisGetUserID(error, reply) {
 		if (error) {
 			console.error(error);
 			return res.status(500).send(error.message);
 		}
         
     if (reply) {
-      var realm_id 	= req.url.split('/')[2];
-			var realm   	= "realm_" + realm_id + "_access";
-			
-			db.zscore([realm, reply], function redisGetPermission(error, reply) {
-				if (error) {
-					console.error(error);
-					return res.status(500).send(error.message);
-				}
-				console.log("owner: " + reply);
-				req.owner = (reply == "1") ? true : false;				
-			});
-            
+      
+      // Authorized
       next();
-            
+      
     } else {
       console.log(req.url + " - Blank redis reply...");
       return res.status(401).send("Please don't try to break things :/");
@@ -138,23 +131,23 @@ app.get('/realms/:id', function httpGetRealm(req, res, next) {
 
   var realm_key = "realm_" + req.params.id;
   
-  db.incr('total_clients', function redisGetGlobalClientCount(error, globalCount) {
+  db.llen(ACTIVE_SESSIONS, function redisGetActiveCount(error, activeCount) {
     if (error) {
 			return res.render('error', {message: "REDIS appears to be down or unresponsive..."});
     }
     
-    if (globalCount < MAX_CLIENTS_GLOBAL) {
-      db.get(realm_key + '_clients', function redisGetRealmClientCount(error, realmCount) {
+    if (activeCount < MAX_CLIENTS_GLOBAL) {
+      db.get(realm_key + '_clients', function redisGetRealmClientCount(error, realmUserCount) {
         if (error) {
           return res.render('error', {message: "REDIS appears to be down or unresponsive..."});
         }
         
-        if (realmCount === null) {
+        if (realmUserCount === null) {
           // First user on this realm
-          realmCount = 0;
+          realmUserCount = 0;
         }
         
-        if (realmCount < MAX_CLIENTS_REALM) {
+        if (realmUserCount < MAX_CLIENTS_REALM) {
           // If we get to here, set queue = false on client response, allowing the client
           // to connect to the realm's port
         }
@@ -200,6 +193,59 @@ app.get('/realms/:id', function httpGetRealm(req, res, next) {
         scripts: scripts
       });
     });
+  });
+});
+
+// Sesh wall for sockets
+io.use(function(socket, next) {
+  
+  // Grab our PHP Sesh key, if it exists
+  var phpsession = '';
+  var cookies = "; " + socket.request.headers.cookie;
+  var parts = cookies.split("; PHPSESSID=");
+  
+  if (parts.length == 2) {
+    phpsession = parts.pop().split(";").shift();
+    
+    // Grab the player id associated with this session
+    db.zscore([SESSION_MAP, phpsession], function redisGetSession(error, reply) {
+      if (reply !== null) {
+
+        // Set the content of the session object to the redis/cookie key
+        socket.request.user_id = reply;
+        
+        return next();
+      }
+    });
+  }
+
+  return next(new Error('not authorized'));
+  
+});
+
+io.on('connection', function socketConnected(socket) {
+  socket.on('stats', function () {
+    socket.emit('stats', '');
+  });
+});
+
+// ADMIN session/auth wall
+app.use(function(req, res, next){
+  var realm_id 	= req.url.split('/')[2];
+  var realm   	= "realm_" + realm_id + "_access";
+  var user_id   = req.user_id;
+  
+  db.zscore([realm, user_id], function redisGetPermission(error, reply) {
+    if (error) {
+      console.error(error);
+      return res.status(500).send(error.message);
+    }
+    console.log("owner: " + reply);
+    if (reply == "1") {
+      next();
+    } else {
+      return res.status(401).send("Please don't try to break things :/");
+    }
   });
 });
 
