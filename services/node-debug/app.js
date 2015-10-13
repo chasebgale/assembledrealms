@@ -23,7 +23,7 @@ var SESSION_LIST       = "sessions";              // Sessions added via /auth al
 var SESSION_MAP        = "session_to_user_map";   // Sessions mapped to user_id via ZSCORE
 var ACTIVE_SESSIONS    = "sessions_active";       // Sessions actually connected via SOCKET
 var QUEUE              = "queue";
-var QUEUE_LOOKUP       = "queue_lookup";          // Quickly determine if user is in queue
+var QUEUE_LOOKUP       = "queue_lookup";          // Quickly determine if user is in queue and for what realm...
 
 // TODO: Don't flush the DB on restart in production...
 db.flushdb();
@@ -129,17 +129,18 @@ app.use(function(req, res, next) {
 
 app.get('/realms/:id', function httpGetRealm(req, res, next) {
 
-  var realmKey = "realm_" + req.params.id;
   var userID   = req.user_id;
+  var realmID  = req.params.id;
+  var realmKey = "realm_" + realmID;
   
   var queueUser = function (callback) {
     // First, is the user already in the queue? (user refreshed browser, etc)
-    db.sismember([QUEUE_LOOKUP, userID], function redisCheckQueue(error, found) {
-      if (found === null) {
+    db.zscore([QUEUE_LOOKUP, userID], function redisCheckQueue(error, queueRealmID) {
+      if (queueRealmID === null) {
         // Not in the queue
         db.multi()
-          .llen(ACTIVE_SESSIONS)        // Total active sessions across realms and queue
-          .get(realmKey + '_clients')   // Total sessions active on requested realm
+          .zcard(ACTIVE_SESSIONS) // Total active sessions across realms and queue
+          .zlexcount([ACTIVE_SESSIONS, realmID, realmID]) // Sessions on requested realm
           .exec(function (err, replies) {
             if (err) {
               console.error(err);
@@ -148,7 +149,7 @@ app.get('/realms/:id', function httpGetRealm(req, res, next) {
             if ((parseInt(replies[0]) >= MAX_CLIENTS_GLOBAL) || (parseInt(replies[1]) >= MAX_CLIENTS_REALM)) {
               
               db.multi()
-                .sadd([QUEUE_LOOKUP, userID])
+                .zadd([QUEUE_LOOKUP, realmID, userID])
                 .rpush([QUEUE, userID])
                 .exec(function (err, replies) {
                   // Successfully added to queue
