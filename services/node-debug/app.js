@@ -11,6 +11,7 @@ var http 			    = require('http');
 var fs            = require('fs');
 var uuid 			    = require('node-uuid');
 var db 	          = redis.createClient();
+var dbSubscriber  = redis.createClient();
 var server			  = http.Server(app);
 var io 				    = require('socket.io')(server);
 var request			  = require('request');
@@ -209,6 +210,16 @@ app.get('/realms/:id', function httpGetRealm(req, res, next) {
 	
 });
 
+dbSubscriber.on('message', function (channel, message) {
+  if (channel === 'realm_notifications') {
+    var action = JSON.parse(message);
+    if (action.type === 'user_disconnected') {
+      // TODO: If a user is queued to join this realm, alert him/her
+      // via the socket they are on
+    }
+  }
+});
+
 // Sesh wall for sockets
 io.use(function(socket, next) {
   
@@ -382,6 +393,7 @@ pm2.connect(function(err) {
 	// Hey!! Listen!
 	server.listen(3000, function onServerListen(){
 	  console.log("Express server listening on port 3000, request to port 80 are redirected to 3000 by Fedora.");
+    dbSubscriber.subscribe('realm_notifications');
 	});
 	
 });
