@@ -6,7 +6,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 
 ?>
 
-<div id='content'>
+<div id='content' style='padding-top: 60px;'>
 
     <img src="/img/underconstruction.gif" class="center-block" />
     <br />

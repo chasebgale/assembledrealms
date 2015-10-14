@@ -31,10 +31,10 @@
     </script>
 	
 	<div id="footer_msg" class="panel panel-danger" style="display: none;">
-		<div class="panel-heading"><span class="glyphicon glyphicon-exclamation-sign"></span> We need your help!</div>
+		<div class="panel-heading"><span class="glyphicon glyphicon-exclamation-sign"></span> I need your help!</div>
 		<div class="panel-body">
-			<h3>If you enjoy this service, please white-list us in your ad-blocking plug-in!</h3>
-			<p class="text-justify">Ads put food on the table! A developer with a full belly is a happy developer. Happy developers continue to write code and improve services! If an ad offended or irritated you, or if you have a suggestion, please feel free to send it over: <a href="mailto:outreach@assembledrealms.com">outreach@assembledrealms.com</a></p>
+			<h3>If you enjoy this site, please white-list it in your ad-blocking plug-in!</h3>
+			<p class="text-justify">This is a <a href="http://www.assembledrealms.com/user/id/1">one-man</a> operation. I am self-funding with my normal 9-5 gig. I am busting my hump trying to make everything run smoothly. A little extra cash from advertising would be awesome. If an ad offended or irritated you, or if you have a suggestion, please feel free to send it over to me directly: <a href="mailto:chase@assembledrealms.com">chase@assembledrealms.com</a> <a href="https://twitter.com/chasebgale">@chasebgale</a></p>
 		</div>
 	</div>
 </div>
