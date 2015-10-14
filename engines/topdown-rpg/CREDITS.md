@@ -1,7 +1,7 @@
 A massive **thank you** to everyone who has contributed directly or indirectly to this project! If you contributed to any entry below and  
 don't see your name listed or want an attribution updated, please contact me directly: [chase@assembledrealms.com](mailto:chase@assembledrealms.com) [@chasebgale](https://twitter.com/chasebgale)  
-**You deserve the credit.**  
-
+#### **You deserve the credit.**
+---
 Actor Sprites
 --------
 http://opengameart.org/content/lpc-medieval-fantasy-character-sprites  
@@ -40,6 +40,24 @@ express   - http://expressjs.com
 PM2 - http://pm2.keymetrics.io  
 node_redis - https://github.com/NodeRedis/node_redis  
 moment - http://momentjs.com  
+
+Browser Libraries
+--------
+pixi.js - super fast HTML5 2D rendering  
+http://www.pixijs.com/  
+
+marked - a markdown parser  
+Copyright (c) 2011-2014, Christopher Jeffrey.  
+https://github.com/chjj/marked  
+
+stats - a javascript performance monitor  
+https://github.com/mrdoob/stats.js  
+
+JQuery  
+https://jquery.com/  
+
+lodash  
+https://lodash.com/  
 
 Redis
 --------

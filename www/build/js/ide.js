@@ -5,6 +5,7 @@ var __projectId;
 var __projectURL;
 var __checkInMsg;
 var __trackedStorageId;
+var __map;
 var __processingFiles   = [];
 var __trackedFiles      = [];
 var __commitFiles       = [];
@@ -72,7 +73,7 @@ function initialize(projectID, projectDomain) {
 		if ($(this).attr('href') == "#markdown") {
 			$("#markdown").html(marked(__editor.getValue()));
 		} else if ($(this).attr('href') == "#editor") {
-			__editor.renderer.updateFull()
+			__editor.renderer.updateFull();
 		}
 		
 		// show tab
@@ -344,13 +345,6 @@ function initialize(projectID, projectDomain) {
     });
     
     //$("#mapToolbar [data-toggle='tooltip']").tooltip();
-    
-    Map.onResourceLoaded = function (json, source) {
-        var template = $('#resource_template').html();
-        var target = $('#' + json.meta.category);
-        
-        target.append(_.template(template, { model: json, source: source }));
-    };
 
     loadRealmRoot();
 	
@@ -704,6 +698,11 @@ function isImageFile(name) {
 
 var __editSessions = {};
 
+function render() {
+  __map.render();
+  requestAnimationFrame(render);
+}
+
 function loadEditor(filename, content, displayRendered) {
 
     __editor.off("change", editor_onChange);
@@ -738,26 +737,35 @@ function loadEditor(filename, content, displayRendered) {
                 
                 // TODO: This is a horrible, horrible test for 'are we looking at a map?'
                 if (parsed.terrain) {
-                    Map.init("mapContainer", parsed);
-                    Map.save = function () {
-                        var worker = {};
-                        worker.settings = Map.settings;
-                        worker.terrain = Map.terrain;
-                        worker.objects = Map.objects;
-                        worker.actors = Map.actors;
+                  __map = new Map(document.getElementById("mapContainer"), document.getElementById("mapToolbar"), parsed);
+                  __map.onInitialized = function () {
+                    render();
+                  };
+                  __map.onResourceLoaded = function (json, source) {
+                    var template = $('#resource_template').html();
+                    var target = $('#' + json.meta.category);
 
-                        sessionStorage[__fileId] = JSON.stringify(worker);
-                        
-                        // Format the JSON so a human can read it:
-                        content = JSON.stringify(parsed, function(key, value) { 
-                            if (key === "index") { 
-                                return '(tile locations ommitted for readability)'; 
-                            } else { 
-                                return value; 
-                            } 
-                        }, '\t');
-                        
-                        __editor.setValue(content);
+                    target.append(_.template(template, { model: json, source: source }));
+                  };
+                  __map.save = function () {
+                      var worker = {};
+                      worker.settings = __map.settings;
+                      worker.terrain = __map.terrain;
+                      worker.objects = __map.objects;
+                      worker.actors = __map.actors;
+
+                      sessionStorage[__fileId] = JSON.stringify(worker);
+                      
+                      // Format the JSON so a human can read it:
+                      content = JSON.stringify(parsed, function(key, value) { 
+                          if (key === "index") { 
+                              return '(tile locations ommitted for readability)'; 
+                          } else { 
+                              return value; 
+                          } 
+                      }, '\t');
+                      
+                      __editor.setValue(content);
                     };
                     
                     // Format the JSON so a human can read it:
