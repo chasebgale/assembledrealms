@@ -46,6 +46,9 @@ Browser Libraries
 pixi.js - super fast HTML5 2D rendering  
 http://www.pixijs.com/  
 
+Ace Code Editor  
+https://ace.c9.io/  
+
 marked - a markdown parser  
 Copyright (c) 2011-2014, Christopher Jeffrey.  
 https://github.com/chjj/marked  
