@@ -11,7 +11,7 @@ var http 			    = require('http');
 var fs            = require('fs');
 var uuid 			    = require('node-uuid');
 var db 	          = redis.createClient();
-var dbSubscriber  = redis.createClient();
+var dbListener    = redis.createClient();
 var server			  = http.Server(app);
 var io 				    = require('socket.io')(server);
 var request			  = require('request');
@@ -26,7 +26,7 @@ var QUEUE              = "queue";
 var QUEUE_LOOKUP       = "queue_lookup";          // Quickly determine if user is in queue and for what realm...
 
 // TODO: Don't flush the DB on restart in production...
-db.flushdb();
+// db.flushdb();
 
 app.use(function(req, res, next) {
   res.header('Access-Control-Allow-Origin', 'http://www.assembledrealms.com');
@@ -197,11 +197,12 @@ app.get('/realms/:id', function httpGetRealm(req, res, next) {
 
       walker.on('end', function onWalkerEnd() {
         res.render('realm', {
-          id: req.params.id,
-          host: req.headers.host,
-          port: port,
-          scripts: scripts,
-          queue: queued
+          id:       realmID,
+          userID:   userID,
+          host:     req.headers.host,
+          port:     port,
+          scripts:  scripts,
+          queue:    queued
         });
       });
       
@@ -211,12 +212,40 @@ app.get('/realms/:id', function httpGetRealm(req, res, next) {
 	
 });
 
-dbSubscriber.on('message', function (channel, message) {
+dbListener.on('message', function (channel, message) {
   if (channel === 'realm_notifications') {
     var action = JSON.parse(message);
+    
     if (action.type === 'user_disconnected') {
-      // TODO: If a user is queued to join this realm, alert him/her
-      // via the socket they are on
+      console.log('USER %s DISCONNECTED FROM %s', action.user_id, action.realm_id); 
+      db.zrem([ACTIVE_SESSIONS, action.user_id], function redisAddSession(error, remSessionReply) {
+        if (error) {
+          console.log('Error attempting to remove from ACTIVE_SESSIONS, check error log...');
+          console.error(error);
+        }
+        
+        // Alert queue if not empty
+        db.lpop(QUEUE, function redisGetFirstInQueue(error, user) {
+          if (user !== null) {
+            // The queue wasn't empty, alert first user in queue to join via socket
+            // io.to(phpseshhhhh).emit('', '');
+            db.lrange([QUEUE, 0, -1], function (error, list) {
+              if (error) {
+                console.error(error);
+              }
+              io.emit('info', {
+                list: list
+              });
+            });
+          }
+        });
+      });
+    }
+    
+    if (action.type === 'user_connected') {
+      db.zadd([ACTIVE_SESSIONS, action.realm_id, action.user_id], function redisAddSession(error, addSessionReply) {
+        console.log('USER %s CONNECTED TO %s', action.user_id, action.realm_id);
+      });
     }
   }
 });
@@ -224,38 +253,68 @@ dbSubscriber.on('message', function (channel, message) {
 // Sesh wall for sockets
 io.use(function(socket, next) {
   
+  console.log(socket.request.headers);
+  
   // Grab our PHP Sesh key, if it exists
   var phpsession = '';
-  var cookies = "; " + socket.request.headers.cookie;
-  var parts = cookies.split("; PHPSESSID=");
+  var cookies    = socket.request.headers.cookie.split('; ');
+  for (var c = 0; c < cookies.length; c++) {
+    if (cookies[c].indexOf('PHPSESSID=') > -1) {
+      phpsession = cookies[c].split('=').pop();
+      break;
+    }
+  }
   
-  if (parts.length == 2) {
-    phpsession = parts.pop().split(";").shift();
+  if (phpsession !== '') {
     
     // Grab the player id associated with this session
     db.zscore([SESSION_MAP, phpsession], function redisGetSession(error, reply) {
+      if (error) {
+        console.log("Error with zscore query");
+        console.error(error);
+        return next(new Error('not authorized'));
+      }
+      
       if (reply !== null) {
 
         // Set the content of the session object to the redis/cookie key
-        socket.request.user_id = reply;
+        socket.request.user_id = reply
+        socket.join(phpsession);
+        console.log("user_id set to %s", reply);
         
         return next();
+      } else {
+        console.log("ZSCORE Missing");
+        return next(new Error('not authorized'));
       }
     });
+  } else {
+    console.log('phpsession: %s', phpsession);
+    return next(new Error('not authorized'));
   }
-
-  return next(new Error('not authorized'));
+  
+  //console.log("IO sesh wall failure from id %s, parsed from: %s", phpsession, cookies);
   
 });
 
 io.on('connection', function socketConnected(socket) {
-  socket.on('stats', function () {
-    socket.emit('stats', '');
+
+  var userID = socket.request.user_id;
+
+  db.lrange([QUEUE, 0, -1], function (error, list) {
+    if (error) {
+      console.error(error);
+    }
+    socket.emit('info', {
+      list: list
+    });
   });
 });
 
 // ADMIN session/auth wall
-app.use(function(req, res, next){
+app.use(function(req, res, next) {
+  console.log(req.url + " using called");
+  
   var realm_id 	= req.url.split('/')[2];
   var realm   	= "realm_" + realm_id + "_access";
   var user_id   = req.user_id;
@@ -394,7 +453,7 @@ pm2.connect(function(err) {
 	// Hey!! Listen!
 	server.listen(3000, function onServerListen(){
 	  console.log("Express server listening on port 3000, request to port 80 are redirected to 3000 by Fedora.");
-    dbSubscriber.subscribe('realm_notifications');
+    dbListener.subscribe('realm_notifications');
 	});
 	
 });

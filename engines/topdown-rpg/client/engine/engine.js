@@ -8,6 +8,7 @@ var Engine = function () {
   this.layerAir;
   this.layerText;
   this.textInput;
+  this.socket;
   
   this.avatar     = new Avatar(this);
   this.terrain    = new Terrain(this);
@@ -16,12 +17,17 @@ var Engine = function () {
   this.position       = {x: 220, y: 220};
   this.alternator     = false;
   this.initialized    = false;
-  
-  this.socket = io(HOST);
-  
+};
+
+Engine.prototype.initialize = function (target) {
+
+  // If we are inside of nested functions, 'this' can be reassigned, let's keep a reference to 'this'
+  // as it initially references 'engine'
   var self = this;
   
-  this.socket.on('sync', function (actors) {
+  self.socket = io(HOST);
+  
+  self.socket.on('sync', function (actors) {
     self.avatar.create(actors.player);
     self.actors.create(actors, self.renderer); //data.players, data.player.id);
     
@@ -31,35 +37,27 @@ var Engine = function () {
     self.loaded();
   });
     
-  this.socket.on('update', function (actors) {
-		if (self.initialized) {
-			self.actors.update(actors);
-		}
+  self.socket.on('update', function (actors) {
+    if (self.initialized) {
+      self.actors.update(actors);
+    }
   });
-	
-	this.socket.on('create', function (actors) {
-		self.actors.create(actors, self.renderer);
-	});
+  
+  self.socket.on('create', function (actors) {
+    self.actors.create(actors, self.renderer);
+  });
     
-  this.socket.on('debug', function (data) {
+  self.socket.on('debug', function (data) {
     console.log(data);
   });
-	
-	this.socket.on('stats', function (data) {
-		self.debugging(data);
-	});
-	
-	this.socket.on('text', function (data) {
+  
+  self.socket.on('stats', function (data) {
+    self.debugging(data);
+  });
+  
+  self.socket.on('text', function (data) {
     self.actors.text(data);
-	});
- 
-};
-
-Engine.prototype.initialize = function (target) {
-
-  // If we are inside of nested functions, 'this' can be reassigned, let's keep a reference to 'this'
-  // as it initially references 'engine'
-  var self = this;
+  });
   
   self.matrix = new PIXI.Matrix();
   self.matrix.translate(0, 0);
@@ -156,13 +154,13 @@ Engine.prototype.load = function (map) {
       
   loader.on('progress', function (e) {
     self.loading(e);
-	});
-	
-	loader.on('error', function (e) {
-		console.log(e);
-	});
-	
-	loader.once('complete', function () {
+  });
+  
+  loader.on('error', function (e) {
+    console.log(e);
+  });
+  
+  loader.once('complete', function () {
     self.terrain.load(map.terrain.source, self.renderer, function (error) {
       self.layerTerrain = new PIXI.Sprite(self.terrain.textureGround);
       self.stage.addChild(self.layerTerrain);
@@ -192,9 +190,9 @@ Engine.prototype.load = function (map) {
           
       });
     });
-	});
-	
-	loader.load();
+  });
+  
+  loader.load();
 };
 
 Engine.prototype.render = function () {
@@ -219,19 +217,19 @@ Engine.prototype.render = function () {
   
   self.avatar.tick();
   self.actors.tick();
-	
-	// Sort actors from front to back
-	// TODO: Merge objects into the same layer as actors, same with avatar
-	self.actors.layer.children.sort(function (a, b) {
+  
+  // Sort actors from front to back
+  // TODO: Merge objects into the same layer as actors, same with avatar
+  self.actors.layer.children.sort(function (a, b) {
         if (a.position.y < b.position.y)
             return -1;
         if (a.position.y > b.position.y)
             return 1;
         return 0; 
-	});
-	
-	
-	self.actors.layer.position = {x: -self.position.x + CANVAS_WIDTH_HALF, y: -self.position.y + CANVAS_HEIGHT_HALF};
+  });
+  
+  
+  self.actors.layer.position = {x: -self.position.x + CANVAS_WIDTH_HALF, y: -self.position.y + CANVAS_HEIGHT_HALF};
     
   // Offset translation for smooth scrolling between tiles
   self.matrix = new PIXI.Matrix();
@@ -245,12 +243,12 @@ Engine.prototype.render = function () {
 };
 
 Engine.prototype.debug = function (enabled) {
-	
-	var self = this;
-	
-	if (enabled) {
-		self.socket.emit('join_debug');
-	} else {
-		self.socket.emit('leave_debug');
-	}
+  
+  var self = this;
+  
+  if (enabled) {
+    self.socket.emit('join_debug');
+  } else {
+    self.socket.emit('leave_debug');
+  }
 };

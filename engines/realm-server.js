@@ -15,7 +15,8 @@ var debug       = (process.argv[3] == 'true');
 
 var Engine      = require(realm_id + '/server/engine');
 
-var SESSION_MAP = "session_to_user_map";
+var SESSION_MAP        = "session_to_user_map";
+var ACTIVE_SESSIONS    = "sessions_active";
 
 // Increment and assign the smallest ids to clients
 var counter = 0;
@@ -64,7 +65,10 @@ io.use(function(socket, next) {
         var key = "realm_" + realm_id + ":" + reply;
         
         // Set the content of the session object to the redis/cookie key
-        socket.request.session = {player_key: key};
+        socket.request.session = {
+          player_key: key, 
+          user_id: reply
+        };
         
         next();
       }
@@ -78,16 +82,13 @@ io.use(function(socket, next) {
 
 io.on('connection', function socketConnected(socket) {
   
-  // Retrieve the key set earlier
-  var player_key = socket.request.session.player_key;
+  var userID     = socket.request.session.user_id;
+  var playerKey  = socket.request.session.player_key;
   var player;
   
   var enterGame = function () {
     
-    // First, check total_clients < MAX_GLOBAL_CLIENTS in redis
-    // Second, check realm_{ID}_clients < MAX_REALM_CLIENTS in redis
-    // THEN:
-    db.get(player_key, function redisGetPlayer(error, data) {
+    db.get(playerKey, function redisGetPlayer(error, data) {
       
       player = data;
       if (player === null) {
@@ -96,7 +97,7 @@ io.on('connection', function socketConnected(socket) {
         player = engine.createPlayer();
         player.id = counter;
         
-        db.set(player_key, JSON.stringify(player), function redisSetPlayer(error) {
+        db.set(playerKey, JSON.stringify(player), function redisSetPlayer(error) {
         
           if (error) {
             console.error(error);
@@ -108,6 +109,13 @@ io.on('connection', function socketConnected(socket) {
       }
       
       engine.addPlayer(player);
+      
+      var action = {
+        type: 'user_connected',
+        user_id: userID,
+        realm_id: realm_id
+      };
+      db.publish('realm_notifications', JSON.stringify(action));
       
       var data = {};
       data.players = {};
@@ -173,6 +181,13 @@ io.on('connection', function socketConnected(socket) {
       });
       
       socket.on('disconnect', function () {
+        var action = {
+          type: 'user_disconnected',
+          user_id: userID,
+          realm_id: realm_id
+        };
+        
+        db.publish('realm_notifications', JSON.stringify(action));
         engine.removePlayer(player);
       });
       
