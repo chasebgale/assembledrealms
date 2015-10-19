@@ -227,6 +227,27 @@ dbListener.on('message', function (channel, message) {
         // Alert queue if not empty
         db.lpop(QUEUE, function redisGetFirstInQueue(error, user) {
           if (user !== null) {
+            db.multi()
+              .zscore([QUEUE_LOOKUP, user])             // Lookup realmID the queued user is waiting for
+              .zrem([QUEUE_LOOKUP, user])               // Remove the queue lookup entry
+              .zrangebyscore([SESSION_MAP, user, user]) // Grab the user's php sesh
+              .lrange([QUEUE, 0, -1])                   // Get a list representing the remaining queue
+              .exec(function (error, replies) {
+                if (error) {
+                  console.error(error);
+                }
+                
+                console.log("QUEUE was not empty, first user [%s] has sesh [%s] and was waiting for realm [%s]", user, replies[2], replies[0]);
+                
+                // Alert user that was first in queue that they are cleared for takeoff
+                io.to(replies[2]).emit('ready');
+                
+                // Update the rest of the queue to what has happened
+                io.emit('info', {
+                  list: replies[3]
+                });
+              });
+            /*
             // The queue wasn't empty, alert first user in queue to join via socket
             // io.to(phpseshhhhh).emit('', '');
             db.lrange([QUEUE, 0, -1], function (error, list) {
@@ -237,6 +258,7 @@ dbListener.on('message', function (channel, message) {
                 list: list
               });
             });
+            */
           }
         });
       });
