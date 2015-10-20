@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Assembled Realms STATS</title>
+
+  <link rel="shortcut icon" type="image/png" href="//www.assembledrealms.com/img/favicon.png">
+
+  <link rel="stylesheet" href="//www.assembledrealms.com/css/root.css">
+  <link rel="stylesheet" href="//www.assembledrealms.com/build/css/style.css">
+
+  <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.css">
+  <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="//www.assembledrealms.com/css/bootstrap-theme.css">
+  
+  <style>
+    html, body {
+        height:100%;
+    }
+  </style>
+    
+</head>
+
+<body style="padding-top: 0px; padding-bottom: 0px; padding-left: 0px;" class="">
+
+  <div id="wrapper" class="container">
+  
+    <h2>Current Stats</h2>
+  
+<% for(var i=0; i<servers.length; i++) {%>
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><%= servers[i].title %></h3>
+      </div>
+      <div class="panel-body">
+        <h3>Sessions</h3>
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Active</th>
+              <th>UserID</th>
+              <th>SessionID</th>
+              <th>RealmID</th>
+            </tr>
+          </thead>
+          <tbody>
+<% for(var j=0; j<servers[i].sessions.length; j++) {%>
+            <tr>
+              <td><%= servers[i].sessions[j].realmID > -1 ? "Y" : "" %></td>
+              <td><%= servers[i].sessions[j].userID %></td>
+              <td><%= servers[i].sessions[j].sessionID %></td>
+              <td><%= servers[i].sessions[j].realmID > -1 ? servers[i].sessions[j].realmID : "N/A" %></td>
+            </tr>
+<% } %>
+          </tbody>
+        </table>
+        
+        <h3>Queue</h3>
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Position</th>
+              <th>UserID</th>
+              <th>RealmID</th>
+            </tr>
+          </thead>
+          <tbody>
+<% for(var k=0; k<servers[i].queue.length; k++) {%>
+            <tr>
+              <td><%= k + 1 %></td>
+              <td><%= servers[i].queue[k].userID %></td>
+              <td><%= servers[i].queue[k].realmID %></td>
+            </tr>
+<% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+<% } %>
+
+  </div>
+  
+</body>
+</html>

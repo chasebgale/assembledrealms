@@ -86,6 +86,29 @@ app.post('/auth/:id', function httpPostAuth(req, res, next) {
     });
 });
 
+app.get('/stats', function httpGetStats(req, res, next) {
+  var auth = req.get('Authorization');
+
+  if (auth !== SECURITY_TOKEN) {
+    console.log('/api/auth - Bad auth token - ' + SECURITY_TOKEN);
+    return res.status(401).send("Please don't try to break things :/");
+  }
+
+  db.multi()
+    .zrange([SESSION_MAP, 0, -1, 'WITHSCORES'])     // Get sessions list with user ids
+    .zrange([ACTIVE_SESSIONS, 0, -1, 'WITHSCORES']) // Get active user_id on realm_id list
+    .lrange([QUEUE, 0, -1])                         // user_id's list in the queue
+    .zrange([QUEUE_LOOKUP, 0, -1, 'WITHSCORES'])    // user_id's waiting for what realm_id's list
+    .exec(function (err, replies) {
+      if (err) {
+        console.error(err);
+        return res.status(500).send(err.message);
+      }
+      console.log("MULTI got " + replies.length + " replies");
+      return res.json(replies);
+    });
+});
+
 // Serve up the realm files, when requested:
 app.use('/realms', express.static(__dirname + '/realms'));
 
@@ -212,6 +235,8 @@ app.get('/realms/:id', function httpGetRealm(req, res, next) {
 	
 });
 
+// Test commands:
+//    publish realm_notifications '{"type": "user_disconnected", "user_id": -1, "realm_id": -1}'
 dbListener.on('message', function (channel, message) {
   if (channel === 'realm_notifications') {
     var action = JSON.parse(message);
@@ -457,7 +482,7 @@ app.get('/launch/:id', function httpGetLaunch(req, res, next) {
 var tickTock = setInterval(function () {
   var expired = Date.now() - 1800000; // 1.8 million milliseconds = 30 minutes
   
-  db.zrange([SESSION_LIST, 0, expired], function redisGetExpiredSessions(error, replies) {
+  db.zrangebyscore([SESSION_LIST, 0, expired], function redisGetExpiredSessions(error, replies) {
     console.log("Expired sessions: " + JSON.stringify(replies));
     // TODO: Loop through replies, killing the SESSION_MAP entry for the session as well, then
     // calling zremrangebyscore
