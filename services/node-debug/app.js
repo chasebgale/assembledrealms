@@ -82,7 +82,8 @@ app.post('/auth/:id', function httpPostAuth(req, res, next) {
         return res.status(500).send(err.message);
       }
       console.log("MULTI got " + replies.length + " replies");
-      return res.send('OK');
+      
+      // TODO: Respond with realm markup just like in play
     });
 });
 

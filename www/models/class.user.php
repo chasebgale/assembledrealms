@@ -218,9 +218,21 @@ class loggedInUser {
 		$stmt->close();
 		*/		
 	}
+
+  public function updateRealmDebug($realm_id, $debug_server) {
+		global $mysqli;
     
-    public function offlineRealm($realm_id)
-	{
+    $stmt = $mysqli->prepare("UPDATE realms
+                              SET address_debug = ?
+                              WHERE
+                              id = ?");
+    $stmt->bind_param("si", $debug_server, $realm_id);
+    $stmt->execute();
+    $stmt->close();
+    return true;
+  }
+  
+  public function offlineRealm($realm_id) {
 		global $mysqli,$db_table_prefix;
         
 		$logfile = '/home/tmp/gatekeeper_outbound.log';
@@ -282,8 +294,7 @@ class loggedInUser {
         }
 	}
     
-    public function onlineRealm($realm_id, $realm_level)
-	{
+    public function onlineRealm($realm_id, $realm_level) {
 		global $mysqli,$db_table_prefix;
         
         $logfile 	= '/home/tmp/gatekeeper_outbound.log';
@@ -444,45 +455,45 @@ class loggedInUser {
         
 		global $mysqli,$db_table_prefix;
 		$stmt = $mysqli->prepare("SELECT 
-				realms.id,
-				realms.user_id,
-				realms.title,
-				realms.description,
-				realms.level,
-				realms.status,
-				realms.players_online,
-				realms.funds,
-				realms.screenshots,
-				realms.loves,
-				realms.url,
-				realms.comments,
-				realms.source,
-				realms.show_funding,
-				realms.address,
-				uc_users.display_name
-				FROM realms
-				INNER JOIN uc_users
-				ON realms.user_id = uc_users.id
-				WHERE realms.id = ?"
-			);
+      realms.id,
+      realms.user_id,
+      realms.title,
+      realms.description,
+      realms.level,
+      realms.status,
+      realms.players_online,
+      realms.funds,
+      realms.screenshots,
+      realms.loves,
+      realms.comments,
+      realms.source,
+      realms.show_funding,
+      realms.address,
+      realms.address_debug,
+      uc_users.display_name
+      FROM realms
+      INNER JOIN uc_users
+      ON realms.user_id = uc_users.id
+      WHERE realms.id = ?"
+    );
 		$stmt->bind_param("i", $realm_id);
 		$stmt->execute();
 		$stmt->bind_result($id,
-				   $user_id,
-				   $title,
-				   $description,
-                   $level,
-				   $status,
-				   $players,
-				   $funds,
-				   $screenshots,
-				   $loves,
-				   $url,
-				   $comments,
-				   $source,
-				   $show_funding,
-                   $address,
-				   $display_name // DISPLAY NAME ALWAYS LAST (JOIN)
+      $user_id,
+      $title,
+      $description,
+      $level,
+      $status,
+      $players,
+      $funds,
+      $screenshots,
+      $loves,
+      $comments,
+      $source,
+      $show_funding,
+      $address,
+      $address_debug,
+      $display_name // DISPLAY NAME ALWAYS LAST (JOIN)
 				   );
 		$stmt->fetch();
 		$stmt->close();
@@ -496,12 +507,12 @@ class loggedInUser {
 			     'funds' => $funds,
 			     'screenshots' => $screenshots,
 			     'loves' => $loves,
-			     'url' => $url,
 			     'display_name' => $display_name,
 			     'comments' => $comments,
 			     'source' => $source,
 			     'show_funding' => $show_funding,
-                 'address' => $address
+                 'address' => $address,
+                 'address_debug' => $address_debug
 			     );
 	}
     
@@ -520,11 +531,11 @@ class loggedInUser {
 			funds,
 			screenshots,
 			loves,
-			url,
 			comments,
 			source,
 			show_funding,
-			address
+			address,
+      address_debug
 			FROM realms
 			WHERE user_id = ? AND status > -1");
 		$stmt->bind_param("i", $this->user_id);
@@ -540,11 +551,11 @@ class loggedInUser {
 				   $funds,
 				   $screenshots,
 				   $loves,
-				   $url,
 				   $comments,
 				   $source,
 				   $show_funding,
-                   $address
+                   $address,
+                   $address_debug
 				   );
         
 		while ($stmt->fetch()){
@@ -558,11 +569,11 @@ class loggedInUser {
 				   'funds' => $funds,
 				   'screenshots' => $screenshots,
 				   'loves' => $loves,
-				   'url' => $url,
 				   'comments' => $comments,
 				   'source' => $source,
 				   'show_funding' => $show_funding,
-                   'address' => $address
+                   'address' => $address,
+                   'address_debug' => $address_debug
 				   );
 		}
 		$stmt->close();
