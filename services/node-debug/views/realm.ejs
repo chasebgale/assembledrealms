@@ -1,88 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <title>Assembled Realms DEBUG</title>
-
-  <link rel="shortcut icon" type="image/png" href="//www.assembledrealms.com/img/favicon.png">
-
-  <link rel="stylesheet" href="//www.assembledrealms.com/css/root.css">
-  <link rel="stylesheet" href="//www.assembledrealms.com/build/css/style.css">
-
-  <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.css">
-  <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
-  <link rel="stylesheet" href="//www.assembledrealms.com/css/bootstrap-theme.css">
-  
-  <style>
-    html, body {
-        height:100%;
-    }
-
-    #commandBar {
-        height: 26px;
-        background-color: #777;
-    }
-    
-    #commandBarButtons {
-        float: left;
-        margin-top: 2px;
-        margin-left: 6px;
-    }
-    
-    #commandBarButtons button {
-        background: #777;
-        color: #e0e0e0;
-        border-color: #666;
-        text-shadow: none;
-    }
-  
-    #commandBarButtons .active {
-      background: #555;
-    }
-      
-    #commandBarButtons button:hover {
-        background: #555;
-    }
-    
-    #commandBarButtons .spacer {
-        display: inline-block;
-        vertical-align: middle;
-        background: #666;
-        width: 2px;
-        border-left: #888 1px solid;
-        height: 18px;
-        margin-left: 6px;
-        margin-right: 6px;
-    }
-  
-    #stats {
-      display: inline-block;
-      vertical-align: top;
-    }
-    
-    #realmStats {
-            text-align: center;
-      background-color: #4C4C4C;
-      width: 896px;
-    }
-      
-    #serverStats {
-        padding: 4px;
-        display: inline-block;
-    }
-  
-  </style>
-    
-</head>
-
-<body style="padding-top: 0px; padding-bottom: 0px; padding-left: 0px;" class="">
-
-<div id="wrapper">
-    
-  <div id="commandBar">
+  <div id="commandBar" style="background-color: #4C4C4C; padding: 4px;">
     <div id="commandBarButtons">
       <button type="button" id="btnReboot" class="btn btn-default btn-xs">
         <i class="fa fa-refresh fa-fw"></i> Reboot
@@ -102,23 +18,19 @@
         <i class="fa fa-check-square-o fa-fw"></i> Server CPU MB
       </button>
     </div>
+    <!--
     <a href="http://www.assembledrealms.com" style="float: right;">
       <img src="//www.assembledrealms.com/build/img/logo.png">
     </a>
+    -->
   </div>
-  
-  <div id="loading" style="margin: 40px auto; width: 896px; padding: 0; display: none;">
-    <h4 id="loading_text" style="text-align: center;">Initializing <i class="fa fa-spinner fa-pulse"></i></h4>
-    <div class="progress">
-      <div id="loading_progress" class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
-          0%
-      </div>
-    </div>
-  </div>
-  
+
   <div id="container">
   
-    <div id="realm" style="margin: 20px auto; width: 896px; padding: 0;"></div>
+    <div style="margin: 20px auto; width: 896px; padding: 0; background-color: black;">
+      <div id="realm" style="margin: 0; width: 896px; padding: 0; display: none;"></div>
+      <div id="queue" style="margin: 0; width: 896px; padding: 0;"></div>
+    </div>
     
     <div id="realmStats" class="center-block" style="display: none;">
       <div id="serverStats">
@@ -132,262 +44,58 @@
     </div>
   
   </div>
-    
-  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
-  <script src="//netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
-  <script src="//<%= host %>:<%= port %>/socket.io/socket.io.js"></script>
-	
-	<!--<script src="//cdn.socket.io/socket.io-1.2.0.js"></script>-->
-    
-<% for(var i=0; i<scripts.length; i++) { %>
-  <script src="<%= scripts[i] %>"></script>
-<% } %>
-
-  <script src="//www.assembledrealms.com/build/js/utilities.js"></script>
-  <script src="//www.assembledrealms.com/build/js/stats.min.js"></script>
-  <script src="//www.assembledrealms.com/js/keyboard.js"></script>
-  <script src="//www.assembledrealms.com/js/pixi.min.js"></script>
-	<script src="//www.assembledrealms.com/js/bigscreen.min.js"></script>
-  <script src="//www.assembledrealms.com/js/async.js"></script>
-  <script src="//www.assembledrealms.com/js/smoothie.js"></script>
-
-
-  <script>
+  
+  <script type="text/javascript">
 		var DEBUG   = true;
-    var ROOT    = '/realms/<%= id %>/';
-    var STATS   = '/realms/<%= id %>/stats';
-    var HOST    = window.location.host + ':<%= port %>';
-		
-		var engine 	= new Engine();
-		var stats 	= new Stats();
-		
-    var __memory_series   = undefined;
-    var __cpu_series      = undefined;
-    var __memory_span     = undefined;
-    var __cpu_span        = undefined;
-		var __display_fps	    = true;
-		var __display_server  = true;
-    var __loading         = false;
-		
-		$("#btnFPS").on("click", function (e) {
-			var self = $(this);
-		
-			if (__display_fps) {
-				// Turn off:
-				$("#stats").hide();
-				__display_fps = false;
-				self.removeClass("active");
-				self.html('<i class="fa fa-square-o fa-fw"></i> FPS');
-			} else {
-				// Turn on:
-				$("#stats").show();
-				__display_fps = true;
-				self.addClass("active");
-				self.html('<i class="fa fa-check-square-o fa-fw"></i> FPS');
-			}
-		});
-		
-		$("#btnServerDiagnostics").on("click", function (e) {
-		
-			var self = $(this);
-		
-			if (__display_server) {
-				// Turn off:
-				$("#serverStats").hide();
-				__display_server = false;
-				self.removeClass("active");
-				self.html('<i class="fa fa-square-o fa-fw"></i> Server CPU MB');
-			} else {
-				// Turn on:
-				$("#serverStats").show();
-				__display_server = true;
-				self.addClass("active");
-				self.html('<i class="fa fa-check-square-o fa-fw"></i> Server CPU MB');
-			}
-			
-			engine.debug(__display_server);
-		});
-        
-    $(document).ready(function () {  
-	
-			engine.loaded = function () {
-			
-				if (DEBUG) {
-					
-					stats.setMode(0); // 0: fps, 1: ms
-					document.getElementById("realmStats").appendChild( stats.domElement );
-					
-					engine.debug(true);
-				}
-                
-        $("#loading").fadeOut(function () {
-          $("#container").fadeIn();
-        });
-            
-				animate();
-			};
-			
-			engine.debugging = function (data) {
-				__memory_series.append(new Date().getTime(), data.memory / 1000000 / 512 * 100);
-        __memory_span.textContent = parseFloat(data.memory / 1000000).toFixed(2);
-        
-        __cpu_series.append(new Date().getTime(), data.cpu);
-        __cpu_span.textContent = data.cpu + ' %';
-			};
-            
-      engine.loading = function (e) {
-        /*
-            _numToLoad: 70
-            _progressChunk: 1.4285714285714286
-        */
-        if (!__loading) {
-            __loading = true;
-            $("#loading_text").text("Downloading realm assets...");
-        }
-        
-        var string_width = Math.floor(e.progress) + "%";
-        
-        $("#loading_progress").width(string_width);
-        $("#loading_progress").text(string_width)
-        $("#loading_progress").attr("aria-valuenow", Math.floor(e.progress));
-      }
-			
-			function animate() {
-				if (__display_fps) {
-					stats.begin();
-				}
-				
-				engine.render();
-				
-				if (__display_fps) {
-					stats.end();
-				}
-				
-				requestAnimationFrame(animate);
-			}
-		
-            
-      var chart = new SmoothieChart({
-        millisPerPixel: 100,
-        grid: {
-          fillStyle:'#4C4C4C',
-          strokeStyle:'#777777'
-        },
-			  yRangeFunction: function (range) { 
-					return {
-            min: 0, 
-            max: (range.max + 10 > 100) ? 100 : range.max + 10
-          }; 
-				},
-				yMinFormatter: function(min, precision) {
-          return parseFloat(min).toFixed(0) + " %";
-        },
-        yMaxFormatter: function(max, precision) {
-          return parseFloat(max).toFixed(0) + " %";
-        }
-      });
-									 
-      var canvas 	= document.getElementById('chart-server');
-      
-      __memory_series = new TimeSeries();
-      __cpu_series 	= new TimeSeries();
-      
-      __memory_span = document.getElementById('mem_display');
-      __cpu_span = document.getElementById('cpu_display');
-      
-      chart.addTimeSeries(__memory_series, {
-        lineWidth:2.3,
-        strokeStyle:'#00ff00',
-        fillStyle:'rgba(0,255,0,0.11)'
-      });
-      
-      chart.addTimeSeries(__cpu_series, {
-        lineWidth:2.3,
-        strokeStyle:'#ffffff',
-        fillStyle:'rgba(255,255,255,0.11)'
-      });
-			
-			chart.streamTo(canvas, 2000);
-			
-<% if (queue) { %>
-      var userID = '<%= userID %>';
-      // create a renderer instance (w/h taken from engine constants)
-      var queueRenderer = PIXI.autoDetectRenderer(CANVAS_WIDTH, CANVAS_HEIGHT, {
-        backgroundColor : 0x000000
-      });
-      // create an new instance of a pixi stage
-      var queueStage = new PIXI.Container();
-      // add the renderer view element to the DOM
-      document.getElementById('realm').appendChild(queueRenderer.view);
-      
-      var countingText = new PIXI.Text("00", {
-        font: "bold 60px Arial", 
-        fill: "#FFFFFF", 
-        align: "center", 
-        stroke: "#FFFFFF", 
-        strokeThickness: 2
-      });
-      countingText.position.x = CANVAS_WIDTH / 2;
-      countingText.position.y = CANVAS_HEIGHT / 2;
-      countingText.anchor.x = 0.5;
-      countingText.anchor.y = 0.5;
-      //countingText.alpha = 0;
-      queueStage.addChild(countingText);
-      
-      function animateQueue() {
-        requestAnimationFrame(animateQueue);
-        // render the root container
-        queueRenderer.render(queueStage);
-      }
-      
-      animateQueue();
-      
-      var socket = io('http://<%= host %>');
-      socket.on('info', function (data) {
-        var fullList = data.list;
-        var pos = data.list.indexOf(userID) + 1;
-        countingText.text = pos;
-      });
-      socket.on('ready', function (data) {
-        // Join game
-        document.getElementById('realm').innerHTML = '';
-        engine.initialize( document.getElementById("realm") );
-      });
-<% } else { %>
-      engine.initialize( document.getElementById("realm") );
-<% } %>
-			
-			
-            /*
-            var socket = io('http://<%= host %>');
-            socket.on('connect', function () {
-                socket.emit('subscribe', {id: <%= id %>});
-            });
-            socket.on('stats', function (data) {
-                __memory_series.append(new Date().getTime(), data.memory / 1000000 / 512 * 100);
-                __memory_span.textContent = parseFloat(data.memory / 1000000).toFixed(2);
-                
-                __cpu_series.append(new Date().getTime(), data.cpu);
-                __cpu_span.textContent = data.cpu + ' %';
-            });
-            
-            setInterval(function() {
-                $.get( 'http://debug-01.assembledrealms.com/realms/99/stats', function( data ) {
-                    __memory_series.append(new Date().getTime(), data.memory / 1000000 / 512 * 100);
-                    __memory_span.textContent = parseFloat(data.memory / 1000000).toFixed(2);
-                    
-                    __cpu_series.append(new Date().getTime(), data.cpu);
-                    __cpu_span.textContent = data.cpu + ' %';
-                });
-            }, 2000);
-            */
-            
-            
-    });
+    var HOST    = '<%= host %>:<%= port %>';
+    var RAWHOST = '<%= host %>';
+    var QUEUE   = <%= queue %>;
+    var USERID  = <%= userID %>;
+    
+    var OWNER   = false;
+    var ROOT    = '//' + RAWHOST + '/realms/<%= id %>/';
+    var STATS   = '//' + RAWHOST + '/realms/<%= id %>/stats';
+    
+    var Loader = function () { }
+    Loader.prototype = {
+      require: function (scripts, callback) {
+        this.loadCount      = 0;
+        this.totalRequired  = scripts.length;
+        this.callback       = callback;
 
+        for (var i = 0; i < scripts.length; i++) {
+          this.writeScript(scripts[i]);
+        }
+      },
+      loaded: function (evt) {
+        this.loadCount++;
+
+        if (this.loadCount == this.totalRequired && typeof this.callback == 'function') this.callback.call();
+      },
+      writeScript: function (src) {
+        var self = this;
+        var s = document.createElement('script');
+        s.type = "text/javascript";
+        s.async = true;
+        s.src = src;
+        s.addEventListener('load', function (e) { self.loaded(e); }, false);
+        var head = document.getElementsByTagName('head')[0];
+        head.appendChild(s);
+      }
+    }
     
+    var l = new Loader();
+    
+    l.require([
+<% for(var i=0; i<scripts.length; i++) { %>
+      "//<%= host %><%= scripts[i] %>",
+<% } %>
+      "//<%= host %>:<%= port %>/socket.io/socket.io.js",
+      "/debug/debug.js"
+    ], 
+    function() {
+        // Callback
+        console.log('All Scripts Loaded');
+        allReady();
+    });
   </script>
-    
-</div>
-</body>
-</html>

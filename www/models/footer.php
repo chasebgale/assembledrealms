@@ -10,9 +10,7 @@
     <script>
     (adsbygoogle = window.adsbygoogle || []).push({});
     </script>
-	
-	<script
-	
+    
     <script>
         $(function() {
             console.log('Document ready!');
