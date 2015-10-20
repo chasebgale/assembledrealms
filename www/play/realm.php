@@ -64,81 +64,75 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 $alert = '';
 
 if (is_numeric($_SERVER['QUERY_STRING'])) {
-    $realmID = $_SERVER['QUERY_STRING'];
-    $realm = $loggedInUser->fetchRealm($realmID);
-    $loved = $loggedInUser->lovesRealm($realmID);
-    
-    if ($realm['status'] == 0) {
-        // TODO: Alert realm owner someone tried to play when offline,
-        //       (add messages/alerts to profile!)
-        $alert = "<h3 style='font-size: 52px; color: white; font-weight: bold;'><i class='fa fa-power-off'></i> OFFLINE</h3>";
+  $realmID = $_SERVER['QUERY_STRING'];
+  $realm   = $loggedInUser->fetchRealm($realmID);
+  $loved   = $loggedInUser->lovesRealm($realmID);
+  
+  if ($realm['status'] == 0) {
+    // TODO: Alert realm owner someone tried to play when offline
+    $alert = "<h3 style='font-size: 52px; color: white; font-weight: bold;'><i class='fa fa-power-off'></i> OFFLINE</h3>";
+  } else {
+/* 
+  NOTE: url and address are different, in the DB a realm could have a url of 'debug-04.assembledrealms.com/45' or 'www.assembledrealms.com/play/realm/43', but the address will include the correct port the debug realm is listening on, or just the ip of the realm droplet we have brought up, i.e. debug-04.assembledrealms.com:4451 or 254.222.33.12
+  
+  Actually, the more I am thinking about it, address in the db should be an integer of the id on a realm_address table, containing realm_id, host, secret-key
+*/
+      
+    if ($realm['level'] == 0) {
+      // Free realm hosting
+      $host       = "http://play-" . $realm['address'] . ".assembledrealms.com";
+      $session_id = session_id();
+      
+      $post_body  = http_build_query(array('session' => $session_id,
+                                           'user_id' => $loggedInUser->user_id,
+                                           'user_name' => $loggedInUser->displayname,
+                                           'user_image' => $loggedInUser->user_image,
+                                           'realm_id' => $realmID
+      ));
+      
+      $curl 			= curl_init();
+      $play_token = "e61f933bcc07050385b8cc08f9deee61de228b2ba31b8523bdc78230d1a72eb2";
+
+      curl_setopt_array($curl, array(
+        CURLOPT_HTTPHEADER 		  => array('Authorization: ' . $play_token),
+        CURLOPT_HEADER          => false,
+        CURLOPT_RETURNTRANSFER 	=> true,
+        CURLOPT_POST            => true,
+        CURLOPT_POSTFIELDS      => $post_body,
+        CURLOPT_SSL_VERIFYHOST 	=> 0,
+        CURLOPT_SSL_VERIFYPEER 	=> false,
+        CURLOPT_URL 			      => $host . '/auth'
+      ));
+
+      $resp       = curl_exec($curl);
+      $httpcode   = intval(curl_getinfo($curl, CURLINFO_HTTP_CODE));
+          
+      curl_close($curl);
+          
+      if (($httpcode < 200) && ($httpcode > 299)) {
+        // We have an error:
+        error_log($httpcode . ": " . $resp, 3, $logfile);
+        echo "Auth fail.";
+        die();
+      } else {
+        $url_from_auth = $host . "/realms/play/" . $realmID;
+      }
+          
     } else {
-        // 1 - Generate GUID
-        // 2 - Send GUID and user_id to realm
-        // 3 - return iframe with realm url + '/auth/[GUID]'
-        // 4 - realm looks up GUID, validates, then removes GUID from redis
-        
-        
-        /* NOTE: url and address are different, in the DB a realm could have a url of 'debug-04.assembledrealms.com/45' or 'www.assembledrealms.com/play/realm/43', but the address will include the correct port the debug realm is listening on, or just the ip of the realm droplet we have brought up, i.e. debug-04.assembledrealms.com:4451 or 254.222.33.12
-		
-		Actually, the more I am thinking about it, address in the db should be an integer of the id on a realm_address table, containing realm_id, host, secret-key
-        */
-        
-        if ($realm['level'] == 0) {
-            // Free realm hosting
-            $host       = "http://play-" . $realm['address'] . ".assembledrealms.com";
-            $session_id = session_id();
-            
-            $post_body  = http_build_query(array('session' => $session_id,
-                                                 'user_id' => $loggedInUser->user_id,
-                                                 'user_name' => $loggedInUser->displayname,
-                                                 'user_image' => $loggedInUser->user_image,
-                                                 'realm_id' => $realmID
-            ));
-            
-            $curl 					= curl_init();
-			$play_token 	        = "e61f933bcc07050385b8cc08f9deee61de228b2ba31b8523bdc78230d1a72eb2";
+      // Paid realm hosting has an IP, not a subdomain of assembledrealms.com, so we won't get php sesh info in the headers,
+      // so we generate a GUID and use that...
+      $guid = GUID();
+      
+      $curl = curl_init();
+      curl_setopt_array($curl, array(
+        CURLOPT_RETURNTRANSFER => 1,
+        CURLOPT_URL => $realm['address'] . '/auth/{secret-key}/' . $loggedInUser->user_id . '/' . $guid
+      ));
 
-			curl_setopt_array($curl, array(
-				CURLOPT_HTTPHEADER 		=> array('Authorization: ' . $play_token),
-                CURLOPT_HEADER          => false,
-				CURLOPT_RETURNTRANSFER 	=> true,
-                CURLOPT_POST            => true,
-                CURLOPT_POSTFIELDS      => $post_body,
-				CURLOPT_SSL_VERIFYHOST 	=> 0,
-				CURLOPT_SSL_VERIFYPEER 	=> false,
-				CURLOPT_URL 			=> $host . '/auth'
-			));
-
-			$resp       = curl_exec($curl);
-            $httpcode   = intval(curl_getinfo($curl, CURLINFO_HTTP_CODE));
-            
-			curl_close($curl);
-            
-            if (($httpcode < 200) && ($httpcode > 299)) {
-                // We have an error:
-                error_log($httpcode . ": " . $resp, 3, $logfile);
-                echo "Auth fail.";
-                die();
-            } else {
-                $url_from_auth = $host . "/realms/play/" . $realmID;
-            }
-            
-        } else {
-            // Paid realm hosting has an IP, not a subdomain of assembledrealms.com, so we won't get php sesh info in the headers,
-            // so we generate a GUID and use that...
-            $guid = GUID();
-            
-            $curl = curl_init();
-            curl_setopt_array($curl, array(
-                CURLOPT_RETURNTRANSFER => 1,
-                CURLOPT_URL => $realm['address'] . '/auth/{secret-key}/' . $loggedInUser->user_id . '/' . $guid
-            ));
-
-            $url_from_auth = curl_exec($curl);
-        }
-
+      $url_from_auth = curl_exec($curl);
     }
+
+  }
     
 } else {
     $alert = "Please stop tinkering.";
