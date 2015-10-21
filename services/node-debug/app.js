@@ -457,7 +457,8 @@ app.get('/launch/:id', function httpGetLaunch(req, res, next) {
               name:       realmID,
               error:      realmErr,
               output:     realmOut,
-              scriptArgs: [realmID, 'true']
+              scriptArgs: [realmID, 'true'],
+              force:      true
             };
             
             console.log("Starting app with the following options: " + JSON.stringify(options));

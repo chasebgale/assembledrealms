@@ -19,9 +19,12 @@ Avatar.prototype.create = function (avatar) {
   this.health     = avatar.health;
   this.stamina    = avatar.stamina;
   this.experience = avatar.experience;
-  this.id			= avatar.id;
+  this.id         = avatar.id;
 
-  this.text               = new PIXI.extras.BitmapText('Hello, just testing!', { font: '16px UO Classic (rough)', align: 'center' });
+  this.text = new PIXI.extras.BitmapText('Hello, World!', {
+    font: '16px UO Classic (rough)', 
+    align: 'center' 
+  });
   this.text.position.x    = 0;
   this.text.position.y    = -34;
   this.text.alpha         = 0;
@@ -160,36 +163,22 @@ Avatar.prototype.load = function (complete) {
               
   self.direction = DIRECTION_S;
         
-	self.sprite.children[self.direction].visible = true;
-	self.sprite.children[self.direction].gotoAndStop(0);
-	
-	KeyboardJS.on('enter', function() {
-
+  self.sprite.children[self.direction].visible = true;
+  self.sprite.children[self.direction].gotoAndStop(0);
+  
+  KeyboardJS.on('space', function(e) {
+    e.preventDefault();
+  });
+  
+  KeyboardJS.on('enter', function() {
+    
     if (self.typing) {
       // Send our text string, then clear it
       self.engine.socket.emit('text', self.blurb);
-      
-      /*
-      if (self.blurb.substring(0, 4) == '/me ') {
-          self.blurb = '*' + self.blurb.substring(4) + '*';
-          self.text.font.tint = 11184810;
-      } else {
-          self.text.font.tint = 16777215;
-      }
-      
-      self.text.text          = self.blurb;
-      
-      // Get the start position from engine input string as occasionally a race condition occurs where 
-      // if I set the text of self.text then request it's textWidth property, it would give an
-      // old measurement as the text hasn't been rastered yet before I ask for the value
-      self.text.position.x        = -1 * Math.round(self.engine.textInput.textWidth / 2);
-      self.text.alpha             = 1;
-      */
-      
       self.emote(self.blurb);
       
       self.blurb                  = ""; 
-      self.engine.textInput.text = "";
+      self.engine.textInput.text  = "";
       
       document.removeEventListener("keydown", self.keydown, false);
     } else {
@@ -206,7 +195,6 @@ Avatar.prototype.load = function (complete) {
       document.addEventListener("keydown", self.keydown, false);
     }
     self.typing = !self.typing;
-    
   });
   
   complete();
@@ -219,57 +207,57 @@ Avatar.prototype.keydown = function (e) {
   
   // Backspace
   if (e.keyCode == 8) {
-      engine.avatar.blurb = engine.avatar.blurb.substring(0, engine.avatar.blurb.length - 1);
+    engine.avatar.blurb = engine.avatar.blurb.substring(0, engine.avatar.blurb.length - 1);
   } else if (e.keyCode == 32) {
-      engine.avatar.blurb += ' ';
+    engine.avatar.blurb += ' ';
   } else if ((e.keyCode > 64) && (e.keyCode < 91)) {
-      // Letter     
-      letter = String.fromCharCode(e.keyCode);
-      if (!e.shiftKey) {
-          letter = letter.toLowerCase();
-      }
-      engine.avatar.blurb += letter;
+    // Letter     
+    letter = String.fromCharCode(e.keyCode);
+    if (!e.shiftKey) {
+      letter = letter.toLowerCase();
+    }
+    engine.avatar.blurb += letter;
   } else if ((e.keyCode > 47) && (e.keyCode < 58)) {
-      // Numbers
-      letter = String.fromCharCode(e.keyCode);
-      if (e.shiftKey) {
-          switch (letter) {
-              case '1':
-                  letter = '!';
-                  break;
-              case '2':
-                  letter = '@';
-                  break;
-              case '3':
-                  letter = '#';
-                  break;
-              case '4':
-                  letter = '$';
-                  break;
-              case '5':
-                  letter = '%';
-                  break;
-              case '6':
-                  letter = '^';
-                  break;
-              case '7':
-                  letter = '&';
-                  break;
-              case '8':
-                  letter = '*';
-                  break;
-              case '9':
-                  letter = '(';
-                  break;
-              case '0':
-                  letter = ')';
-                  break;
-              default:
-                  letter = '';
-                  break;
-          }
+    // Numbers
+    letter = String.fromCharCode(e.keyCode);
+    if (e.shiftKey) {
+      switch (letter) {
+        case '1':
+          letter = '!';
+          break;
+        case '2':
+          letter = '@';
+          break;
+        case '3':
+          letter = '#';
+          break;
+        case '4':
+          letter = '$';
+          break;
+        case '5':
+          letter = '%';
+          break;
+        case '6':
+          letter = '^';
+          break;
+        case '7':
+          letter = '&';
+          break;
+        case '8':
+          letter = '*';
+          break;
+        case '9':
+          letter = '(';
+          break;
+        case '0':
+          letter = ')';
+          break;
+        default:
+          letter = '';
+          break;
       }
-      engine.avatar.blurb += letter;
+    }
+    engine.avatar.blurb += letter;
   } else if ((e.keyCode > 185) && (e.keyCode < 193)) {
     switch (e.keyCode) {
       case 186:
@@ -319,24 +307,24 @@ Avatar.prototype.keydown = function (e) {
 
 Avatar.prototype.emote = function(blurb) {
     
-    var self = this;
-    
-    if (blurb.substring(0, 4) == '/me ') {
-      blurb = '*' + blurb.substring(4) + '*';
-      self.text.font.tint = 11184810;
-    } else {
-      self.text.font.tint = 16777215;
-    }
-    
-    self.text.text = blurb;
-    
-    // Get the start position from engine input string as occasionally a race condition occurs where 
-    // if I set the text of self.text then request it's textWidth property, it would give an
-    // old measurement as the text hasn't been rastered yet before I ask for the value
-    self.text.position.x = -1 * Math.round(self.engine.textInput.textWidth / 2);
-    self.text.alpha      = 1;  
+  var self = this;
+  
+  if (blurb.substring(0, 4) == '/me ') {
+    blurb = '*' + blurb.substring(4) + '*';
+    self.text.font.tint = 11184810;
+  } else {
+    self.text.font.tint = 16777215;
+  }
+  
+  self.text.text = blurb;
+  
+  // Get the start position from engine input string as occasionally a race condition occurs where 
+  // if I set the text of self.text then request it's textWidth property, it would give an
+  // old measurement as the text hasn't been rastered yet before I ask for the value
+  self.text.position.x = -1 * Math.round(self.engine.textInput.textWidth / 2);
+  self.text.alpha      = 1;  
 };
-		
+    
 Avatar.prototype.tick = function () {
   var self = this;
   
@@ -420,7 +408,7 @@ Avatar.prototype.tick = function () {
       self.sprite.children[self.direction].visible = true;
       
       if (self.moving) {
-          self.sprite.children[self.direction].play();   
+        self.sprite.children[self.direction].play();   
       }
     };
     

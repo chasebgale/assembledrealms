@@ -120,7 +120,7 @@ function initialize(projectID, projectDomain) {
 		.done(function (data) {
 			
 			var address 	= data.address;
-			var debug_url 	= 'http://' + address + '/realms/' + __projectId;
+			var debug_url 	= 'http://www.assembledrealms.com/debug/realm/' + __projectId;
 			
 			$('#debugProgressList').append('<li>Compressing latest commit and delivering it to ' + address + '</li>');
 
@@ -142,7 +142,7 @@ function initialize(projectID, projectDomain) {
 						dataType: 'text'
 					})
 					.done(function (data) {
-						$('#debugProgressList').append('<li>Your debug URL is <a href="' + debug_url + '">' + debug_url + '</a>!</li>');
+						$('#debugProgressList').append('<li><strong>Success!</strong> Your debug URL is <a target="_blank" href="' + debug_url + '">' + debug_url + '</a></li>');
 					})
 					.fail(function(data) {
 						$('#debugProgressList').append('<li class="text-danger"><strong><i class="fa fa-exclamation-triangle"></i> Fatal Error:' + data.responseText + '</strong> Please try again in a few minutes, monkeys are furiously typing away to fix this problem.</li>');

@@ -66,7 +66,8 @@ if ($method == 'POST') {
     $curl = curl_init();
     
     // TODO: Pick least congested play server, but for now:
-    $realm_address  = "debug-01.assembledrealms.com";
+    $realm_server   = "01";
+    $realm_address  = "debug-" . $realm_server . ".assembledrealms.com";
     $target_url     = "http://" . $realm_address . "/auth/" . $realm_id;
     
     $post_body  = http_build_query(array('php_sess' => session_id(),
@@ -97,7 +98,7 @@ if ($method == 'POST') {
       die();
     } else {
       
-      $loggedInUser->updateRealmDebug($realm_id, $realm_address);
+      $loggedInUser->updateRealmDebug($realm_id, $realm_server);
       
       echo json_encode( (object) ['message' => 'OK', 'address' => $realm_address] );
       die();
