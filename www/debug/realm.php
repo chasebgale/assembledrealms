@@ -17,7 +17,8 @@ if(!isUserLoggedIn()) {
 
 require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 
-$alert = '';
+$alert    = '';
+$logfile  = '/home/tmp/realm_debug.log';
 
 if (is_numeric($_SERVER['QUERY_STRING'])) {
   $realmID = $_SERVER['QUERY_STRING'];
@@ -32,11 +33,15 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     // Free realm hosting
     $host       = "http://debug-" . $realm['address_debug'] . ".assembledrealms.com";
     $session_id = session_id();
+    $user_id    = $loggedInUser->user_id;
+    $owner      = ($realm['user_id'] == $user_id);
     
-    $post_body  = http_build_query(array('php_sess' => session_id(),
-                                         'user_id' => $loggedInUser->user_id,
-                                         'owner' => false
+    $post_body  = http_build_query(array('php_sess' => $session_id,
+                                         'user_id' => $user_id,
+                                         'owner' => $owner
     ));
+    
+    error_log("Initiating auth to: " . $host . " with sesh: " . $session_id . " and id: " . $user_id . "\n", 3, $logfile);
     
     $curl 			= curl_init();
     $debug_token = "1e4651af36b170acdec7ede7268cbd63b490a57b1ccd4d4ddd8837c8eff2ddb9";
@@ -49,13 +54,15 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
       CURLOPT_POSTFIELDS      => $post_body,
       CURLOPT_SSL_VERIFYHOST 	=> 0,
       CURLOPT_SSL_VERIFYPEER 	=> false,
-      CURLOPT_URL 			      => $host . '/auth'
+      CURLOPT_URL 			      => $host . '/auth/' . $realmID
     ));
 
     $resp       = curl_exec($curl);
     $httpcode   = intval(curl_getinfo($curl, CURLINFO_HTTP_CODE));
         
     curl_close($curl);
+    
+    error_log("Curl response body: " . $resp . "\n", 3, $logfile);
         
     if (($httpcode < 200) && ($httpcode > 299)) {
       // We have an error:
@@ -84,7 +91,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
 ?>
 
-<div id="realm-container" style="margin-top: 20px;"></div>
+<div id="realm-container" style="padding-top: 20px;"></div>
 
 <script src="/build/js/stats.min.js"></script>
 <script src="/build/js/utilities.js"></script>

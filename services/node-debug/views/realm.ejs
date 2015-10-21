@@ -1,47 +1,55 @@
-  <div id="commandBar" style="background-color: #4C4C4C; padding: 4px;">
-    <div id="commandBarButtons">
-      <button type="button" id="btnReboot" class="btn btn-default btn-xs">
-        <i class="fa fa-refresh fa-fw"></i> Reboot
-      </button>
-      <button type="button" id="btnCommand" class="btn btn-default btn-xs">
-        <i class="fa fa-keyboard-o fa-fw"></i> Message -> Server
-      </button>
-      <div class="spacer"></div>
-      <button type="button" id="btnScreenshot" class="btn btn-default btn-xs">
-        <i class="fa fa-camera-retro fa-fw"></i> Take Screenshot
-      </button>
-      <div class="spacer"></div>
-      <button type="button" id="btnFPS" class="btn btn-default btn-xs active">
-        <i class="fa fa-check-square-o fa-fw"></i> FPS
-      </button>
-      <button type="button" id="btnServerDiagnostics" class="btn btn-default btn-xs active">
-        <i class="fa fa-check-square-o fa-fw"></i> Server CPU MB
-      </button>
-    </div>
-    <!--
-    <a href="http://www.assembledrealms.com" style="float: right;">
-      <img src="//www.assembledrealms.com/build/img/logo.png">
-    </a>
-    -->
-  </div>
-
   <div id="container">
   
     <div style="margin: 20px auto; width: 896px; padding: 0; background-color: black;">
+<% if (owner) { %>
+      <div id="commandBar">
+        <div id="commandBarButtons">
+          <button type="button" id="btnReboot" class="btn btn-default btn-xs">
+            <i class="fa fa-refresh fa-fw"></i> Reboot
+          </button>
+          <button type="button" id="btnCommand" class="btn btn-default btn-xs">
+            <i class="fa fa-keyboard-o fa-fw"></i> Message -> Server
+          </button>
+          <div class="spacer"></div>
+          <button type="button" id="btnScreenshot" class="btn btn-default btn-xs">
+            <i class="fa fa-camera-retro fa-fw"></i> Take Screenshot
+          </button>
+          <div class="spacer"></div>
+          <button type="button" id="btnFPS" class="btn btn-default btn-xs active">
+            <i class="fa fa-check-square-o fa-fw"></i> FPS
+          </button>
+          <button type="button" id="btnServerDiagnostics" class="btn btn-default btn-xs active">
+            <i class="fa fa-check-square-o fa-fw"></i> Server CPU MB
+          </button>
+        </div>
+      </div>
+<% } %>
       <div id="realm" style="margin: 0; width: 896px; padding: 0; display: none;"></div>
-      <div id="queue" style="margin: 0; width: 896px; padding: 0;"></div>
+      <div id="queue" style="margin: 0; width: 896px; height: 504px; padding: 0;"></div>
+<% if (owner) { %>
+      <div id="statsBar" class="center-block">
+        <div id="statsServer" class="statsBarItem">
+          <div style="display: inline-block; font-size: 0.75em; vertical-align: top; margin-top: 6px;">
+            <span style="color: #999;">SERVER</span>
+            <br />
+            <span style="color: #ffffff;"><span id="cpu_display"></span> CPU <i class="fa fa-square"></i></span>
+            <br />
+            <span style="color: #00ff00;"><span id="mem_display"></span> MB <i class="fa fa-square"></i></span>
+          </div>
+          <canvas id="chart-server" width="300" height="48" style="display: inline-block;"></canvas>
+        </div>
+        <div id="statsClient" class="statsBarItem">
+          <div style="display: inline-block; font-size: 0.75em; vertical-align: top; margin-top: 6px;">
+            <span style="color: #999;">CLIENT</span>
+            <br />
+            <span style="color: #ffffff; font-size: 0.5em;">(click to change)</span>
+          </div>
+        </div>
+      </div>
+<% } %>
     </div>
     
-    <div id="realmStats" class="center-block" style="display: none;">
-      <div id="serverStats">
-        <div style="display: inline-block; font-size: 0.75em; vertical-align: top; margin-top: 6px;">
-          <span style="color: #ffffff;"><span id="cpu_display"></span> CPU <i class="fa fa-square"></i></span>
-          <br />
-          <span style="color: #00ff00;"><span id="mem_display"></span> MB <i class="fa fa-square"></i></span>
-        </div>
-        <canvas id="chart-server" width="300" height="48" style="display: inline-block;"></canvas>
-      </div>
-    </div>
+    
   
   </div>
   
@@ -52,7 +60,7 @@
     var QUEUE   = <%= queue %>;
     var USERID  = <%= userID %>;
     
-    var OWNER   = false;
+    var OWNER   = <%= owner %>;
     var ROOT    = '//' + RAWHOST + '/realms/<%= id %>/';
     var STATS   = '//' + RAWHOST + '/realms/<%= id %>/stats';
     

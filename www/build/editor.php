@@ -186,39 +186,6 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     html, body {
       height:100%;
     }
-
-    #commandBar {
-      height: 26px;
-      background-color: #777;
-    }
-    
-    #commandBarButtons {
-      float: left;
-      margin-top: 2px;
-      margin-left: 6px;
-    }
-    
-    #commandBarButtons button {
-      background: #777;
-      color: #e0e0e0;
-      border-color: #666;
-      text-shadow: none;
-    }
-    
-    #commandBarButtons button:hover {
-      background: #555;
-    }
-    
-    #commandBarButtons .spacer {
-      display: inline-block;
-      vertical-align: middle;
-      background: #666;
-      width: 2px;
-      border-left: #888 1px solid;
-      height: 18px;
-      margin-left: 6px;
-      margin-right: 6px;
-    }
   </style>
 
 </head>

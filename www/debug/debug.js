@@ -65,7 +65,7 @@ function allReady() {
   engine.loaded = function () {
     if (DEBUG) {			
       stats.setMode(0); // 0: fps, 1: ms
-      document.getElementById("realmStats").appendChild( stats.domElement );
+      document.getElementById("statsClient").appendChild( stats.domElement );
       engine.debug(true);
     }
             

@@ -13,6 +13,7 @@ var realms          = {};
 var ocean_token     = "254c9a09018914f98dd83d0ab1670f307b036fe761dda0d7eaeee851a37eb1cd";
 var realms_token    = "b2856c87d4416db5e3d1eaef2fbef317846b06549f1b5f3cce1ea9d639839224";
 var self_token      = "2f15adf29c930d8281b0fb076b0a14062ef93d4d142f6f19f4cdbed71fff3394";
+var debug_token     = "1e4651af36b170acdec7ede7268cbd63b490a57b1ccd4d4ddd8837c8eff2ddb9";
 
 var allowCrossDomain = function(req, res, next) {
     res.header('Access-Control-Allow-Origin', 'http://www.assembledrealms.com');
@@ -46,7 +47,13 @@ app.get('/stats', function (req, res, next) {
       sessions: [],
       queue:    []
     };
-    request(address, function (error, response, body) {
+    var options = {
+      url: address,
+      headers: {
+        'Authorization': debug_token
+      }
+    };
+    request(options, function (error, response, body) {
       if (!error && response.statusCode == 200) {
         console.log(body)
         var responseData = JSON.parse(body);
@@ -61,9 +68,11 @@ app.get('/stats', function (req, res, next) {
             sessionID: responseData[0][q],
             realmID:   realmIDLookup
           });
-          data.servers.push(serverData);
-          callback();
         }
+        data.servers.push(serverData);
+        callback();
+      } else {
+        callback();
       }
     })
   }, function (err) {

@@ -64,9 +64,12 @@ app.post('/auth/:id', function httpPostAuth(req, res, next) {
   var realm_id    = req.params.id;
   
   if ((php_sess === undefined) || (user_id === undefined) || (owner === undefined)) {
-    console.log('/api/auth - Missing params: ' + JSON.stringify(req.body));
+    console.log('/auth - Missing params: ' + JSON.stringify(req.body));
     return res.status(500).send("Missing parameters, bruh.");
   }
+  
+  console.log("/auth requested: session: %s, user: %s, realm: %s, owner: %s",
+    php_sess, user_id, realm_id, owner);
 
   var realm     = "realm_" + realm_id + "_access";
   var privilege = (owner == true) ? 1 : 0;
@@ -81,9 +84,9 @@ app.post('/auth/:id', function httpPostAuth(req, res, next) {
         console.error(err);
         return res.status(500).send(err.message);
       }
-      console.log("MULTI got " + replies.length + " replies");
+      console.log("/auth success, db replies: %s", JSON.stringify(replies));
       
-      // TODO: Respond with realm markup just like in play
+      return res.send('OK');
     });
 });
 
@@ -153,43 +156,57 @@ app.use(function(req, res, next) {
 
 app.get('/realms/:id', function httpGetRealm(req, res, next) {
 
-  var userID   = req.user_id;
-  var realmID  = req.params.id;
-  var realmKey = "realm_" + realmID;
+  var userID       = req.user_id;
+  var realmID      = req.params.id;
+  var realmKey     = "realm_" + realmID;
+  var realmAccess  = "realm_" + realmID + "_access";
+  var owner        = false;
   
   var queueUser = function (callback) {
     // First, is the user already in the queue? (user refreshed browser, etc)
-    db.zscore([QUEUE_LOOKUP, userID], function redisCheckQueue(error, queueRealmID) {
-      if (queueRealmID === null) {
-        // Not in the queue
-        db.multi()
-          .zcard(ACTIVE_SESSIONS) // Total active sessions across realms and queue
-          .zlexcount([ACTIVE_SESSIONS, realmID, realmID]) // Sessions on requested realm
-          .exec(function (err, replies) {
-            if (err) {
-              console.error(err);
-              return res.status(500).send(err.message);
-            }
-            if ((parseInt(replies[0]) >= MAX_CLIENTS_GLOBAL) || (parseInt(replies[1]) >= MAX_CLIENTS_REALM)) {
-              
-              db.multi()
-                .zadd([QUEUE_LOOKUP, realmID, userID])
-                .rpush([QUEUE, userID])
-                .exec(function (err, replies) {
-                  // Successfully added to queue
-                  return callback(true);
-                });
-              
-            } else {
-              // No need for queue
-              return callback(false);
-            }
-          });
-      } else {
-        // Already queued
-        return callback(true);
-      }
-    });
+    
+    db.multi()
+      .zscore([realmAccess, userID])     // Check the user permission (1 = privileged)
+      .zscore([QUEUE_LOOKUP, userID])    // Check if user is in queue
+      .exec(function (err, replies) {
+        var accessReply  = replies[0];
+        var queueReply   = replies[1];
+        
+        // TODO: If accessReply === null, punt user
+        if (accessReply.toString() === "1") {
+          owner = true;
+        }
+        
+        if (queueReply === null) {
+          // Not in the queue
+          db.multi()
+            .zcard(ACTIVE_SESSIONS) // Total active sessions across realms and queue
+            .zlexcount([ACTIVE_SESSIONS, realmID, realmID]) // Sessions on requested realm
+            .exec(function (err, replies) {
+              if (err) {
+                console.error(err);
+                return res.status(500).send(err.message);
+              }
+              if ((parseInt(replies[0]) >= MAX_CLIENTS_GLOBAL) || (parseInt(replies[1]) >= MAX_CLIENTS_REALM)) {
+                
+                db.multi()
+                  .zadd([QUEUE_LOOKUP, realmID, userID])
+                  .rpush([QUEUE, userID])
+                  .exec(function (err, replies) {
+                    // Successfully added to queue
+                    return callback(true);
+                  });
+                
+              } else {
+                // No need for queue
+                return callback(false);
+              }
+            });
+        } else {
+          // Already queued
+          return callback(true);
+        }
+      });
   };
 	
   queueUser(function(queued) {
@@ -226,7 +243,8 @@ app.get('/realms/:id', function httpGetRealm(req, res, next) {
           host:     req.headers.host,
           port:     port,
           scripts:  scripts,
-          queue:    queued
+          queue:    queued,
+          owner:    owner
         });
       });
       

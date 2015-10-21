@@ -8,7 +8,7 @@
         <span class="icon-bar"></span>
       </button>
       <a class="navbar-brand" href="http://www.assembledrealms.com/">
-		<img src='../../img/logo_small.png' />
+		<img src='/img/logo_small.png' />
 	  </a>
     </div>
     
