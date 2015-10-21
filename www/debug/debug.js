@@ -14,13 +14,15 @@ $("#btnFPS").on("click", function (e) {
 
   if (displayClientStats) {
     // Turn off:
-    $("#stats").hide();
+    $("#statsClient").prev().hide();
+    $("#statsClient").hide();
     displayClientStats = false;
     self.removeClass("active");
     self.html('<i class="fa fa-square-o fa-fw"></i> FPS');
   } else {
     // Turn on:
-    $("#stats").show();
+    $("#statsClient").prev().show();
+    $("#statsClient").show();
     displayClientStats = true;
     self.addClass("active");
     self.html('<i class="fa fa-check-square-o fa-fw"></i> FPS');
@@ -33,13 +35,15 @@ $("#btnServerDiagnostics").on("click", function (e) {
 
   if (displayServerStats) {
     // Turn off:
-    $("#serverStats").hide();
+    $("#statsServer").prev().hide();
+    $("#statsServer").hide();
     displayServerStats = false;
     self.removeClass("active");
     self.html('<i class="fa fa-square-o fa-fw"></i> Server CPU MB');
   } else {
     // Turn on:
-    $("#serverStats").show();
+    $("#statsServer").prev().show();
+    $("#statsServer").show();
     displayServerStats = true;
     self.addClass("active");
     self.html('<i class="fa fa-check-square-o fa-fw"></i> Server CPU MB');
@@ -63,7 +67,7 @@ function allReady() {
   document.getElementById('queue').appendChild(queueRenderer.view);
 
   engine.loaded = function () {
-    if (DEBUG) {			
+    if (OWNER) {			
       stats.setMode(0); // 0: fps, 1: ms
       document.getElementById("statsClient").appendChild( stats.domElement );
       engine.debug(true);

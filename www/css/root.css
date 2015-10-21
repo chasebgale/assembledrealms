@@ -306,7 +306,19 @@ div#funding {
 }
 
 #statsBar #stats {
-  display: inline-block;
+  float: left;
+}
+
+#statsBar .spacer {
+  float: left;
+  vertical-align: middle;
+  background: #666;
+  width: 2px;
+  border-left: #888 1px solid;
+  height: 32px;
+  margin-left: 6px;
+  margin-right: 6px;
+  margin-top: 8px;
 }
 
 #commandBar {

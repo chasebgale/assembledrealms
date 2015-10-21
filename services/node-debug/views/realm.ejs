@@ -27,23 +27,28 @@
       <div id="realm" style="margin: 0; width: 896px; padding: 0; display: none;"></div>
       <div id="queue" style="margin: 0; width: 896px; height: 504px; padding: 0;"></div>
 <% if (owner) { %>
-      <div id="statsBar" class="center-block">
-        <div id="statsServer" class="statsBarItem">
-          <div style="display: inline-block; font-size: 0.75em; vertical-align: top; margin-top: 6px;">
+      <div id="statsBar" class="clearfix">
+        <div class="statsBarItem">
+          <div style="font-size: 0.75em; vertical-align: top;">
             <span style="color: #999;">SERVER</span>
             <br />
             <span style="color: #ffffff;"><span id="cpu_display"></span> CPU <i class="fa fa-square"></i></span>
             <br />
             <span style="color: #00ff00;"><span id="mem_display"></span> MB <i class="fa fa-square"></i></span>
           </div>
+        </div>
+        <div id="statsServer" class="statsBarItem">
           <canvas id="chart-server" width="300" height="48" style="display: inline-block;"></canvas>
         </div>
-        <div id="statsClient" class="statsBarItem">
-          <div style="display: inline-block; font-size: 0.75em; vertical-align: top; margin-top: 6px;">
+        <div class="spacer"></div>
+        <div class="statsBarItem">
+          <div style="display: inline-block; font-size: 0.75em; vertical-align: top;">
             <span style="color: #999;">CLIENT</span>
             <br />
-            <span style="color: #ffffff; font-size: 0.5em;">(click to change)</span>
+            <span style="color: #ffffff; font-size: 0.65em;">(click to change)</span>
           </div>
+        </div>
+        <div id="statsClient" class="statsBarItem">
         </div>
       </div>
 <% } %>

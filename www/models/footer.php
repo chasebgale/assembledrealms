@@ -1,5 +1,5 @@
 <div id='footer' class="container">
-    <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js'></script>
+    <script src='//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js'></script>
     <script src='//netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js'></script>
     <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
     <!-- assembledrealms large -->
@@ -32,7 +32,7 @@
 		<div class="panel-heading"><span class="glyphicon glyphicon-exclamation-sign"></span> I need your help!</div>
 		<div class="panel-body">
 			<h3>If you enjoy this site, please white-list it in your ad-blocking plug-in!</h3>
-			<p class="text-justify">This is a <a href="http://www.assembledrealms.com/user/id/1">one-man</a> operation. I am self-funding with my normal 9-5 gig. I am busting my hump trying to make everything run smoothly. A little extra cash from advertising would be awesome. If an ad offended or irritated you, or if you have a suggestion, please feel free to send it over to me directly: <a href="mailto:chase@assembledrealms.com">chase@assembledrealms.com</a> <a href="https://twitter.com/chasebgale">@chasebgale</a></p>
+			<p class="text-justify">This is a <a href="http://www.assembledrealms.com/user/id/1">one-man</a> operation. I am self-funding with my own hard earned cash and busting my hump trying to make sure everything runs smoothly. A little extra cash from advertising would be awesome. If an ad offended or irritated you, or if you have a suggestion, please feel free to contact me directly: <a href="mailto:chase@assembledrealms.com">chase@assembledrealms.com</a> <a href="https://twitter.com/chasebgale">@chasebgale</a></p>
 		</div>
 	</div>
 </div>
