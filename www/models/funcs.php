@@ -352,6 +352,23 @@ function fetchUserDetails($email=NULL,$token=NULL, $id=NULL)
 	return ($row);
 }
 
+function fetchUserBlurb($id) {
+  global $mysqli,$db_table_prefix;
+		
+		$stmt = $mysqli->prepare("SELECT 
+				description
+				FROM user_blurbs
+				WHERE user_id = ?"
+			);
+		$stmt->bind_param("i", $id);
+		$stmt->execute();
+    $stmt->bind_result($description);
+		$stmt->fetch();
+		$stmt->close();
+		
+		return ($description);
+}
+
 //Toggle if lost password request flag on or off
 function flagLostPasswordRequest($username,$value)
 {

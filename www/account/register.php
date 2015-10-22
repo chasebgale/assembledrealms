@@ -174,7 +174,7 @@ if(!empty($_POST)) {
 require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 echo "<div class='container'>";
 
-$wrapper = '<div id="alertPanel" class="panel panel-warning" style="width: 75%; margin: 30px auto;">
+$wrapper = '<div id="alertPanel" class="panel panel-warning" style="width: 75%; margin: 30px auto; display: none;">
                 <div class="panel-body">
                     <h2 id="alertMessage" style="text-align: center; margin-top: 0;"><small>
                         %message% Please take a moment to register or login.
@@ -197,6 +197,11 @@ switch (substr($_SERVER['QUERY_STRING'], 0, 1)) {
 }
 
 ?>
+
+<div class="well" style="margin: 40px auto;">
+  <h3 class="text-center" style="margin-top: 10px;"><strong>ASSEMBLEDREALMS IS IN BETA!</strong></h3>
+  <p class="text-justify"><strong>This is a <a href="http://www.assembledrealms.com/user/id/1">one-man</a> operation.</strong> I am self-funding with my own hard earned cash and busting my hump trying to make sure everything runs smoothly. Please don't take things too seriously until the platform is more stable. If you encounter a bug or if something is not working as you'd expect, please feel free to contact me directly: <a href="mailto:chase@assembledrealms.com">chase@assembledrealms.com</a> or <a href="https://twitter.com/chasebgale">@chasebgale</a>. Have fun!</p>
+</div>
 
 <div class="row">
 	<div class="col-md-5">

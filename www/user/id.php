@@ -23,7 +23,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
             <img src="/img/profiles/<?=$userID . ".jpg?" . time() ?>" />
         </div>
         
-        <div id="blurb" class="media-body"><?=$loggedInUser->fetchBlurb();?></div>
+        <div id="blurb" class="media-body"><?=fetchUserBlurb($userID)?></div>
     </div>
     
 </div>

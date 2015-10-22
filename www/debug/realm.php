@@ -93,6 +93,11 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
 <div id="realm-container" style="padding-top: 20px;"></div>
 
+<ins id="footer_ad" class="adsbygoogle"
+         style="display:block;width:970px;height:90px; margin: 0 auto; margin-top: 100px;"
+         data-ad-client="ca-pub-4898800745718155"
+         data-ad-slot="4211616849"></ins>
+
 <script src="/build/js/stats.min.js"></script>
 <script src="/build/js/utilities.js"></script>
 <script src="/js/keyboard.js"></script>

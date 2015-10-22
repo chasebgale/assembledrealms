@@ -22,19 +22,17 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
         <h1>Things Are Broken!!<small></small></h1>
     </div>
     <p>
-        Assembled Realms is currently in a seriously alpha state - and I don't mean leading the pack; The technology is expansive and is developed by <a href="/user/index/1">a single, solitary code-monkey</a>. Please don't take things too seriously until the platform is more stable. Please remember this fact before sending that lonely, poor programmer a hate-filled email. 
+        Assembled Realms is currently in a seriously alpha state - and I don't mean leading the pack; The technology is expansive and is developed by <a href="/user/id/1">a single, solitary code-monkey</a>. Please don't take things too seriously until the platform is more stable. Please remember this fact before sending that lonely, poor programmer a hate-filled email. 
     </p>
     
     <div class="page-header">
-        <h1>Can I Contact You? <small>Please?</small></h1>
+      <h1>Can I Contact You? <small>Please?</small></h1>
     </div>
     <blockquote>
-        <p>outreach@assembledrealms.com</p>
-        <footer>For 99.99% of your contacting needs.</footer>
+      <p><a href="mailto:chase@assembledrealms.com">chase@assembledrealms.com</a></p>
     </blockquote>
     <blockquote>
-        <p>suits@assembledrealms.com</p>
-        <footer>Business inquires and whatnot.</footer>
+      <p><a href="https://www.twitter.com/chasebgale">@chasebgale</a></p>
     </blockquote>
     
 </div>
