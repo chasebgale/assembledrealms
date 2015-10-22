@@ -503,12 +503,34 @@ var tickTock = setInterval(function () {
   var expired = Date.now() - 1800000; // 1.8 million milliseconds = 30 minutes
   
   db.zrangebyscore([SESSION_LIST, 0, expired], function redisGetExpiredSessions(error, replies) {
-    console.log("Expired sessions: " + JSON.stringify(replies));
-    // TODO: Loop through replies, killing the SESSION_MAP entry for the session as well, then
-    // calling zremrangebyscore
+    
+    if (error) {
+      return console.error(error);
+    }
+    
+    if (replies.length > 0) {
+      console.log("Expired sessions: " + JSON.stringify(replies));
+      
+      // Add the target memory table to the beginning of the array so it is formatted properly e.g.
+      // ["table_id", "value", "value"]
+      replies.unshift(SESSION_MAP);
+      
+      db.zrem(replies, function redisDeleteSessionMap(error, count) {
+        if (error) {
+          return console.error(error);
+        }
+        
+        db.zremrangebyscore([SESSION_LIST, 0, expired], function redisDeleteSessionList(error, counted) {
+          if (error) {
+            return console.error(error);
+          }
+          
+          return true;
+        });
+      });
+    }
   });
   
-  //db.zremrangebyscore(
 }, 30000);
 
 pm2.connect(function(err) {
