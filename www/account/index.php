@@ -98,7 +98,37 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 
 <div id="content" class="container">
 
-    <div class="well">
+    <div class="row">
+        <div class="col-md-3">
+            <h3>Mugshot</h3>
+            <div>
+                <img src="<?=$loggedInUser->user_image?>" />
+            </div>
+            <!--
+            <div>
+                <span><?=$loggedInUser->email?></span>
+            </div>
+            -->
+            <form id="mugshotForm" enctype="multipart/form-data" action="" method="POST" role="form">
+                <div class="form-group">
+                    <label for="upfile">New mugshot:</label>
+                    <!-- MAX_FILE_SIZE must precede the file input field -->
+                    <input type="hidden" name="MAX_FILE_SIZE" value="200000" />
+                    <!-- Name of input element determines name in $_FILES array -->
+                    <input name="upfile" id="upfile" type="file" accept="image/gif, image/png, image/jpeg" />
+                    <!--<button type="submit" class="btn btn-default">Upload</button>-->
+                </div>
+            </form>
+        </div>
+        
+        <div class="col-md-9">
+            <h3>Blurb</h3>
+            <div id="editor" style="height: 300px;"><?=$loggedInUser->fetchBlurb();?></div>
+        </div>
+    </div>
+    <button id="saveChanges" class="btn btn-default pull-right">Save Changes</button>          
+    
+    <div class="well" style="margin-top: 60px;">
         <div class="row">
             <div class="col-md-6 text-center">
                 <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top" style="margin-bottom: 40px;">
@@ -153,37 +183,6 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
             </div>
         </div>
     </div>
-			
-    <div class="row">
-        <div class="col-md-3">
-            <h3>Mugshot</h3>
-            <div>
-                <img src="<?=$loggedInUser->user_image?>" />
-            </div>
-            <!--
-            <div>
-                <span><?=$loggedInUser->email?></span>
-            </div>
-            -->
-            <form id="mugshotForm" enctype="multipart/form-data" action="" method="POST" role="form">
-                <div class="form-group">
-                    <label for="upfile">New mugshot:</label>
-                    <!-- MAX_FILE_SIZE must precede the file input field -->
-                    <input type="hidden" name="MAX_FILE_SIZE" value="200000" />
-                    <!-- Name of input element determines name in $_FILES array -->
-                    <input name="upfile" id="upfile" type="file" accept="image/gif, image/png, image/jpeg" />
-                    <!--<button type="submit" class="btn btn-default">Upload</button>-->
-                </div>
-            </form>
-        </div>
-        
-        <div class="col-md-9">
-            <h3>Blurb</h3>
-            <div id="editor" style="height: 300px;"><?=$loggedInUser->fetchBlurb();?></div>
-        </div>
-    </div>
-    <button id="saveChanges" class="btn btn-default pull-right">Save Changes</button>          
-
 </div>
 
 <?php require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php"); ?>

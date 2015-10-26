@@ -24,6 +24,7 @@ var SESSION_MAP        = "session_to_user_map";   // Sessions mapped to user_id 
 var ACTIVE_SESSIONS    = "sessions_active";       // Sessions actually connected via SOCKET
 var QUEUE              = "queue";
 var QUEUE_LOOKUP       = "queue_lookup";          // Quickly determine if user is in queue and for what realm...
+var REALM_QUEUE        = "realm_queue";           // Realms waiting to be launched
 
 // TODO: Don't flush the DB on restart in production...
 // db.flushdb();
@@ -410,7 +411,7 @@ app.get('/launch/:id', function httpGetLaunch(req, res, next) {
   var realmErr    = '/var/www/logs/' + realmID + '-err.log';
   var realmOut    = '/var/www/logs/' + realmID + '-out.log';
   var found_proc  = [];
-//  var close_proc  = [];
+  var checkList   = [];
     
   var realmLaunch = function (callback) {
     // Get all processes running
@@ -422,22 +423,16 @@ app.get('/launch/:id', function httpGetLaunch(req, res, next) {
           found_proc.push(proc);
           return;
         }
- 
-/* 
-        db.get(realmID + "_clients",  function redisGetClients(error, reply) {
-          if (error) {
-              return;
-          }
-          // If the server is empty, shut it down:
-          // TODO: Maybe check the last activity time and only shudown proc if it's been idle for
-          // over 5-10 minutes or something...
-          if (reply == 0) {
-              close_proc.push(proc);
-          }
+        
+        /*
+        pm2.describe(proc.name, function (err, list){
+          console.log(JSON.stringify(list));
         });
-*/
+        */
       });
-          
+      
+      
+      
 /*
       close_proc.forEach(function(proc) {
         pm2.stop(proc, function onPmStop(err, proc) {
@@ -447,7 +442,40 @@ app.get('/launch/:id', function httpGetLaunch(req, res, next) {
         });
       });
 */
+         
+      if (found_proc.length === 0) {
+        // 7 == max, realm_broker + 7 realms, = 8 total
+        // For now, check # of running realms, perhaps in the future when more data is available
+        // in terms of average memory consumption, it'll check for free mem
+        if (process_list.length > 7) {
           
+          // Do we have a realm we can power down?
+          var multi = db.multi();
+            
+          process_list.forEach(function(proc) {
+            multi.zrangebyscore([ACTIVE_SESSIONS, proc.name, proc.name]);
+            checkList.push(proc.name);
+          });
+          
+          multi.exec(function (error, replies) {
+            for (var i = 0; i < replies.length; i++) {
+              if (replies[i] === null) {
+                // No active sessions for this realm, power it down
+                // TODO: Check to make sure realm is at least 15 min old or something
+                
+              }
+            }
+          });
+          
+          
+          // QUEUE REALM LAUNCH
+          db.rpush([REALM_QUEUE, realmID], function (error, response) {
+            callback();
+          });
+        }
+      }
+       
+      // QUEUE is not necessary, load as usual
       fs.truncate(realmErr, 0, function onTruncateErrorLog(){
         fs.truncate(realmOut, 0, function onTruncateOutLog(){
           if (found_proc.length === 0) {

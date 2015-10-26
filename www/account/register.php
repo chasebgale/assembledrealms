@@ -260,82 +260,93 @@ switch (substr($_SERVER['QUERY_STRING'], 0, 1)) {
 
 <script>
 
-    $("#registerSubmit").on("click", function (e) {
-        e.preventDefault();
+  $("#registerSubmit").on("click", function (e) {
+    e.preventDefault();
 	
-	var post = 'directive=register&' + $("#form-register").serialize();
+    var post = 'directive=register&' + $("#form-register").serialize();
 
-        $.post("<?php echo $_SERVER['PHP_SELF']; ?>", post, function (data) {
-            if (data == "OK") {
+    $.post("<?php echo $_SERVER['PHP_SELF']; ?>", post, function (data) {
+      if (data == "OK") {
 
-                switch (window.location.search.substr(1, 1)) {
-                    case '0':
-                        window.location = "/build";
-                        break;
-                    case '1':
-                        window.location = "/play/realm.php?" + window.location.search.substr(2);
-                        break;
-                    case '2':
-                        window.location = "/account";
-                        break;
-                    default:
-                        window.location = "/account";
-                        break;
-                }
-
-                //window.location = "account.php";
-
-            } else {
-                var parsed = JSON.parse(data);
-                var input;
-
-                // Remove existing error displays:
-                $("#form-register .form-group").removeClass("has-error");
-                $("#form-register .form-control-feedback").remove();
-
-                // Add current error displays:
-                _.each(parsed, function (value, key) {
-
-                    input = $("#form-register input[name='" + key + "']");
-                    input.parent().addClass("has-error");
-                    input.before('<div class="alert alert-danger">' + value + '</div>')
-
-                });
-            }
-        });
-
-    });
-    
-    $("#loginSubmit").on("click", function (e) {
-        e.preventDefault();
-	
-        var post = 'directive=login&' + $("#form-signin").serialize();
-
-        $.post("<?php echo $_SERVER['PHP_SELF']; ?>", post, function (data) {
-		if (data == "OK") {
-            <?php 
-                switch (substr($_SERVER['QUERY_STRING'], 0, 1)) {
-                    case '0':
-                        echo 'window.location = "/build";';
-                        break;
-                    case '1':
-                        echo 'window.location = "/play/realm.php?' . substr($_SERVER['QUERY_STRING'], 1) . '";';
-                        break;
-                    case '2':
-                        echo 'window.location = "/account";';
-                        break;
-                    default:
-                        echo 'window.location = "/account";';
-                        break;
-                }
-            ?>
-		} else {
-            $("#alertPanel").removeClass("panel-warning").addClass("panel-danger");
-            $("#alertMessage").html("<small>" + data + "</small>");
+        switch (window.location.search.substr(1, 1)) {
+          case '0':
+            window.location = "/build";
+            break;
+          case '1':
+            window.location = "/play/realm.php?" + window.location.search.substr(2);
+            break;
+          case '2':
+            window.location = "/account";
+            break;
+          default:
+            window.location = "/build";
+            break;
         }
-        });
 
+        //window.location = "account.php";
+
+      } else {
+        var parsed = JSON.parse(data);
+        var input;
+
+        // Remove existing error displays:
+        $("#form-register .form-group").removeClass("has-error");
+        $("#form-register .form-control-feedback").remove();
+
+        // Add current error displays:
+        _.each(parsed, function (value, key) {
+
+            input = $("#form-register input[name='" + key + "']");
+            input.parent().addClass("has-error");
+            input.before('<div class="alert alert-danger">' + value + '</div>')
+
+        });
+      }
     });
+  });
+    
+  $("#loginSubmit").on("click", function (e) {
+    e.preventDefault();
+    
+    var button  = $(this);
+    button.attr('disabled', 'disabled');
+    button.html('<i class="fa fa-cog fa-spin"></i> Sign in');
+    
+    if (button.next().hasClass('alert')) {
+      button.next().remove();
+    }
+    
+    var post    = 'directive=login&' + $("#form-signin").serialize();
+
+    $.post("<?php echo $_SERVER['PHP_SELF']; ?>", post, function (data) {
+      if (data == "OK") {
+        <?php 
+            switch (substr($_SERVER['QUERY_STRING'], 0, 1)) {
+                case '0':
+                    echo 'window.location = "/build";';
+                    break;
+                case '1':
+                    echo 'window.location = "/play/realm.php?' . substr($_SERVER['QUERY_STRING'], 1) . '";';
+                    break;
+                case '2':
+                    echo 'window.location = "/account";';
+                    break;
+                default:
+                    echo 'window.location = "/account";';
+                    break;
+            }
+        ?>
+      } else {
+        
+        button.after('<div class="alert alert-danger" role="alert">' + data + '</div>');
+        button.removeAttr('disabled');
+        button.html('Sign in');
+        
+        // $("#alertPanel").removeClass("panel-warning").addClass("panel-danger");
+        // $("#alertMessage").html("<small>" + data + "</small>");
+      }
+    });
+  });
 
 </script>
 
