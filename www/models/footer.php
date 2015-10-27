@@ -1,12 +1,13 @@
 <div id='footer' class="container">
     <script src='//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js'></script>
     <script src='//netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js'></script>
+    <!--
     <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
     <!-- assembledrealms large 
     <ins id="footer_ad" class="adsbygoogle"
          style="display:block;width:970px;height:90px; margin: 0 auto; margin-top: 100px;"
          data-ad-client="ca-pub-4898800745718155"
-         data-ad-slot="4211616849"></ins> -->
+         data-ad-slot="4211616849"></ins> 
     <script>
     (adsbygoogle = window.adsbygoogle || []).push({});
     </script>
@@ -27,7 +28,7 @@
             }, 1000);
         });
     </script>
-	
+	-->
 	<div id="footer_msg" class="panel panel-danger" style="display: none;">
 		<div class="panel-heading"><span class="glyphicon glyphicon-exclamation-sign"></span> I need your help!</div>
 		<div class="panel-body">

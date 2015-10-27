@@ -312,181 +312,156 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
 <script type="text/javascript">
     
-    var __renderer;
+  var __renderer;
     
 	var engine 		= undefined;		
 	var	loading		= false;
+  var status    = <?php echo $realm['status']; ?>;
 	
-    function fundingMarkdown(data) {
-       var variables = {};
-       variables.funds = "$12.45";
-       variables.priceHour = "$0.009";
-       variables.priceDay = "$0.22";
-       variables.fundsToTime = "9 days, 11 hours";
-       
-       var markedOutput = marked(data);
-       
-       _.forIn(variables, function(value, key) {
-          markedOutput = markedOutput.replace('{' + key + '}', value);
-       });
-       
-       return markedOutput;
-    }
+  function fundingMarkdown(data) {
+     var variables = {};
+     variables.funds = "$12.45";
+     variables.priceHour = "$0.009";
+     variables.priceDay = "$0.22";
+     variables.fundsToTime = "9 days, 11 hours";
+     
+     var markedOutput = marked(data);
+     
+     _.forIn(variables, function(value, key) {
+        markedOutput = markedOutput.replace('{' + key + '}', value);
+     });
+     
+     return markedOutput;
+  }
     
-    $(document).ready(function () {
+  $(document).ready(function () {
 		
-		engine = new Engine();
+    if (status > 0) {
+		  engine = new Engine();
 
-		engine.loaded = function () {
-			
-			$("#loading").fadeOut(function () {
-				$("#container").fadeIn();
-			});
+      engine.loaded = function () {
+        $("#loading").fadeOut(function () {
+          $("#container").fadeIn();
+        });
+        animate();
+      };
 		
-			animate();
-		};
-		
-		engine.loading = function (e) {
-			/*
-				_numToLoad: 70
-				_progressChunk: 1.4285714285714286
-			*/
-			if (!loading) {
-				loading = true;
-				$("#loading_text").text("Downloading realm assets...");
-			}
-			
-			var string_width = Math.floor(e.progress) + "%";
-			
-			$("#loading_progress").width(string_width);
-			$("#loading_progress").text(string_width)
-			$("#loading_progress").attr("aria-valuenow", Math.floor(e.progress));
-		}
+      engine.loading = function (e) {
+        if (!loading) {
+          loading = true;
+          $("#loading_text").text("Downloading realm assets...");
+        }
+        var string_width = Math.floor(e.progress) + "%";
+        $("#loading_progress").width(string_width);
+        $("#loading_progress").text(string_width)
+        $("#loading_progress").attr("aria-valuenow", Math.floor(e.progress));
+      }
+      
+      engine.initialize( document.getElementById("realm") );
+      
+    }
 		
 		function animate() {
-			
 			engine.render();
 			requestAnimationFrame(animate);
-
 		}
-	
-		engine.initialize( document.getElementById("realm") );
         
-        __renderer = new marked.Renderer();
-   
-        __renderer.table = function(header, body) {
-           return '<table class="table table-striped"><thead>' + header + '</thead><tbody>' + body + '</tbody></table>';
+    __renderer = new marked.Renderer();
+ 
+    __renderer.table = function(header, body) {
+      return '<table class="table table-striped"><thead>' + header + '</thead><tbody>' + body + '</tbody></table>';
+    };
+        
+    marked.setOptions({
+       sanitize: true,
+       renderer: __renderer
+    });
+        
+    var templateFn = _.template($('#comments_template').html());
+    var templateReplyFn = _.template($('#comment_reply_template').html());
+        
+    $.post( "realm.php", { directive: "comment", realmID: "<?=$realmID?>" })
+      .done(function( data ) {
+          if (data !== "null") {
+              data = JSON.parse( data );
+              $("#comments").html(templateFn({ 'comments': data }));
+              
+              for (var i =0; i < data.length; i++) {
+                  if (data[i].parent_id) {
+                      var target = $('#comments').find('[data-id="' + data[i].parent_id + '"]');
+                      target.append(templateReplyFn({'comment': data[i]}));
+                  }
+              }
+          } 
+      });
+        
+        
+        
+    $('#btnLove').on('click', function (e) {
+
+      e.preventDefault();
+      
+      var button = $(this);
+      
+      $.post( "realm.php", { directive: "love", realmID: "<?=$realmID?>" })
+      .done(function( data ) {
+        if (data !== "null") {
+            
+          button.html('<i class="fa fa-heart"></i>  Loved!');
+          button.prop("disabled",true);
+          
+          var loveCountSpan = $("#loveCount");
+          var loveCount = parseInt(loveCountSpan.text()) + 1;
+          
+          loveCountSpan.text(loveCount);
+
         }
+      });
         
-        marked.setOptions({
-           sanitize: true,
-           renderer: __renderer
-        });
-        
-        var templateFn = _.template($('#comments_template').html());
-        var templateReplyFn = _.template($('#comment_reply_template').html());
-		
-		/*
-        $.post("realm.php", { directive: "markdown", realmID: "<?=$realmID?>" })
-        .done(function( data ) {
-            if (data !== "null") {
-                
-                data = JSON.parse( data );
-                
-                if (data.description) {
-                    $("#tab_readme").html( marked(data.description) );
-                }
-                
-                if (data.funding) {
-                    $("#funding").html( fundingMarkdown(data.funding) );
-                }
-
-            }
-        });
-		*/
-        
-        $.post( "realm.php", { directive: "comment", realmID: "<?=$realmID?>" })
-        .done(function( data ) {
-            if (data !== "null") {
-                data = JSON.parse( data );
-                $("#comments").html(templateFn({ 'comments': data }));
-                
-                for (var i =0; i < data.length; i++) {
-                    if (data[i].parent_id) {
-                        var target = $('#comments').find('[data-id="' + data[i].parent_id + '"]');
-                        target.append(templateReplyFn({'comment': data[i]}));
-                    }
-                }
-            } 
-        });
-        
-        
-        
-        $('#btnLove').on('click', function (e) {
-
-            e.preventDefault();
-            
-            var button = $(this);
-            
-            $.post( "realm.php", { directive: "love", realmID: "<?=$realmID?>" })
-            .done(function( data ) {
-                if (data !== "null") {
-                    
-                    button.html('<i class="fa fa-heart"></i>  Loved!');
-                    button.prop("disabled",true);
-                    
-                    var loveCountSpan = $("#loveCount");
-                    var loveCount = parseInt(loveCountSpan.text()) + 1;
-                    
-                    loveCountSpan.text(loveCount);
-
-                }
-            });
-            
-        });
+    });
        
-        $('#btnComment').on('click', function (e) {
-            e.preventDefault();
+    $('#btnComment').on('click', function (e) {
+      e.preventDefault();
+      
+      $('#tabs a[href="#tab_comments"]').tab('show');
+      
+      $('html, body').animate({
+          scrollTop: $("#comment").offset().top - 100
+      }, 400);
             
-            $('#tabs a[href="#tab_comments"]').tab('show');
-            
-            $('html, body').animate({
-                scrollTop: $("#comment").offset().top - 100
-            }, 400);
-                
-       });
+    });
        
-       $('#btnAddComment').on('click', function (e) {
+    $('#btnAddComment').on('click', function (e) {
         
-            var button = $(this);
-            button.attr('disabled', true);
-            button.html('<i class="fa fa-cog fa-spin"></i> Add Comment');
-            
-            $.post( "realm.php", { directive: "comment", realmID: "<?=$realmID?>", comment: $('#commentContent').val() })
-                .done(function( data ) {
-                    if (data !== "null") {
-                        
-                        data = JSON.parse( data );
-                        
-                        $("#comments").append(templateFn({ 'comments': [data] }));
-                        button.removeAttr('disabled');
-                        button.html('Add Comment');
-                        $('#commentContent').val('');
-                        
-                        // Update comment count:
-                        var commentCountSpan = $("#commentCount");
-                        var commentCount = parseInt(commentCountSpan.text()) + 1;
-                        commentCountSpan.text(commentCount);
-                        
-                        // Scroll page to new comment:
-                        $('html, body').animate({
-                            scrollTop: $('#comments').find('[data-id="' + data.id + '"]').offset().top
-                        }, 1000);
+      var button = $(this);
+      button.attr('disabled', true);
+      button.html('<i class="fa fa-cog fa-spin"></i> Add Comment');
+      
+      $.post( "realm.php", { directive: "comment", realmID: "<?=$realmID?>", comment: $('#commentContent').val() })
+          .done(function( data ) {
+              if (data !== "null") {
+                  
+                  data = JSON.parse( data );
+                  
+                  $("#comments").append(templateFn({ 'comments': [data] }));
+                  button.removeAttr('disabled');
+                  button.html('Add Comment');
+                  $('#commentContent').val('');
+                  
+                  // Update comment count:
+                  var commentCountSpan = $("#commentCount");
+                  var commentCount = parseInt(commentCountSpan.text()) + 1;
+                  commentCountSpan.text(commentCount);
+                  
+                  // Scroll page to new comment:
+                  $('html, body').animate({
+                      scrollTop: $('#comments').find('[data-id="' + data.id + '"]').offset().top
+                  }, 1000);
 
-                    }
-                });
+              }
+          });
             
-       });
+    });
        
        $('#comments').on('click', '.reply', function (e) {
             var button = $(this);
