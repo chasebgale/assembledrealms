@@ -314,6 +314,13 @@ dbListener.on('message', function (channel, message) {
         console.log('USER %s CONNECTED TO %s', action.user_id, action.realm_id);
       });
     }
+    
+    // Update user's last activity time
+    db.zadd([SESSION_LIST, Date.now(), action.session_id], function (error, reply) {
+      if (error) {
+        console.error(error);
+      }
+    });
   }
 });
 
@@ -539,27 +546,62 @@ var tickTock = setInterval(function () {
     if (replies.length > 0) {
       console.log("Expired sessions: " + JSON.stringify(replies));
       
-      // Add the target memory table to the beginning of the array so it is formatted properly e.g.
-      // ["table_id", "value", "value"]
-      replies.unshift(SESSION_MAP);
+      // Remove any sessions that have active connections from the removal list
+      var multiSessionToUserLookup = db.multi();
       
-      db.zrem(replies, function redisDeleteSessionMap(error, count) {
+      for (var m = 0; m < replies.length; m++) {
+        multiSessionToUserLookup.zscore([SESSION_MAP, replies[m]]); 
+      }
+      
+      multiSessionToUserLookup.exec(function (error, userIDs) {
         if (error) {
           return console.error(error);
         }
         
-        db.zremrangebyscore([SESSION_LIST, 0, expired], function redisDeleteSessionList(error, counted) {
-          if (error) {
-            return console.error(error);
+        var multiSessionsActive = db.multi();
+        
+        for (var u = 0; u < userIDs.length; u++) {
+          multiSessionsActive.zscore([ACTIVE_SESSIONS, userIDs[u]]);
+        }
+        
+        multiSessionsActive.exec(function (error, sessionLookups) {
+          // check for active sessions
+          for (var s = sessionLookups.length; s > -1; s--) {
+            if (sessionLookups[s] !== null) {
+              // Remove session that is actively connected from list to be purged
+              replies.splice(s, 1);
+            }
           }
           
-          return true;
+          if (replies.length > 0) {
+            // Add the target memory table to the beginning of the array so it is formatted properly e.g.
+            // ["table_id", "value", "value"]
+            replies.unshift(SESSION_MAP);
+            
+            db.zrem(replies, function redisDeleteSessionMap(error, count) {
+              if (error) {
+                return console.error(error);
+              }
+              
+              db.zremrangebyscore([SESSION_LIST, 0, expired], function redisDeleteSessionList(error, counted) {
+                if (error) {
+                  return console.error(error);
+                }
+                
+                return true;
+              });
+            });
+          }
+          
         });
+        
       });
     }
+    
+    
   });
   
-}, 30000);
+}, 60000);
 
 pm2.connect(function(err) {
 	

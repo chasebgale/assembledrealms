@@ -265,6 +265,10 @@ div#funding {
     padding-left: 10px !important;
 }
 
+#tabs>li>a {
+  padding: 10px 15px !important;
+}
+
 .panel {
 	border-radius: 0 !important;
 }

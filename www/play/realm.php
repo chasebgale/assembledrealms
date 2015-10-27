@@ -191,7 +191,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     ?>
     
     
-    <div>
+  <div>
         
 		<ul id="tabs" class="nav nav-tabs" role="tablist" style="margin-top: 60px;">
 			<li class="active"><a href="#tab_readme" role="tab" data-toggle="tab">Readme</a></li>
@@ -317,6 +317,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 	var engine 		= undefined;		
 	var	loading		= false;
   var status    = <?php echo $realm['status']; ?>;
+  var realmURL  = "<?php echo "http://play-" . $realm['address'] . ".assembledrealms.com/realms/" . $realmID . "/" ?>";
 	
   function fundingMarkdown(data) {
      var variables = {};
@@ -395,7 +396,13 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
           } 
       });
         
-        
+    $.get(realmURL + "README.md", function (data) {
+      $("#tab_readme").html(marked(data));
+    });
+    
+    $.get(realmURL + "CREDITS.md", function (data) {
+      $("#tab_credits").html(marked(data));
+    });
         
     $('#btnLove').on('click', function (e) {
 

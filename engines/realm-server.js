@@ -67,7 +67,8 @@ io.use(function(socket, next) {
         // Set the content of the session object to the redis/cookie key
         socket.request.session = {
           player_key: key, 
-          user_id: reply
+          user_id: reply,
+          id: phpsession
         };
         
         next();
@@ -84,6 +85,7 @@ io.on('connection', function socketConnected(socket) {
   
   var userID     = socket.request.session.user_id;
   var playerKey  = socket.request.session.player_key;
+  var session    = socket.request.session.id;
   var player;
   
   var enterGame = function () {
@@ -113,7 +115,8 @@ io.on('connection', function socketConnected(socket) {
       var action = {
         type: 'user_connected',
         user_id: userID,
-        realm_id: realm_id
+        realm_id: realm_id,
+        session_id: session 
       };
       db.publish('realm_notifications', JSON.stringify(action));
       
@@ -184,7 +187,8 @@ io.on('connection', function socketConnected(socket) {
         var action = {
           type: 'user_disconnected',
           user_id: userID,
-          realm_id: realm_id
+          realm_id: realm_id,
+          session_id: session 
         };
         
         db.publish('realm_notifications', JSON.stringify(action));
