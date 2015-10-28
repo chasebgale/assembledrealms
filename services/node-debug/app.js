@@ -410,127 +410,148 @@ app.use(function(req, res, next) {
 });
 
 app.get('/launch/:id', function httpGetLaunch(req, res, next) {
-
-	console.log(req.url + " called");
-
-	var realmID     = req.params.id;
-	var realmApp    = '/var/www/realms/realm-server.js';
-  var realmErr    = '/var/www/logs/' + realmID + '-err.log';
-  var realmOut    = '/var/www/logs/' + realmID + '-out.log';
-  var found_proc  = [];
-  var checkList   = [];
-    
-  var realmLaunch = function (callback) {
-    // Get all processes running
-    pm2.list(function(err, process_list) {
-      // Search for running instance of requested realm
-      process_list.forEach(function(proc) {
-        console.log('checking: ' + proc.name);
-        if (proc.name == realmID) {
-          found_proc.push(proc);
-          return;
+  
+  var expired        = Date.now() - 900000; // 900k milliseconds = 15 minutes
+	var realmID        = req.params.id;
+	var realmApp       = '/var/www/realms/realm-server.js';
+  var realmErr       = '/var/www/logs/' + realmID + '-err.log';
+  var realmOut       = '/var/www/logs/' + realmID + '-out.log';
+  var running        = false;
+  var stagnantRealms = [];
+  
+  var launchRealm = function (restart, launchRealmCallback) {
+    fs.unlink(realmErr, function onRemErrorLog(error){
+      fs.unlink(realmOut, function onRemOutLog(error){
+        
+        if (error) {
+          console.log(error);
         }
         
-        /*
+        if (restart) {
+          pm2.restart(realmApp, function onPmRestart(err, proc) {
+            
+            if (err) {
+              launchRealmCallback(err);
+            }
+
+            launchRealmCallback();
+          });        
+        } else {
+          var options = {
+            name:       realmID,
+            error:      realmErr,
+            output:     realmOut,
+            scriptArgs: [realmID, 'true'],
+            force:      true
+          };
+          
+          console.log("Starting realm with the following options: " + JSON.stringify(options));
+
+          pm2.start(realmApp, options, function onPmStart(err, proc) {
+             
+            if (err) {
+              launchRealmCallback(err);
+            }
+
+            launchRealmCallback();
+          });
+        }
+        
+      });
+    });
+  };
+    
+  // Get all processes running
+  pm2.list(function(err, processes) {
+    // Search for running instance of requested realm
+    processes.forEach(function(proc) {
+      if (proc.name == realmID) {
+        running = true;
+        
         pm2.describe(proc.name, function (err, list){
           console.log(JSON.stringify(list));
         });
-        */
-      });
-      
-      
-      
-/*
-      close_proc.forEach(function(proc) {
-        pm2.stop(proc, function onPmStop(err, proc) {
-          if (err) {
-            console.log("Attempted to stop " + proc + " but errored: " + err.stack);
-          }                   
-        });
-      });
-*/
-         
-      if (found_proc.length === 0) {
-        // 7 == max, realm_broker + 7 realms, = 8 total
-        // For now, check # of running realms, perhaps in the future when more data is available
-        // in terms of average memory consumption, it'll check for free mem
-        if (process_list.length > 7) {
-          
-          // Do we have a realm we can power down?
-          var multi = db.multi();
-            
-          process_list.forEach(function(proc) {
-            multi.zrangebyscore([ACTIVE_SESSIONS, proc.name, proc.name]);
-            checkList.push(proc.name);
-          });
-          
-          multi.exec(function (error, replies) {
-            for (var i = 0; i < replies.length; i++) {
-              if (replies[i] === null) {
-                // No active sessions for this realm, power it down
-                // TODO: Check to make sure realm is at least 15 min old or something
-                
-              }
-            }
-          });
-          
-          
-          // QUEUE REALM LAUNCH
-          db.rpush([REALM_QUEUE, realmID], function (error, response) {
-            callback();
-          });
-        }
+        
+        return;
       }
+    });
        
-      // QUEUE is not necessary, load as usual
-      fs.truncate(realmErr, 0, function onTruncateErrorLog(){
-        fs.truncate(realmOut, 0, function onTruncateOutLog(){
-          if (found_proc.length === 0) {
-            // No existing realm server running, spool up new one:
-            // scriptArgs: [realm_id, debug]
-            var options = {
-              name:       realmID,
-              error:      realmErr,
-              output:     realmOut,
-              scriptArgs: [realmID, 'true'],
-              force:      true
-            };
-            
-            console.log("Starting app with the following options: " + JSON.stringify(options));
-            
-            // TODO!!!! Check if the server has ~150 or so mb free before launching, if not,
-            // add this realm to the REALM QUEUE
-            pm2.start(realmApp, options, function onPmStart(err, proc) {
-               
-              if (err) {
-                callback(err);
+    if (!running) {
+      // 7 == max, realm_broker + 7 realms, = 8 total
+      // For now, check # of running realms, perhaps in the future when more data is available
+      // in terms of average memory consumption, it'll check for free mem
+      if (processes.length > 7) {
+        
+        // Do we have a realm we can power down?
+        var multi = db.multi();
+          
+        for (var i = 0; i < processes.length; i++) {
+          multi.zrangebyscore([ACTIVE_SESSIONS, processes[i].name, processes[i].name]);
+        };
+        
+        multi.exec(function (error, replies) {
+          for (var i = 0; i < replies.length; i++) {
+            if (replies[i] === null) {
+              // No active sessions for this realm, power it down
+              stagnantRealms.push(processes[i].name);
+            }
+          }
+          
+          if (stagnantRealms.length > 0) {            
+            async.each(stagnantRealms, function(name, callback) {
+              pm2.describe(name, function (error, list){
+                if (list.launchTimeStamp < expired) {
+                  pm2.stop(name, function onPmStop(err, proc) {
+                    if (err) {
+                      console.log("Attempted to stop " + proc + " but errored: " + err.stack);
+                      callback(err);
+                    }
+                    callback();
+                  });
+                } else {
+                  callback();
+                }
+              });
+            }, function (error) {
+              if (error) {
+                return console.error(error);
               }
-
-              callback();
+              // If we are here, we've powered down at least one realm, so we can launch a new one
+              launchRealm(false, function (error) {
+                if (error) {
+                  console.error(err);
+                  return res.status(500).send(err.stack);
+                }
+                return res.send('OK');
+              });
             });
           } else {
-            // Existing realm server found, restart it
-            pm2.restart(realmApp, function onPmRestart(err, proc) {
-              
-              if (err) {
-                callback(err);
-              }
-
-              callback();
+            // QUEUE REALM LAUNCH
+            db.rpush([REALM_QUEUE, realmID], function (error, response) {
+              return res.send('QUEUED');
             });
           }
         });
+      } else {
+        // Realm not running and we have the space to spool a new one:
+        launchRealm(false, function (error) {
+          if (error) {
+            console.error(err);
+            return res.status(500).send(err.stack);
+          }
+          return res.send('OK');
+        });
+      }
+    } else {
+      // Realm is already running, simply restart it
+      launchRealm(true, function (error) {
+        if (error) {
+          console.error(err);
+          return res.status(500).send(err.stack);
+        }
+        return res.send('OK');
       });
-          
-    });
-  };
-  
-  realmLaunch(function (err) {
-    if (err) {
-      console.error(err);
-      return res.status(500).send(err.stack);
     }
-    return res.send('OK');
   });
 });
 
@@ -544,7 +565,7 @@ var tickTock = setInterval(function () {
     }
     
     if (replies.length > 0) {
-      console.log("Expired sessions: " + JSON.stringify(replies));
+      console.log("Unfiltered expired sessions: " + replies.length);
       
       // Remove any sessions that have active connections from the removal list
       var multiSessionToUserLookup = db.multi();
@@ -574,6 +595,7 @@ var tickTock = setInterval(function () {
           }
           
           if (replies.length > 0) {
+            console.log("Filtered expired sessions: " + replies.length);
             // Add the target memory table to the beginning of the array so it is formatted properly e.g.
             // ["table_id", "value", "value"]
             replies.unshift(SESSION_MAP);
