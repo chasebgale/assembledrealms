@@ -68,6 +68,8 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
   $realm   = $loggedInUser->fetchRealm($realmID);
   $loved   = $loggedInUser->lovesRealm($realmID);
   
+  $creator = fetchUserDetails(NULL, NULL, $realm['user_id']);
+  
   if ($realm['status'] == 0) {
     // TODO: Alert realm owner someone tried to play when offline
     $alert = "<h3 style='font-size: 52px; color: white; font-weight: bold;'><i class='fa fa-power-off'></i> OFFLINE</h3>";
@@ -161,7 +163,11 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
         <div class="media pull-left">
             <a class="pull-left" href="#">
+              <?php if ($creator->has_image == 1) { ?>
                 <img width="50" height="50" class="media-object" src="/img/profiles/<?=$realm['user_id'] . ".jpg?" . time() ?>">
+              <?php } else { ?>
+                <img width="50" height="50" class="media-object" src="/img/anonymous.png" />
+              <?php } ?>
             </a>
             <div class="media-body">
                 <h4 class="media-heading"><?=$realm['display_name']?><br />
