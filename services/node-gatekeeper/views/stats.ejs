@@ -20,6 +20,10 @@
     html, body {
         height:100%;
     }
+    
+    .panel-heading .progress {
+      margin-bottom: 2px !important;
+    }
   </style>
     
 </head>
@@ -33,7 +37,35 @@
 <% for(var i=0; i<servers.length; i++) {%>
     <div class="panel panel-default">
       <div class="panel-heading">
-        <h3 class="panel-title"><%= servers[i].title %></h3>
+        <div class="row">
+          <div class="col-md-4">
+            <h3 class="panel-title">
+              <strong><%= servers[i].title %></strong><br/>
+              <%= servers[i].stats.platform + " " + servers[i].stats.release %>
+            </h3>
+          </div>
+          <div class="col-md-2">
+            <span>UPTIME:</span><br/>
+            <%= servers[i].stats.uptime %>
+          </div>
+          <div class="col-md-3">
+            <span>CPU: 15min avg. load</span>
+            <div class="progress">
+              <div class="progress-bar progress-bar-info" role="progressbar" style="width: <%= servers[i].stats.load %>; min-width: 3em;">
+                <%= servers[i].stats.load %>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <span>MEM: <%= servers[i].stats.freemem + "/" + servers[i].stats.totalmem %></span>
+            <div class="progress">
+              <div class="progress-bar progress-bar-success" role="progressbar" style="width: <%= servers[i].stats.percentmem %>; min-width: 3em;">
+                <%= servers[i].stats.percentmem %>
+              </div>
+            </div>
+          </div>
+        </div>
+        
       </div>
       <div class="panel-body">
         <h3>Sessions</h3>

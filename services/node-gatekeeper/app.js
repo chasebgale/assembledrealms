@@ -4,6 +4,7 @@ var app         = express();
 var server      = require('http').Server(app);
 var request     = require('request');
 var async       = require('async');
+var moment      = require('moment');
 
 // TODO: For now we'll just keep the list of servers to check on in memory; however, this should really be stored
 // in redis or the like for fault tolerance in case this service crashes for some reason... if not someone could
@@ -69,6 +70,13 @@ app.get('/stats', function (req, res, next) {
             realmID:   realmIDLookup
           });
         }
+        serverData.stats = responseData[4];
+        serverData.stats.percentmem = ((parseInt(serverData.stats.freemem) / parseInt(serverData.stats.totalmem)) * 100).toFixed(2) + "%";
+        serverData.stats.freemem    = Math.round(parseInt(serverData.stats.freemem) / 1048576) + "mb";
+        serverData.stats.totalmem   = Math.round(parseInt(serverData.stats.totalmem) / 1048576) + "mb";
+        serverData.stats.load       = (parseFloat(serverData.stats.load[2]) * 100).toFixed(2) + "%";
+        serverData.stats.uptime     = moment.duration(parseInt(serverData.stats.uptime), "seconds").humanize();
+        
         data.servers.push(serverData);
         callback();
       } else {

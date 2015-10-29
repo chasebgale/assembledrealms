@@ -9,6 +9,7 @@ var path          = require('path');
 var redis 			  = require('redis');
 var http 			    = require('http');
 var fs            = require('fs');
+var os            = require('os');
 var uuid 			    = require('node-uuid');
 var db 	          = redis.createClient();
 var dbListener    = redis.createClient();
@@ -19,6 +20,7 @@ var request			  = require('request');
 var SECURITY_TOKEN     = process.env.SECURITY_TOKEN;
 var MAX_CLIENTS_GLOBAL = parseInt(process.env.MAX_CLIENTS_GLOBAL);
 var MAX_CLIENTS_REALM  = parseInt(process.env.MAX_CLIENTS_REALM);
+var MAX_RUNNING_REALMS = parseInt(process.env.MAX_RUNNING_REALMS);
 var SESSION_LIST       = "sessions";              // Sessions added via /auth allowing access
 var SESSION_MAP        = "session_to_user_map";   // Sessions mapped to user_id via ZSCORE
 var ACTIVE_SESSIONS    = "sessions_active";       // Sessions actually connected via SOCKET
@@ -109,7 +111,18 @@ app.get('/stats', function httpGetStats(req, res, next) {
         console.error(err);
         return res.status(500).send(err.message);
       }
-      console.log("MULTI got " + replies.length + " replies");
+      
+      var systemInfo = {
+        platform: os.platform(),
+        release:  os.release(),
+        uptime:   os.uptime(),
+        load:     os.loadavg(),
+        totalmem: os.totalmem(),
+        freemem:  os.freemem()
+      };
+      
+      replies.push(systemInfo);
+      
       return res.json(replies);
     });
 });
@@ -477,10 +490,9 @@ app.get('/launch/:id', function httpGetLaunch(req, res, next) {
     });
        
     if (!running) {
-      // 7 == max, realm_broker + 7 realms, = 8 total
       // For now, check # of running realms, perhaps in the future when more data is available
       // in terms of average memory consumption, it'll check for free mem
-      if (processes.length > 7) {
+      if (processes.length > MAX_RUNNING_REALMS) {
         
         // Do we have a realm we can power down?
         var multi = db.multi();
