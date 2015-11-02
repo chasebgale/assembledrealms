@@ -71,11 +71,14 @@ app.get('/stats', function (req, res, next) {
           });
         }
         serverData.stats = responseData[4];
-        serverData.stats.percentmem = ((parseInt(serverData.stats.freemem) / parseInt(serverData.stats.totalmem)) * 100).toFixed(2) + "%";
-        serverData.stats.freemem    = Math.round(parseInt(serverData.stats.freemem) / 1048576) + "mb";
-        serverData.stats.totalmem   = Math.round(parseInt(serverData.stats.totalmem) / 1048576) + "mb";
         serverData.stats.load       = (parseFloat(serverData.stats.load[2]) * 100).toFixed(2) + "%";
         serverData.stats.uptime     = moment.duration(parseInt(serverData.stats.uptime), "seconds").humanize();
+        
+        serverData.processes = responseData[5];
+        
+        for (var p = 0; p < serverData.processes.length; p++) {
+          serverData.processes[p].pm2_env.created_at = moment(serverData.processes[p].pm2_env.created_at).fromNow(true);
+        }
         
         data.servers.push(serverData);
         callback();

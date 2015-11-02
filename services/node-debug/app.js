@@ -16,6 +16,8 @@ var dbListener    = redis.createClient();
 var server			  = http.Server(app);
 var io 				    = require('socket.io')(server);
 var request			  = require('request');
+var async         = require('async');
+var spawn         = require("child_process").spawn;
 
 var SECURITY_TOKEN     = process.env.SECURITY_TOKEN;
 var MAX_CLIENTS_GLOBAL = parseInt(process.env.MAX_CLIENTS_GLOBAL);
@@ -27,6 +29,7 @@ var ACTIVE_SESSIONS    = "sessions_active";       // Sessions actually connected
 var QUEUE              = "queue";
 var QUEUE_LOOKUP       = "queue_lookup";          // Quickly determine if user is in queue and for what realm...
 var REALM_QUEUE        = "realm_queue";           // Realms waiting to be launched
+var REALM_ACTIVITY     = "realm_activity";        // Last timestamp a user joined or left
 
 // TODO: Don't flush the DB on restart in production...
 // db.flushdb();
@@ -100,31 +103,83 @@ app.get('/stats', function httpGetStats(req, res, next) {
     console.log('/api/auth - Bad auth token - ' + SECURITY_TOKEN);
     return res.status(401).send("Please don't try to break things :/");
   }
+  
+  async.series([
+    function(callback) {
+      db.multi()
+        .zrange([SESSION_MAP, 0, -1, 'WITHSCORES'])     // Get sessions list with user ids
+        .zrange([ACTIVE_SESSIONS, 0, -1, 'WITHSCORES']) // Get active user_id on realm_id list
+        .lrange([QUEUE, 0, -1])                         // user_id's list in the queue
+        .zrange([QUEUE_LOOKUP, 0, -1, 'WITHSCORES'])    // user_id's waiting for what realm_id's list
+        .exec(function (err, replies) {
+          if (err) {
+            console.error(err);
+            return callback(err);
+          }
+          
+          callback(null, replies);
+        });
+    },
+    function(callback) {
+      var prc = spawn("free", []);
+      prc.stdout.setEncoding("utf8");
+      prc.stdout.on("data", function (data) {
+        var lines = data.toString().split(/\n/g),
+            line = lines[1].split(/\s+/),
+            total = parseInt(line[1], 10),
+            free = parseInt(line[3], 10),
+            buffers = parseInt(line[5], 10),
+            cached = parseInt(line[6], 10),
+            actualFree = free + buffers + cached,
+            memory = {
+                total: total,
+                used: parseInt(line[2], 10),
+                free: free,
+                shared: parseInt(line[4], 10),
+                buffers: buffers,
+                cached: cached,
+                actualFree: actualFree,
+                percentUsed: parseFloat(((1 - (actualFree / total)) * 100).toFixed(2)),
+                comparePercentUsed: ((1 - (os.freemem() / os.totalmem())) * 100).toFixed(2)
+            };
+        console.log("memory", memory);
+        
+        var systemInfo = {
+          platform: os.platform(),
+          release:  os.release(),
+          uptime:   os.uptime(),
+          load:     os.loadavg(),
+          memory:   memory
+        };
+        
+        callback(null, systemInfo);
+      });
+      prc.on("error", function (error) {
+        console.log("[ERROR] Free memory process", error);
+        return callback(error);
+      });
+    },
+    function(callback) {
+      pm2.list(function(error, processes) {
+        if (error) {
+          return callback(error);
+        }
+        
+        callback(null, processes);
+      });
+    }
+  ], function(err, results){
+    
+    if (err) {
+      return res.status(500).send(error.message);
+    }
+    
+    var result = results[0];
+    result.push(results[1]);
+    result.push(results[2]);
+    return res.json(result);
+  });
 
-  db.multi()
-    .zrange([SESSION_MAP, 0, -1, 'WITHSCORES'])     // Get sessions list with user ids
-    .zrange([ACTIVE_SESSIONS, 0, -1, 'WITHSCORES']) // Get active user_id on realm_id list
-    .lrange([QUEUE, 0, -1])                         // user_id's list in the queue
-    .zrange([QUEUE_LOOKUP, 0, -1, 'WITHSCORES'])    // user_id's waiting for what realm_id's list
-    .exec(function (err, replies) {
-      if (err) {
-        console.error(err);
-        return res.status(500).send(err.message);
-      }
-      
-      var systemInfo = {
-        platform: os.platform(),
-        release:  os.release(),
-        uptime:   os.uptime(),
-        load:     os.loadavg(),
-        totalmem: os.totalmem(),
-        freemem:  os.freemem()
-      };
-      
-      replies.push(systemInfo);
-      
-      return res.json(replies);
-    });
 });
 
 // Serve up the realm files, when requested:
@@ -175,13 +230,15 @@ app.get('/realms/:id', function httpGetRealm(req, res, next) {
   var realmKey     = "realm_" + realmID;
   var realmAccess  = "realm_" + realmID + "_access";
   var owner        = false;
+  var now          = Date.now();
   
   var queueUser = function (callback) {
     // First, is the user already in the queue? (user refreshed browser, etc)
     
     db.multi()
-      .zscore([realmAccess, userID])     // Check the user permission (1 = privileged)
-      .zscore([QUEUE_LOOKUP, userID])    // Check if user is in queue
+      .zscore([realmAccess, userID])         // Check the user permission (1 = privileged)
+      .zscore([QUEUE_LOOKUP, userID])        // Check if user is in queue
+      .zadd([REALM_ACTIVITY, now, realmID])  // Update/create realm activity entry
       .exec(function (err, replies) {
         var accessReply  = replies[0];
         var queueReply   = replies[1];
@@ -195,7 +252,7 @@ app.get('/realms/:id', function httpGetRealm(req, res, next) {
           // Not in the queue
           db.multi()
             .zcard(ACTIVE_SESSIONS) // Total active sessions across realms and queue
-            .zlexcount([ACTIVE_SESSIONS, realmID, realmID]) // Sessions on requested realm
+            .zcount([ACTIVE_SESSIONS, realmID, realmID]) // Sessions on requested realm
             .exec(function (err, replies) {
               if (err) {
                 console.error(err);
@@ -231,7 +288,7 @@ app.get('/realms/:id', function httpGetRealm(req, res, next) {
       }
       
       if (realm == null) {
-        return res.render('error', {message: "REDIS has no knowledge of this realm..."});
+        return res.render('error', {message: "This realm is offline..."});
       }
       
       var scripts  = [];
@@ -328,12 +385,17 @@ dbListener.on('message', function (channel, message) {
       });
     }
     
-    // Update user's last activity time
-    db.zadd([SESSION_LIST, Date.now(), action.session_id], function (error, reply) {
-      if (error) {
-        console.error(error);
-      }
-    });
+    var now = Date.now();
+    
+    // Update user's/realm's last activity time
+    db.multi()
+      .zadd([REALM_ACTIVITY, now, action.realm_id])
+      .zadd([SESSION_LIST, now, action.session_id])
+      .exec(function (error, replies) {
+        if (error) {
+          console.error(error);
+        }
+      });
   }
 });
 
@@ -426,6 +488,7 @@ app.get('/launch/:id', function httpGetLaunch(req, res, next) {
   
   var expired        = Date.now() - 900000; // 900k milliseconds = 15 minutes
 	var realmID        = req.params.id;
+  var realmProcess   = "realm-" + realmID;
 	var realmApp       = '/var/www/realms/realm-server.js';
   var realmErr       = '/var/www/logs/' + realmID + '-err.log';
   var realmOut       = '/var/www/logs/' + realmID + '-out.log';
@@ -451,7 +514,7 @@ app.get('/launch/:id', function httpGetLaunch(req, res, next) {
           });        
         } else {
           var options = {
-            name:       realmID,
+            name:       realmProcess,
             error:      realmErr,
             output:     realmOut,
             scriptArgs: [realmID, 'true'],
@@ -478,12 +541,14 @@ app.get('/launch/:id', function httpGetLaunch(req, res, next) {
   pm2.list(function(err, processes) {
     // Search for running instance of requested realm
     processes.forEach(function(proc) {
-      if (proc.name == realmID) {
+      if (proc.name == realmProcess) {
         running = true;
         
+        /*
         pm2.describe(proc.name, function (err, list){
           console.log(JSON.stringify(list));
         });
+        */
         
         return;
       }
@@ -498,7 +563,10 @@ app.get('/launch/:id', function httpGetLaunch(req, res, next) {
         var multi = db.multi();
           
         for (var i = 0; i < processes.length; i++) {
-          multi.zrangebyscore([ACTIVE_SESSIONS, processes[i].name, processes[i].name]);
+          if (processes[i].name !== "realm-host") {
+            var id = processes[i].name.split('-')[1];
+            multi.zrangebyscore([ACTIVE_SESSIONS, id, id]);
+          }
         };
         
         multi.exec(function (error, replies) {
@@ -512,8 +580,8 @@ app.get('/launch/:id', function httpGetLaunch(req, res, next) {
           if (stagnantRealms.length > 0) {            
             async.each(stagnantRealms, function(name, callback) {
               pm2.describe(name, function (error, list){
-                if (list.launchTimeStamp < expired) {
-                  pm2.stop(name, function onPmStop(err, proc) {
+                if (list[0].pm2_env.created_at < expired) {
+                  pm2.delete(name, function onPmStop(err, proc) {
                     if (err) {
                       console.log("Attempted to stop " + proc + " but errored: " + err.stack);
                       callback(err);
@@ -568,9 +636,76 @@ app.get('/launch/:id', function httpGetLaunch(req, res, next) {
 });
 
 var tickTock = setInterval(function () {
-  var expired = Date.now() - 1800000; // 1.8 million milliseconds = 30 minutes
+  var now            = Date.now();
+  var expiredSession = now - 1800000; // 1.8 million milliseconds = 30 minutes
+  var expiredRealm   = now - 120000;  // 2 min
   
-  db.zrangebyscore([SESSION_LIST, 0, expired], function redisGetExpiredSessions(error, replies) {
+  // Expired realms
+  pm2.list(function(error, processes) {
+    
+    if (error) {
+      console.log(error.stack);
+      return callback(error);
+    }
+    
+    async.each(processes, function(process, callback) {
+      if (process.name !== "realm-host") {
+        var id = process.name.split('-')[1];
+        db.zcount([ACTIVE_SESSIONS, id, id], function (error, count) {
+          if (error) {
+            console.log(process.name + "  " + error.stack);
+            return callback(error);
+          }
+          
+          if (count === 0) {
+            
+            console.log("Found a process with no users, testing for acitivty...");
+            
+            db.zscore([REALM_ACTIVITY, id], function (error, lastActivity) {
+              if (error) {
+                console.log(error.stack);
+                return callback(error);
+              }
+              
+              console.log("...last active at %s, going to stop it: %s", lastActivity, (lastActivity < expiredRealm));
+              
+              if (lastActivity < expiredRealm) {
+                pm2.delete(process.name, function onPmStop(err, proc) {
+                  if (err) {
+                    console.log("Attempted to stop " + process.name + " but errored: " + err.stack);
+                    return callback(err);
+                  }
+                  
+                  db.del("realm_" + id, function (error, reply) {
+                    if (error) {
+                      console.log(error.stack);
+                      return callback(error);
+                    }
+                    callback();
+                  });
+                });
+              } else {
+                callback();
+              }
+              
+            });
+          } else {
+            callback();
+          }
+        });
+      } else {
+        callback();
+      }
+    }, function (error) {
+      if (error) {
+        console.error(error.stack);
+      }
+    });
+  });
+  
+  
+  // Expired user sessions
+  db.zrangebyscore([SESSION_LIST, 0, expiredSession], function redisGetExpiredSessions(error, replies) {
     
     if (error) {
       return console.error(error);
@@ -588,6 +723,7 @@ var tickTock = setInterval(function () {
       
       multiSessionToUserLookup.exec(function (error, userIDs) {
         if (error) {
+          console.log(error.stack);
           return console.error(error);
         }
         
@@ -614,11 +750,13 @@ var tickTock = setInterval(function () {
             
             db.zrem(replies, function redisDeleteSessionMap(error, count) {
               if (error) {
+                console.log(error.stack);
                 return console.error(error);
               }
               
-              db.zremrangebyscore([SESSION_LIST, 0, expired], function redisDeleteSessionList(error, counted) {
+              db.zremrangebyscore([SESSION_LIST, 0, expiredSession], function redisDeleteSessionList(error, counted) {
                 if (error) {
+                  console.log(error.stack);
                   return console.error(error);
                 }
                 

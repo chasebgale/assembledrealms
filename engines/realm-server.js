@@ -245,7 +245,7 @@ if (debug) {
 
     var debugLoop = setInterval(function () {
         //var room = io.sockets.adapter.rooms['debug']; Object.keys(room).length;
-        pm2.describe(realm_id, function (err, list) {
+        pm2.describe("realm-" + realm_id, function (err, list) {
             if (err) {
                 return;
             } 

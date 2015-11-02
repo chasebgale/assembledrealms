@@ -57,10 +57,10 @@
             </div>
           </div>
           <div class="col-md-3">
-            <span>MEM: <%= servers[i].stats.freemem + "/" + servers[i].stats.totalmem %></span>
+            <span>MEM: <%= ((servers[i].stats.memory.total - servers[i].stats.memory.actualFree) / 1024).toFixed(2) + "MB / " + (servers[i].stats.memory.total / 1024).toFixed(2) + "MB" %></span>
             <div class="progress">
-              <div class="progress-bar progress-bar-success" role="progressbar" style="width: <%= servers[i].stats.percentmem %>; min-width: 3em;">
-                <%= servers[i].stats.percentmem %>
+              <div class="progress-bar progress-bar-success" role="progressbar" style="width: <%= servers[i].stats.memory.percentUsed %>%; min-width: 3em;">
+                <%= servers[i].stats.memory.percentUsed %>%
               </div>
             </div>
           </div>
@@ -68,6 +68,28 @@
         
       </div>
       <div class="panel-body">
+        <h3>Processes</h3>
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>CPU</th>
+              <th>MEMORY</th>
+              <th>UPTIME</th>
+            </tr>
+          </thead>
+          <tbody>
+<% for(var j=0; j<servers[i].processes.length; j++) {%>
+            <tr>
+              <td><%= servers[i].processes[j].name %></td>
+              <td><%= servers[i].processes[j].monit.cpu %>%</td>
+              <td><%= (servers[i].processes[j].monit.memory / 1048576).toFixed(2) %>MB</td>
+              <td><%= servers[i].processes[j].pm2_env.created_at %></td>
+            </tr>
+<% } %>
+          </tbody>
+        </table>
+        
         <h3>Sessions</h3>
         <table class="table table-hover">
           <thead>
