@@ -76,6 +76,7 @@
               <th>CPU</th>
               <th>MEMORY</th>
               <th>UPTIME</th>
+              <th>USERS</th>
             </tr>
           </thead>
           <tbody>
@@ -85,6 +86,7 @@
               <td><%= servers[i].processes[j].monit.cpu %>%</td>
               <td><%= (servers[i].processes[j].monit.memory / 1048576).toFixed(2) %>MB</td>
               <td><%= servers[i].processes[j].pm2_env.created_at %></td>
+              <td><%= servers[i].processes[j].users %></td>
             </tr>
 <% } %>
           </tbody>

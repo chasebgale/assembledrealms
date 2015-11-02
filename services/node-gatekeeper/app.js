@@ -58,6 +58,7 @@ app.get('/stats', function (req, res, next) {
       if (!error && response.statusCode == 200) {
         console.log(body)
         var responseData = JSON.parse(body);
+        /*
         // Loop through [.zrange([SESSION_MAP, 0, -1, 'WITHSCORES'])]
         for (var q = 0; q < responseData[0].length - 1; q += 2) {
           var realmIDLookup = responseData[1].indexOf(responseData[0][q+1]);
@@ -70,14 +71,35 @@ app.get('/stats', function (req, res, next) {
             realmID:   realmIDLookup
           });
         }
-        serverData.stats = responseData[4];
-        serverData.stats.load       = (parseFloat(serverData.stats.load[2]) * 100).toFixed(2) + "%";
-        serverData.stats.uptime     = moment.duration(parseInt(serverData.stats.uptime), "seconds").humanize();
+        */
         
-        serverData.processes = responseData[5];
+        serverData.realms = {};
+        
+        for (q = 0; q < responseData.active_sessions.length - 1; q+=2) {
+          var userID  = responseData.active_sessions[q];
+          var realmID = responseData.active_sessions[q+1];
+          if (serverData.realms[realmID] == undefined) {
+            serverData.realms[realmID] = [];
+          }
+          
+          serverData.realms[realmID].push(userID);
+        }
+        
+        serverData.stats          = responseData.system;
+        serverData.stats.load     = (parseFloat(serverData.stats.load[2]) * 100).toFixed(2) + "%";
+        serverData.stats.uptime   = moment.duration(parseInt(serverData.stats.uptime), "seconds").humanize();
+        
+        serverData.processes = responseData.processes;
         
         for (var p = 0; p < serverData.processes.length; p++) {
           serverData.processes[p].pm2_env.created_at = moment(serverData.processes[p].pm2_env.created_at).fromNow(true);
+          
+          if (serverData.processes[p].name === "realm-host") {
+            serverData.processes[p].users = "N/A";
+          } else {
+            var realmID = serverData.processes[p].name.split('-')[1];
+            serverData.processes[p].users = serverData.realms[realmID];
+          }
         }
         
         data.servers.push(serverData);

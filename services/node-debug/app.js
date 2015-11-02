@@ -174,9 +174,12 @@ app.get('/stats', function httpGetStats(req, res, next) {
       return res.status(500).send(error.message);
     }
     
-    var result = results[0];
-    result.push(results[1]);
-    result.push(results[2]);
+    var result = {
+      active_sessions: results[0][1],
+      system:          results[1],
+      processes:       results[2]
+    };
+    
     return res.json(result);
   });
 
@@ -288,7 +291,23 @@ app.get('/realms/:id', function httpGetRealm(req, res, next) {
       }
       
       if (realm == null) {
-        return res.render('error', {message: "This realm is offline..."});
+        // Is the realm queued?
+        db.lrange([REALM_QUEUE, 0, -1], function (error, list) {
+          
+          if (error) {
+            return res.render('error', {message: "This realm is offline..."}); 
+          }
+          
+          if (list == null) {
+            return res.render('error', {message: "This realm is offline...."}); 
+          }
+          if (list.indexOf(realmID) > -1) {
+            // TODO: Make work like user queue
+            return res.render('error', {message: "This realm is queued for launch..."});
+          } else {
+            return res.render('error', {message: "This realm is offline..."});
+          }
+        });
       }
       
       var scripts  = [];
