@@ -105,6 +105,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 <script src="/js/bigscreen.min.js"></script>
 <script src="/js/async.js"></script>
 <script src="/js/smoothie.js"></script>
+<script src="/debug/debug.js"></script>
 
 <?php require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php"); ?>
 
@@ -120,6 +121,50 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
   $(document).ready(function () {
     $.get("<?php echo $url_from_auth; ?>", function (data) {
       $("#realm-container").append(data);
+      
+      $("#btnFPS").on("click", function (e) {
+        var self = $(this);
+
+        if (displayClientStats) {
+          // Turn off:
+          $("#statsClient").prev().hide();
+          $("#statsClient").hide();
+          displayClientStats = false;
+          self.removeClass("active");
+          self.html('<i class="fa fa-square-o fa-fw"></i> FPS');
+        } else {
+          // Turn on:
+          $("#statsClient").prev().show();
+          $("#statsClient").show();
+          displayClientStats = true;
+          self.addClass("active");
+          self.html('<i class="fa fa-check-square-o fa-fw"></i> FPS');
+        }
+      });
+
+      $("#btnServerDiagnostics").on("click", function (e) {
+
+        var self = $(this);
+
+        if (displayServerStats) {
+          // Turn off:
+          $("#statsServer").prev().hide();
+          $("#statsServer").hide();
+          displayServerStats = false;
+          self.removeClass("active");
+          self.html('<i class="fa fa-square-o fa-fw"></i> Server CPU MB');
+        } else {
+          // Turn on:
+          $("#statsServer").prev().show();
+          $("#statsServer").show();
+          displayServerStats = true;
+          self.addClass("active");
+          self.html('<i class="fa fa-check-square-o fa-fw"></i> Server CPU MB');
+        }
+        
+        engine.debug(displayServerStats);
+      });
+      
     });
   });
     

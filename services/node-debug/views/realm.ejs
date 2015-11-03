@@ -59,22 +59,31 @@
   </div>
   
   <script type="text/javascript">
-		var DEBUG   = true;
-    var HOST    = '<%= host %>:<%= port %>';
-    var RAWHOST = '<%= host %>';
-    var QUEUE   = <%= queue %>;
-    var USERID  = <%= userID %>;
+		var DEBUG    = true;
+    var HOST     = '<%= host %>';
+    var PORT     = <%= port %>;
+    var QUEUE    = <%= queue %>;
+    var USER_ID  = <%= userID %>;
+    var REALM_ID = <%= id %>;
     
     var OWNER   = <%= owner %>;
-    var ROOT    = '//' + RAWHOST + '/realms/<%= id %>/';
-    var STATS   = '//' + RAWHOST + '/realms/<%= id %>/stats';
+    var ROOT    = '//' + HOST + '/realms/<%= id %>/';
+    var STATS   = '//' + HOST + '/realms/<%= id %>/stats';
     
-    var Loader = function () { }
+    var SCRIPTS = [
+      <% for(var i=0; i<scripts.length-1; i++) { %>
+      "//<%= host %><%= scripts[i] %>",
+      <% } %>
+      "//<%= host %><%= scripts[scripts.length-1] %>"
+    ];
+    
+    var Loader = function (){};
     Loader.prototype = {
-      require: function (scripts, callback) {
+      require: function (scripts, loading, finished) {
         this.loadCount      = 0;
         this.totalRequired  = scripts.length;
-        this.callback       = callback;
+        this.finished       = finished;
+        this.loading        = loading;
 
         for (var i = 0; i < scripts.length; i++) {
           this.writeScript(scripts[i]);
@@ -82,8 +91,10 @@
       },
       loaded: function (evt) {
         this.loadCount++;
+        
+        this.loading.call();
 
-        if (this.loadCount == this.totalRequired && typeof this.callback == 'function') this.callback.call();
+        if (this.loadCount == this.totalRequired && typeof this.finished == 'function') this.finished.call();
       },
       writeScript: function (src) {
         var self = this;
@@ -95,20 +106,8 @@
         var head = document.getElementsByTagName('head')[0];
         head.appendChild(s);
       }
-    }
+    };
     
-    var l = new Loader();
+    setup();
     
-    l.require([
-<% for(var i=0; i<scripts.length; i++) { %>
-      "//<%= host %><%= scripts[i] %>",
-<% } %>
-      "//<%= host %>:<%= port %>/socket.io/socket.io.js",
-      "/debug/debug.js"
-    ], 
-    function() {
-        // Callback
-        console.log('All Scripts Loaded');
-        allReady();
-    });
   </script>

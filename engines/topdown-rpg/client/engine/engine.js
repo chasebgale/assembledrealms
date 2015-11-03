@@ -19,13 +19,17 @@ var Engine = function () {
   this.initialized    = false;
 };
 
-Engine.prototype.initialize = function (target) {
+Engine.prototype.initialize = function (container, host, port, cwd) {
 
   // If we are inside of nested functions, 'this' can be reassigned, let's keep a reference to 'this'
   // as it initially references 'engine'
   var self = this;
   
-  self.socket = io(HOST);
+  self.host = host;
+  self.port = port;
+  self.cwd  = cwd;
+  
+  self.socket = io(host + ":" + port);
   
   self.socket.on('sync', function (actors) {
     self.avatar.create(actors.player);
@@ -34,7 +38,7 @@ Engine.prototype.initialize = function (target) {
     self.position = actors.player.position;
     
     self.initialized = true;
-    self.loaded();
+    self.ready();
   });
     
   self.socket.on('update', function (actors) {
@@ -74,7 +78,7 @@ Engine.prototype.initialize = function (target) {
   self.stage      = new PIXI.Container();
   //self.buffer     = new PIXI.ParticleContainer();
   
-  target.appendChild(self.renderer.view);
+  container.appendChild(self.renderer.view);
   
   self.stage.mousedown = function (data) {
     //console.log(self.indexFromScreen(data.global));
@@ -86,7 +90,7 @@ Engine.prototype.initialize = function (target) {
   
   // OR: Perhaps the handshake just auth's and then we display a list of available 
   // characters or the new character option...
-  var jqxhr = $.getJSON( ROOT + "client/maps/town.json", function( data ) {
+  var jqxhr = $.getJSON("//" + host + cwd + "client/maps/town.json", function( data ) {
     self.load(data);
   }).fail(function(d, textStatus, error) {
     console.error("getJSON failed, status: " + textStatus + ", error: "+error);
@@ -161,6 +165,7 @@ Engine.prototype.load = function (map) {
   });
   
   loader.once('complete', function () {
+    self.loaded();
     self.terrain.load(map.terrain.source, self.renderer, function (error) {
       self.layerTerrain = new PIXI.Sprite(self.terrain.textureGround);
       self.stage.addChild(self.layerTerrain);

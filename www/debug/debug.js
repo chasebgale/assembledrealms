@@ -5,58 +5,17 @@ var chartSeriesCPU;
 var chartSpanMemory;
 var chartSpanCPU;
 var loadingBar;
+var loadingText;
 var displayClientStats	= false;
 var displayServerStats  = false;
-var isLoading           = false;
+var isLoading           = true;
+var isBooting           = false;
+var loadingBarSpeed     = 0.1;
 
-$("#btnFPS").on("click", function (e) {
-  var self = $(this);
+var CANVAS_WIDTH   = 896;
+var CANVAS_HEIGHT  = 504;
 
-  if (displayClientStats) {
-    // Turn off:
-    $("#statsClient").prev().hide();
-    $("#statsClient").hide();
-    displayClientStats = false;
-    self.removeClass("active");
-    self.html('<i class="fa fa-square-o fa-fw"></i> FPS');
-  } else {
-    // Turn on:
-    $("#statsClient").prev().show();
-    $("#statsClient").show();
-    displayClientStats = true;
-    self.addClass("active");
-    self.html('<i class="fa fa-check-square-o fa-fw"></i> FPS');
-  }
-});
-
-$("#btnServerDiagnostics").on("click", function (e) {
-
-  var self = $(this);
-
-  if (displayServerStats) {
-    // Turn off:
-    $("#statsServer").prev().hide();
-    $("#statsServer").hide();
-    displayServerStats = false;
-    self.removeClass("active");
-    self.html('<i class="fa fa-square-o fa-fw"></i> Server CPU MB');
-  } else {
-    // Turn on:
-    $("#statsServer").prev().show();
-    $("#statsServer").show();
-    displayServerStats = true;
-    self.addClass("active");
-    self.html('<i class="fa fa-check-square-o fa-fw"></i> Server CPU MB');
-  }
-  
-  engine.debug(displayServerStats);
-});
-    
-function allReady() {
-
-  engine 	= new Engine();
-  stats 	= new Stats();
-  
+function setup() {
   // create a renderer instance (w/h taken from engine constants)
   var queueRenderer = PIXI.autoDetectRenderer(CANVAS_WIDTH, CANVAS_HEIGHT, {
     backgroundColor : 0x000000
@@ -65,8 +24,124 @@ function allReady() {
   var queueStage = new PIXI.Container();
   // add the renderer view element to the DOM
   document.getElementById('queue').appendChild(queueRenderer.view);
+  
+  var yeehaw = function () {
+    queueStage.removeChildren();
+    
+    loadingBar = new PIXI.Graphics();
+    queueStage.addChild(loadingBar);
+    
+    loadingText = new PIXI.Text("Loading realm code...", {
+      font: "bold 10px Arial", 
+      fill: "#FFFFFF", 
+      align: "left"
+    });
+    queueStage.addChild(loadingText);
+    
+    loadingText.position.x = (CANVAS_WIDTH / 2) - 50;
+    loadingText.position.y = (CANVAS_HEIGHT / 2) + 14;
+    loadingText.anchor.x = 0;
+    loadingText.anchor.y = 0;
+    
+    loadingBar.position.x = CANVAS_WIDTH / 2;
+    loadingBar.position.y = CANVAS_HEIGHT / 2;
+    
+    // Add this late as we might not have the PORT until now (realm was queued for launch)
+    SCRIPTS.push("//" + HOST + ":" + PORT + "/socket.io/socket.io.js");
+    
+    var l = new Loader();
+    l.require(SCRIPTS, function onLoading() {
+      loadingBar.clear();
+      loadingBar.beginFill(0xFFFFFF, 0.4);
+      loadingBar.drawRect(-50, 0, Math.floor((l.loadCount / l.totalRequired) * 100), 12);
+      loadingBar.endFill();
+      
+      loadingBar.lineStyle(2, 0xFFFFFF, 1.0);
+      loadingBar.drawRect(-50, 0, 100, 12);
+    }, function onComplete() {
+      console.log('All Scripts Loaded');
+      
+      loadingBar.clear();
+      loadingBar.lineStyle(2, 0xFFFFFF, 1.0);
+      loadingBar.drawRect(-50, 0, 100, 12);
+ 
+      loadingText.text = "Loading realm assets...";
+      
+      loadEngine();
+    });
+  };
+  
+  if (QUEUE) {
+    
+    var countingText = new PIXI.Text("00", {
+      font: "bold 60px Arial", 
+      fill: "#FFFFFF", 
+      align: "center", 
+      stroke: "#FFFFFF", 
+      strokeThickness: 2
+    });
+    countingText.position.x = CANVAS_WIDTH / 2;
+    countingText.position.y = CANVAS_HEIGHT / 2;
+    countingText.anchor.x = 0.5;
+    countingText.anchor.y = 0.5;
+    //countingText.alpha = 0;
+    queueStage.addChild(countingText);
+    
+    var socket = io('http://' + RAWHOST);
+    socket.on('info', function (data) {
+      var fullList = data.queue;
+      var realmQueue = data.realm_queue;
+      var pos = fullList.indexOf(USER_ID);
+      
+      if (pos > -1) {
+        // User is queued to play
+        pos++;
+        countingText.text = "User Queue, #" + pos;
+      } else {
+        // Realm is queued to launch
+        pos = realmQueue.indexOf(REALM_ID);
+        
+        if (pos > -1) {
+          pos++;
+          countingText.text = "Realm Queue, #" + pos;
+        } else {
+          countingText.text = "...";
+        }
+      }
+    });
+    socket.on('ready', function (data) {
+      // Join game
+      PORT = data.port;
+      document.getElementById('realm').innerHTML = '';
+      yeehaw();
+    });
+  } else {
+    yeehaw();
+  }
+  
+  function animateQueue() {
+    if (isLoading) {
+      requestAnimationFrame(animateQueue);
+    }
+    
+    if (isBooting) {
+      loadingBar.rotation += loadingBarSpeed;
+      loadingBarSpeed += Math.random() * 0.05;
+    }
+    
+    // render the root container
+    queueRenderer.render(queueStage);
+  }
+  
+  animateQueue();
+}
 
-  engine.loaded = function () {
+function loadEngine() {
+
+  engine 	= new Engine();
+  stats 	= new Stats();
+
+  engine.ready = function () {
     if (OWNER) {			
       stats.setMode(0); // 0: fps, 1: ms
       document.getElementById("statsClient").appendChild( stats.domElement );
@@ -76,28 +151,19 @@ function allReady() {
     $("#queue").fadeOut(function () {
       $("#realm").fadeIn();
     });
+    
+    isLoading = false;
         
     animate();
   };
+  
+  engine.loaded = function () {
+    loadingText.text = "Starting engine...";
+    isBooting = true;
+  };
    
   engine.loading = function (e) {
-    /*
-        _numToLoad: 70
-        _progressChunk: 1.4285714285714286
-    */
-    if (!isLoading) {
-        isLoading = true;
-        $("#loading_text").text("Downloading realm assets...");
-    }
-    
-    /*
-    var string_width = Math.floor(e.progress) + "%";
-    
-    $("#loading_progress").width(string_width);
-    $("#loading_progress").text(string_width)
-    $("#loading_progress").attr("aria-valuenow", Math.floor(e.progress));
-    */
-    
+   
     if (loadingBar) {
       loadingBar.clear();
       loadingBar.beginFill(0xFFFFFF, 0.4);
@@ -107,6 +173,8 @@ function allReady() {
       loadingBar.lineStyle(2, 0xFFFFFF, 1.0);
       loadingBar.drawRect(-50, 0, 100, 12);
     }
+    
+    console.log(e.progress);
     
   }
   
@@ -182,51 +250,8 @@ function allReady() {
     };
   }
   
-  
-  if (QUEUE) {
-    
-    var countingText = new PIXI.Text("00", {
-      font: "bold 60px Arial", 
-      fill: "#FFFFFF", 
-      align: "center", 
-      stroke: "#FFFFFF", 
-      strokeThickness: 2
-    });
-    countingText.position.x = CANVAS_WIDTH / 2;
-    countingText.position.y = CANVAS_HEIGHT / 2;
-    countingText.anchor.x = 0.5;
-    countingText.anchor.y = 0.5;
-    //countingText.alpha = 0;
-    queueStage.addChild(countingText);
-    
-    var socket = io('http://' + RAWHOST);
-    socket.on('info', function (data) {
-      var fullList = data.list;
-      var pos = data.list.indexOf(USERID) + 1;
-      countingText.text = pos;
-    });
-    socket.on('ready', function (data) {
-      // Join game
-      document.getElementById('realm').innerHTML = '';
-      engine.initialize( document.getElementById("realm") );
-    });
-  } else {
-    queueStage.removeChildren();
-    loadingBar = new PIXI.Graphics();
-    queueStage.addChild(loadingBar);
-    loadingBar.position.x = CANVAS_WIDTH / 2;
-    loadingBar.position.y = CANVAS_HEIGHT / 2;
-    //loadingBar.anchor.x = 0.5;
-    //loadingBar.anchor.y = 0.5;
-    
-    engine.initialize( document.getElementById("realm") );
-  }
-  
-  function animateQueue() {
-    requestAnimationFrame(animateQueue);
-    // render the root container
-    queueRenderer.render(queueStage);
-  }
-  
-  animateQueue();
-}
+  engine.initialize(document.getElementById('realm'),
+                    HOST,
+                    PORT,
+                    '/realms/' + REALM_ID + '/');
+};

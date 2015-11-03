@@ -283,6 +283,35 @@ app.get('/realms/:id', function httpGetRealm(req, res, next) {
       });
   };
 	
+  var renderRealm = function (port, queued) {
+    var scripts  = [];
+
+    // For now, grab all the required libs each time we prep the view, in the future,
+    // do this once when '/launch' is called and store the array in redis...
+    var walker  = walk.walk('./realms/' + req.params.id + '/client/', { followLinks: false });
+
+    walker.on('file', function onWalkerFile(root, stat, next) {
+      if (path.extname(stat.name) == '.js') {
+          // Add this file to the list of files
+          console.log("root: " + root + " , stat.name: " + stat.name);
+          scripts.push("/" + path.join(root, stat.name));
+      }
+      next();
+    });
+
+    walker.on('end', function onWalkerEnd() {
+      res.render('realm', {
+        id:       realmID,
+        userID:   userID,
+        host:     req.headers.host,
+        port:     port,
+        scripts:  scripts,
+        queue:    queued,
+        owner:    owner
+      });
+    });
+  };
+  
   queueUser(function(queued) {
     db.hgetall(realmKey, function redisGetRealm(error, realm) {
 		
@@ -303,40 +332,16 @@ app.get('/realms/:id', function httpGetRealm(req, res, next) {
           }
           if (list.indexOf(realmID) > -1) {
             // TODO: Make work like user queue
-            return res.render('error', {message: "This realm is queued for launch..."});
+            //return res.render('error', {message: "This realm is queued for launch..."});
+            renderRealm(-1, queued);
           } else {
-            return res.render('error', {message: "This realm is offline..."});
+            return res.render('error', {message: "This realm is offline....."});
           }
         });
+      } else {
+        var port = realm.port.toString().replace(/(\r\n|\n|\r)/gm,"");
+        renderRealm(port, queued);
       }
-      
-      var scripts  = [];
-      var port     = realm.port.toString().replace(/(\r\n|\n|\r)/gm,"");
-
-      // For now, grab all the required libs each time we prep the view, in the future,
-      // do this once when '/launch' is called and store the array in redis...
-      var walker  = walk.walk('./realms/' + req.params.id + '/client/', { followLinks: false });
-
-      walker.on('file', function onWalkerFile(root, stat, next) {
-        if (path.extname(stat.name) == '.js') {
-            // Add this file to the list of files
-            console.log("root: " + root + " , stat.name: " + stat.name);
-            scripts.push("/" + path.join(root, stat.name));
-        }
-        next();
-      });
-
-      walker.on('end', function onWalkerEnd() {
-        res.render('realm', {
-          id:       realmID,
-          userID:   userID,
-          host:     req.headers.host,
-          port:     port,
-          scripts:  scripts,
-          queue:    queued,
-          owner:    owner
-        });
-      });
       
     });
   });
@@ -469,14 +474,18 @@ io.on('connection', function socketConnected(socket) {
 
   var userID = socket.request.user_id;
 
-  db.lrange([QUEUE, 0, -1], function (error, list) {
-    if (error) {
-      console.error(error);
-    }
-    socket.emit('info', {
-      list: list
+  db.multi()
+    .lrange([QUEUE, 0, -1])
+    .lrange([REALM_QUEUE, 0, -1])
+    .exec(function (error, replies) {
+      if (error) {
+        console.error(error);
+      }
+      socket.emit('info', {
+        queue:        replies[0],
+        realm_queue:  replies[1]
+      });    
     });
-  });
 });
 
 // ADMIN session/auth wall
