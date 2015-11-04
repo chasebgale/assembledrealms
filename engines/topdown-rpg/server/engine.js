@@ -28,6 +28,10 @@ var broadcast = {
   npcs: {}
 };
 
+var settings = {
+  events: ["move", ]
+};
+
 function Engine () {
   EventEmitter.call(this);
 }
@@ -46,12 +50,11 @@ Engine.prototype.initialize = function (callback) {
   //   var fs = require('fs');
   //   function readJSON { fs. etc etc
   
-  fs.readFile(__dirname + '/../client/maps/town.json', function (err, data) {
-    if (err) throw err;
-    
+  fs.readFile(__dirname + '/../client/maps/town.json', function (error, data) {
+    if (error) throw err;
     maps.push(JSON.parse(data));
-    
     self.spawn();
+    callback();
   });
 
 };
