@@ -20,7 +20,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     <h2><?= $user["display_name"] ?> <small> <?= $user["title"] ?></small></h2>
     <div class="media">
         <div class="pull-left">
-          <?php if ($user->has_image == 1) { ?>
+          <?php if ($user['has_image'] == 1) { ?>
             <img src="/img/profiles/<?=$userID . ".jpg?" . time() ?>" />
           <?php } else { ?>
             <img src="/img/anonymous.png" />
