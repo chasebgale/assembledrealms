@@ -585,7 +585,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     var __realmOnline = parseInt(<?php echo $realm["status"] ?>);
 	var __realmLevel = parseInt(<?php echo $realm["level"] ?>);
     var __existingState = {
-	description: "<?php echo $realm["description"] ?>",
+	description: "<?php echo htmlspecialchars($realm['description'], ENT_QUOTES, 'UTF-8'); ?>",
 	show_funding: <?php echo $realm["show_funding"] ?>
     };
     

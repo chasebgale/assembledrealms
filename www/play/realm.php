@@ -163,7 +163,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
         <div class="media pull-left">
             <a class="pull-left" href="#">
-              <?php if ($creator->has_image == 1) { ?>
+              <?php if ($creator['has_image'] == 1) { ?>
                 <img width="50" height="50" class="media-object" src="/img/profiles/<?=$realm['user_id'] . ".jpg?" . time() ?>">
               <?php } else { ?>
                 <img width="50" height="50" class="media-object" src="/img/anonymous.png" />

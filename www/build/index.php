@@ -119,7 +119,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
                 <h3 class="realm-panel-title">Your Realms</h3>
             </div>
             <div class="panel-body">
-                <div id="emptyAlert" class="alert alert-info" role="alert" style="display: none;">
+                <div id="emptyAlert" class="text-center" role="alert" style="display: none;">
                     <strong>Time to get busy!</strong> You haven't created a realm yet...
                 </div>
                 <table id="existingRealmsTable" class="table table-hover">
@@ -147,7 +147,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 </div>
 
 <script id="realms_template" type="text/template">
-    <% _.each( realms, function( realm ){ %>
+    <% _.eachRight( realms, function( realm ){ %>
     
         <% if (realm.status == 0) { %>
         <tr>

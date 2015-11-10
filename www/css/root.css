@@ -357,3 +357,22 @@ div#funding {
   margin-left: 6px;
   margin-right: 6px;
 }
+
+.newRealmTableRow {
+  animation-duration: 4s;
+  animation-delay: 3s;
+  animation-name: newRealmTableRow;
+  animation-iteration-count: 1;
+  animation-fill-mode: backwards;
+}
+
+@keyframes newRealmTableRow {
+  from {
+    background-color: #d9edf7;
+  }
+  
+  to {
+    background-color: #FFF;
+  }
+}
+

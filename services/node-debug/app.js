@@ -512,6 +512,66 @@ app.use(function(req, res, next) {
   });
 });
 
+var terminateStagnantRealms = function (stagnantCallback) {
+  // Do we have a realm we can power down?
+  var multi           = db.multi();
+  var stagnantRealms  = [];
+    
+  for (var i = 0; i < processes.length; i++) {
+    if (processes[i].name !== "realm-host") {
+      var id = processes[i].name.split('-')[1];
+      multi.zrangebyscore([ACTIVE_SESSIONS, id, id]);
+    }
+  };
+  
+  var freed = false;
+  
+  multi.exec(function (error, replies) {
+    
+    if (error) {
+      return stagnantCallback(error);
+    }
+    
+    for (var i = 0; i < replies.length; i++) {
+      if (replies[i] === null) {
+        // No active sessions for this realm, power it down
+        stagnantRealms.push(processes[i].name);
+      }
+    }
+    
+    if (stagnantRealms.length > 0) {            
+      async.each(stagnantRealms, function(name, callback) {
+        pm2.describe(name, function (error, list){
+          if (list[0].pm2_env.created_at < expired) {
+            pm2.delete(name, function onPmStop(err, proc) {
+              if (err) {
+                console.log("Attempted to stop " + proc + " but errored: " + err.stack);
+                callback(err);
+              }
+              freed = true;
+              callback();
+            });
+          } else {
+            callback();
+          }
+        });
+      }, function (error) {
+        if (error) {
+          return stagnantCallback(error);
+        }
+        // If we are here, we've powered down at least one realm, so we can launch a new one
+        if (freed) {
+          stagnantCallback(null, true);
+        } else {
+          stagnantCallback(null, false);
+        }
+      });
+    } else {
+      stagnantCallback(null, false);
+    }
+  });
+};
+
 app.get('/launch/:id', function httpGetLaunch(req, res, next) {
   
   var expired        = Date.now() - 900000; // 900k milliseconds = 15 minutes
@@ -521,7 +581,6 @@ app.get('/launch/:id', function httpGetLaunch(req, res, next) {
   var realmErr       = '/var/www/logs/' + realmID + '-err.log';
   var realmOut       = '/var/www/logs/' + realmID + '-out.log';
   var running        = false;
-  var stagnantRealms = [];
   
   var launchRealm = function (restart, launchRealmCallback) {
     fs.unlink(realmErr, function onRemErrorLog(error){
@@ -587,59 +646,10 @@ app.get('/launch/:id', function httpGetLaunch(req, res, next) {
       // in terms of average memory consumption, it'll check for free mem
       if (processes.length > MAX_RUNNING_REALMS) {
         
-        // Do we have a realm we can power down?
-        var multi = db.multi();
-          
-        for (var i = 0; i < processes.length; i++) {
-          if (processes[i].name !== "realm-host") {
-            var id = processes[i].name.split('-')[1];
-            multi.zrangebyscore([ACTIVE_SESSIONS, id, id]);
-          }
-        };
-        
-        multi.exec(function (error, replies) {
-          for (var i = 0; i < replies.length; i++) {
-            if (replies[i] === null) {
-              // No active sessions for this realm, power it down
-              stagnantRealms.push(processes[i].name);
-            }
-          }
-          
-          if (stagnantRealms.length > 0) {            
-            async.each(stagnantRealms, function(name, callback) {
-              pm2.describe(name, function (error, list){
-                if (list[0].pm2_env.created_at < expired) {
-                  pm2.delete(name, function onPmStop(err, proc) {
-                    if (err) {
-                      console.log("Attempted to stop " + proc + " but errored: " + err.stack);
-                      callback(err);
-                    }
-                    callback();
-                  });
-                } else {
-                  callback();
-                }
-              });
-            }, function (error) {
-              if (error) {
-                return console.error(error);
-              }
-              // If we are here, we've powered down at least one realm, so we can launch a new one
-              launchRealm(false, function (error) {
-                if (error) {
-                  console.error(err);
-                  return res.status(500).send(err.stack);
-                }
-                return res.send('OK');
-              });
-            });
-          } else {
-            // QUEUE REALM LAUNCH
-            db.rpush([REALM_QUEUE, realmID], function (error, response) {
-              return res.send('QUEUED');
-            });
-          }
+        db.rpush([REALM_QUEUE, realmID], function (error, reply) {
+          return res.send('QUEUED');
         });
+        
       } else {
         // Realm not running and we have the space to spool a new one:
         launchRealm(false, function (error) {
@@ -709,6 +719,10 @@ var tickTock = setInterval(function () {
                       console.log(error.stack);
                       return callback(error);
                     }
+                    
+                    // Boot up first queued realm, if any are queued
+                    
+                    
                     callback();
                   });
                 });
