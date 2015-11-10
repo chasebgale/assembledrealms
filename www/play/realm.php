@@ -175,7 +175,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
             </div>
         </div>
         
-        <div class="pull-right">
+        <div class="pull-right" id="actionButtons" style="display: none;">
         <?php if ($loved) { ?>
             <button id="btnLove" type="button" class="btn btn-default navbar-btn" disabled="disabled"><i class="fa fa-heart"></i> Loved!</button>
         <?php } else { ?>
@@ -197,7 +197,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     ?>
     
     
-  <div>
+  <div id="tabsContainer" style="display: none;">
         
 		<ul id="tabs" class="nav nav-tabs" role="tablist" style="margin-top: 60px;">
 			<li class="active"><a href="#tab_readme" role="tab" data-toggle="tab">Readme</a></li>
@@ -366,6 +366,52 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
       
       engine.initialize( document.getElementById("realm") );
       
+      __renderer = new marked.Renderer();
+      __renderer.table = function(header, body) {
+        return '<table class="table table-striped"><thead>' + header + '</thead><tbody>' + body + '</tbody></table>';
+      };
+          
+      marked.setOptions({
+         sanitize: true,
+         renderer: __renderer
+      });
+      
+      async.parallel([
+        function(callback){
+          $.post( "realm.php", { directive: "comment", realmID: "<?=$realmID?>" })
+            .done(function( data ) {
+              if (data !== "null") {
+                data = JSON.parse( data );
+                $("#comments").html(templateFn({ 'comments': data }));
+                
+                for (var i =0; i < data.length; i++) {
+                  if (data[i].parent_id) {
+                    var target = $('#comments').find('[data-id="' + data[i].parent_id + '"]');
+                    target.append(templateReplyFn({'comment': data[i]}));
+                  }
+                }
+                
+                callback(null, true);
+              } 
+            });
+        },
+        function(callback){
+          $.get(realmURL + "README.md", function (data) {
+            $("#tab_readme").html(marked(data));
+            callback(null, true);
+          });
+        },
+        function(callback){
+          $.get(realmURL + "CREDITS.md", function (data) {
+            $("#tab_credits").html(marked(data));
+            callback(null, true);
+          });
+        }
+      ],
+      function(err, results){
+        $('#tabsContainer').fadeIn();
+        $('#actionButtons').fadeIn();
+      });
     }
 		
 		function animate() {
@@ -373,42 +419,8 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 			requestAnimationFrame(animate);
 		}
         
-    __renderer = new marked.Renderer();
- 
-    __renderer.table = function(header, body) {
-      return '<table class="table table-striped"><thead>' + header + '</thead><tbody>' + body + '</tbody></table>';
-    };
-        
-    marked.setOptions({
-       sanitize: true,
-       renderer: __renderer
-    });
-        
     var templateFn = _.template($('#comments_template').html());
     var templateReplyFn = _.template($('#comment_reply_template').html());
-        
-    $.post( "realm.php", { directive: "comment", realmID: "<?=$realmID?>" })
-      .done(function( data ) {
-          if (data !== "null") {
-              data = JSON.parse( data );
-              $("#comments").html(templateFn({ 'comments': data }));
-              
-              for (var i =0; i < data.length; i++) {
-                  if (data[i].parent_id) {
-                      var target = $('#comments').find('[data-id="' + data[i].parent_id + '"]');
-                      target.append(templateReplyFn({'comment': data[i]}));
-                  }
-              }
-          } 
-      });
-        
-    $.get(realmURL + "README.md", function (data) {
-      $("#tab_readme").html(marked(data));
-    });
-    
-    $.get(realmURL + "CREDITS.md", function (data) {
-      $("#tab_credits").html(marked(data));
-    });
         
     $('#btnLove').on('click', function (e) {
 
@@ -451,78 +463,78 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
       button.html('<i class="fa fa-cog fa-spin"></i> Add Comment');
       
       $.post( "realm.php", { directive: "comment", realmID: "<?=$realmID?>", comment: $('#commentContent').val() })
-          .done(function( data ) {
-              if (data !== "null") {
-                  
-                  data = JSON.parse( data );
-                  
-                  $("#comments").append(templateFn({ 'comments': [data] }));
-                  button.removeAttr('disabled');
-                  button.html('Add Comment');
-                  $('#commentContent').val('');
-                  
-                  // Update comment count:
-                  var commentCountSpan = $("#commentCount");
-                  var commentCount = parseInt(commentCountSpan.text()) + 1;
-                  commentCountSpan.text(commentCount);
-                  
-                  // Scroll page to new comment:
-                  $('html, body').animate({
-                      scrollTop: $('#comments').find('[data-id="' + data.id + '"]').offset().top
-                  }, 1000);
+        .done(function( data ) {
+          if (data !== "null") {
+              
+            data = JSON.parse( data );
+            
+            $("#comments").append(templateFn({ 'comments': [data] }));
+            button.removeAttr('disabled');
+            button.html('Add Comment');
+            $('#commentContent').val('');
+            
+            // Update comment count:
+            var commentCountSpan = $("#commentCount");
+            var commentCount = parseInt(commentCountSpan.text()) + 1;
+            commentCountSpan.text(commentCount);
+            
+            // Scroll page to new comment:
+            $('html, body').animate({
+                scrollTop: $('#comments').find('[data-id="' + data.id + '"]').offset().top
+            }, 1000);
 
-              }
-          });
+          }
+        });
             
     });
        
-       $('#comments').on('click', '.reply', function (e) {
-            var button = $(this);
-            var contentBlock = button.closest('div [data-id]');
-            var commentID = contentBlock.attr('data-id');
-            
-            var existingReplyToBlock = $('#replyTo');
-            
-            if (existingReplyToBlock.length > 0) {
-                existingReplyToBlock.remove();
-            }
-            
-            contentBlock.append('<div id="replyTo" style="display: none;" class="well clearfix">' +
-                                '<textarea class="form-control" rows="5" cols="100" id="replyToCommentContent" placeholder="Add your voice to the conversation..."></textarea>' +
-                                '<button id="replyToComment" data-id="' + commentID + '" style="margin-top: 10px;" class="btn btn-default pull-right">Add Comment</button>' +
-                                '</div>'
-                                );
-            
-            $('#replyTo').fadeIn();
-       });
+    $('#comments').on('click', '.reply', function (e) {
+      var button = $(this);
+      var contentBlock = button.closest('div [data-id]');
+      var commentID = contentBlock.attr('data-id');
+      
+      var existingReplyToBlock = $('#replyTo');
+      
+      if (existingReplyToBlock.length > 0) {
+        existingReplyToBlock.remove();
+      }
+      
+      contentBlock.append('<div id="replyTo" style="display: none;" class="well clearfix">' +
+                          '<textarea class="form-control" rows="5" cols="100" id="replyToCommentContent" placeholder="Add your voice to the conversation..."></textarea>' +
+                          '<button id="replyToComment" data-id="' + commentID + '" style="margin-top: 10px;" class="btn btn-default pull-right">Add Comment</button>' +
+                          '</div>'
+                          );
+      
+      $('#replyTo').fadeIn();
+    });
        
-       $('#comments').on('click', '#replyToComment', function (e) {
-            var button = $(this);
+    $('#comments').on('click', '#replyToComment', function (e) {
+      var button = $(this);
+      
+      button.attr('disabled', true);
+      button.html('<i class="fa fa-cog fa-spin"></i> Add Comment');
+      
+      var commentID = button.attr('data-id');
+      
+      $.post( "realm.php", { directive: "comment", realmID: "<?=$realmID?>", comment: $('#replyToCommentContent').val(), parentID: commentID })
+        .done(function( data ) {
+          if (data !== "null") {
+              
+            data = JSON.parse( data );
             
-            button.attr('disabled', true);
-            button.html('<i class="fa fa-cog fa-spin"></i> Add Comment');
+            var target = $('#comments').find('[data-id="' + commentID + '"]');
+            target.append(templateReplyFn({'comment': data}));
             
-            var commentID = button.attr('data-id');
+            $('#replyTo').remove();
             
-            $.post( "realm.php", { directive: "comment", realmID: "<?=$realmID?>", comment: $('#replyToCommentContent').val(), parentID: commentID })
-                .done(function( data ) {
-                    if (data !== "null") {
-                        
-                        data = JSON.parse( data );
-                        
-                        var target = $('#comments').find('[data-id="' + commentID + '"]');
-                        target.append(templateReplyFn({'comment': data}));
-                        
-                        $('#replyTo').remove();
-                        
-                        // Scroll page to new comment:
-                        $('html, body').animate({
-                            scrollTop: $('#comments').find('[data-id="' + data.id + '"]').offset().top
-                        }, 1000);
+            // Scroll page to new comment:
+            $('html, body').animate({
+                scrollTop: $('#comments').find('[data-id="' + data.id + '"]').offset().top
+            }, 1000);
 
-                    }
-                });
-       });
+          }
+        });
+    });
        
     });
     
