@@ -5,6 +5,8 @@ var server      = require('http').Server(app);
 var request     = require('request');
 var async       = require('async');
 var moment      = require('moment');
+var redis 			= require('redis');
+var db 	        = redis.createClient();
 
 // TODO: For now we'll just keep the list of servers to check on in memory; however, this should really be stored
 // in redis or the like for fault tolerance in case this service crashes for some reason... if not someone could
@@ -120,86 +122,99 @@ app.get('/stats', function (req, res, next) {
 
 app.get('/launch/:id', function (req, res, next) {
     
-    var auth = req.get('Authorization');
-
-    if (auth !== self_token) {
-        return res.status(401).send("Please don't try to break things :/");
+  var auth        = req.get('Authorization');
+  var id          = req.params.id;
+  var realm_host  = 'realm-' + id + '.assembledrealms.com';
+  var time        = new Date().getTime();
+  
+  if (auth !== self_token) {
+      return res.status(401).send("Please don't try to break things :/");
+  }
+  
+  console.log(new Date().toISOString() + ' Received valid request to /launch/' + id);
+    
+  var options = {
+    url: 'https://api.digitalocean.com/v2/droplets',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + ocean_token,
+      'Accept': '*/*'
+    },
+    json: true,
+    body: {
+      name:     realm_host,
+      region:   'nyc3',
+      size:     '512mb',
+      image:    '12588564'
     }
+  };
     
-    console.log(new Date().toISOString() + ' Received valid request to /launch/' + req.params.id);
+  request.post(options, function(err, response, body) {
+    console.log(new Date().toISOString() + " Got launch response from DO: " + response.statusCode + " for " + req.params.id);
     
-  var realm_host = 'realm-' + req.params.id + '.assembledrealms.com';
-    
-    var options = {
-        url: 'https://api.digitalocean.com/v2/droplets',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + ocean_token,
-            'Accept': '*/*'
-        },
-        json: true,
-        body: {
-            name:     realm_host,
-            region:   'nyc3',
-            size:     '512mb',
-            image:    '12588564'
-        }
-    };
-    
-    request.post(options, function(err, response, body) {
-        console.log(new Date().toISOString() + " Got launch response from DO: " + response.statusCode + " for " + req.params.id);
+    if ((response.statusCode > 199) && (response.statusCode < 300)) {
+      // True success
+      
+      //check_list.push( {id: req.params.id, droplet: body.droplet.id, time: new Date().getTime()} );
+      // realms[req.params.id] = body.droplet.id;
+      
+      db.multi()
+        .hmset(["realm:" + id, "droplet", body.droplet.id, "requested", time, "address", ""])
+        .zadd(["queue", time, id])
+        .exec(function (error, replies) {
+          if (error) {
+            console.error(error);
+            return res.status(500).send(error.message);
+          }
+          
+          return res.json({message: 'OK'});
+        });
         
-        if ((response.statusCode > 199) && (response.statusCode < 300)) {
-            // True success
-            check_list.push( {id: req.params.id, droplet: body.droplet.id, time: new Date().getTime()} );
-            realms[req.params.id] = body.droplet.id;
-            
-            return res.json({message: 'OK'});
-        } else {
-            // Successful request but failure on DO API side
-            console.log("Failure message: " + body);
-            return res.status(401).send(body);
-        }
-    });
+    } else {
+      // Successful request but failure on DO API side
+      console.log("Failure message: " + body);
+      return res.status(500).send(body);
+    }
+  });
     
 });
 
 app.get('/shutdown/:id', function (req, res, next) {
     
-    var auth = req.get('Authorization');
+  var auth = req.get('Authorization');
 
-    if (auth !== self_token) {
-        return res.status(401).send("Please don't try to break things :/");
-    }
+  if (auth !== self_token) {
+    return res.status(401).send("Please don't try to break things :/");
+  }
+  
+  console.log(new Date().toISOString() + ' Received valid request to /shutdown/' + req.params.id);
+  
+  if (realms[req.params.id]) {
+    var options = {
+      url: 'https://api.digitalocean.com/v2/droplets/' + realms[req.params.id],
+      headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + ocean_token,
+          'Accept': '*/*'
+      }
+    };
     
-    console.log(new Date().toISOString() + ' Received valid request to /shutdown/' + req.params.id);
-    
-    if (realms[req.params.id]) {
-        var options = {
-            url: 'https://api.digitalocean.com/v2/droplets/' + realms[req.params.id],
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + ocean_token,
-                'Accept': '*/*'
-            }
-        };
-        
-        request.del(options, function(err, response, body) {
-            console.log(new Date().toISOString() + " Got delete response from DO: " + response.statusCode + " for " + req.params.id);
-            
-            if ((response.statusCode > 199) && (response.statusCode < 300)) {
-                // True success
-                realms[req.params.id] = undefined;
-                return res.json({message: 'OK'});
-            } else {
-                // Successful request but failure on DO API side
-                console.log("Failure message: " + body);
-                return res.status(401).send(body);
-            }
-        });
-    } else {
-        console.log(new Date().toISOString() + " : Delete request was missing a DO droplet ID from memory array...");
-    }
+    request.del(options, function(err, response, body) {
+      console.log(new Date().toISOString() + " Got delete response from DO: " + response.statusCode + " for " + req.params.id);
+      
+      if ((response.statusCode > 199) && (response.statusCode < 300)) {
+          // True success
+          realms[req.params.id] = undefined;
+          return res.json({message: 'OK'});
+      } else {
+          // Successful request but failure on DO API side
+          console.log("Failure message: " + body);
+          return res.status(401).send(body);
+      }
+    });
+  } else {
+    console.log(new Date().toISOString() + " : Delete request was missing a DO droplet ID from memory array...");
+  }
     
 });
 
@@ -213,23 +228,23 @@ var working = false;
 // Run the check loop every ~10 seconds
 setInterval(function(){
     
-    if (working) {
-        // If the previous iteration is taking more than 10 seconds, break:
-        return;
-        // I like this better than calling setTimeout at the end of the function because it allows for
-        // less time between iterations
-    } else {
-        working = true;
-    }
+  if (working) {
+    // If the previous iteration is taking more than 10 seconds, break:
+    return;
+    // I like this better than calling setTimeout at the end of the function because it allows for
+    // less time between iterations
+  } else {
+    working = true;
+  }
     
-    var ts = new Date().getTime();
-    
-    async.each(check_list, function(check_item, callback) {
-      if ((ts - check_item.time) > 30000) {
-        // If it's been a minimum of 30 seconds, we can try it:
-        
+  var minimum = new Date().getTime() - 30000;
+  var online  = [];
+  
+  db.zrangebyscore(["queue", "-inf", minimum], function (error, list) {
+    async.each(list, function(item, callback) {
+      db.hget(["realm:" + item, "droplet"], function (error, dropletID) {
         request.get({
-          url: 'https://api.digitalocean.com/v2/droplets/' + check_item.droplet,
+          url: 'https://api.digitalocean.com/v2/droplets/' + dropletID,
           headers: {
             'Content-Type': 'application/json', 
             'Authorization': 'Bearer ' + ocean_token
@@ -241,11 +256,11 @@ setInterval(function(){
             // True success
             try {
               if (body.droplet.networks.v4.length > 0) {
-                check_item.address = body.droplet.networks.v4[0].ip_address;
+                var ip = body.droplet.networks.v4[0].ip_address;
+                online.push( {id: item, address: ip} );
               }
             } catch (e) {
-              console.log(e.message);
-              console.log(JSON.stringify(body));
+              // Maybe if we are not getting an address after 10 min send an alert email or something?
             }
           } else {
             // Successful request but failure on DO API side
@@ -254,38 +269,34 @@ setInterval(function(){
           
           callback();
         });
+      });
+    }, function (error) {
+      if (online.length > 0) {
+        request.post({
+          url: 'http://www.assembledrealms.com/external/gatekeeper.php',
+          headers: {'Content-Type': 'application/json', 'Token': realms_token},
+          json: true, body: online
+        }, function(err, response, body) {
+          if (body.message !== 'OK') {
+            // TODO: QUEUE UP RETRY
+            console.log(new Date().toISOString() + ' Failure to update assembledrealms...');
+          }
+        });
+        
+        var purge = db.multi();
+        
+        for (var i = 0; i < online.length; i++) {
+          purge.zrem(["queue", online[i].id]);
+        }
+        
+        purge.exec(function (error, replies) {
+          
+        });
           
       } else {
-        callback();
+        working = false;
       }
-    }, function (err) {
-        
-        var online  = [];
-        var i       = check_list.length;
-        
-        while (i--) {
-            if (check_list[i].address) {
-                // If we have an address property, the server is online
-                online.push( {id: check_list[i].id, address: check_list[i].address} );
-                check_list.splice(i, 1);
-            }
-        }
-        
-        if (online.length > 0) {
-            
-            request.post({url: 'http://www.assembledrealms.com/external/gatekeeper.php',
-                        headers: {'Content-Type': 'application/json', 'Token': realms_token},
-                        json: true, body: online}, function(err, response, body) {
-                            
-                if (body.message !== 'OK') {
-                    // TODO: QUEUE UP RETRY
-                    console.log(new Date().toISOString() + ' Failure to update assembledrealms...');
-                }
-            });
-            
-        } else {
-            working = false;
-        }
     });
+  });
     
 }, 10000);
