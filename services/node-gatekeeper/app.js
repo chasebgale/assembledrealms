@@ -5,8 +5,8 @@ var server      = require('http').Server(app);
 var request     = require('request');
 var async       = require('async');
 var moment      = require('moment');
-var redis 			= require('redis');
-var db 	        = redis.createClient();
+//var redis 			= require('redis');
+//var db 	        = redis.createClient();
 
 // TODO: For now we'll just keep the list of servers to check on in memory; however, this should really be stored
 // in redis or the like for fault tolerance in case this service crashes for some reason... if not someone could
@@ -94,7 +94,7 @@ app.get('/stats', function (req, res, next) {
         serverData.processes = responseData.processes;
         
         for (var p = 0; p < serverData.processes.length; p++) {
-          serverData.processes[p].pm2_env.created_at = moment(serverData.processes[p].pm2_env.created_at).fromNow(true);
+          serverData.processes[p].created_at = moment(serverData.processes[p].created_at).fromNow(true);
           
           if (serverData.processes[p].name === "realm-host") {
             serverData.processes[p].users = "N/A";
@@ -155,9 +155,9 @@ app.get('/launch/:id', function (req, res, next) {
     if ((response.statusCode > 199) && (response.statusCode < 300)) {
       // True success
       
-      //check_list.push( {id: req.params.id, droplet: body.droplet.id, time: new Date().getTime()} );
-      // realms[req.params.id] = body.droplet.id;
-      
+      /*
+      NOW THAT DNS IS UP, NO NEED TO WAIT FOR THE IP TO COME BACK, D.O. WILL AUTOMATICALLY ROUTE THIS REALM BY IT'S
+      HOSTNAME TO IT'S IP
       db.multi()
         .hmset(["realm:" + id, "droplet", body.droplet.id, "requested", time, "address", ""])
         .zadd(["queue", time, id])
@@ -169,7 +169,10 @@ app.get('/launch/:id', function (req, res, next) {
           
           return res.json({message: 'OK'});
         });
-        
+      */
+      
+      return res.json({message: 'OK'});
+      
     } else {
       // Successful request but failure on DO API side
       console.log("Failure message: " + body);
@@ -223,8 +226,10 @@ server.listen(3000, function(){
     console.log("Express server listening on port 3000, request to port 80 are redirected to 3000 by Fedora.");
 });
 
-var working = false;
 
+
+/*
+var working = false;
 // Run the check loop every ~10 seconds
 setInterval(function(){
     
@@ -287,6 +292,7 @@ setInterval(function(){
         
         for (var i = 0; i < online.length; i++) {
           purge.zrem(["queue", online[i].id]);
+          purge.hmset(["realm:" + id, "address", online[i].address])
         }
         
         purge.exec(function (error, replies) {
@@ -300,3 +306,4 @@ setInterval(function(){
   });
     
 }, 10000);
+*/

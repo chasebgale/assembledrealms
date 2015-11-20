@@ -237,7 +237,7 @@ class loggedInUser {
         
 		$logfile = '/home/tmp/gatekeeper_outbound.log';
 		
-        $stmt = $mysqli->prepare("SELECT level, address
+    $stmt = $mysqli->prepare("SELECT level, address
 			FROM realms
 			WHERE id = ?");
 		$stmt->bind_param("i", $realm_id);
@@ -246,108 +246,107 @@ class loggedInUser {
 		$stmt->fetch();
 		$stmt->close();
         
-        $curl 	= curl_init();
+    $curl 	= curl_init();
         
 		error_log("offlineRealm(" . $realm_id . ") " . $realm_level . ", " . $realm_address, 3, $logfile);
 		
 		if ($realm_level > 0) {
 			// Paid tier
-            // gatekeeper
+      // gatekeeper
 			$auth_token     = "2f15adf29c930d8281b0fb076b0a14062ef93d4d142f6f19f4cdbed71fff3394";
-            $target_url     = "http://gatekeeper.assembledrealms.com/shutdown/" . $realm_id;
+      $target_url     = "http://gatekeeper.assembledrealms.com/shutdown/" . $realm_id;
 		} else {
 			// Free tier
-            // play-XX
+      // play-XX
 			$auth_token     = "e61f933bcc07050385b8cc08f9deee61de228b2ba31b8523bdc78230d1a72eb2";
-            $target_url     = "http://play-" . $realm_address . ".assembledrealms.com/shutdown/" . $realm_id;
-        }
+      $target_url     = "http://play-" . $realm_address . ".assembledrealms.com/shutdown/" . $realm_id;
+    }
         
-        curl_setopt_array($curl, array(
-            CURLOPT_HTTPHEADER 		=> array('Authorization: ' . $auth_token),
-            CURLOPT_HEADER          => true,
-            CURLOPT_RETURNTRANSFER 	=> true,
-            CURLOPT_SSL_VERIFYHOST 	=> 0,
-            CURLOPT_SSL_VERIFYPEER 	=> false,
-            CURLOPT_URL 			=> $target_url
-        ));
+    curl_setopt_array($curl, array(
+      CURLOPT_HTTPHEADER 		=> array('Authorization: ' . $auth_token),
+      CURLOPT_HEADER          => true,
+      CURLOPT_RETURNTRANSFER 	=> true,
+      CURLOPT_SSL_VERIFYHOST 	=> 0,
+      CURLOPT_SSL_VERIFYPEER 	=> false,
+      CURLOPT_URL 			=> $target_url
+    ));
 
-        $resp       = curl_exec($curl);
-        $httpcode   = intval(curl_getinfo($curl, CURLINFO_HTTP_CODE));
-        
-        curl_close($curl);
-        
-        $decoded = json_decode($resp, true);
-        
-        if (($httpcode < 200) && ($httpcode > 299)) {
-            // We have an error:
-            error_log($httpcode . ": " . $resp, 3, $logfile);
-            return false;
-        } else {
-            $stmt = $mysqli->prepare("UPDATE realms
-                              SET status = 0, address = NULL
-                              WHERE
-                              id = ?");
-            $stmt->bind_param("i", $realm_id);
-            $stmt->execute();
-            $stmt->close();
-            return true;
-        }
+    $resp       = curl_exec($curl);
+    $httpcode   = intval(curl_getinfo($curl, CURLINFO_HTTP_CODE));
+    
+    curl_close($curl);
+    
+    $decoded = json_decode($resp, true);
+    
+    if (($httpcode < 200) && ($httpcode > 299)) {
+      // We have an error:
+      error_log($httpcode . ": " . $resp, 3, $logfile);
+      return false;
+    } else {
+      $stmt = $mysqli->prepare("UPDATE realms
+                        SET status = 0, address = NULL
+                        WHERE
+                        id = ?");
+      $stmt->bind_param("i", $realm_id);
+      $stmt->execute();
+      $stmt->close();
+      return true;
+    }
 	}
     
-    public function onlineRealm($realm_id, $realm_level) {
+  public function onlineRealm($realm_id, $realm_level) {
 		global $mysqli,$db_table_prefix;
         
-        $logfile 	= '/home/tmp/gatekeeper_outbound.log';
-        $status 	= 0;
+    $logfile 	= '/home/tmp/gatekeeper_outbound.log';
+    $status 	= 0;
 		$curl 		= curl_init();
 		
 		if ($realm_level > 0) {
 			// Paid tier
-            // gatekeeper
+      // gatekeeper
 			$auth_token		= "2f15adf29c930d8281b0fb076b0a14062ef93d4d142f6f19f4cdbed71fff3394";
-			$target_url     = "http://gatekeeper.assembledrealms.com/launch/" . $realm_id;
+			$target_url   = "http://gatekeeper.assembledrealms.com/launch/" . $realm_id;
 
-            curl_setopt_array($curl, array(
-                CURLOPT_HTTPHEADER 		=> array('Authorization: ' . $auth_token),
-                CURLOPT_HEADER          => true,
-                CURLOPT_RETURNTRANSFER 	=> true,
-                CURLOPT_SSL_VERIFYHOST 	=> 0,
-                CURLOPT_SSL_VERIFYPEER 	=> false,
-                CURLOPT_URL 			=> $target_url
-            ));
+      curl_setopt_array($curl, array(
+        CURLOPT_HTTPHEADER 		=> array('Authorization: ' . $auth_token),
+        CURLOPT_HEADER          => true,
+        CURLOPT_RETURNTRANSFER 	=> true,
+        CURLOPT_SSL_VERIFYHOST 	=> 0,
+        CURLOPT_SSL_VERIFYPEER 	=> false,
+        CURLOPT_URL 			=> $target_url
+      ));
+      
 		} else {
 			
-            $stmt = $mysqli->prepare("SELECT source
-                FROM realms
-                WHERE id = ?");
-            $stmt->bind_param("i", $realm_id);
-            $stmt->execute();
-            $stmt->bind_result($realm_source);
-            $stmt->fetch();
-            $stmt->close();
+      $stmt = $mysqli->prepare("SELECT source
+        FROM realms
+        WHERE id = ?");
+      $stmt->bind_param("i", $realm_id);
+      $stmt->execute();
+      $stmt->bind_result($realm_source);
+      $stmt->fetch();
+      $stmt->close();
             
 			// TODO: Pick least congested play server, but for now:
 			$realm_address 	= "01";
-            $auth_token     = "e61f933bcc07050385b8cc08f9deee61de228b2ba31b8523bdc78230d1a72eb2";
-            $target_url     = "http://play-" . $realm_address . ".assembledrealms.com/launch/" . $realm_id;
-            
-            
-            
-            $post_body  = http_build_query(array('destination' => $realm_address,
-                                                 'source' => $realm_source
-            ));
-            
-            curl_setopt_array($curl, array(
-                CURLOPT_HTTPHEADER 		=> array('Authorization: ' . $auth_token),
-                CURLOPT_HEADER          => false,
-                CURLOPT_RETURNTRANSFER 	=> true,
-                CURLOPT_POST            => true,
-                CURLOPT_POSTFIELDS      => $post_body,
-                CURLOPT_SSL_VERIFYHOST 	=> 0,
-                CURLOPT_SSL_VERIFYPEER 	=> false,
-                CURLOPT_URL 			=> $target_url
-            ));
-        }
+      $auth_token     = "e61f933bcc07050385b8cc08f9deee61de228b2ba31b8523bdc78230d1a72eb2";
+      $target_url     = "http://play-" . $realm_address . ".assembledrealms.com/launch/" . $realm_id;
+      
+      $post_body  = http_build_query(array('destination' => $realm_address,
+                                           'source' => $realm_source
+      ));
+      
+      curl_setopt_array($curl, array(
+        CURLOPT_HTTPHEADER 		=> array('Authorization: ' . $auth_token),
+        CURLOPT_HEADER          => false,
+        CURLOPT_RETURNTRANSFER 	=> true,
+        CURLOPT_POST            => true,
+        CURLOPT_POSTFIELDS      => $post_body,
+        CURLOPT_SSL_VERIFYHOST 	=> 0,
+        CURLOPT_SSL_VERIFYPEER 	=> false,
+        CURLOPT_URL 			=> $target_url
+      ));
+    }
 
 		$resp       = curl_exec($curl);
 		$httpcode   = intval(curl_getinfo($curl, CURLINFO_HTTP_CODE));
@@ -378,17 +377,17 @@ class loggedInUser {
 			$stmt->bind_param("iisi", $status, $realm_level, $realm_address, $realm_id);
 		}
         
-        $stmt->execute();
-        $stmt->close();
-        
-        return true;
+    $stmt->execute();
+    $stmt->close();
+    
+    return true;
         
 	}
     
-    public function depositToRealm($realm_id, $amount) {
-        global $mysqli,$db_table_prefix;
+  public function depositToRealm($realm_id, $amount) {
+    global $mysqli,$db_table_prefix;
         
-        $stmt = $mysqli->prepare("SELECT funds
+    $stmt = $mysqli->prepare("SELECT funds
 			FROM ".$db_table_prefix."users
 			WHERE id = ?");
 		$stmt->bind_param("i", $this->user_id);
@@ -397,45 +396,45 @@ class loggedInUser {
 		$stmt->fetch();
 		$stmt->close();
         
-        if ($amount > $funds) {
-            return false;
-        }
-        
-        $mysqli->autocommit(FALSE);
-
-        // Update realm funds
-        $stmt = $mysqli->prepare("UPDATE realms
-						 SET funds = funds + ?
-						 WHERE
-						 id = ?");
-        $stmt->bind_param("ii", $amount, $realm_id);
-        $stmt->execute();
-        $stmt->close();
-        
-        // Update user funds
-        $stmt = $mysqli->prepare("UPDATE uc_users
-						 SET funds = funds - ?
-						 WHERE
-						 id = ?");
-        $stmt->bind_param("ii", $amount, $this->user_id);
-        $stmt->execute();
-        $stmt->close();
-        
-        // Log the deposit
-        $stmt = $mysqli->prepare("INSERT INTO realm_deposits
-				(realm_id, user_id, amount)
-				VALUES
-				(?, ?, ?)"
-			);
-        $stmt->bind_param("iii", $realm_id, $this->user_id, $amount);
-        $stmt->execute();
-        $stmt->close();
-        
-        $mysqli->commit();
-        $mysqli->autocommit(TRUE);
-        
-        return true;
+    if ($amount > $funds) {
+        return false;
     }
+    
+    $mysqli->autocommit(FALSE);
+
+    // Update realm funds
+    $stmt = $mysqli->prepare("UPDATE realms
+         SET funds = funds + ?
+         WHERE
+         id = ?");
+    $stmt->bind_param("ii", $amount, $realm_id);
+    $stmt->execute();
+    $stmt->close();
+        
+    // Update user funds
+    $stmt = $mysqli->prepare("UPDATE uc_users
+      SET funds = funds - ?
+      WHERE
+      id = ?");
+    $stmt->bind_param("ii", $amount, $this->user_id);
+    $stmt->execute();
+    $stmt->close();
+      
+      // Log the deposit
+    $stmt = $mysqli->prepare("INSERT INTO realm_deposits
+      (realm_id, user_id, amount)
+      VALUES
+      (?, ?, ?)"
+    );
+    $stmt->bind_param("iii", $realm_id, $this->user_id, $amount);
+    $stmt->execute();
+    $stmt->close();
+    
+    $mysqli->commit();
+    $mysqli->autocommit(TRUE);
+    
+    return true;
+  }
     
     public function fetchRealmScreenshots($realm_id) {
         global $mysqli,$db_table_prefix;

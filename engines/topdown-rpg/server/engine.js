@@ -29,7 +29,7 @@ var broadcast = {
 };
 
 var settings = {
-  events: ["move", ]
+  events: ["move"]
 };
 
 function Engine () {
@@ -51,7 +51,9 @@ Engine.prototype.initialize = function (callback) {
   //   function readJSON { fs. etc etc
   
   fs.readFile(__dirname + '/../client/maps/town.json', function (error, data) {
-    if (error) throw err;
+    if (error) {
+      return callback(error);
+    }
     maps.push(JSON.parse(data));
     self.spawn();
     callback();

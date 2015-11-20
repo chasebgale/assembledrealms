@@ -85,7 +85,7 @@
               <td><%= servers[i].processes[j].name %></td>
               <td><%= servers[i].processes[j].monit.cpu %>%</td>
               <td><%= (servers[i].processes[j].monit.memory / 1048576).toFixed(2) %>MB</td>
-              <td><%= servers[i].processes[j].pm2_env.created_at %></td>
+              <td><%= servers[i].processes[j].created_at %></td>
               <td><%= servers[i].processes[j].users %></td>
             </tr>
 <% } %>

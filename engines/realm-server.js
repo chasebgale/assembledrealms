@@ -219,78 +219,90 @@ app.get('/stats', function(req, res, next) {
   return res.send(io.sockets.sockets.length);
 });
 
-engine.initialize();
-
-// 16ms is 60fps, updating at half that
-var worldLoop = setInterval(function () {
+engine.initialize(function(error) {
+  if (error) {
+    console.log("engine.initialize error:");
+    console.log(error);
+    
+    var data = {
+      'error': error.message + '\n' + error.stack
+    };
+    
+    db.hmset("realm_" + realm_id, data, function(err, reply) {
+      if (err) {
+        console.log(err);
+      }
+      
+      return;
+    });
+  }
   
-  engine.tick();
+  // 16ms is 60fps, updating at half that
+  var worldLoop = setInterval(function () {
+    
+    engine.tick();
     
     var broadcast = engine.broadcast();
     
     if ((Object.getOwnPropertyNames(broadcast.npcs).length > 0) ||
-    (Object.getOwnPropertyNames(broadcast.players).length > 0)) {
-    
-        io.emit('update', broadcast);
-        
+      (Object.getOwnPropertyNames(broadcast.players).length > 0)) {
+      io.emit('update', broadcast);  
     }
+    
+    engine.broadcastComplete();
+    
+  }, 32);
   
-  engine.broadcastComplete();
-    
-    
-    
-}, 32);
-
-if (debug) {
-
+  if (debug) {
     var debugLoop = setInterval(function () {
-        //var room = io.sockets.adapter.rooms['debug']; Object.keys(room).length;
-        pm2.describe("realm-" + realm_id, function (err, list) {
-            if (err) {
-                return;
-            } 
-            io.to('debug').emit('stats', {cpu: list[0].monit.cpu, memory: list[0].monit.memory});
-        });
+      //var room = io.sockets.adapter.rooms['debug']; Object.keys(room).length;
+      pm2.describe("realm-" + realm_id, function (err, list) {
+        if (err) {
+          return;
+        } 
+        io.to('debug').emit('stats', {cpu: list[0].monit.cpu, memory: list[0].monit.memory});
+      });
     }, 1000);
-
-}
-
-pm2.connect(function(err) {
+  }
+  
+  pm2.connect(function(err) {
   
     if (err) {
-        console.log(err.message);
+      console.log(err.message);
     } else {
-        // Listen on random port because lots (hopefully) of other nodes are running too!
-        http.listen(0, function(){
-            // Log the port to the console
-            console.log("port: " + http.address().port);
+      // Listen on random port because lots (hopefully) of other nodes are running too!
+      http.listen(0, function(){
+        // Log the port to the console
+        console.log("port: " + http.address().port);
 
-            if (debug) {
-                // In debug mode, trash any DB entries on (re)start so we don't get into trouble
-                db.keys("realm_" + realm_id + "*", function (err, keys) {
-                    if ((err === undefined) && (keys)) {
-                        keys.forEach(function (key, pos) {
-                            db.del(key, function (err) {
-                                console.log("Deleted key: " + key);
-                            });
-                        });
-                    }
+        if (debug) {
+          // In debug mode, trash any DB entries on (re)start so we don't get into trouble
+          db.keys("realm_" + realm_id + "*", function (err, keys) {
+            if ((err === undefined) && (keys)) {
+              keys.forEach(function (key, pos) {
+                db.del(key, function (err) {
+                  console.log("Deleted key: " + key);
                 });
+              });
             }
-            
-            var data = {
-                "port": http.address().port,
-                "time": Date.now()
-            };
-            
-            db.hmset("realm_" + realm_id, data, function(err, reply) {
-                if (err) {
-                    console.log(err);
-                }
-                console.log(reply);
-            });
-            
+          });
+        }
+        
+        var data = {
+          "port":  http.address().port,
+          "time":  Date.now(),
+          "error": ""
+        };
+        
+        db.hmset("realm_" + realm_id, data, function(err, reply) {
+          if (err) {
+            console.log(err);
+          }
+          console.log(reply);
         });
-    }
-    
+          
+      });
+    }  
+  });
+  
 });

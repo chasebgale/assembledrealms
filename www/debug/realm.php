@@ -70,7 +70,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
       echo "Auth fail.";
       die();
     } else {
-      $url_from_auth = $host . "/realms/" . $realmID;
+      $url_from_auth = $host . "/realms/" . $realmID . "/";
     }
         
   } else {

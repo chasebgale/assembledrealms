@@ -165,7 +165,19 @@ app.get('/stats', function httpGetStats(req, res, next) {
           return callback(error);
         }
         
-        callback(null, processes);
+        var list = [];
+        var trim = {};
+        
+        processes.forEach(function(proc) {
+          trim = {
+            'created_at': proc.pm2_env.created_at,
+            'name': proc.name,
+            'monit': proc.monit
+          };
+          list.push(trim);
+        });
+        
+        callback(null, list);
       });
     }
   ], function(err, results){
@@ -313,6 +325,9 @@ app.get('/realms/:id', function httpGetRealm(req, res, next) {
   };
   
   queueUser(function(queued) {
+    
+    // This hash entry in redis is created by the realm itself, if it's missing, the realm error'd on startup,
+    // assuming it was launched at all...
     db.hgetall(realmKey, function redisGetRealm(error, realm) {
 		
       if (error) {
@@ -339,6 +354,11 @@ app.get('/realms/:id', function httpGetRealm(req, res, next) {
           }
         });
       } else {
+        
+        if (realm.error !== "") {
+          return res.render('error', {message: realm.error});
+        }
+        
         var port = realm.port.toString().replace(/(\r\n|\n|\r)/gm,"");
         renderRealm(port, queued);
       }
