@@ -565,7 +565,8 @@ app.get('/launch/:id', function httpGetLaunch(req, res, next) {
             error:      realmErr,
             output:     realmOut,
             scriptArgs: [realmID, 'true'],
-            force:      true
+            force:      true,
+            merge_logs: true
           };
           
           console.log("Starting realm with the following options: " + JSON.stringify(options));
