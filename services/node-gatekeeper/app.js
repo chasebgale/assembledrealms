@@ -35,6 +35,9 @@ app.use( bodyParser.urlencoded() ); // to support URL-encoded bodies
 
 app.set('view engine', 'ejs'); // set up EJS for templating
 
+// Serve static files
+app.use('/', express.static(__dirname + '/static'));
+
 app.get('/stats', function (req, res, next) {
   
   var servers = [];
@@ -47,7 +50,6 @@ app.get('/stats', function (req, res, next) {
   async.each(servers, function(address, callback) {
     var serverData = {
       title:    address,
-      sessions: [],
       queue:    []
     };
     var options = {
@@ -90,6 +92,7 @@ app.get('/stats', function (req, res, next) {
         serverData.stats          = responseData.system;
         serverData.stats.load     = (parseFloat(serverData.stats.load[2]) * 100).toFixed(2) + "%";
         serverData.stats.uptime   = moment.duration(parseInt(serverData.stats.uptime), "seconds").humanize();
+        serverData.stats.users    = (responseData.active_sessions.length / 2);
         
         serverData.processes = responseData.processes;
         

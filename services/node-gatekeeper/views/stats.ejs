@@ -38,15 +38,18 @@
     <div class="panel panel-default">
       <div class="panel-heading">
         <div class="row">
+          <div class="col-md-1 text-center">
+            <img src="img/cloud.png" style="height: 40px;" />
+          </div>
           <div class="col-md-4">
             <h3 class="panel-title">
               <strong><%= servers[i].title %></strong><br/>
               <%= servers[i].stats.platform + " " + servers[i].stats.release %>
             </h3>
           </div>
-          <div class="col-md-2">
-            <span>UPTIME:</span><br/>
-            <%= servers[i].stats.uptime %>
+          <div class="col-md-1">
+            <span>USERS:</span><br/>
+            <%= servers[i].stats.users %>
           </div>
           <div class="col-md-3">
             <span>CPU: 15min avg. load</span>
@@ -87,28 +90,6 @@
               <td><%= (servers[i].processes[j].monit.memory / 1048576).toFixed(2) %>MB</td>
               <td><%= servers[i].processes[j].created_at %></td>
               <td><%= servers[i].processes[j].users %></td>
-            </tr>
-<% } %>
-          </tbody>
-        </table>
-        
-        <h3>Sessions</h3>
-        <table class="table table-hover">
-          <thead>
-            <tr>
-              <th>Active</th>
-              <th>UserID</th>
-              <th>SessionID</th>
-              <th>RealmID</th>
-            </tr>
-          </thead>
-          <tbody>
-<% for(var j=0; j<servers[i].sessions.length; j++) {%>
-            <tr>
-              <td><%= servers[i].sessions[j].realmID > -1 ? "Y" : "" %></td>
-              <td><%= servers[i].sessions[j].userID %></td>
-              <td><%= servers[i].sessions[j].sessionID %></td>
-              <td><%= servers[i].sessions[j].realmID > -1 ? servers[i].sessions[j].realmID : "N/A" %></td>
             </tr>
 <% } %>
           </tbody>
