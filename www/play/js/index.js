@@ -21,22 +21,26 @@ function searchRealms(initial) {
     parameters.sort = $('#selectSort').val();
 
     $.post("index.php", parameters, function (data) {
-        if (data !== "null") {
-            data = JSON.parse( data );
-            
-            if (initial) {
-                __pageCount = Math.ceil(data.length / __resultsPerPage);
-            }
-            
-            $("#realmList").html(templateFn({ 'realms':  data, 'initial': initial, 'page': __page, 'pages': __pageCount }));
-            
-            if (initial) {
-                $("#results").fadeIn();
-            } else {
-                $('#btnSearch').html('Update Search');
-                $('#btnSearch').removeAttr('disabled');
-            }
+      if (data !== "null") {
+        data = JSON.parse( data );
+        
+        _.forEach(data, function (realm) {
+          realm.screenshots = JSON.parse(realm.screenshots);
+        });
+        
+        if (initial) {
+            __pageCount = Math.ceil(data.length / __resultsPerPage);
         }
+        
+        $("#realmList").html(templateFn({ 'realms':  data, 'initial': initial, 'page': __page, 'pages': __pageCount }));
+        
+        if (initial) {
+            $("#results").fadeIn();
+        } else {
+            $('#btnSearch').html('Update Search');
+            $('#btnSearch').removeAttr('disabled');
+        }
+      }
     });
 }
 

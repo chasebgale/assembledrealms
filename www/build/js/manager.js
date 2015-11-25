@@ -11,7 +11,7 @@ var __cpu_span				= undefined;
 
 $(document).ready(function () {
    
-    $('.monitored').on('change', function (e) {
+    $('.monitored').on('input', function (e) {
         var prop = $(this).attr('data-id');
         __currentState[prop] = $(this).val();
         checkForChanges();
@@ -130,12 +130,6 @@ $(document).ready(function () {
       
         button.attr('disabled', true);
         button.html('<i class="fa fa-cog fa-spin"></i> Save Changes!');
-        
-        var newOrder = [];
-        
-        $('.screenshotHolder').each( function(e) {
-            newOrder.push($(this).attr('data-id'));
-        });
 
         $.ajax({
             url: 'manager.php',
@@ -145,9 +139,7 @@ $(document).ready(function () {
                 directive: 'save',
                 realm_id: __realmID,
                 description: $("#details-description").val(),
-                funding: $("#chkFunding").is(":checked"),
-                shots: newOrder,
-                shots_removed: __removedScreenshots
+                funding: $("#chkFunding").is(":checked")
             }
         })
         .done(function (data) {
@@ -165,19 +157,42 @@ $(document).ready(function () {
     });
    
     $("#screenshotsCol").on('click', '.removeScreenshot', function (e) {
-        e.preventDefault();
-        var id = $(this).attr('data-id');
-        
-        if (id) {
-            // We only need to report existing shots to be removed, the staging area server side gets wiped daily
-            __removedScreenshots.push(id);
+      e.preventDefault();
+      
+      var removeLink = $(this);
+      var filename   = removeLink.attr('data-id');
+      
+      removeLink.html('<i class="fa fa-trash-o fa-spin"></i> Remove</a>');
+      $("#screenshotsCol .removeScreenshot").attr('disabled', true);
+      
+      $.ajax({
+        url: 'manager.php',
+        type: 'post',
+        dataType: 'json',
+        data: {
+          directive: 'remove_screenshot',
+          realm_id: __realmID,
+          filename: filename
         }
-        
-        $(this).parent().parent().remove();
-        
-        if ($('.screenShotHolder').length < 6) {
+      })
+      .done(function (data) {
+        removeLink.parent().parent().fadeOut(function () {
+          $(this).remove();
+          $("#screenshotsCol .removeScreenshot").removeAttr('disabled');
+
+          if ($('.screenShotHolder').length < 6) {
             $('#addNewShot').fadeIn();
-        }
+          }
+        });
+      })
+      .fail(function(data) {
+        console.log(data);
+        $('#newFileCreateAlert').text('Network Error: ' + data.statusText);
+        $('#newFileCreateAlert').fadeIn();
+        // Update DOM to reflect we messed up:
+        //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
+      });
+      
     });
    
     $("#upfile").on('change', function (e) {
@@ -208,10 +223,10 @@ $(document).ready(function () {
             },
             success: function(data, textStatus, jqXHR) {
                 if(data.message === 'OK') {
-                    var newContent = '<div class="thumbnail screenshotHolder" data-id="staging/' + data.guid + '" style="display: inline-block; margin: 8px;">';
-                    newContent += '<a href="/play/img/staging/' + data.guid + '.jpg" data-toggle="lightbox" data-title="NEW Screenshot" data-parent=".wrapper-parent" data-gallery="gallery-43">';
-                    newContent += '<img src="/play/img/staging/' + data.guid + '-thumb.jpg"></a>';
-                    newContent += '<div class="caption"><a href="#" class="btn removeScreenshot"><i class="fa fa-trash-o"></i> Remove</a></div></div>';
+                    var newContent = '<div class="thumbnail screenshotHolder" data-id="' + data.filename + '" style="display: inline-block; margin: 8px;">';
+                    newContent += '<a href="/play/img/' + data.filename + '.jpg" data-toggle="lightbox" data-title="NEW Screenshot" data-parent=".wrapper-parent" data-gallery="gallery-' + __realmID + '">';
+                    newContent += '<img src="/play/img/' + data.filename + '-thumb.jpg"></a>';
+                    newContent += '<div class="caption"><a href="#" class="btn removeScreenshot" data-id="' + data.filename + '"><i class="fa fa-trash-o"></i> Remove</a></div></div>';
                     
                     $('#screenshotsCol').append(newContent);
                     

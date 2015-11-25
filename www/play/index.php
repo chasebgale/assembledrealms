@@ -148,60 +148,57 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 <script id="realms_template" type="text/template">
     
     <div id="results">
-    
     <% _.each( realms, function( realm ){ %>
     
-        <div class="playListRealm">
-            
+      <div class="playListRealm">
+        <a href="realm/<%- realm.id %>" style="color: inherit;">
+        <div class="row">
+          <div class="col-md-10">
             <!-- Title -->
-            <!-- TODO: Realm url should be different if offline, else we are just forwarding them to an 'offline' message -->
-            <a href="realm/<%- realm.id %>">
-            <h3> <%- realm.title %>
-            <div class="pull-right" style="margin-top: -6px;">
-            <small>
+            <div class="pull-left" style="min-width: 100px; max-width: 400px; margin-right: 20px;">
+              <span class="realmTitle"><%- realm.title %></span>
+            </div>
             
+            <!-- Description -->
+            <% if (realm.description) { %>
+                <p class="text-justify"><%- realm.description %></p>
+            <% } else { %>
+                <p class="text-justify">&nbsp;</p>
+            <% } %>
+          </div>
+          <div class="col-md-2">
             <!--  Online / Offline + users  -->
             <% if (realm.status == 1) { %>
-                <span class="label label-success"><i class="fa fa-power-off"></i> Online</span>
-                <span class="label label-default" style="margin-left: 6px;"><i class="fa fa-child"></i> <%- realm.players_online %></span>
+              <span class="label label-success"><i class="fa fa-power-off"></i> Online</span>
             <% } else { %>
-                <span class="label label-default"><i class="fa fa-power-off"></i> Offline</span>
+              <span class="label label-default"><i class="fa fa-power-off"></i> Offline</span>
             <% } %>
+            <span class="label label-default" style="margin-left: 6px;"><i class="fa fa-child"></i> <%- realm.players_online %></span>
             
             <!--  Loves -->
-                <span class="label label-default" style="margin-left: 6px;"><i class="fa fa-heart"></i> <%- realm.loves %></span>
-                
-            </small>
-            </div>
-            </h3>
-            </a>
-            
-        <% if (realm.screenshots) { %>
-            <div class="row wrapper-parent">
-            
-            <!-- Screenshots are in the format {id}-{#}-thumb.jpg and {id}-{#}.jpg, e.g. 42-1.jpg and 42-1-thumb.jpg -->
-            <% for (var i = 0; i < realm.screenshots; i++) { %>
-                <div class="col-md-2">
-                    <a href="img/<%- realm.id + '-' + i + '.jpg' %>"
-                       data-toggle="lightbox"
-                       data-title="<%- realm.title + '<small> screenshot #' + (i + 1) + ' </small>' %>"
-                       data-parent=".wrapper-parent"
-                       data-gallery="<%- 'gallery-' + realm.id %>" class="thumbnail">
-                        <img src="img/<%- realm.id + '-' + i + '-thumb.jpg' %>">
-                    </a>
-                </div>
-            <% } %>
-            
-            </div>
-        <% } %>
-        
-        <% if (realm.description) { %>
-            <p class="text-justify"><%- realm.description %></p>
-        <% } else { %>
-            <p class="text-justify">&nbsp;</p>
-        <% } %>
+            <span class="label label-default" style="margin-left: 6px;"><i class="fa fa-heart"></i> <%- realm.loves %></span>
+          </div>
         </div>
+        </a>
+      <% if (realm.screenshots.length > 0) { %>
+        <div class="row wrapper-parent">
         
+        <!-- Screenshots are in the format {id}-{#}-thumb.jpg and {id}-{#}.jpg, e.g. 42-1.jpg and 42-1-thumb.jpg -->
+        <% for (var i = 0; i < realm.screenshots.length; i++) { %>
+          <div class="col-md-2">
+            <a href="img/<%- realm.screenshots[i] + '.jpg' %>"
+               data-toggle="lightbox"
+               data-title="<%- realm.title + '<small> screenshot #' + (i + 1) + ' </small>' %>"
+               data-parent=".wrapper-parent"
+               data-gallery="<%- 'gallery-' + realm.id %>" class="thumbnail">
+                <img src="img/<%- realm.screenshots[i] + '-thumb.jpg' %>">
+            </a>
+          </div>
+        <% } %>
+        
+        </div>
+      <% } %>
+      </div>
     <% }); %>
     
     </div>

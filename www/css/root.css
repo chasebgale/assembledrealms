@@ -376,3 +376,11 @@ div#funding {
   }
 }
 
+.realmTitle {
+  font-size: 1.8em;
+  font-weight: bold;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  display: block;
+}
