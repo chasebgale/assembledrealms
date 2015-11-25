@@ -27,7 +27,7 @@ if ($method == 'POST') {
     
     if (isset($_POST['screenshots'])) {
         if ($_POST['screenshots'] == 'true') {
-            array_push($where, "screenshots > 0");
+            array_push($where, "screenshots <> '[]'");
         }
     }
     
@@ -166,26 +166,26 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
                 <p class="text-justify">&nbsp;</p>
             <% } %>
           </div>
-          <div class="col-md-2">
+          <div class="col-md-2" style="text-align: right;">
             <!--  Online / Offline + users  -->
             <% if (realm.status == 1) { %>
               <span class="label label-success"><i class="fa fa-power-off"></i> Online</span>
             <% } else { %>
               <span class="label label-default"><i class="fa fa-power-off"></i> Offline</span>
             <% } %>
-            <span class="label label-default" style="margin-left: 6px;"><i class="fa fa-child"></i> <%- realm.players_online %></span>
+            <span class="label label-default"><i class="fa fa-child"></i> <%- realm.players_online %></span>
             
             <!--  Loves -->
-            <span class="label label-default" style="margin-left: 6px;"><i class="fa fa-heart"></i> <%- realm.loves %></span>
+            <span class="label label-default"><i class="fa fa-heart"></i> <%- realm.loves %></span>
           </div>
         </div>
         </a>
       <% if (realm.screenshots.length > 0) { %>
-        <div class="row wrapper-parent">
+        <div class="container-fluid">
         
         <!-- Screenshots are in the format {id}-{#}-thumb.jpg and {id}-{#}.jpg, e.g. 42-1.jpg and 42-1-thumb.jpg -->
         <% for (var i = 0; i < realm.screenshots.length; i++) { %>
-          <div class="col-md-2">
+          <div style="width: 161px; height: 160px; display: inline-block;">
             <a href="img/<%- realm.screenshots[i] + '.jpg' %>"
                data-toggle="lightbox"
                data-title="<%- realm.title + '<small> screenshot #' + (i + 1) + ' </small>' %>"

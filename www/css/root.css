@@ -63,23 +63,25 @@ div#funding {
     
 }
 
-@media (max-width: 994px) {
+@media (min-width: 992px) {
 	.header-link {
-		font-size: 0.75em;
+		font-size: 1.25em;
+    text-align: center;
+	}
+}
+
+@media (max-width: 991px) {
+	.header-link {
+		font-size: 1.1em;
+    text-align: center;
 	}
 }
 
 @media (max-width: 767px) {
 	.header-link {
-		font-size: 1.25em;
+		font-size: 2em;
+    text-align: left;
 	}
-}
-
-
-
-.header-link {
-    text-align: center;
-    font-size: 16px;
 }
 
 #realm-engine-carousel {
@@ -383,4 +385,5 @@ div#funding {
   white-space: nowrap;
   overflow: hidden;
   display: block;
+  line-height: 1.15em;
 }
