@@ -59,7 +59,7 @@ var Map = function (target, toolbar, map) {
   };
 
   // If we haven't already, let's get our toolbar in place:
-  if (!toolbar.firstChild.hasChildNodes()) {
+  if (!toolbar.hasChildNodes()) {
       self.appendDOM();
   }
   
@@ -120,41 +120,41 @@ var Map = function (target, toolbar, map) {
     
   worker.push({name: "cursor_", url: realmResourceURL('client/resource/cursors.png')});
   
-  PIXI.loader
-    .add(worker)
-    .after(function (event) {
-      
-      if (self.tileIndexes[event.name] === undefined) {
-        self.tileIndexes[event.name] = 0;
+  var loader = new PIXI.loaders.Loader();
+  loader.add(worker);
+  loader.after(function (event) {
+        
+    if (self.tileIndexes[event.name] === undefined) {
+      self.tileIndexes[event.name] = 0;
+    }
+    
+    // Once we have the tile image loaded, break it up into textures:
+    for (row = 0; row < event.texture.height; row += 32) {
+      for (col = 0; col < event.texture.width; col += 32) {
+        frameTexture = new PIXI.Texture(event.texture, {
+          x: col,
+          y: row,
+          width: 32,
+          height: 32
+        });
+        PIXI.Texture.addTextureToCache(frameTexture, event.name + self.tileIndexes[event.name]);
+        self.tileIndexes[event.name] = self.tileIndexes[event.name] + 1;
       }
-      
-      // Once we have the tile image loaded, break it up into textures:
-      for (row = 0; row < event.texture.height; row += 32) {
-        for (col = 0; col < event.texture.width; col += 32) {
-          frameTexture = new PIXI.Texture(event.texture, {
-            x: col,
-            y: row,
-            width: 32,
-            height: 32
-          });
-          PIXI.Texture.addTextureToCache(frameTexture, event.name + self.tileIndexes[event.name]);
-          self.tileIndexes[event.name] = self.tileIndexes[event.name] + 1;
-        }
-      }
-      
-      if (event.name == "terrain_") {
-        document.getElementById('modalTilesBody').appendChild(event.texture.baseTexture.source);
-      }
-      
-      load_count++;
-      
-      if (load_count > 1) {
-        load_complete();
-      }
-    })
-    .load(function (loader, resources) {
+    }
+    
+    if (event.name == "terrain_") {
+      document.getElementById('modalTilesBody').appendChild(event.texture.baseTexture.source);
+    }
+    
+    /*
+    load_count++;
+    
+    if (load_count > 1) {
       load_complete();
-    });
+    }
+    */
+  });
+  loader.load(load_complete);
 };
 
 Map.prototype.setTile = function (screen_coordinates, tile_index) {

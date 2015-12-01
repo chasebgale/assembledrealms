@@ -195,32 +195,35 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
 <div id='wrapper'>
     
-    <div style="width: 500px; display: none; margin: 0 auto; margin-top: 100px;" class="alert alert-danger" id="errorMessage"></div>
+  <div style="width: 500px; display: none; margin: 0 auto; margin-top: 100px;" class="alert alert-danger" id="errorMessage"></div>
 
-    <div id="loading" style="width: 500px; margin: 0 auto; margin-top: 100px;">
-        <div class="progress progress-striped active">
-            <div class="progress-bar"  role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%;">
-                <span class="sr-only">Loading...</span>
-            </div>
-        </div>
-        <p style="text-align: center;">Your realm is loading, please wait...</p>
+  <div id="loading" style="width: 500px; margin: 0 auto; margin-top: 100px;">
+    <div class="progress progress-striped active">
+      <div class="progress-bar"  role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%;">
+          <span class="sr-only">Loading...</span>
+      </div>
     </div>
+    <p style="text-align: center;">Your realm is loading, please wait...</p>
+  </div>
     
-    <section id="workspace" style="display: none;">
+  <section id="workspace" style="display: none;">
     
-        <div id="commandBar">
-            <div id="commandBarButtons">
-                <button type="button" id="btnNewFile" class="btn btn-default btn-xs"><i class="fa fa-file-text-o fa-fw"></i> New File</button>
-                <button type="button" id="btnNewFolder" class="btn btn-default btn-xs"><i class="fa fa-folder-o fa-fw"></i> New Folder</button>
-                <button type="button" id="btnUploadResource" class="btn btn-default btn-xs"><i class="fa fa-upload fa-fw"></i> Upload File</button>
-                <div class="spacer"></div>
-                <button type="button" id="btnCommit" class="btn btn-default btn-xs"><i class="fa fa-cloud-upload fa-fw"></i> Commit</button>
-                <div class="spacer"></div>
-                <button type="button" id="btnDebug" class="btn btn-default btn-xs"><i class="fa fa-caret-square-o-right fa-fw"></i> Debug</button>
+    <div id="commandBar">
+      <div id="commandBarButtons">
+        <button type="button" id="btnNewFile" class="btn btn-default btn-xs"><i class="fa fa-file-text-o fa-fw"></i> New File</button>
+        <button type="button" id="btnNewFolder" class="btn btn-default btn-xs"><i class="fa fa-folder-o fa-fw"></i> New Folder</button>
+        <button type="button" id="btnUploadResource" class="btn btn-default btn-xs"><i class="fa fa-upload fa-fw"></i> Upload File</button>
+        
         <div class="spacer"></div>
+        
+        <button type="button" id="btnCommit" class="btn btn-default btn-xs"><i class="fa fa-cloud-upload fa-fw"></i> Commit</button>
+        <button type="button" id="btnDebug" class="btn btn-default btn-xs"><i class="fa fa-caret-square-o-right fa-fw"></i> Debug</button>
+        
+        <div class="spacer"></div>
+        
         <div class="btn-group">
           <button type="button" id="btnView" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          <i class="fa fa-eye"></i> Rendered Markdown <span class="caret"></span>
+            <i class="fa fa-eye"></i> Rendered Markdown <span class="caret"></span>
           </button>
           <ul id="ulView" class="dropdown-menu">
             <li id="tab-nav-editor" style="display: none;"><a href="#editor">Raw Text</a></li>
@@ -230,91 +233,115 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
             <li id="tab-nav-file" style="display: none;"><a href="#file">File Tools</a></li>
           </ul>
         </div>
-            </div>
-            <a href="http://www.assembledrealms.com" style="float: right;"><img src="/build/img/logo.png"></img></a>
-        </div>
-    
-        <div id="tree">
-            <ul id="explorer" class="filetree treeview">
+        
+        <div id="editorOptions" style="display: none;">
+          <div class="btn-group">
+            <button type="button" id="btnEditorFontSize" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              12px <span class="caret"></span>
+            </button>
+            <ul id="ulEditorFontSize" class="dropdown-menu">
+              <li><a href="#">10px</a></li>
+              <li><a href="#">12px</a></li>
+              <li><a href="#">14px</a></li>
+              <li><a href="#">16px</a></li>
+              <li><a href="#">18px</a></li>
             </ul>
+          </div>
+          <div class="btn-group">
+            <button type="button" id="btnEditorTheme" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              Ambiance <span class="caret"></span>
+            </button>
+            <ul id="ulEditorTheme" class="dropdown-menu">
+              <li><a href="#">Ambiance</a></li>
+              <li><a href="#">Chaos</a></li>
+              <li><a href="#">Clouds</a></li>
+              <li><a href="#">Clouds Midnight</a></li>
+              <li><a href="#">Cobalt</a></li>
+              <li><a href="#">Dawn</a></li>
+              <li><a href="#">Dreamweaver</a></li>
+              <li><a href="#">Eclipse</a></li>
+              <li><a href="#">Github</a></li>
+              <li><a href="#">Idle Fingers</a></li>
+              <li><a href="#">KR Theme</a></li>
+              <li><a href="#">Merbivore</a></li>
+              <li><a href="#">Merbivore Soft</a></li>
+              <li><a href="#">Mono Industrial</a></li>
+              <li><a href="#">Monokai</a></li>
+              <li><a href="#">Pastel On Dark</a></li>
+              <li><a href="#">Solarized Dark</a></li>
+              <li><a href="#">Solarized Light</a></li>
+              <li><a href="#">Terminal</a></li>
+              <li><a href="#">Textmate</a></li>
+              <li><a href="#">Tomorrow</a></li>
+              <li><a href="#">Tomorrow Night</a></li>
+              <li><a href="#">Tomorrow Night Blue</a></li>
+              <li><a href="#">Tomorrow Night Bright</a></li>
+              <li><a href="#">Tomorrow Night Eighties</a></li>
+              <li><a href="#">Twilight</a></li>
+              <li><a href="#">Vibrant Ink</a></li>
+              <li><a href="#">XCode</a></li>
+            </ul>
+          </div>
         </div>
+      </div>
+      
+      <a href="http://www.assembledrealms.com" style="float: right;">
+        <img src="/build/img/logo.png"></img>
+      </a>
+    </div>
     
-        <div id="tabs">
-            <div class="tab-pane active" id="editor"></div>
+    <div id="tree">
+      <ul id="explorer" class="filetree treeview"></ul>
+    </div>
+    
+    <div id="tabs">
+      <div class="tab-pane active" id="editor"></div>
       <div class="tab-pane" id="image"></div>
       <div class="tab-pane" id="map">
         <nav class="navbar navbar-light" role="navigation">
           <div class="container-fluid">
             <div class="collapse navbar-collapse">
-              <ul class="nav navbar-nav" id="mapToolbar">
-              </ul>
+              <ul class="nav navbar-nav" id="mapToolbar"></ul>
             </div>
           </div>
         </nav>
-        <div id="mapContainer">
-        
-        </div>
-        <div id="mapDetails">
-        
-        </div>
+        <div id="mapContainer"></div>
+        <div id="mapDetails"></div>
       </div>
       <div class="tab-pane" id="markdown"></div>
       <div class="tab-pane" id="file"></div>
-        </div>
-
-    </section>
-
-    <!--
-    <div class="modal fade tiles-modal-lg" id="modalTerrain" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header clearfix">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title pull-left" style="width: 230px;">Select a tile from category: </h4>
-        <select id="categorySelection" class="form-control pull-left" style="display: inline-block; width: 125px; margin-top: -4px;">
-      <option data-id="terrain">Terrain</option>
-      <option data-id="objects">Objects</option>
-        </select>
-                </div>
-                <div class="modal-body">
-        <div class="tileContainer" id="terrain">
-        </div>
-        <div class="tileContainer" id="objects" style="display: none;">
-        </div>
-                </div>
-            </div>
-        </div>
     </div>
-    -->
+
+  </section>
     
-    <div class="modal fade" id="modalNewFile" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title">Create New File...</h4>
-                </div>
-                <div class="modal-body">
-        <div class="form-group">
-      <label for="newfileName">Filename:</label>
-      <input type="text" class="form-control" id="newfileName" placeholder="Filename, i.e. 'types.js'">
+  <div class="modal fade" id="modalNewFile" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Create New File...</h4>
         </div>
-        <div class="form-group">
-      <label for="newfileLocation">Location:</label>
-      <div class="list-group" id="newfileLocation">
-          <a href="#" class="list-group-item active" data-path="">
-        <i class="fa fa-folder-o"></i> /
-          </a>
-      </div>
-        </div>
-                </div>
-    <div class="modal-footer">
-        <div id="newFileCreateAlert" class="alert alert-danger" style="display: none;"></div>
-        <button id="btnNewFileCreate" class="btn btn-default">Create</button>
-    </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="newfileName">Filename:</label>
+            <input type="text" class="form-control" id="newfileName" placeholder="Filename, i.e. 'types.js'">
+          </div>
+          <div class="form-group">
+            <label for="newfileLocation">Location:</label>
+            <div class="list-group" id="newfileLocation">
+              <a href="#" class="list-group-item active" data-path="">
+                <i class="fa fa-folder-o"></i> /
+              </a>
             </div>
+          </div>
         </div>
+        <div class="modal-footer">
+          <div id="newFileCreateAlert" class="alert alert-danger" style="display: none;"></div>
+          <button id="btnNewFileCreate" class="btn btn-default">Create</button>
+        </div>
+      </div>
     </div>
+  </div>
     
     <div class="modal fade" id="modalCommit" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg">

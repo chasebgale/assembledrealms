@@ -64,22 +64,34 @@ function initialize(projectID, projectDomain) {
         loadRealmFile(id, path, name);
 
     });
+    
+    $('#ulEditorFontSize a').on("click", function (e) {
+      e.preventDefault();
+      document.getElementById('editor').style.fontSize = $(this).text();
+      $("#btnEditorFontSize").html($(this).text() + ' <span class="caret"></span>');
+    });
+    
+    $('#ulEditorTheme a').on("click", function (e) {
+      e.preventDefault();
+      __editor.setTheme('ace/theme/' + $(this).text().toLowerCase().replace(new RegExp(" ", "g"), "_"));
+      $("#btnEditorTheme").html($(this).text() + ' <span class="caret"></span>');
+    });
 
     $('#ulView a').on("click", function (e) {
         e.preventDefault();
         // Hide all tabs
-		$("#tabs .tab-pane").hide();
+      $("#tabs .tab-pane").hide();
 		
-		if ($(this).attr('href') == "#markdown") {
-			$("#markdown").html(marked(__editor.getValue()));
-		} else if ($(this).attr('href') == "#editor") {
-			__editor.renderer.updateFull();
-		}
-		
-		// show tab
-		$($(this).attr('href')).show();
-		
-		$("#btnView").html('<i class="fa fa-eye"></i> ' + $(this).text() + ' <span class="caret"></span>');
+      if ($(this).attr('href') == "#markdown") {
+        $("#markdown").html(marked(__editor.getValue()));
+      } else if ($(this).attr('href') == "#editor") {
+        __editor.renderer.updateFull();
+      }
+      
+      // show tab
+      $($(this).attr('href')).show();
+      
+      $("#btnView").html('<i class="fa fa-eye"></i> ' + $(this).text() + ' <span class="caret"></span>');
     });
     
     $("#categorySelection").on('change', function () {
@@ -705,121 +717,117 @@ function render() {
 
 function loadEditor(filename, content, displayRendered) {
 
-    __editor.off("change", editor_onChange);
-    var ext = filename.split('.').pop();
-	
+  __editor.off("change", editor_onChange);
+  
+  var ext = filename.split('.').pop();
 	var renderTarget;
 
-    $("#ulView li").css('display', 'none');
-    $("#tab-nav-editor").css('display', 'block');
+  $("#ulView li").css('display', 'none');
+  $("#tab-nav-editor").css('display', 'block');
     
-    var extension_to_mode = {
-        'js':   'ace/mode/javascript',
-        'json': 'ace/mode/json',
-        'html': 'ace/mode/html',
-        'md':   'ace/mode/plain_text'
-    };
-    
-    switch (ext) {
-        case "js":
-            //__editor.getSession().setMode("ace/mode/javascript");
-            //__editSessions[filename] = ace.createEditSession(content, "ace/mode/javascript");
-            break;
-        case "json":
-            //__editor.getSession().setMode("ace/mode/json");
-            
-            if (displayRendered === undefined) {
-                displayRendered = true;
-            }
-            
-            try {
-                var parsed = JSON.parse(content);
-                
-                // TODO: This is a horrible, horrible test for 'are we looking at a map?'
-                if (parsed.terrain) {
-                  __map = new Map(document.getElementById("mapContainer"), document.getElementById("mapToolbar"), parsed);
-                  __map.onInitialized = function () {
-                    render();
-                  };
-                  __map.onResourceLoaded = function (json, source) {
-                    var template = $('#resource_template').html();
-                    var target = $('#' + json.meta.category);
+  var extension_to_mode = {
+      'js':   'ace/mode/javascript',
+      'json': 'ace/mode/json',
+      'html': 'ace/mode/html',
+      'md':   'ace/mode/plain_text'
+  };
+  
+  switch (ext) {
+    case "js":
+      break;
+    case "json":
+      
+      if (displayRendered === undefined) {
+        displayRendered = true;
+      }
+      
+      try {
+        var parsed = JSON.parse(content);
+        
+        // TODO: This is a horrible, horrible test for 'are we looking at a map?'
+        if (parsed.terrain) {
+          __map = new Map(document.getElementById("mapContainer"), document.getElementById("mapToolbar"), parsed);
+          __map.onInitialized = function () {
+            render();
+          };
+          __map.onResourceLoaded = function (json, source) {
+            var template = $('#resource_template').html();
+            var target = $('#' + json.meta.category);
 
-                    target.append(_.template(template, { model: json, source: source }));
-                  };
-                  __map.save = function () {
-                      var worker = {};
-                      worker.settings = __map.settings;
-                      worker.terrain = __map.terrain;
-                      worker.objects = __map.objects;
-                      worker.actors = __map.actors;
+            target.append(_.template(template, { model: json, source: source }));
+          };
+          __map.save = function () {
+            var worker = {};
+            worker.settings = __map.settings;
+            worker.terrain = __map.terrain;
+            worker.objects = __map.objects;
+            worker.actors = __map.actors;
 
-                      sessionStorage[__fileId] = JSON.stringify(worker);
-                      
-                      // Format the JSON so a human can read it:
-                      content = JSON.stringify(parsed, function(key, value) { 
-                          if (key === "index") { 
-                              return '(tile locations ommitted for readability)'; 
-                          } else { 
-                              return value; 
-                          } 
-                      }, '\t');
-                      
-                      __editor.setValue(content);
-                    };
-                    
-                    // Format the JSON so a human can read it:
-                    content = JSON.stringify(parsed, function(key, value) { 
-                        if (key === "index") { 
-                            return '(tile locations ommitted for readability)'; 
-                        } else { 
-                            return value; 
-                        } 
-                    }, '\t');
-                    
-                    $("#mapToolbar [data-toggle='tooltip']").tooltip();
-                    $("#tab-nav-map").css('display', 'block');
-                    renderTarget = $("#tab-nav-map a:first");
-                }
-                
-                __editSessions[filename] = ace.createEditSession(content, "ace/mode/json");
-                
-            } catch (e) {
-                console.log(e);
-            }
+            sessionStorage[__fileId] = JSON.stringify(worker);
             
-            break;
-        case "html":
-            //__editor.getSession().setMode("ace/mode/html");
-            //__editSessions[filename] = ace.createEditSession(content, "ace/mode/html");
-            break;
-        case "md":
-            if (displayRendered === undefined) {
-                displayRendered = true;
-            }
+            // Format the JSON so a human can read it:
+            content = JSON.stringify(parsed, function(key, value) { 
+                if (key === "index") { 
+                    return '(tile locations ommitted for readability)'; 
+                } else { 
+                    return value; 
+                } 
+            }, '\t');
             
-            //__editor.getSession().setMode("ace/mode/plain_text");
-            //__editSessions[filename] = ace.createEditSession(content, "ace/mode/plain_text");
+            __editor.setValue(content);
+          };
             
-            $("#tab-nav-markdown").css('display', 'block');
-            renderTarget = $("#tab-nav-markdown a:first");
-            $("#markdown").html(marked(content));
-            break;
-    }
-    
-    if (!__editSessions[filename]) {
-        __editSessions[filename] = ace.createEditSession(content, extension_to_mode[ext] ? extension_to_mode[ext] : 'ace/mode/plain_text');
-    }
-    __editor.setSession(__editSessions[filename]);
+          // Format the JSON so a human can read it:
+          content = JSON.stringify(parsed, function(key, value) { 
+            if (key === "index") { 
+              return '(tile locations ommitted for readability)'; 
+            } else { 
+              return value; 
+            } 
+          }, '\t');
+          
+          $("#mapToolbar [data-toggle='tooltip']").tooltip();
+          $("#tab-nav-map").css('display', 'block');
+          renderTarget = $("#tab-nav-map a:first");
+        }
+        
+        __editSessions[filename] = ace.createEditSession(content, "ace/mode/json");
+          
+      } catch (e) {
+        console.log(e);
+      }
+      
+      break;
+    case "html":
+        break;
+    case "md":
+        if (displayRendered === undefined) {
+            displayRendered = true;
+        }
+        
+        //__editor.getSession().setMode("ace/mode/plain_text");
+        //__editSessions[filename] = ace.createEditSession(content, "ace/mode/plain_text");
+        
+        $("#tab-nav-markdown").css('display', 'block');
+        renderTarget = $("#tab-nav-markdown a:first");
+        $("#markdown").html(marked(content));
+        break;
+  }
+  
+  if (!__editSessions[filename]) {
+      __editSessions[filename] = ace.createEditSession(content, extension_to_mode[ext] ? extension_to_mode[ext] : 'ace/mode/plain_text');
+  }
+  __editor.setSession(__editSessions[filename]);
     
 	$("#tabs .tab-pane").hide();
 	
 	if (displayRendered) {
-		// TODO: Switch between rendered things. 
 		$(renderTarget.attr("href")).show();
+    $('#editorOptions').hide();
 		$("#btnView").html('<i class="fa fa-eye"></i> ' + renderTarget.text() + ' <span class="caret"></span>');
 	} else {
 		$($('#tab-nav-editor a:first').attr('href')).show();
+    $("#editorOptions").fadeIn().css('display','inline-block');
 		$("#btnView").html('<i class="fa fa-eye"></i> ' + $('#tab-nav-editor a:first').text() + ' <span class="caret"></span>');
 	}
 	
