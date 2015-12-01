@@ -84,12 +84,42 @@ var Map = function (target, toolbar, map) {
   var index  = 0;
   var row    = 0;
   var col    = 0;
-  var worker = [];
   var frameTexture;
+    
+  self.reloader = PIXI.loader;
+  self.reloader.reset();
+  _.each(map.terrain.source, function (asset) {
+    self.reloader.add("terrain_", realmResourceURL(asset));
+  });
+    
+  self.reloader.add("cursor_", realmResourceURL('client/resource/cursors.png'));
   
-  // This sucks but for some reason the on complete events aren't firing:
-  var load_count = 0;
-  var load_complete = function () {
+  self.reloader.load(function(e, resources) {
+      
+    _.each(resources, function (resource) {
+        if (self.tileIndexes[resource.name] === undefined) {
+            self.tileIndexes[resource.name] = 0;
+        }
+    
+        // Once we have the tile image loaded, break it up into textures:
+        for (row = 0; row < resource.texture.height; row += 32) {
+          for (col = 0; col < resource.texture.width; col += 32) {
+            frameTexture = new PIXI.Texture(resource.texture, {
+              x: col,
+              y: row,
+              width: 32,
+              height: 32
+            });
+            PIXI.Texture.addTextureToCache(frameTexture, resource.name + self.tileIndexes[resource.name]);
+            self.tileIndexes[resource.name] = self.tileIndexes[resource.name] + 1;
+          }
+        }
+        
+        if (resource.name == "terrain_") {
+          document.getElementById('modalTilesBody').appendChild(resource.texture.baseTexture.source);
+        } 
+    });
+      
     self.initialized = true;
       
     self.tile_count = index - 1;
@@ -112,49 +142,7 @@ var Map = function (target, toolbar, map) {
     self.invalidate = true;
     //requestAnimationFrame(this.render);
     self.onInitialized();
-  };
-
-  _.each(map.terrain.source, function (asset) {
-    worker.push({name: "terrain_", url: realmResourceURL(asset)});
   });
-    
-  worker.push({name: "cursor_", url: realmResourceURL('client/resource/cursors.png')});
-  
-  var loader = new PIXI.loaders.Loader();
-  loader.add(worker);
-  loader.after(function (event) {
-        
-    if (self.tileIndexes[event.name] === undefined) {
-      self.tileIndexes[event.name] = 0;
-    }
-    
-    // Once we have the tile image loaded, break it up into textures:
-    for (row = 0; row < event.texture.height; row += 32) {
-      for (col = 0; col < event.texture.width; col += 32) {
-        frameTexture = new PIXI.Texture(event.texture, {
-          x: col,
-          y: row,
-          width: 32,
-          height: 32
-        });
-        PIXI.Texture.addTextureToCache(frameTexture, event.name + self.tileIndexes[event.name]);
-        self.tileIndexes[event.name] = self.tileIndexes[event.name] + 1;
-      }
-    }
-    
-    if (event.name == "terrain_") {
-      document.getElementById('modalTilesBody').appendChild(event.texture.baseTexture.source);
-    }
-    
-    /*
-    load_count++;
-    
-    if (load_count > 1) {
-      load_complete();
-    }
-    */
-  });
-  loader.load(load_complete);
 };
 
 Map.prototype.setTile = function (screen_coordinates, tile_index) {
@@ -163,7 +151,7 @@ Map.prototype.setTile = function (screen_coordinates, tile_index) {
   var col = self.coordinates.col + Math.floor(screen_coordinates.x / self.TILE_WIDTH);
   var row = self.coordinates.row + Math.floor(screen_coordinates.y / self.TILE_HEIGHT);
 
-  if (tile_index == null) {
+  if (tile_index === null) {
     // DELETE THIS TILE:
     if (self.terrain.index[row]) {
       if (col in self.terrain.index[row]) {
@@ -246,7 +234,7 @@ Map.prototype.setMode = function (mode) {
         }
         
         if (self.mouse_down) {
-          if (event.which == 0) {
+          if (event.which === 0) {
             // We've re-entered the canvas w/o the mouse being held down:
             self.mouse_down = false;
           } else {                        
@@ -291,7 +279,7 @@ Map.prototype.setMode = function (mode) {
         
         if (self.mouse_down) {
             
-          if (event.which == 0) {
+          if (event.which === 0) {
             // We've re-entered the canvas w/o the mouse being held down:
             self.mouse_down = false;
           } else {                        
@@ -330,17 +318,17 @@ Map.prototype.setMode = function (mode) {
       self.canvas.onmousedown = function (event) {
         self.mouse_down = true;
         self.setTile({x: event.layerX, y: event.layerY}, null);
-      }
+      };
       
       self.canvas.onmouseup = function (event) {
         self.mouse_down = false;
         self.save();
-      }
+      };
       
       self.canvas.onmouseout = function (event) {
         self.mouse_sprite.visible = false;
         self.mouse_sprite_highlight.visible = false;
-      }
+      };
       
       self.canvas.onmousemove = function (event) {
         if (!self.mouse_sprite_highlight.visible) {
@@ -348,7 +336,7 @@ Map.prototype.setMode = function (mode) {
         }
         
         if (self.mouse_down) {
-          if (event.which == 0) {
+          if (event.which === 0) {
             // We've re-entered the canvas w/o the mouse being held down:
             self.mouse_down = false;
           } else { 
@@ -361,7 +349,7 @@ Map.prototype.setMode = function (mode) {
       
         self.mouse_sprite_highlight.x = x;
         self.mouse_sprite_highlight.y = y;
-      }
+      };
       break;
                 
     case self.modes.ADD_TILE:
@@ -378,17 +366,17 @@ Map.prototype.setMode = function (mode) {
       self.canvas.onmousedown = function (event) {
         self.mouse_down = true;
         self.setTile({x: event.layerX, y: event.layerY}, self.tile_index);
-      }
+      };
       
       self.canvas.onmouseup = function (event) {
         self.mouse_down = false;
         self.save();
-      }
+      };
       
       self.canvas.onmouseout = function (event) {
         self.mouse_sprite.visible = false;
         self.mouse_sprite_highlight.visible = false;
-      }
+      };
   
       self.canvas.onmousemove = function (event) {
         if (!self.mouse_sprite.visible) {
@@ -397,7 +385,7 @@ Map.prototype.setMode = function (mode) {
         }
         
         if (self.mouse_down) {
-          if (event.which == 0) {
+          if (event.which === 0) {
               // We've re-entered the canvas w/o the mouse being held down:
               self.mouse_down = false;
           } else { 
@@ -413,7 +401,7 @@ Map.prototype.setMode = function (mode) {
         
         self.mouse_sprite_highlight.x = x;
         self.mouse_sprite_highlight.y = y;
-      }
+      };
       break;
   }    
 };
@@ -443,7 +431,7 @@ Map.prototype.draw = function (full) {
           
         index = layers[i];
         
-        if (index != null) {
+        if (index !== null) {
           sprite = new PIXI.Sprite(PIXI.Texture.fromFrame('terrain_' + index));
   
           sprite.position.x = ((col - self.coordinates.col) * self.TILE_WIDTH);

@@ -9,6 +9,8 @@ var __map;
 var __processingFiles   = [];
 var __trackedFiles      = [];
 var __commitFiles       = [];
+var __editSessions      = {};
+var __mapDisplayed      = false;
 
 function resize() {
     $("#editor").height( $("#tree").height() );
@@ -29,6 +31,18 @@ function initialize(projectID, projectDomain) {
     
     __editor = ace.edit("editor");
     __editor.setShowPrintMargin(false);
+    
+    var editorTheme = localStorage.getItem("editorTheme");
+    if (editorTheme !== null) {
+      __editor.setTheme('ace/theme/' + editorTheme);
+      $("#btnEditorTheme").html(toTitleCase(editorTheme.replace(new RegExp("_", "g"), " ")) + ' <span class="caret"></span>');
+    }
+    
+    var editorFontSize = localStorage.getItem("editorFontSize");
+    if (editorFontSize !== null) {
+      document.getElementById('editor').style.fontSize = editorFontSize;
+      $("#btnEditorFontSize").html(editorFontSize + ' <span class="caret"></span>');
+    }
     
     __renderer = new marked.Renderer();
     __renderer.table = function(header, body) {
@@ -69,12 +83,14 @@ function initialize(projectID, projectDomain) {
       e.preventDefault();
       document.getElementById('editor').style.fontSize = $(this).text();
       $("#btnEditorFontSize").html($(this).text() + ' <span class="caret"></span>');
+      localStorage.setItem("editorFontSize",  $(this).text());
     });
     
     $('#ulEditorTheme a').on("click", function (e) {
       e.preventDefault();
       __editor.setTheme('ace/theme/' + $(this).text().toLowerCase().replace(new RegExp(" ", "g"), "_"));
       $("#btnEditorTheme").html($(this).text() + ' <span class="caret"></span>');
+      localStorage.setItem("editorTheme",  $(this).text().toLowerCase().replace(new RegExp(" ", "g"), "_"));
     });
 
     $('#ulView a').on("click", function (e) {
@@ -708,11 +724,11 @@ function isImageFile(name) {
 	return false;
 }
 
-var __editSessions = {};
-
 function render() {
-  __map.render();
-  requestAnimationFrame(render);
+  if (__mapDisplayed) {
+    __map.render();
+    requestAnimationFrame(render);
+  }
 }
 
 function loadEditor(filename, content, displayRendered) {
@@ -724,6 +740,11 @@ function loadEditor(filename, content, displayRendered) {
 
   $("#ulView li").css('display', 'none');
   $("#tab-nav-editor").css('display', 'block');
+  
+  // Turn off the map render loop if we are switching off of the map
+  if (__mapDisplayed) {
+    __mapDisplayed = false;
+  }
     
   var extension_to_mode = {
       'js':   'ace/mode/javascript',
@@ -746,8 +767,10 @@ function loadEditor(filename, content, displayRendered) {
         
         // TODO: This is a horrible, horrible test for 'are we looking at a map?'
         if (parsed.terrain) {
+          $('#mapContainer').empty();
           __map = new Map(document.getElementById("mapContainer"), document.getElementById("mapToolbar"), parsed);
           __map.onInitialized = function () {
+            __mapDisplayed = true;
             render();
           };
           __map.onResourceLoaded = function (json, source) {
@@ -817,6 +840,9 @@ function loadEditor(filename, content, displayRendered) {
   if (!__editSessions[filename]) {
       __editSessions[filename] = ace.createEditSession(content, extension_to_mode[ext] ? extension_to_mode[ext] : 'ace/mode/plain_text');
   }
+  
+  __editSessions[filename].setUseSoftTabs(true);
+  __editSessions[filename].setTabSize(2);
   __editor.setSession(__editSessions[filename]);
     
 	$("#tabs .tab-pane").hide();
@@ -865,6 +891,12 @@ function encode_utf8(s) {
 
 function decode_utf8(s) {
     return decodeURIComponent(escape(s));
+}
+
+function toTitleCase(str) {
+  return str.replace(/\w\S*/g, function(txt) {
+    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+  });
 }
 
 String.prototype.endsWith = function (suffix) {

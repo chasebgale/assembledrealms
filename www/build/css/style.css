@@ -19,7 +19,6 @@ div#leftBar {
 }
 
 div#tabs {
-	overflow-y: scroll;
     position: absolute;
     top: 26px;
     left: 209px;
