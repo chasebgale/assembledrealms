@@ -1,4 +1,4 @@
-var Map = function (target, toolbar, map) {
+function Map (target, toolbar, map) {
   var self = this;
   
   self.settings = map.settings;
@@ -143,7 +143,7 @@ var Map = function (target, toolbar, map) {
     //requestAnimationFrame(this.render);
     self.onInitialized();
   });
-};
+}
 
 Map.prototype.setTile = function (screen_coordinates, tile_index) {
   var self = this;
