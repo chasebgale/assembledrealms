@@ -6,6 +6,7 @@ var chartSpanMemory;
 var chartSpanCPU;
 var loadingBar;
 var loadingText;
+var blurFilter;
 var displayClientStats	= false;
 var displayServerStats  = false;
 var isLoading           = true;
@@ -25,6 +26,9 @@ function setup() {
   // add the renderer view element to the DOM
   document.getElementById('queue').appendChild(queueRenderer.view);
   
+  blurFilter = new PIXI.filters.BlurFilter();
+  blurFilter.blur = 0;
+  
   var yeehaw = function () {
     queueStage.removeChildren();
     
@@ -42,9 +46,11 @@ function setup() {
     loadingText.position.y = (CANVAS_HEIGHT / 2) + 14;
     loadingText.anchor.x = 0;
     loadingText.anchor.y = 0;
+    loadingText.filters  = [blurFilter];
     
     loadingBar.position.x = CANVAS_WIDTH / 2;
     loadingBar.position.y = CANVAS_HEIGHT / 2;
+    loadingBar.filters  = [blurFilter];
     
     // Add this late as we might not have the PORT until now (realm was queued for launch)
     SCRIPTS.push("//" + HOST + ":" + PORT + "/socket.io/socket.io.js");
@@ -125,7 +131,7 @@ function setup() {
     }
     
     if (isBooting) {
-      loadingBar.rotation += loadingBarSpeed;
+      blurFilter.blur = loadingBarSpeed;
       loadingBarSpeed += Math.random() * 0.05;
     }
     

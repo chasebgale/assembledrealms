@@ -534,7 +534,7 @@ app.use(function(req, res, next) {
 
 app.get('/launch/:id', function httpGetLaunch(req, res, next) {
   
-  var expired        = Date.now() - 900000; // 900k milliseconds = 15 minutes
+  var now            = Date.now();
 	var realmID        = req.params.id;
   var realmProcess   = "realm-" + realmID;
 	var realmApp       = '/var/www/realms/realm-server.js';
@@ -550,37 +550,44 @@ app.get('/launch/:id', function httpGetLaunch(req, res, next) {
           console.log(error);
         }
         
-        if (restart) {
-          pm2.restart(realmApp, function onPmRestart(err, proc) {
-            
-            if (err) {
-              launchRealmCallback(err);
-            }
-
-            launchRealmCallback();
-          });        
-        } else {
-          var options = {
-            name:       realmProcess,
-            error:      realmErr,
-            output:     realmOut,
-            scriptArgs: [realmID, 'true'],
-            force:      true,
-            merge_logs: true
-          };
+        db.zadd([REALM_ACTIVITY, now, realmID], function (error, reply) {
           
-          console.log("Starting realm with the following options: " + JSON.stringify(options));
+          if (error) {
+            launchRealmCallback(error);
+          }
+          
+          if (restart) {
+            pm2.restart(realmApp, function onPmRestart(err, proc) {
+              
+              if (err) {
+                launchRealmCallback(err);
+              }
 
-          pm2.start(realmApp, options, function onPmStart(err, proc) {
-             
-            if (err) {
-              launchRealmCallback(err);
-            }
+              launchRealmCallback();
+            });        
+          } else {
+            var options = {
+              name:       realmProcess,
+              error:      realmErr,
+              output:     realmOut,
+              scriptArgs: [realmID, 'true'],
+              force:      true,
+              merge_logs: true
+            };
+            
+            console.log("Starting realm with the following options: " + JSON.stringify(options));
 
-            launchRealmCallback();
-          });
-        }
-        
+            pm2.start(realmApp, options, function onPmStart(err, proc) {
+               
+              if (err) {
+                launchRealmCallback(err);
+              }
+
+              launchRealmCallback();
+            });
+          }
+          
+        });
       });
     });
   };
@@ -715,8 +722,6 @@ var tickTock = setInterval(function () {
     }
     
     if (replies.length > 0) {
-      console.log("Unfiltered expired sessions: " + replies.length);
-      
       // Remove any sessions that have active connections from the removal list
       var multiSessionToUserLookup = db.multi();
       
@@ -746,7 +751,6 @@ var tickTock = setInterval(function () {
           }
           
           if (replies.length > 0) {
-            console.log("Filtered expired sessions: " + replies.length);
             // Add the target memory table to the beginning of the array so it is formatted properly e.g.
             // ["table_id", "value", "value"]
             replies.unshift(SESSION_MAP);
