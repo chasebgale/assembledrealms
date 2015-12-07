@@ -12,52 +12,57 @@ if ($method == 'POST') {
     $sort = "ORDER BY loves DESC";
     $where = [];
     $whereSQL = "";
+    $tempSQL = "";
     
     if (isset($_POST['page'])) {
-        if (is_numeric($_POST['page'])) {
-            $page = $_POST['page'];
-        }
+      if (is_numeric($_POST['page'])) {
+        $page = $_POST['page'];
+      }
     }
     
     if (isset($_POST['count'])) {
-        if (is_numeric($_POST['count'])) {
-            $count = $_POST['count'];
-        }
+      if (is_numeric($_POST['count'])) {
+        $count = $_POST['count'];
+      }
     }
     
+    $tempSQL = "screenshots <> '[]'";
     if (isset($_POST['screenshots'])) {
-        if ($_POST['screenshots'] == 'true') {
-            array_push($where, "screenshots <> '[]'");
-        }
+      if ($_POST['screenshots'] == 'false') {
+        $tempSQL = "screenshots == '[]'";
+      }
     }
+    array_push($where, $tempSQL);
     
+    $tempSQL = "status > 0";
     if (isset($_POST['online'])) {
-        if ($_POST['online'] == 'true') {
-            array_push($where, "status > 0");
-        }
+      if ($_POST['online'] == 'false') {
+        $tempSQL = "status > -1";
+      }
     }
+    array_push($where, $tempSQL);
     
     $whereCount = count($where);
     
     if ($whereCount) {
-        $whereSQL = implode(" AND ", $where);
-        $whereSQL = "WHERE " . $whereSQL;
+      $whereSQL = implode(" AND ", $where);
+      $whereSQL = "WHERE " . $whereSQL;
     }
     
     if (isset($_POST['sort'])) {
-        if (is_numeric($_POST['sort'])) {
-            switch ($_POST['sort']) {
-                case 0:
-                    $sort = "ORDER BY loves DESC";
-                    break;
-                case 1:
-                    $sort = "ORDER BY players_online DESC";
-                    break;
-                case 2:
-                    $sort = "ORDER BY players_online ASC";
-                    break;
-            }
+      if (is_numeric($_POST['sort'])) {
+        switch ($_POST['sort']) {
+          case 0:
+            $sort = "ORDER BY loves DESC";
+            break;
+          case 1:
+            $sort = "ORDER BY players_online DESC";
+            break;
+          case 2:
+            $sort = "ORDER BY players_online ASC";
+            break;
         }
+      }
     }
     
     global $mysqli,$db_table_prefix;
@@ -124,8 +129,8 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
     <div class="well clearfix" style="margin-bottom: 40px; padding: 10px;">
         <div class="pull-left">
             <strong>Required:</strong>
-            <div class="checkbox" style="display: inline; margin-left: 10px;"><label><input id="chkOnline" type="checkbox" value=""> Online</label></div>
-            <div class="checkbox" style="display: inline; margin-left: 10px;"><label><input id="chkScreenshots" type="checkbox" value=""> Screenshots</label></div>
+            <div class="checkbox" style="display: inline; margin-left: 10px;"><label><input id="chkOnline" type="checkbox" value="" checked> Online</label></div>
+            <div class="checkbox" style="display: inline; margin-left: 10px;"><label><input id="chkScreenshots" type="checkbox" value="" checked> Screenshots</label></div>
             <div class="checkbox" style="display: inline; margin-left: 10px;"><label><input type="checkbox"> No Wait</label></div>
             <strong style=" margin-left: 16px;">Sort:</strong>
             <select id="selectSort" style="display: inline-block;">
@@ -181,7 +186,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
         </div>
         </a>
       <% if (realm.screenshots.length > 0) { %>
-        <div class="container-fluid">
+        <div>
         
         <!-- Screenshots are in the format {id}-{#}-thumb.jpg and {id}-{#}.jpg, e.g. 42-1.jpg and 42-1-thumb.jpg -->
         <% for (var i = 0; i < realm.screenshots.length; i++) { %>
