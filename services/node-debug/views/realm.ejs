@@ -1,113 +1,53 @@
-  <div id="container">
+<script type="text/javascript">
+  var DEBUG    = true;
+  var HOST     = '<%= host %>';
+  var PORT     = <%= port %>;
+  var QUEUE    = <%= queue %>;
+  var USER_ID  = <%= userID %>;
+  var REALM_ID = <%= id %>;
   
-    <div style="margin: 20px auto; width: 896px; padding: 0; background-color: black;">
-<% if (owner) { %>
-      <div id="commandBar">
-        <div id="commandBarButtons">
-          <button type="button" id="btnReboot" class="btn btn-default btn-xs">
-            <i class="fa fa-refresh fa-fw"></i> Reboot
-          </button>
-          <button type="button" id="btnCommand" class="btn btn-default btn-xs">
-            <i class="fa fa-keyboard-o fa-fw"></i> Message -> Server
-          </button>
-          <div class="spacer"></div>
-          <button type="button" id="btnScreenshot" class="btn btn-default btn-xs">
-            <i class="fa fa-camera-retro fa-fw"></i> Take Screenshot
-          </button>
-          <div class="spacer"></div>
-          <button type="button" id="btnFPS" class="btn btn-default btn-xs active">
-            <i class="fa fa-check-square-o fa-fw"></i> Client Stats
-          </button>
-          <button type="button" id="btnServerDiagnostics" class="btn btn-default btn-xs active">
-            <i class="fa fa-check-square-o fa-fw"></i> Server Stats
-          </button>
-        </div>
-      </div>
-<% } %>
-      <div id="realm" style="margin: 0; width: 896px; height: 504px; padding: 0; display: none;"></div>
-      <div id="queue" style="margin: 0; width: 896px; height: 504px; padding: 0;"></div>
-<% if (owner) { %>
-      <div id="statsBar" class="clearfix">
-        <div class="statsBarItem">
-          <div style="font-size: 0.75em; vertical-align: top;">
-            <span style="color: #999;">SERVER</span>
-            <br />
-            <span style="color: #ffffff;"><span id="cpu_display"></span> CPU <i class="fa fa-square"></i></span>
-            <br />
-            <span style="color: #00ff00;"><span id="mem_display"></span> MB <i class="fa fa-square"></i></span>
-          </div>
-        </div>
-        <div id="statsServer" class="statsBarItem">
-          <canvas id="chart-server" width="300" height="48" style="display: inline-block;"></canvas>
-        </div>
-        <div class="spacer"></div>
-        <div class="statsBarItem">
-          <div style="display: inline-block; font-size: 0.75em; vertical-align: top;">
-            <span style="color: #999;">CLIENT</span>
-            <br />
-            <span style="color: #ffffff; font-size: 0.65em;">(click to change)</span>
-          </div>
-        </div>
-        <div id="statsClient" class="statsBarItem">
-        </div>
-      </div>
-<% } %>
-    </div>
-    
-    
+  var OWNER   = <%= owner %>;
+  var ROOT    = '//' + HOST + '/realms/<%= id %>/';
+  var STATS   = '//' + HOST + '/realms/<%= id %>/stats';
   
-  </div>
+  var SCRIPTS = [
+    <% for(var i=0; i<scripts.length-1; i++) { %>
+    "//<%= host %><%= scripts[i] %>",
+    <% } %>
+    "//<%= host %><%= scripts[scripts.length-1] %>"
+  ];
   
-  <script type="text/javascript">
-		var DEBUG    = true;
-    var HOST     = '<%= host %>';
-    var PORT     = <%= port %>;
-    var QUEUE    = <%= queue %>;
-    var USER_ID  = <%= userID %>;
-    var REALM_ID = <%= id %>;
-    
-    var OWNER   = <%= owner %>;
-    var ROOT    = '//' + HOST + '/realms/<%= id %>/';
-    var STATS   = '//' + HOST + '/realms/<%= id %>/stats';
-    
-    var SCRIPTS = [
-      <% for(var i=0; i<scripts.length-1; i++) { %>
-      "//<%= host %><%= scripts[i] %>",
-      <% } %>
-      "//<%= host %><%= scripts[scripts.length-1] %>"
-    ];
-    
-    var Loader = function (){};
-    Loader.prototype = {
-      require: function (scripts, loading, finished) {
-        this.loadCount      = 0;
-        this.totalRequired  = scripts.length;
-        this.finished       = finished;
-        this.loading        = loading;
+  var Loader = function (){};
+  Loader.prototype = {
+    require: function (scripts, loading, finished) {
+      this.loadCount      = 0;
+      this.totalRequired  = scripts.length;
+      this.finished       = finished;
+      this.loading        = loading;
 
-        for (var i = 0; i < scripts.length; i++) {
-          this.writeScript(scripts[i]);
-        }
-      },
-      loaded: function (evt) {
-        this.loadCount++;
-        
-        this.loading.call();
-
-        if (this.loadCount == this.totalRequired && typeof this.finished == 'function') this.finished.call();
-      },
-      writeScript: function (src) {
-        var self = this;
-        var s = document.createElement('script');
-        s.type = "text/javascript";
-        s.async = true;
-        s.src = src;
-        s.addEventListener('load', function (e) { self.loaded(e); }, false);
-        var head = document.getElementsByTagName('head')[0];
-        head.appendChild(s);
+      for (var i = 0; i < scripts.length; i++) {
+        this.writeScript(scripts[i]);
       }
-    };
-    
-    setup();
-    
-  </script>
+    },
+    loaded: function (evt) {
+      this.loadCount++;
+      
+      this.loading.call();
+
+      if (this.loadCount == this.totalRequired && typeof this.finished == 'function') this.finished.call();
+    },
+    writeScript: function (src) {
+      var self = this;
+      var s = document.createElement('script');
+      s.type = "text/javascript";
+      s.async = true;
+      s.src = src;
+      s.addEventListener('load', function (e) { self.loaded(e); }, false);
+      var head = document.getElementsByTagName('head')[0];
+      head.appendChild(s);
+    }
+  };
+  
+  setup();
+  
+</script>

@@ -91,7 +91,63 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
 ?>
 
-<div id="realm-container" style="padding-top: 20px;"></div>
+<div id="realm-container" style="padding-top: 20px;">
+  <div id="container">
+    <div style="margin: 20px auto; width: 896px; padding: 0; background-color: black;">
+<?php if ($owner) { ?>
+      <div id="commandBar">
+        <div id="commandBarButtons">
+          <button type="button" id="btnReboot" class="btn btn-default btn-xs">
+            <i class="fa fa-refresh fa-fw"></i> Reboot
+          </button>
+          <button type="button" id="btnCommand" class="btn btn-default btn-xs">
+            <i class="fa fa-keyboard-o fa-fw"></i> Message -> Server
+          </button>
+          <div class="spacer"></div>
+          <button type="button" id="btnScreenshot" class="btn btn-default btn-xs">
+            <i class="fa fa-camera-retro fa-fw"></i> Take Screenshot
+          </button>
+          <div class="spacer"></div>
+          <button type="button" id="btnFPS" class="btn btn-default btn-xs active">
+            <i class="fa fa-check-square-o fa-fw"></i> Client Stats
+          </button>
+          <button type="button" id="btnServerDiagnostics" class="btn btn-default btn-xs active">
+            <i class="fa fa-check-square-o fa-fw"></i> Server Stats
+          </button>
+        </div>
+      </div>
+<?php } ?>
+      <div id="realm" style="margin: 0; width: 896px; height: 504px; padding: 0; display: none;"></div>
+      <div id="queue" style="margin: 0; width: 896px; height: 504px; padding: 0;"></div>
+<?php if ($owner) { ?>
+      <div id="statsBar" class="clearfix">
+        <div class="statsBarItem">
+          <div style="font-size: 0.75em; vertical-align: top;">
+            <span style="color: #999;">SERVER</span>
+            <br />
+            <span style="color: #ffffff;"><span id="cpu_display"></span> CPU <i class="fa fa-square"></i></span>
+            <br />
+            <span style="color: #00ff00;"><span id="mem_display"></span> MB <i class="fa fa-square"></i></span>
+          </div>
+        </div>
+        <div id="statsServer" class="statsBarItem">
+          <canvas id="chart-server" width="300" height="48" style="display: inline-block;"></canvas>
+        </div>
+        <div class="spacer"></div>
+        <div class="statsBarItem">
+          <div style="display: inline-block; font-size: 0.75em; vertical-align: top;">
+            <span style="color: #999;">CLIENT</span>
+            <br />
+            <span style="color: #ffffff; font-size: 0.65em;">(click to change)</span>
+          </div>
+        </div>
+        <div id="statsClient" class="statsBarItem">
+        </div>
+      </div>
+<?php } ?>
+    </div>
+  </div>
+</div>
 
 <ins id="footer_ad" class="adsbygoogle"
          style="display:block;width:970px;height:90px; margin: 0 auto; margin-top: 100px;"
