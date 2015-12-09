@@ -132,7 +132,7 @@ function setup() {
     
     if (isBooting) {
       blurFilter.blur = loadingBarSpeed;
-      loadingBarSpeed += Math.random() * 0.75;
+      loadingBarSpeed += Math.random() * 5;
     }
     
     // render the root container
