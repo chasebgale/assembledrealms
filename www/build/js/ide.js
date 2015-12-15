@@ -129,77 +129,76 @@ function initialize(projectID, projectDomain) {
     
     $("#btnDebug").on("click", function () {
         
-        if ($('#debugProgressbar').hasClass('active') == false) {
-            $('#debugProgressbar').addClass('active');
-        }
-        
-        $('#debugProgressList').empty();
-        
-        $('#modalDebug').modal('show');
+      if ($('#debugProgressbar').hasClass('active') == false) {
+          $('#debugProgressbar').addClass('active');
+      }
+      
+      $('#debugProgressList').empty();
+      
+      $('#modalDebug').modal('show');
+  
+      $('#debugProgressList').append('<li>Selecting least congested server...</li>');
 		
-		$('#debugProgressList').append('<li>Selecting least congested server...</li>');
-		
-		$.ajax({
-            url: 'editor.php',
-			type: 'post',
-			dataType: 'json',
-			data: {directive: 'debug', realm_id: __projectId}
+      $.ajax({
+        url: 'editor.php',
+        type: 'post',
+        dataType: 'json',
+        data: {directive: 'debug', realm_id: __projectId}
+      })
+      .done(function (data) {
+			
+        var address 	= data.address;
+        var debug_url 	= 'http://www.assembledrealms.com/debug/realm/' + __projectId;
+        
+        $('#debugProgressList').append('<li>Compressing latest commit and delivering it to ' + address + '</li>');
+
+        $.ajax({
+          url: __projectURL + '/publish',
+          type: 'post',
+          dataType: 'text',
+          data: {address: address, shared: true}
         })
-		.done(function (data) {
-			
-			var address 	= data.address;
-			var debug_url 	= 'http://www.assembledrealms.com/debug/realm/' + __projectId;
-			
-			$('#debugProgressList').append('<li>Compressing latest commit and delivering it to ' + address + '</li>');
+        .done(function (data) {
+          if (data === "OK") {
+           
+            $('#debugProgressList').append('<li>Published to debug server successfully!</li>');
+            $('#debugProgressList').append('<li>Launching realm on ' + address + '</li>');
+            
+            $.ajax({
+              url: 'http://' + address + '/launch/' + __projectId,
+              type: 'get',
+              dataType: 'text'
+            })
+            .done(function (data) {
+              $('#debugProgressList').append('<li><strong>Success!</strong> Your debug URL is <a target="_blank" href="' + debug_url + '">' + debug_url + '</a></li>');
+            })
+            .fail(function(data) {
+              $('#debugProgressList').append('<li class="text-danger"><strong><i class="fa fa-exclamation-triangle"></i> Fatal Error:' + data.responseText + '</strong> Please try again in a few minutes, monkeys are furiously typing away to fix this problem.</li>');
+            })
+            .always(function() {
+              $('#debugClose').attr('disabled', false);
+              $('#debugProgressbar').removeClass('active');
+            });
 
-			$.ajax({
-				url: __projectURL + '/publish',
-				type: 'post',
-				dataType: 'text',
-				data: {address: address, shared: true}
-			})
-			.done(function (data) {
-				if (data === "OK") {
-			   
-					$('#debugProgressList').append('<li>Published to debug server successfully!</li>');
-					$('#debugProgressList').append('<li>Launching realm on ' + address + '</li>');
-					
-					$.ajax({
-						url: 'http://' + address + '/launch/' + __projectId,
-						type: 'get',
-						dataType: 'text'
-					})
-					.done(function (data) {
-						$('#debugProgressList').append('<li><strong>Success!</strong> Your debug URL is <a target="_blank" href="' + debug_url + '">' + debug_url + '</a></li>');
-					})
-					.fail(function(data) {
-						$('#debugProgressList').append('<li class="text-danger"><strong><i class="fa fa-exclamation-triangle"></i> Fatal Error:' + data.responseText + '</strong> Please try again in a few minutes, monkeys are furiously typing away to fix this problem.</li>');
-					})
-					.always(function() {
-						$('#debugClose').attr('disabled', false);
-						$('#debugProgressbar').removeClass('active');
-					});
-
-				}
-			})
-			.fail(function(d, textStatus, error) {
-				console.log(textStatus);
-				$('#debugAlert').html('<li class="text-danger"><strong><i class="fa fa-exclamation-triangle"></i> Error: </strong> ' + textStatus);
-				$('#debugAlert').fadeIn();
-				$('#debugClose').attr('disabled', false);
-					// Update DOM to reflect we messed up:
-					//$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
-			});
-		})
-		.fail(function(d, textStatus, error) {
-            console.log(textStatus);
-            $('#debugAlert').html('<li class="text-danger"><strong><i class="fa fa-exclamation-triangle"></i> Error: </strong> ' + textStatus);
-            $('#debugAlert').fadeIn();
-			$('#debugClose').attr('disabled', false);
+          }
+        })
+        .fail(function(d, textStatus, error) {
+          console.log(textStatus);
+          $('#debugAlert').html('<li class="text-danger"><strong><i class="fa fa-exclamation-triangle"></i> Error: </strong> ' + textStatus);
+          $('#debugAlert').fadeIn();
+          $('#debugClose').attr('disabled', false);
+            // Update DOM to reflect we messed up:
+            //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
+        });
+      })
+      .fail(function(d, textStatus, error) {
+        console.log(textStatus);
+        $('#debugAlert').html('<li class="text-danger"><strong><i class="fa fa-exclamation-triangle"></i> Error: </strong> ' + textStatus);
+        $('#debugAlert').fadeIn();
+        $('#debugClose').attr('disabled', false);
                 // Update DOM to reflect we messed up:
                 //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
-        });
-		
+      });
     });
     
     $('#commitStart').on('click', function () {

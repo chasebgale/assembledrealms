@@ -5,6 +5,8 @@ var server      = require('http').Server(app);
 var request     = require('request');
 var async       = require('async');
 var moment      = require('moment');
+var pg          = require('pg');
+
 //var redis 			= require('redis');
 //var db 	        = redis.createClient();
 
@@ -13,10 +15,13 @@ var moment      = require('moment');
 // potentially be waiting in perpetuity for their realm to come online...
 var check_list      = [];
 var realms          = {};
+
 var ocean_token     = "254c9a09018914f98dd83d0ab1670f307b036fe761dda0d7eaeee851a37eb1cd";
 var realms_token    = "b2856c87d4416db5e3d1eaef2fbef317846b06549f1b5f3cce1ea9d639839224";
 var self_token      = "2f15adf29c930d8281b0fb076b0a14062ef93d4d142f6f19f4cdbed71fff3394";
 var debug_token     = "1e4651af36b170acdec7ede7268cbd63b490a57b1ccd4d4ddd8837c8eff2ddb9";
+
+var connection      = 'postgres://web:ENBRyvqa91MTzotLBppU@localhost:5432/gatekeeper';
 
 var allowCrossDomain = function(req, res, next) {
     res.header('Access-Control-Allow-Origin', 'http://www.assembledrealms.com');
@@ -123,7 +128,13 @@ app.get('/stats', function (req, res, next) {
   });
 });
 
-app.get('/launch/:id', function (req, res, next) {
+// Deploy specfied realm to least congested shared play server
+app.get('/launch/shared/:id', function (req, res, next) {
+  
+});
+
+// Start a new droplet and deploy that realm to it:
+app.get('/launch/private/:id', function (req, res, next) {
     
   var auth        = req.get('Authorization');
   var id          = req.params.id;
@@ -229,6 +240,99 @@ server.listen(3000, function(){
     console.log("Express server listening on port 3000, request to port 80 are redirected to 3000 by Fedora.");
 });
 
+// Acquire stats every minute
+var collectingStats = false;
+setInterval(function(){
+    
+  if (collectingStats) {
+    // If the previous iteration is taking more than a minute, break:
+    return;
+    // I like this better than calling setTimeout at the end of the function because it allows for
+    // less time between iterations
+  } else {
+    collectingStats = true;
+  }
+  
+  var servers = [];
+  var url     = '';
+  var token   = '';
+  var time    = moment().format();
+  
+  pg.connect(connection, function(error, client, done) {
+
+		if (error) {
+			console.error(error);
+			return;
+		}
+    
+    var query = client.query('SELECT * FROM servers WHERE online = true');
+
+    query.on('error', function(error) {
+      console.error(error);
+			return;
+    });
+    
+    query.on('row', function(row) {
+      if (row.type == 0) {
+        url   = 'http://debug-';
+        token = debug_token;
+      } else {
+        url   = 'http://play-';
+        token = debug_token;
+      }
+      url += row.host + '.assembledrealms.com/stats';
+      
+      servers.push({
+        id:    row.id,
+        url:   url,
+        token: token
+      });
+    });
+    
+    query.on('end', function() {
+      
+      async.each(servers, function(server, callback) {
+        var options = {
+          url: server.url,
+          headers: {
+            'Authorization': server.token
+          }
+        };
+        request(options, function (error, response, body) {
+          if (!error && response.statusCode == 200) {
+            var responseData   = JSON.parse(body);
+            var connectedUsers = responseData.active_sessions.length / 2;
+            var runningRealms  = responseData.processes.length - 1;
+            var cpu            = Math.round(responseData.system.load[2] * 100);
+            var memory         = Math.round(responseData.system.memory.percentUsed);
+            
+            client.query('INSERT INTO history (timestamp, cpu, memory, connected_users, running_realms, server_id) VALUES ($1, $2, $3, $4, $5, $6)', [time, cpu, memory, connectedUsers, runningRealms, server.id], function(error) {
+              if (error) {
+                console.error(error);
+              }
+              callback();
+            });
+
+          } else {
+            callback();
+          }
+        });
+      }, function (error) {
+        if (error) {
+          console.error(error);
+          return;
+        }
+        
+        done();
+        collectingStats = false;
+        
+      });
+      
+    });
+
+  });
+  
+}, 60000);
 
 
 /*

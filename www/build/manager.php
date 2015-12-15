@@ -77,6 +77,9 @@ if ($method == 'POST') {
     if ($directive == 'online') {
         $server_type = $_POST['server'];
         
+        // TODO: THIS SHOULD SEND A MESSAGE TO GATEWAY TO LAUNCH, EVEN WITH A 
+        // SHARED REALM, ASYNC, THAT WAY GATEWAY CAN FIND THE LEAST USED SERVER BY
+        // CHECKING THE STATS FROM THE JOB THAT RUNS EVERY ~10 MIN
         $success = $loggedInUser->onlineRealm($realm_id, $server_type);
         
         if ($success !== false) {
@@ -468,99 +471,101 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 </div>
 
 <div class="modal fade" id="modalTakeRealmOnline" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title">Bring Realm Online</h4>
-            </div>
-            <div class="modal-body" id="modalTakeRealmOnlineContent">
-            <?php if ($realm_cents < 25) { ?>
-                <div class="alert alert-warning" role="alert">
-                    <strong>Heads Up!</strong> Your realm needs at least $0.25 of funds before you're able to bring up a private server.
-                </div>
-            <?php } ?>
-                 <div class="row" style="padding-top: 8px;">
-                    <div class="col-md-6">
-                        <!-- FREE SERVER -->
-                        <div class="panel panel-default">
-                            <div class="panel-heading">
-                                <div class="radio">
-                                    <label>
-                                        <input type="radio" name="serverTypeRadios" id="typeFree" value="0" checked>
-                                        <span class="h4">Shared Server</span>
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="panel-body">
-                                <h4>Free</h4>
-                            </div>
-                            <ul class="list-group">
-                                <li class="list-group-item">Max simultaneous users: 10</li>
-                                <li class="list-group-item">Resources shared among all online realms on server</li>
-                                <li class="list-group-item">Players will queue globally</li>
-                                <li class="list-group-item">Realm background processing will stop if no players are online</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <!-- PAID SERVER -->
-                        <div class="panel panel-default">
-                            <div class="panel-heading">
-                            <?php if ($realm_cents < 25) { ?>
-                                <div class="radio disabled">
-                                    <label>
-                                        <input type="radio" name="serverTypeRadios" id="typePaid1" value="1" disabled>
-                                        <span class="h4"><s>Small Private Server</s></span>
-                                    </label>
-                                </div>
-                            <?php } else { ?>
-                                <div class="radio">
-                                    <label>
-                                        <input type="radio" name="serverTypeRadios" id="typePaid1" value="1">
-                                        <span class="h4">Small Private Server</span>
-                                    </label>
-                                </div>
-                            <?php } ?>
-                            </div>
-                            <div class="panel-body">
-                            <h4>$0.01 per hour <small>(1 cent)</small></h4>
-                            </div>
-                            <ul class="list-group">
-                                <li class="list-group-item">Max simultaneous users: Up to you</li>
-                                <li class="list-group-item">512MB Memory, 1 Core Processor, 20GB SSD</li>
-                                <li class="list-group-item">Players will only wait if you have max users</li>
-                            </ul>                        
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <div id="realmOnlineAlert" class="alert alert-danger" style="display: none;"></div>
-                <button type="button" class="btn btn-default" data-dismiss="modal"><i class="fa fa-times"></i> Cancel</button>
-                <button id="takeRealmOnline" type="button" class="btn btn-default">Bring Online</button>
-            </div>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">Bring Realm Online</h4>
+      </div>
+      <div class="modal-body" id="modalTakeRealmOnlineContent">
+        <?php if ($realm_cents < 25) { ?>
+        <div class="alert alert-warning" role="alert">
+          <strong>Heads Up!</strong> Your realm needs at least $0.25 of funds before you're able to launch a private server.
         </div>
+        <?php } ?>
+        <div class="row" style="padding-top: 8px;">
+          <div class="col-md-6">
+            <!-- FREE SERVER -->
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <div class="radio">
+                  <label>
+                    <input type="radio" name="serverTypeRadios" id="typeFree" value="0" checked>
+                    <span class="h4">Shared Server</span>
+                  </label>
+                </div>
+              </div>
+              <div class="panel-body">
+                <h4>Free</h4>
+              </div>
+              <ul class="list-group">
+                <li class="list-group-item">Max simultaneous users: 10</li>
+                <li class="list-group-item">Resources shared among all online realms on server</li>
+                <li class="list-group-item">Players will queue globally, i.e. server player limit shared between realms</li>
+                <li class="list-group-item">Realm background processing will stop if no players are online</li>
+              </ul>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <!-- PAID SERVER -->
+            <div class="panel panel-default">
+              <div class="panel-heading">
+              <?php if ($realm_cents < 25) { ?>
+                <div class="radio disabled">
+                  <label>
+                    <input type="radio" name="serverTypeRadios" id="typePaid1" value="1" disabled>
+                    <span class="h4"><s>Small Private Server</s></span>
+                  </label>
+                </div>
+              <?php } else { ?>
+                <div class="radio">
+                  <label>
+                    <input type="radio" name="serverTypeRadios" id="typePaid1" value="1">
+                    <span class="h4">Small Private Server</span>
+                  </label>
+                </div>
+              <?php } ?>
+              </div>
+              <div class="panel-body">
+                <h4>$0.01 per hour <small>(1 cent)</small></h4>
+              </div>
+              <ul class="list-group">
+                <li class="list-group-item">Max simultaneous users: Up to you</li>
+                <li class="list-group-item">512MB Memory, 1 Core Processor, 20GB SSD</li>
+                <li class="list-group-item">Players will only wait if you have max users</li>
+                <li class="list-group-item">Realm is only stopped by you, allowing for static worlds</li>
+                <li class="list-group-item" style="display: none;">More control, including options for invite-only and unlisted</li>
+              </ul>                        
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div id="realmOnlineAlert" class="alert alert-danger" style="display: none;"></div>
+        <button id="takeRealmOnline" type="button" class="btn btn-default">Bring Online</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><i class="fa fa-times"></i> Cancel</button>
+      </div>
     </div>
+  </div>
 </div>
 
 <div class="modal fade" id="modalTakeRealmOffline" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title">Take Realm Offline</h4>
-            </div>
-            <div class="modal-body" id="modalTakeRealmOfflineContent">
-                <p><strong>Are you sure?</strong> All users will be disconnected and your realm page will indicate your server is offline.</p>
-            </div>
-            <div class="modal-footer">
-                <div id="realmOfflineAlert" class="alert alert-danger" style="display: none;"></div>
-                <button type="button" class="btn btn-default" data-dismiss="modal"><i class="fa fa-times"></i> Cancel</button>
-                <button id="takeRealmOffline" type="button" class="btn btn-default">Yes</button>
-            </div>
-        </div>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">Take Realm Offline</h4>
+      </div>
+      <div class="modal-body" id="modalTakeRealmOfflineContent">
+        <p><strong>Are you sure?</strong> All users will be disconnected and your realm page will indicate your server is offline.</p>
+      </div>
+      <div class="modal-footer">
+        <div id="realmOfflineAlert" class="alert alert-danger" style="display: none;"></div>
+        <button id="takeRealmOffline" type="button" class="btn btn-default">Yes</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal"><i class="fa fa-times"></i> Cancel</button>
+      </div>
     </div>
+  </div>
 </div>
 
 <div class="modal fade" id="modalDestroy" tabindex="-1" role="dialog" aria-hidden="true">
