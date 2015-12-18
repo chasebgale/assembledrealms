@@ -241,18 +241,7 @@ server.listen(3000, function(){
 });
 
 // Acquire stats every minute
-var collectingStats = false;
 setInterval(function(){
-    
-  if (collectingStats) {
-    // If the previous iteration is taking more than a minute, break:
-    return;
-    // I like this better than calling setTimeout at the end of the function because it allows for
-    // less time between iterations
-  } else {
-    collectingStats = true;
-  }
-  
   var servers = [];
   var url     = '';
   var token   = '';
@@ -296,7 +285,8 @@ setInterval(function(){
           url: server.url,
           headers: {
             'Authorization': server.token
-          }
+          },
+          timeout: 30000
         };
         request(options, function (error, response, body) {
           if (!error && response.statusCode == 200) {
@@ -314,6 +304,15 @@ setInterval(function(){
             });
 
           } else {
+            
+            if (error.code === 'ETIMEDOUT') {
+              if (error.connect === true) {
+                console.error(options.url + ' timed out establishing connection...');
+              } else {
+                console.error(options.url + ' timed out after establishing connection...');
+              }
+            }
+            
             callback();
           }
         });
