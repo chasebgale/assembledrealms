@@ -6,7 +6,7 @@
   <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
   
   <div class="row">
-    <div id="footer-left" class="col-xs-3">
+    <div id="footer-left" class="col-xs-12 col-md-3">
       <a href="#">Home</a>
       ·
       <a href="#">Account</a>
@@ -18,7 +18,7 @@
       <a href="#">About</a>
     </div>
   
-    <div id="footer-right" class="col-xs-9">
+    <div id="footer-right" class="col-xs-12 col-md-9">
       <ins id="footer_ad" class="adsbygoogle"
            style="display:inline-block;width:970px;height:90px;"
            data-ad-client="ca-pub-4898800745718155"
