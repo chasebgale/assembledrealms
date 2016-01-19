@@ -128,6 +128,25 @@ app.get('/stats', function (req, res, next) {
   });
 });
 
+app.get('/history', function (req, res, next) {
+  pg.connect(connection, function(error, client, done) {
+
+		if (error) {
+			console.error(error);
+			return;
+		}
+    
+    client.query('SELECT count(*) as count FROM history', function(error, result) {
+      if (error) {
+        console.error(error);
+      }
+      res.send(result.rows[0].count);
+      done();
+    });
+    
+  });
+});
+
 // Deploy specfied realm to least congested shared play server
 app.get('/launch/shared/:id', function (req, res, next) {
   
@@ -204,6 +223,7 @@ app.get('/shutdown/:id', function (req, res, next) {
     return res.status(401).send("Please don't try to break things :/");
   }
   
+  // Check console logs...
   console.log(new Date().toISOString() + ' Received valid request to /shutdown/' + req.params.id);
   
   if (realms[req.params.id]) {

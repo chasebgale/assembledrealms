@@ -21,27 +21,24 @@ body {
 
 #footer {
   background-color: #777;
-  width: 100%;
-  padding-left: 15px;
-  padding-right: 15px;
-  padding-top: 5px;
-  min-height: 100px;
-  overflow-x: hidden;
+  width:            100%;
+  padding-left:     15px;
+  padding-right:    15px;
+  padding-top:      15px;
+  min-height:       100px;
+  overflow-x:       hidden;
+  text-align:       center;
 }
 
-#footer-left {
+#footer-nav {
   color: #999;
-  padding-left: 30px;
   padding-top: 30px;
+  padding-bottom: 30px;
 }
 
-#footer-left a {
+#footer-nav a {
   color: #999 !important;
   font-size: 1.5em;
-}
-
-#footer-right {
-  text-align: right;
 }
 
 div#comment {
