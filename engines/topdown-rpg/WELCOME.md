@@ -3,6 +3,24 @@
 This file, **welcome.md**, is the first file another user sees when checking out your source code. You can use it to give a little head's up to some issues in the code, common gotchas or anything else you feel is important. Personally, 
 I'm going to use this file to give you a brief overview of the IDE itself and the default file structure I've provided you with, *hold tight!*  
 
+## Use The IDE
+
+On the command bar at the top of this window, furtherst to the right, you'll notice a drop-down button with an eye logo labeled "Rendered Markdown." This button will change it's text depending on what file you are viewing but will always retain the eye logo. If you click it, you'll be able to change the view mode, usually from a display mode to an edit mode. 
+
+![Markdown View Dropdown](/img/welcome/rendered_markdown_button.png)
+
+Go ahead and try clicking the dropdown button, then selecting the "Raw Text" option to see the source of this very file. You can make changes to it and click back to "Rendered Markdown" to see your edits rendered immediately.
+
+There are two other very important buttons on the command bar and they are right next to the view button we just discussed, "Commit" and "Debug." As you edit files in your project, the changes are stored locally on your machine. Once you are ready to see how the changes you've made will effect your game, you'll want to debug - and to see your changes in action, the server needs to know about them, so you'll need to commit the changes to the server. If you click the "Commit" button, you'll be presented with this dialog:
+
+![Commit Window](/img/welcome/commit_window.png)
+
+After (optionally) adding a description to the changes you have made, clicking the "commit" button will upload them to the server. Now that the server is synced with your local work, you can click the "Debug" button on the command bar. You'll see various status updates letting you know what the server is doing - once it is finished deploying your realm to a free server, you'll be given a link to view your game. 
+
+![Debug Window](/img/welcome/debug_window.png)
+
+Clicking the link will open in a new window where you can see your realm running with your applied changes!
+
 ## Inform Your Players
 
 Firstly, you'll notice three other **.md** files to the left, namely **CREDITS.md, FUNDING.md** and **README.md**. These files are written in a lightweight markup language called markdown and are unique in that they are not used directly

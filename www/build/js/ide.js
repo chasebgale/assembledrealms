@@ -170,7 +170,7 @@ function initialize(projectID, projectDomain) {
               dataType: 'text'
             })
             .done(function (data) {
-              $('#debugProgressList').append('<li><strong>Success!</strong> Your debug URL is <a target="_blank" href="' + debug_url + '">' + debug_url + '</a></li>');
+              $('#debugProgressList').append('<li><strong>Success!</strong> Your debug URL: <a target="_blank" href="' + debug_url + '"><i class="fa fa-external-link"></i> ' + debug_url + '</a></li>');
             })
             .fail(function(data) {
               $('#debugProgressList').append('<li class="text-danger"><strong><i class="fa fa-exclamation-triangle"></i> Fatal Error:' + data.responseText + '</strong> Please try again in a few minutes, monkeys are furiously typing away to fix this problem.</li>');
