@@ -22,18 +22,22 @@ var Engine = function () {
 Engine.prototype.initialize = function (container, host, port, cwd) {
 
   // If we are inside of nested functions, 'this' can be reassigned, let's keep a reference to 'this'
-  // as it initially references 'engine'
+  // as it initially references our Engine instance 'engine'
   var self = this;
   
   self.host = host;
   self.port = port;
   self.cwd  = cwd;
   
+  // Create a socket connection to server we've been given
   self.socket = io(host + ":" + port);
   
+  // Respond to the 'sync' message from the server when it arrives. 
+  // This message is sent after a player successfully makes a connection to our server. The message
+  // contains the locations of other players, npcs and this players last (or initial) position.
   self.socket.on('sync', function (actors) {
     self.avatar.create(actors.player);
-    self.actors.create(actors, self.renderer); //data.players, data.player.id);
+    self.actors.create(actors, self.renderer);
     
     self.position = actors.player.position;
     
@@ -41,12 +45,14 @@ Engine.prototype.initialize = function (container, host, port, cwd) {
     self.ready();
   });
     
+  // The update message occurs anytime an npc or player performed an action
   self.socket.on('update', function (actors) {
     if (self.initialized) {
       self.actors.update(actors);
     }
   });
   
+  // The create message tells us another player or npc has entered the map we are on
   self.socket.on('create', function (actors) {
     self.actors.create(actors, self.renderer);
   });
@@ -59,6 +65,7 @@ Engine.prototype.initialize = function (container, host, port, cwd) {
     self.debugging(data);
   });
   
+  // Respond to an npc or player emitting text
   self.socket.on('text', function (data) {
     self.actors.text(data);
   });
@@ -66,8 +73,8 @@ Engine.prototype.initialize = function (container, host, port, cwd) {
   self.matrix = new PIXI.Matrix();
   self.matrix.translate(0, 0);
   
-  // Initialize PIXI, the 2D rendering engine we will use, check out
-  // https://github.com/GoodBoyDigital/pixi.js for more info
+  // Initialize PIXI, the 2D rendering engine we will use, for more info check out:
+  // https://github.com/GoodBoyDigital/pixi.js 
   var rendererOptions = {
     antialiasing:   false,
     transparent:    false,
@@ -76,7 +83,6 @@ Engine.prototype.initialize = function (container, host, port, cwd) {
   
   self.renderer   = PIXI.autoDetectRenderer(CANVAS_WIDTH, CANVAS_HEIGHT, rendererOptions);
   self.stage      = new PIXI.Container();
-  //self.buffer     = new PIXI.ParticleContainer();
   
   container.appendChild(self.renderer.view);
   

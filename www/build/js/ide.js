@@ -842,6 +842,7 @@ function loadEditor(filename, content, displayRendered) {
   
   __editSessions[filename].setUseSoftTabs(true);
   __editSessions[filename].setTabSize(2);
+  __editSessions[filename].setUseWrapMode(true);
   __editor.setSession(__editSessions[filename]);
     
 	$("#tabs .tab-pane").hide();

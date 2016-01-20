@@ -37,8 +37,12 @@ body {
 }
 
 #footer-nav a {
-  color: #999 !important;
+  color: #FFF !important;
   font-size: 1.5em;
+}
+
+#footer-ad {
+  overflow-x: hidden;
 }
 
 div#comment {
