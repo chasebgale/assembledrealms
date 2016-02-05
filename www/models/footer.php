@@ -5,6 +5,10 @@
   <script src='//netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js'></script>
   <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
   
+  <div>
+    <img src="/img/logo.png" />
+  </div>
+  
   <div id="footer-nav">
     <a href="#">Home</a>
     &nbsp;·&nbsp;
