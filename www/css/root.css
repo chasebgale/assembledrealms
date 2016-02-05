@@ -56,6 +56,13 @@ div#funding {
     margin-bottom: 12px;
 }
 
+div#play-now {
+  width: 200px; 
+  margin: 0 auto; 
+  border: 1px #222 dashed;
+  margin-top: 100px;
+}
+
 #form-signin {
     margin: 0 auto;
 }
@@ -289,12 +296,12 @@ div#funding {
 
 .navbar-brand {
 	height: auto !important;
-	padding: 10px 0px !important;
+	padding: 5px 0px !important;
 }
 
 .navbar-spacer {
   float: left;
-  margin-top: 12px;
+  margin-top: 6px;
   display: inline-block;
   background: #666;
   width: 2px;
@@ -306,7 +313,7 @@ div#funding {
 
 .nav>li>a {
 	padding-bottom: 0 !important;
-    padding-top: 12px !important;
+    padding-top: 8px !important;
     padding-right: 10px !important;
     padding-left: 10px !important;
 }
