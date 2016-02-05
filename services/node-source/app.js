@@ -62,7 +62,7 @@ app.post('/api/auth', function (req, res, next) {
     var user_id     = req.body.user_id;
     var realms      = req.body.realms;
     
-    if ((php_sess === undefined) || (user_id === undefined) || (realms === undefined)) {
+  if ((php_sess === null) || (user_id === null) || (realms === null)) {
         console.log('/api/auth - Missing params: ' + JSON.stringify(req.body));
         return res.status(500).send("Missing parameters, bruh.");
     }

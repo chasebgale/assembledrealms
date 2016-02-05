@@ -182,7 +182,7 @@
 .navbar-brand,
 .navbar-nav > li > a {
   text-shadow: 0 1px 0 #777;
-  color: #999 !important;
+  color: #e0e0e0 !important;
 }
 .navbar-nav > li > a:hover {
   text-shadow: 0 1px 0 #000;

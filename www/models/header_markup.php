@@ -13,6 +13,7 @@
     </div>
 
     <div class="collapse navbar-collapse">
+      <div class="navbar-spacer"></div>
       <ul class="nav navbar-nav">
         <li><a href='../../build' class='header-link'><i class='fa fa-cogs'></i> Build</a></li>
         <li><a href='../../play' class='header-link'><i class='fa fa-rocket'></i> Play</a></li>
@@ -22,12 +23,12 @@
         <li><a href="../../help" class="header-link"><i class='fa fa-life-ring'></i> Help</a></li>
 <?php if (isUserLoggedIn()) { ?>
         <li>
-          <a href='/account/logout.php' class='header-link'>
+          <a href='/account/logout/now' class='header-link'>
             <i class='fa fa-sign-out'></i> Logout
           </a>
         </li>
         <li>
-          <a href='/account' class='header-link'>
+          <a href='/account' class='header-link' style="margin-top: -2px;">
             <img src='<?php echo $loggedInUser->user_image; ?>' width='24' /><span class='badge' style='background-color: #4C4C4C; vertical-align: top; text-align: left; line-height: 1.5em; height: 24px; border-radius: 0;'>
               <?php echo $loggedInUser->displayname; ?>
               <div class='spacer'></div>

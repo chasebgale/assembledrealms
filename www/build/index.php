@@ -149,7 +149,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 <script id="realms_template" type="text/template">
     <% _.eachRight( realms, function( realm ){ %>
     
-        <% if (realm.status == 0) { %>
+        <% if (realm.status < 1) { %>
         <tr>
         <% } else if (realm.status == 1) { %>
         <tr class="success">

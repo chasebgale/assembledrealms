@@ -141,7 +141,8 @@ class loggedInUser {
 		global $mysqli,$db_table_prefix;
         
     $source_server = "02"; // TODO: Have a function here that picks the server under the least load
-        
+    $status = -1;   
+     
 		$stmt = $mysqli->prepare("INSERT INTO realms (
 			user_id,
 			title,
@@ -153,8 +154,9 @@ class loggedInUser {
 			?,
 			?,
 			?,
+      ?,
       ?)");
-		$stmt->bind_param("isssi", $this->user_id, $title, $description, $source_server, -1);
+		$stmt->bind_param("isssi", $this->user_id, $title, $description, $source_server, $status);
 		$stmt->execute();
 		$inserted_id = $mysqli->insert_id;
 		$stmt->close();
@@ -166,7 +168,7 @@ class loggedInUser {
     $auth_token = "fb25e93db6100b687614730f8f317653bb53374015fc94144bd82c69dc4e6ea0";
     
     $post_body  = json_encode(array('php_sess' => session_id(),
-                                         'user_id' => $loggedInUser->user_id,
+                                         'user_id' => $this->user_id,
                                          'realms' => $realms
     ));
     
@@ -537,7 +539,7 @@ class loggedInUser {
 			address,
       address_debug
 			FROM realms
-			WHERE user_id = ? AND status > -1");
+			WHERE user_id = ? AND status > -10");
 		$stmt->bind_param("i", $this->user_id);
 		$stmt->execute();
         
@@ -586,7 +588,7 @@ class loggedInUser {
 		$stmt = $mysqli->prepare("SELECT
 			id
 			FROM realms
-			WHERE user_id = ? AND status > -1");
+			WHERE user_id = ? AND status > -10");
 		$stmt->bind_param("i", $this->user_id);
 		$stmt->execute();
         

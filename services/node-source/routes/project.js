@@ -33,11 +33,15 @@ var writeFileAsync = function (file, done) {
 exports.create = function(req, res, next){
   
     var dirs = [];
+    
+    console.log("Create called with params: %s", JSON.stringify(req.params));
 
     var destination = __dirname + '/../projects/' + req.params.id;
     var source = engines[req.params.engine];
     var repository;
     var index;
+    
+    console.log("'Create' request in progress, source = %s, destination = %s", source, destination);
   
     fs.mkdir(destination, 0777, function (error) {
         if (error) return next(error);
