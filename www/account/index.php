@@ -98,91 +98,101 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 
 <div id="content" class="container">
 
-    <div class="row">
-        <div class="col-md-3">
-            <h3>Mugshot</h3>
-            <div>
-                <img src="<?=$loggedInUser->user_image?>" />
-            </div>
-            <!--
-            <div>
-                <span><?=$loggedInUser->email?></span>
-            </div>
-            -->
-            <form id="mugshotForm" enctype="multipart/form-data" action="" method="POST" role="form">
-                <div class="form-group">
-                    <label for="upfile">New mugshot:</label>
-                    <!-- MAX_FILE_SIZE must precede the file input field -->
-                    <input type="hidden" name="MAX_FILE_SIZE" value="200000" />
-                    <!-- Name of input element determines name in $_FILES array -->
-                    <input name="upfile" id="upfile" type="file" accept="image/gif, image/png, image/jpeg" />
-                    <!--<button type="submit" class="btn btn-default">Upload</button>-->
-                </div>
-            </form>
-        </div>
-        
-        <div class="col-md-9">
-            <h3>Blurb</h3>
-            <div id="editor" style="height: 300px;"><?=$loggedInUser->fetchBlurb();?></div>
-        </div>
-    </div>
-    <button id="saveChanges" class="btn btn-default pull-right">Save Changes</button>          
-    
-    <div class="well" style="margin-top: 60px;">
+  <section id="sectionAvatar">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+          <h3 class="realm-panel-title">Your Avatar</h3>
+      </div>
+      <div class="panel-body">
         <div class="row">
-            <div class="col-md-6 text-center">
-                <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top" style="margin-bottom: 40px;">
-                    <input type="hidden" name="cmd" value="_s-xclick">
-                    <input type="hidden" name="hosted_button_id" value="MG5YX75N4LFAW">
-                    <table style="margin: 0 auto;">
-                        <tr>
-                            <td>
-                                <h2><input type="hidden" name="on0" value="Account Deposit:">Account Deposit:</h2>
-                            </td>
-                        </tr>
-                        <tr style="margin-top: 12px;">
-                            <td>
-                                <select name="os0" id="os0">
-                                    <option value="$2 for" data-fee="- $0.07" data-amt="$2.37">$2 for $2.37 USD</option>
-                                    <option value="$5 for" data-fee="- $0.16" data-amt="$5.46">$5 for $5.46 USD</option>
-                                    <option value="$10 for" data-fee="- $0.31" data-amt="$10.61">$10 for $10.61 USD</option>
-                                    <option value="$15 for" data-fee="- $0.46" data-amt="$15.76">$15 for $15.76 USD</option>
-                                    <option value="$20 for" data-fee="- $0.61" data-amt="$20.91">$20 for $20.91 USD</option>
-                                </select>
-                            </td>
-                        </tr>
-                    </table>
-                    <input type="hidden" name="currency_code" value="USD">
-                    <input type="hidden" name="custom" value="<?php echo $loggedInUser->user_id ?>">
-                    <input style="margin-top: 12px;" type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_paynowCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
-                    <img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
-                </form>
+          <div class="col-md-3">
+            <div>
+              <img src="<?=$loggedInUser->user_image?>" />
             </div>
-            <div class="col-md-6">
-                <h2 style="margin-top: 0;">The Math:</h2>
-                <table class="table">
-                    <tbody>
-                        <tr>
-                            <td>Payment Amount:</td>
-                            <td id="calculator_start">  $2.37</td>
-                        </tr>
-                        <tr>
-                            <td><a href="https://www.paypal.com/webapps/mpp/paypal-fees" target="_blank">Paypal Fee (2.9%)</a>:</td>
-                            <td id="calculator_fee">- $0.07</td>
-                        </tr>
-                        <tr>
-                            <td><a href="https://www.paypal.com/webapps/mpp/paypal-fees" target="_blank">Paypal Transaction Fee</a>:</td>
-                            <td>- $0.30</td>
-                        </tr>
-                        <tr>
-                            <td>Total Deposit:</td>
-                            <td id="calculator_finish">  $2.00</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <form id="mugshotForm" enctype="multipart/form-data" action="" method="POST" role="form">
+              <div class="form-group">
+                <label for="upfile">New mugshot:</label>
+                <!-- MAX_FILE_SIZE must precede the file input field -->
+                <input type="hidden" name="MAX_FILE_SIZE" value="200000" />
+                <!-- Name of input element determines name in $_FILES array -->
+                <input name="upfile" id="upfile" type="file" accept="image/gif, image/png, image/jpeg" />
+                <!--<button type="submit" class="btn btn-default">Upload</button>-->
+              </div>
+            </form>
+          </div>
+          <div class="col-md-9">
+            <div id="editor" style="height: 300px;"><?=$loggedInUser->fetchBlurb();?></div>
+          </div>
         </div>
+      </div>
+      <div class="panel-footer clearfix">
+        <button id="saveChanges" class="btn btn-default pull-right">Save Changes</button>
+      </div>
     </div>
+  </section>
+              
+  <section id="sectionAccounting">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+          <h3 class="realm-panel-title">Your <a href="https://www.youtube.com/watch?v=1xNXgyWQqxY" style="color: #939393;" target="_blank">Cash</a></h3>
+      </div>
+      <div class="panel-body">
+        <div class="row">
+          <div class="col-md-2">
+            <h2 style="margin-top: 0;">Funds:</h2>
+            <h1>$<?php echo $loggedInUser->funds(); ?></h1>
+          </div>
+          <div class="col-md-3">
+            <h2 style="margin-top: 0;">Deposit:</h2>
+            <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top" style="margin-bottom: 40px;">
+              <input type="hidden" name="cmd" value="_s-xclick">
+              <input type="hidden" name="hosted_button_id" value="MG5YX75N4LFAW">
+              <table>
+                <tr style="margin-top: 12px;">
+                    <td>
+                        <select name="os0" id="os0">
+                            <option value="$2 for" data-fee="- $0.07" data-amt="$2.37">$2 for $2.37 USD</option>
+                            <option value="$5 for" data-fee="- $0.16" data-amt="$5.46">$5 for $5.46 USD</option>
+                            <option value="$10 for" data-fee="- $0.31" data-amt="$10.61">$10 for $10.61 USD</option>
+                            <option value="$15 for" data-fee="- $0.46" data-amt="$15.76">$15 for $15.76 USD</option>
+                            <option value="$20 for" data-fee="- $0.61" data-amt="$20.91">$20 for $20.91 USD</option>
+                        </select>
+                    </td>
+                </tr>
+              </table>
+              <input type="hidden" name="currency_code" value="USD">
+              <input type="hidden" name="custom" value="<?php echo $loggedInUser->user_id ?>">
+              <input style="margin-top: 12px;" type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_paynowCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+              <img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
+            </form>
+          </div>
+          <div class="col-md-4">
+            <h2 style="margin-top: 0;"><i class="fa fa-calculator"></i> The Math:</h2>
+            <table class="table">
+              <tbody>
+                <tr>
+                  <td>Payment Amount:</td>
+                  <td id="calculator_start">  $2.37</td>
+                </tr>
+                <tr>
+                  <td><a href="https://www.paypal.com/webapps/mpp/paypal-fees" target="_blank">Paypal Fee (2.9%)</a>:</td>
+                  <td id="calculator_fee">- $0.07</td>
+                </tr>
+                <tr>
+                  <td><a href="https://www.paypal.com/webapps/mpp/paypal-fees" target="_blank">Paypal Transaction Fee</a>:</td>
+                  <td>- $0.30</td>
+                </tr>
+                <tr>
+                  <td>Total Deposit:</td>
+                  <td id="calculator_finish">  $2.00</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 </div>
 
 <?php require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php"); ?>
