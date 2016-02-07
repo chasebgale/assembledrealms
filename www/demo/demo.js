@@ -1,5 +1,4 @@
 var engine;
-var stats;
 var chartSeriesMemory;
 var chartSeriesCPU;
 var chartSpanMemory;
@@ -7,8 +6,6 @@ var chartSpanCPU;
 var loadingBar;
 var loadingText;
 var blurFilter;
-var displayClientStats	= false;
-var displayServerStats  = false;
 var isLoading           = true;
 var isBooting           = false;
 var loadingBarSpeed     = 0.1;
@@ -148,15 +145,13 @@ function setup() {
 function loadEngine() {
 
   engine 	= new Engine();
-  stats 	= new Stats();
 
   engine.ready = function () {
-    if (OWNER) {			
-      stats.setMode(0); // 0: fps, 1: ms
-      document.getElementById("statsClient").appendChild( stats.domElement );
+    
+    /* if (OWNER) {			
       engine.debug(true);
-    }
-            
+    } */
+    
     $("#queue").fadeOut(function () {
       $("#realm").fadeIn();
     });
@@ -188,76 +183,12 @@ function loadEngine() {
   }
   
   function animate() {
-    if (displayClientStats) {
-      stats.begin();
-    }
-    
     engine.render();
-    
-    if (displayClientStats) {
-      stats.end();
-    }
-    
     requestAnimationFrame(animate);
   }
 
   engine.debugging = function (data) {
   };
-  
-  if (OWNER) {
-    displayClientStats = true;
-    displayServerStats = true;
-    
-    var chart = new SmoothieChart({
-      millisPerPixel: 100,
-      grid: {
-        fillStyle:'#4C4C4C',
-        strokeStyle:'#777777'
-      },
-      yRangeFunction: function (range) { 
-        return {
-          min: 0, 
-          max: (range.max + 10 > 100) ? 100 : range.max + 10
-        }; 
-      },
-      yMinFormatter: function(min, precision) {
-        return parseFloat(min).toFixed(0) + " %";
-      },
-      yMaxFormatter: function(max, precision) {
-        return parseFloat(max).toFixed(0) + " %";
-      }
-    });
-                 
-    var canvas 	= document.getElementById('chart-server');
-    
-    chartSeriesMemory = new TimeSeries();
-    chartSeriesCPU 	= new TimeSeries();
-    
-    chartSpanMemory = document.getElementById('mem_display');
-    chartSpanCPU = document.getElementById('cpu_display');
-    
-    chart.addTimeSeries(chartSeriesMemory, {
-      lineWidth:2.3,
-      strokeStyle:'#00ff00',
-      fillStyle:'rgba(0,255,0,0.11)'
-    });
-    
-    chart.addTimeSeries(chartSeriesCPU, {
-      lineWidth:2.3,
-      strokeStyle:'#ffffff',
-      fillStyle:'rgba(255,255,255,0.11)'
-    });
-    
-    chart.streamTo(canvas, 2000);
-    
-    engine.debugging = function (data) {
-      chartSeriesMemory.append(new Date().getTime(), data.memory / 1000000 / 512 * 100);
-      chartSpanMemory.textContent = parseFloat(data.memory / 1000000).toFixed(2);
-      
-      chartSeriesCPU.append(new Date().getTime(), data.cpu);
-      chartSpanCPU.textContent = data.cpu + ' %';
-    };
-  }
   
   engine.initialize(document.getElementById('realm'),
                     HOST,

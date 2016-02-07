@@ -3,27 +3,33 @@
 require_once($_SERVER['DOCUMENT_ROOT'] . "models/config.php");
 if (!securePage($_SERVER['PHP_SELF'])){die();}
 
-if(!empty($_POST)) {
+$method = $_SERVER['REQUEST_METHOD'];
+
+if ($method == 'POST') {
   // TODO: Pick least congested server, if I'm lucky and anyone actually enjoys this :0
   $host       = "http://demo-01.assembledrealms.com";
-  $session_id = session_id();
-  // TODO: On "demo" server, add code that assigns random player if id# == -1
-  $user_id    = -1; 
-  $owner      = false;
+  $session_id = session_id();  
+  $realmID    = 1;
+  $realm      = fetchRealm($realmID);
   
-  $post_body  = http_build_query(array('php_sess' => $session_id,
-                                       'user_id' => $user_id,
-                                       'owner' => $owner
+  if (!isUserLoggedIn()) {
+    $user_id = 0;
+  } else {
+    $user_id = $loggedInUser->user_id;
+  }
+  
+  $owner      = ($realm['user_id'] == $user_id);
+  $post_body  = http_build_query(array(
+    'php_sess' => $session_id,
+    'user_id' => $user_id,
+    'owner' => $owner
   ));
   
-  error_log("Initiating auth to: " . $host . " with sesh: " . $session_id . " and id: " . $user_id . "\n", 3, $logfile);
-  
   $curl 			= curl_init();
-  // TODO: Create demo_token
-  $debug_token = "1e4651af36b170acdec7ede7268cbd63b490a57b1ccd4d4ddd8837c8eff2ddb9";
+  $demo_token = "045603f288bcdb3391ba819eb9fc8346bc81f4276a7911471bfc5a1881ceff37";
 
   curl_setopt_array($curl, array(
-    CURLOPT_HTTPHEADER 		  => array('Authorization: ' . $debug_token),
+    CURLOPT_HTTPHEADER 		  => array('Authorization: ' . $demo_token),
     CURLOPT_HEADER          => false,
     CURLOPT_RETURNTRANSFER 	=> true,
     CURLOPT_POST            => true,
@@ -31,7 +37,6 @@ if(!empty($_POST)) {
     CURLOPT_SSL_VERIFYHOST 	=> 0,
     CURLOPT_SSL_VERIFYPEER 	=> false,
     CURLOPT_URL 			      => $host . '/auth/'
-    // TODO: I removed the realm id from /auth/, update it in app.js for demo server
   ));
 
   $resp       = curl_exec($curl);
@@ -39,16 +44,16 @@ if(!empty($_POST)) {
       
   curl_close($curl);
   
-  error_log("Curl response body: " . $resp . "\n", 3, $logfile);
+  // error_log("Curl response body: " . $resp . "\n", 3, $logfile);
       
   if (($httpcode < 200) && ($httpcode > 299)) {
     // We have an error:
-    error_log($httpcode . ": " . $resp, 3, $logfile);
+    // error_log($httpcode . ": " . $resp, 3, $logfile);
     echo "Auth fail.";
     die();
   } else {
-    // TODO: I made the url to grab the script from the root url, update app.js on demo
-    $url_from_auth = $host;
+    echo json_encode(array ('server' => $host . "/realms/1", 'raw' => $resp));
+    die();
   }
 }
 
@@ -90,12 +95,37 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php");
 
 <script>
   $(function() {
-    $("#play-now-link").click(function() {
-      $.get("<?php echo $url_from_auth; ?>", function (data) {
-        $("#realm-container").append(data);
+    
+    $.ajaxSetup({
+        crossDomain: true,
+        xhrFields: {
+            withCredentials: true
+        }
+    });
+    
+    $("#play-now-link").click( function() {
+      $.post("/index_new.php", {}, function (data) {
         
-        $("#intro .hide-for-play").fadeOut(function () {
-          $("#realm-container").fadeIn();
+        // TODO: Jquery ajax should be doing this automagically?
+        data = JSON.parse(data);
+        console.log(data);
+        
+        if (!data) {
+          console.log('// TODO: handle this. whoops.');
+          return;
+        }
+        
+        if (!data.server) {
+          console.log('// TODO: handle this. whoops.');
+          return;
+        }
+        
+        $.get(data.server, function (html) {
+          $("#realm-container").append(html);
+          
+          $("#intro .hide-for-play").fadeOut( function () {
+            $("#realm-container").fadeIn();
+          });
         });
       });      
     });

@@ -1,0 +1,8 @@
+{
+  "name"   : "realm-host",
+  "script" : "app.js",
+  "env"    : {
+    "SECURITY_TOKEN":      "045603f288bcdb3391ba819eb9fc8346bc81f4276a7911471bfc5a1881ceff37", 
+    "MAX_CLIENTS_GLOBAL":  "200"
+  }
+}

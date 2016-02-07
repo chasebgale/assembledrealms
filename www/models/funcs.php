@@ -308,6 +308,72 @@ function fetchAllUsers()
 	return ($row);
 }
 
+function fetchRealm($realm_id) {
+        
+  global $mysqli,$db_table_prefix;
+  $stmt = $mysqli->prepare("SELECT 
+    realms.id,
+    realms.user_id,
+    realms.title,
+    realms.description,
+    realms.level,
+    realms.status,
+    realms.players_online,
+    realms.funds,
+    realms.screenshots,
+    realms.loves,
+    realms.comments,
+    realms.source,
+    realms.show_funding,
+    realms.address,
+    realms.address_debug,
+    uc_users.display_name
+    FROM realms
+    INNER JOIN uc_users
+    ON realms.user_id = uc_users.id
+    WHERE realms.id = ?"
+  );
+  $stmt->bind_param("i", $realm_id);
+  $stmt->execute();
+  $stmt->bind_result($id,
+    $user_id,
+    $title,
+    $description,
+    $level,
+    $status,
+    $players,
+    $funds,
+    $screenshots,
+    $loves,
+    $comments,
+    $source,
+    $show_funding,
+    $address,
+    $address_debug,
+    $display_name // DISPLAY NAME ALWAYS LAST (JOIN)
+  );
+  $stmt->fetch();
+  $stmt->close();
+  return array(
+    'id' => $id,
+    'user_id' => $user_id,
+    'title' => $title,
+    'description' => $description,
+    'level' => $level,
+    'status' => $status,
+    'players' => $players,
+    'funds' => $funds,
+    'screenshots' => $screenshots,
+    'loves' => $loves,
+    'display_name' => $display_name,
+    'comments' => $comments,
+    'source' => $source,
+    'show_funding' => $show_funding,
+    'address' => $address,
+    'address_debug' => $address_debug
+  );
+}
+
 //Retrieve complete user information by username, token or ID
 function fetchUserDetails($email=NULL,$token=NULL, $id=NULL)
 {
