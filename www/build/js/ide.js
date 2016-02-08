@@ -17,6 +17,9 @@ function resize() {
   $("#editor").height(h);
   $("#ulEditorTheme").css('max-height', (h-10) + 'px');
   $("#ulEditorTheme").css('overflow-y', 'auto');
+  
+  $("#historyList").css('max-height', Math.round(h/2) + 'px');
+  $("#historyList").css('overflow-y', 'auto');
 }
 
 function initialize(projectID, projectDomain) {

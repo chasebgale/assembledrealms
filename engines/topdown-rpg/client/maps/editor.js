@@ -117,6 +117,8 @@ function Map (target, toolbar, map) {
         
         if (resource.name == "terrain_") {
           document.getElementById('modalTilesBody').appendChild(resource.texture.baseTexture.source);
+          // 30 is for the 15px x 2 of padding on the container... wonky
+          $("#modalTiles").children().first().width(resource.texture.width + 30);
           // Wonky-feeling attempt to set default add tile to a mushroom, lol
           self.tile_index = 1018;
           $("#brushIndicator").css('background-image', 'url(' + resource.url + ')');
