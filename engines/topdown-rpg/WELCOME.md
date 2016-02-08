@@ -9,13 +9,19 @@ On the command bar at the top of this window, furtherst to the right, you'll not
 
 ![Markdown View Dropdown](/img/welcome/rendered_markdown_button.png)
 
-Go ahead and try clicking the dropdown button, then selecting the "Raw Text" option to see the source of this very file. You can make changes to it and click back to "Rendered Markdown" to see your edits rendered immediately.
+Go ahead and try clicking the dropdown button on the toolbar above, then selecting the "Text Editor" option to see the source of this very file. You can make changes to it and click back to "Rendered Markdown" to see your edits rendered immediately.
 
-There are two other very important buttons on the command bar and they are right next to the view button we just discussed, "Commit" and "Debug." As you edit files in your project, the changes are stored locally on your machine. Once you are ready to see how the changes you've made will effect your game, you'll want to debug - and to see your changes in action, the server needs to know about them, so you'll need to commit the changes to the server. If you click the "Commit" button, you'll be presented with this dialog:
+There are two other very important buttons on the command bar and they are right next to the view button we just discussed, "Commit" and "Debug." As you edit files in your project, the changes are stored locally inside of your web browser. Once you are ready to see how the changes you've made will effect your game, you'll want to debug - and to see your changes in action, the server needs to know about them, so you'll need to commit the changes to the server. If you click the "Commit" button, you'll be presented with this dialog:
 
 ![Commit Window](/img/welcome/commit_window.png)
 
-After (optionally) adding a description to the changes you have made, clicking the "commit" button will upload them to the server. Now that the server is synced with your local work, you can click the "Debug" button on the command bar. You'll see various status updates letting you know what the server is doing - once it is finished deploying your realm to a free server, you'll be given a link to view your game. 
+After (optionally) adding a description to the changes you have made, clicking the "commit" button will upload them to the server. [Please note, adding notes to your commit is an *excellent* habit to develop](http://alistapart.com/article/the-art-of-the-commit).
+
+> [![Commit Window](/img/welcome/git_logo.png)](https://git-scm.com/)
+>
+> Assembled Realms uses GIT as it's source control system - [check 'em out](https://git-scm.com/). 
+
+Now that the server is synced with your local work, you can click the "Debug" button on the command bar. You'll see various status updates letting you know what the server is doing - once it is finished deploying your realm to a free server, you'll be given a link to view your game.
 
 ![Debug Window](/img/welcome/debug_window.png)
 

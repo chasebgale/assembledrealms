@@ -106,6 +106,7 @@ function initialize(projectID, projectDomain) {
 		
       if ($(this).attr('href') == "#markdown") {
         $("#markdown").html(marked(__editor.getValue()));
+        $("#markdown a").attr('target', '_blank');
       }
       
       if ($(this).attr('href') == "#editor") {
@@ -416,8 +417,8 @@ function initialize(projectID, projectDomain) {
 	console.log("|__| [__  [__  |___ |\\\/| |__] |    |___ |  \\\    |__/ |___ |__| |    |\\\/| [__ ");
 	console.log("|  | ___] ___] |___ |  | |__] |___ |___ |__/    |  \\\ |___ |  | |___ |  | ___]");
 	console.log(" ");
-	console.log("Thanks for taking a look!");
-	console.log("Please contact me if you find a bug or an exploit, you'll be rewarded! chase@assembledrealms.com");
+	console.log("Thanks for taking a look! I keep the IDE source unminified/uncompressed/unobfuscated so it's easier to learn.");
+	console.log("Have fun and explore but please contact me if you find a (bug || exploit), you'll be rewarded! chase@assembledrealms.com");
 }
 
 function lz4Compress(data) {
@@ -867,6 +868,7 @@ function loadEditor(filename, content, displayRendered) {
         $("#tab-nav-markdown").css('display', 'block');
         renderTarget = $("#tab-nav-markdown a:first");
         $("#markdown").html(marked(content));
+        $("#markdown a").attr('target', '_blank');
         break;
   }
   

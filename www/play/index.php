@@ -158,7 +158,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
       <div class="playListRealm">
         <a href="realm/<%- realm.id %>" style="color: inherit;">
         <div class="row">
-          <div class="col-md-10">
+          <div class="col-md-11">
             <!-- Title -->
             <div class="pull-left" style="min-width: 100px; max-width: 400px; margin-right: 20px;">
               <span class="realmTitle"><%- realm.title %></span>
@@ -171,17 +171,17 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
                 <p class="text-justify">&nbsp;</p>
             <% } %>
           </div>
-          <div class="col-md-2" style="text-align: right;">
+          <div class="col-md-1">
             <!--  Online / Offline + users  -->
             <% if (realm.status == 1) { %>
-              <span class="label label-success"><i class="fa fa-power-off"></i> Online</span>
+              <span class="label-play-stats label label-success">Online <i class="fa fa-power-off fa-fw"></i></span>
             <% } else { %>
-              <span class="label label-default"><i class="fa fa-power-off"></i> Offline</span>
+              <span class="label-play-stats label label-default">Offline <i class="fa fa-power-off fa-fw"></i></span>
             <% } %>
-            <span class="label label-default"><i class="fa fa-child"></i> <%- realm.players_online %></span>
+            <span class="label-play-stats label label-default"><%- realm.players_online %> <i class="fa fa-child fa-fw"></i></span>
             
             <!--  Loves -->
-            <span class="label label-default"><i class="fa fa-heart"></i> <%- realm.loves %></span>
+            <span class="label-play-stats label label-default"><%- realm.loves %> <i class="fa fa-heart fa-fw"></i></span>
           </div>
         </div>
         </a>

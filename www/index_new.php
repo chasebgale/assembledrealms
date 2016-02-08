@@ -85,7 +85,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
           </button>
         </div>
       </div>
-      <div id="realm" style="margin: 0; width: 896px; height: 504px; padding: 0; display: none;"></div>
+      <div id="realm" style="background-color: black; margin: 0; width: 896px; height: 504px; padding: 0; display: none;"></div>
       <div id="queue" style="margin: 0; width: 896px; height: 504px; padding: 0;"></div>
     </div>
   </div>
