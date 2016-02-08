@@ -57,9 +57,7 @@ div#funding {
 }
 
 div#play-now {
-  width: 200px; 
   margin: 0 auto; 
-  border: 1px #222 dashed;
   margin-top: 100px;
 }
 
@@ -321,6 +319,10 @@ div#play-now {
     padding-top: 8px !important;
     padding-right: 10px !important;
     padding-left: 10px !important;
+}
+
+.tooltip-inner {
+  border: 1px solid #666;
 }
 
 #tabs>li>a {

@@ -65,26 +65,28 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 <div id="intro" style="width: 100%; height: 100vh; background-size: cover; background-image:url('/img/front_page_background.png'); color: white;">
   <h1 class="text-center hide-for-play" style="padding-top: 100px;"><strong>BUILD AN AWESOME MMO IN YOUR BROWSER</strong></h1>
   <h3 class="text-center hide-for-play">QUICK-START FROM AN EXISTING GAME &#9642; DEVELOPER/COMMUNITY TOOLS</h3> <h3 class="text-center hide-for-play"><strong>CLIENT/SERVER CODE IN ONE LANGUAGE: JAVASCRIPT</strong></h3>
-  <div id="play-now" class="hide-for-play">
-    <a id="play-now-link" href="#" style="color: #999;">
-      <h1 class="text-center">
-        <strong>PLAY</strong>
-      </h1>
-      <p class="text-center" style="font-size: 0.75em;">(The Game In The Background)</p>
-      <h1 class="text-center" style="margin-top: 4px; margin-bottom: 20px;">
-        <strong>NOW</strong>
-      </h1>
-    </a>
+  <div id="play-now" class="hide-for-play" style="text-align: center;">
+    <div id="commandBarButtons" style="display: inline-block; float: none;">
+      <button id="play-now-link" class="btn btn-default">
+        <i class="fa fa-expand fa-fw"></i> <strong>Play the demo game now!</strong> No registration needed.
+      </button>
+    </div>
   </div>
-  <div id="realm-container" style="padding-top: 20px; display: none;">
-    <div style="margin: 20px auto; width: 896px; padding: 0;">
-      <div id="commandBar" style="background: none;" class="clear-fix">
-        <div id="commandBarButtons" class="pull-right">
-          <button id="btn-fullscreen" class="btn btn-default btn-xs">
-            <i class="fa fa-expand fa-fw"></i> Fullscreen
-          </button>
-        </div>
+  <div id="realm-container" style="padding-top: 30px; display: none;">
+    <div id="commandBar" style="margin: 0 auto; width: 896px; padding: 0; background: none;" class="clear-fix">
+      <div id="commandBarButtons" class="pull-right">
+        <button id="btn-demo-play" class="btn btn-default btn-xs" title="Register an account, then choose any game to play! Choose from the official version of this game or any user-created games!" data-toggle="tooltip" data-placement="bottom">
+          <i class="fa fa-external-link fa-fw"></i> Play For Real
+        </button>
+        <button id="btn-demo-build" class="btn btn-default btn-xs" title="Things are broken? Fix it. Awesome idea you want to add? Make it so." data-toggle="tooltip" data-placement="bottom">
+          <i class="fa fa-external-link fa-fw"></i> Make Changes!
+        </button>
+        <button id="btn-fullscreen" class="btn btn-default btn-xs">
+          <i class="fa fa-expand fa-fw"></i> Fullscreen
+        </button>
       </div>
+    </div>
+    <div style="margin: 0 auto; width: 896px; padding: 0; background-color: #000;">
       <div id="realm" style="background-color: black; margin: 0; width: 896px; height: 504px; padding: 0; display: none;"></div>
       <div id="queue" style="margin: 0; width: 896px; height: 504px; padding: 0;"></div>
     </div>
@@ -110,6 +112,8 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php");
         }
     });
     
+    $('[data-toggle="tooltip"]').tooltip();
+    
     $("#btn-fullscreen").click( function() {
       if (BigScreen.enabled) {
         var realm = document.getElementById('realm');
@@ -122,6 +126,10 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php");
     });
     
     $("#play-now-link").click( function() {
+      
+      $(this).attr('disabled', true);
+      $(this).html('<i class="fa fa-spinner fa-spin"></i> Loading...');
+      
       $.post("/index_new.php", {}, function (data) {
         
         // TODO: Jquery ajax should be doing this automagically?
