@@ -176,7 +176,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
   <link rel='stylesheet' href='/css/root.css' />
   <link rel='stylesheet' href='/build/css/style.css' />
 
-  <link rel='stylesheet' href='//netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.css' />
+  <link rel='stylesheet' href='//netdna.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.css' />
   <link rel='stylesheet' href='//netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css'>
   <link rel='stylesheet' href='/css/bootstrap-theme.css' />
 
@@ -216,6 +216,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
         
         <div class="spacer"></div>
         
+        <button type="button" id="btnHistory" class="btn btn-default btn-xs"><i class="fa fa-history fa-fw"></i></i> History</button>
         <button type="button" id="btnCommit" class="btn btn-default btn-xs"><i class="fa fa-cloud-upload fa-fw"></i> Commit</button>
         <button type="button" id="btnDebug" class="btn btn-default btn-xs"><i class="fa fa-caret-square-o-right fa-fw"></i> Debug</button>
         
@@ -226,7 +227,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
             <i class="fa fa-eye"></i> Rendered Markdown <span class="caret"></span>
           </button>
           <ul id="ulView" class="dropdown-menu">
-            <li id="tab-nav-editor" style="display: none;"><a href="#editor">Raw Text</a></li>
+            <li id="tab-nav-editor" style="display: none;"><a href="#editor">Text Editor</a></li>
             <li id="tab-nav-image" style="display: none;"><a href="#image">Raw Image</a></li>
             <li id="tab-nav-map" style="display: none;"><a href="#map">Map Editor</a></li>
             <li id="tab-nav-markdown" style="display: none;"><a href="#markdown">Rendered Markdown</a></li>
@@ -343,6 +344,29 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     </div>
   </div>
     
+  <div class="modal fade" id="modalHistory" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Commit History</h4>
+        </div>
+        <div class="modal-body">
+          <ul id="historyList" style="min-height: 300px; list-style: none;">
+            <li style="text-align: center;">
+              <i class="fa fa-spinner fa-pulse fa-3x"></i>
+            </li>
+          </ul>
+        </div>
+        <div class="modal-footer">
+          <div id="historyAlert" class="alert alert-danger" style="display: none;"></div>
+          <button id="historyRevert" type="button" data-dismiss="modal" class="btn btn-default" disabled="disabled"><i class="fa fa-undo"></i> Revert</button>
+          <button id="historyClose" type="button" data-dismiss="modal" class="btn btn-default">Close</button>
+        </div>
+      </div>      
+    </div>
+  </div>
+    
     <div class="modal fade" id="modalCommit" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -416,125 +440,125 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
         </div>
     </div>
     
-    <script id="root_files_template" type="text/template">
-        <% _.each( _.filter(model, function (obj) {return (obj.path.indexOf('/') === - 1) }), function(child) { %>
-            <% if (child.hasChildren) { %>
-                <li class='hasChildren closed' data-path='<%= child.path %>'>
-                    <span class='folder'><%= child.name %></span>
-                    <ul>
-                        <%= templateChildFnFiles({'model': _.filter( model, function (obj) {
-                return (child.path === obj.path.substr(0, obj.path.lastIndexOf('/')));
-              }), 'templateChildFnFiles': templateChildFnFiles, 'full': model}) %>
-                    </ul>
-                </li>
-            <% } else { %>
-                <li><span class="file" data-id="<%= child.sha %>" data-path="<%= child.path %>"><%= child.name %></span></li>
-            <% } %>
-        <% }); %>
-    </script>
-    
-    <script id="child_files_template" type="text/template">
-        <% _.each(model, function(child) { %>
-            <% if (child.hasChildren) { %>
-                <li class='hasChildren closed' data-path='<%= child.path %>'>
-                    <span class='folder'><%= child.name %></span>
-                    <ul>
-      <%= templateChildFnFiles({
-          'model': _.filter( full, function (obj) {
-        return (child.path === obj.path.substr(0, obj.path.lastIndexOf('/')));
-          }),
-          'templateChildFnFiles': templateChildFnFiles,
-          'full': full
-      }) %>
-                    </ul>
-                </li>
-            <% } else { %>
-                <li><span class="file" data-id="<%= child.sha %>" data-path="<%= child.path %>"><%= child.name %></span></li>
-            <% } %>
-        <% }); %>
-    </script>
-    
-    
-    <script id="files_template" type="text/template">
-        <% _.each(model, function(child) { %>
-            <% if (child.hasChildren) { %>
-                <li class='hasChildren closed no-data' data-path='<%= child.path %>'>
-                    <span class='folder'><%= child.name %></span>
-                    <ul>
-                        <li><span class="placeholder">&nbsp;</span></li>
-                    </ul>
-                </li>
-            <% } else { %>
-                <li><span class="file" data-id="<%= child.id %>" data-path="<%= child.path %>"><%= child.name %></span></li>
-            <% } %>
-        <% }); %>
-    </script>
-    
-    <script id="files_dynamic_template" type="text/template">
-        <% if (model.children) { %>
-    <div class="hitarea collapsable-hitarea open-hitarea"></div>
-        <span class='folder'><%= model.name %></span>
-        <ul>
-            <% _.each(model.children, function(child) { %>
-            <%= templateFnDynamic({'model': child, 'templateFnDynamic': templateFnDynamic}) %>
-            <% }); %>
-        </ul>
-        <% } else if (model.hasChildren) { %>
-      <li class='hasChildren closed no-data' data-path='<%= model.path %>'>
-        <div class="hitarea hasChildren-hitarea closed-hitarea"></div>
-    <span class='folder'><%= model.name %></span>
-    <ul>
-        <li><span class="placeholder">&nbsp;</span></li>
-    </ul>
-      </li>
-        <% } else { %>
-        <li><span class="file" data-id="<%- model.id %>" data-path='<%= model.path %>'><%- model.name %></span></li>
-        <% } %>
-    </script>
+  <script id="root_files_template" type="text/template">
+      <% _.each( _.filter(model, function (obj) {return (obj.path.indexOf('/') === - 1) }), function(child) { %>
+          <% if (child.hasChildren) { %>
+              <li class='hasChildren closed' data-path='<%= child.path %>'>
+                  <span class='folder'><%= child.name %></span>
+                  <ul>
+                      <%= templateChildFnFiles({'model': _.filter( model, function (obj) {
+              return (child.path === obj.path.substr(0, obj.path.lastIndexOf('/')));
+            }), 'templateChildFnFiles': templateChildFnFiles, 'full': model}) %>
+                  </ul>
+              </li>
+          <% } else { %>
+              <li><span class="file" data-id="<%= child.sha %>" data-path="<%= child.path %>"><%= child.name %></span></li>
+          <% } %>
+      <% }); %>
+  </script>
+  
+  <script id="child_files_template" type="text/template">
+      <% _.each(model, function(child) { %>
+          <% if (child.hasChildren) { %>
+              <li class='hasChildren closed' data-path='<%= child.path %>'>
+                  <span class='folder'><%= child.name %></span>
+                  <ul>
+    <%= templateChildFnFiles({
+        'model': _.filter( full, function (obj) {
+      return (child.path === obj.path.substr(0, obj.path.lastIndexOf('/')));
+        }),
+        'templateChildFnFiles': templateChildFnFiles,
+        'full': full
+    }) %>
+                  </ul>
+              </li>
+          <% } else { %>
+              <li><span class="file" data-id="<%= child.sha %>" data-path="<%= child.path %>"><%= child.name %></span></li>
+          <% } %>
+      <% }); %>
+  </script>
+  
+  
+  <script id="files_template" type="text/template">
+      <% _.each(model, function(child) { %>
+          <% if (child.hasChildren) { %>
+              <li class='hasChildren closed no-data' data-path='<%= child.path %>'>
+                  <span class='folder'><%= child.name %></span>
+                  <ul>
+                      <li><span class="placeholder">&nbsp;</span></li>
+                  </ul>
+              </li>
+          <% } else { %>
+              <li><span class="file" data-id="<%= child.id %>" data-path="<%= child.path %>"><%= child.name %></span></li>
+          <% } %>
+      <% }); %>
+  </script>
+  
+  <script id="files_dynamic_template" type="text/template">
+      <% if (model.children) { %>
+  <div class="hitarea collapsable-hitarea open-hitarea"></div>
+      <span class='folder'><%= model.name %></span>
+      <ul>
+          <% _.each(model.children, function(child) { %>
+          <%= templateFnDynamic({'model': child, 'templateFnDynamic': templateFnDynamic}) %>
+          <% }); %>
+      </ul>
+      <% } else if (model.hasChildren) { %>
+    <li class='hasChildren closed no-data' data-path='<%= model.path %>'>
+      <div class="hitarea hasChildren-hitarea closed-hitarea"></div>
+  <span class='folder'><%= model.name %></span>
+  <ul>
+      <li><span class="placeholder">&nbsp;</span></li>
+  </ul>
+    </li>
+      <% } else { %>
+      <li><span class="file" data-id="<%- model.id %>" data-path='<%= model.path %>'><%- model.name %></span></li>
+      <% } %>
+  </script>
 
-    <script id="resource_template" type="text/template">
-        <h3><%- model.meta.image %></h3>
-        <div class="container-fluid">
-            <div class="row">
-                <% if (model.frames) { %>
-                    <% _.each(model.frames, function(frame, key) { %>
-                        <div class="col-md-1 <%- model.meta.category %>"
-           data-id="<%- key %>"
-           data-offset-x="<%- frame.frame.x %>"
-           data-offset-y="<%- frame.frame.y %>"
-           style="background-image: url(<%- source %>);
-            background-position-x: <%- (frame.frame.x * -1) + 'px' %>;
-            background-position-y: <%- (frame.frame.y * -1) + 'px' %>;
-            width: <%- frame.frame.w + 'px' %>;
-            height: <%- frame.frame.h + 'px' %>; "></div>
-                    <% }); %>
-                <% } %>
-            </div>
-        </div>
-    </script>
-    
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
-    <script src="//netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
-    
-    <script type="text/javascript">
-        $(document).ready(function () {
-            initialize(<?php echo $realm_id; ?>, "<?php echo $sourceURL; ?>");
-        });
-    </script>
+  <script id="resource_template" type="text/template">
+      <h3><%- model.meta.image %></h3>
+      <div class="container-fluid">
+          <div class="row">
+              <% if (model.frames) { %>
+                  <% _.each(model.frames, function(frame, key) { %>
+                      <div class="col-md-1 <%- model.meta.category %>"
+         data-id="<%- key %>"
+         data-offset-x="<%- frame.frame.x %>"
+         data-offset-y="<%- frame.frame.y %>"
+         style="background-image: url(<%- source %>);
+          background-position-x: <%- (frame.frame.x * -1) + 'px' %>;
+          background-position-y: <%- (frame.frame.y * -1) + 'px' %>;
+          width: <%- frame.frame.w + 'px' %>;
+          height: <%- frame.frame.h + 'px' %>; "></div>
+                  <% }); %>
+              <% } %>
+          </div>
+      </div>
+  </script>
+  
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+  <script src="//netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+  
+  <script type="text/javascript">
+      $(document).ready(function () {
+          initialize(<?php echo $realm_id; ?>, "<?php echo $sourceURL; ?>");
+      });
+  </script>
 
-    <script src="/build/js/utilities.js"></script>
-    <script src="/build/js/stats.min.js"></script>
-    <script src="<?php echo 'http://' . $sourceURL . '/api/project/' . $realm_id . '/file/raw/client/maps/editor.js'; ?>"></script>
-    <script src="/build/js/ide.js"></script>
-    <script src="/build/js/jquery.treeview.js"></script>
-    <script src="/build/js/md5.js"></script>
-    <script src="/build/js/marked.js"></script>
-    <script src="/build/js/lz4.min.js"></script>
-    
-    <script src="/js/pixi.js"></script>
+  <script src="/build/js/utilities.js"></script>
+  <script src="/build/js/stats.min.js"></script>
+  <script src="<?php echo 'http://' . $sourceURL . '/api/project/' . $realm_id . '/file/raw/client/maps/editor.js'; ?>"></script>
+  <script src="/build/js/ide.js"></script>
+  <script src="/build/js/jquery.treeview.js"></script>
+  <script src="/build/js/md5.js"></script>
+  <script src="/build/js/marked.js"></script>
+  <script src="/build/js/lz4.min.js"></script>
+  
+  <script src="/js/pixi.js"></script>
   <script src="/js/bigscreen.min.js"></script>
-    <script src="/js/lodash.min.js"></script>
-    <script src="/js/ace/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+  <script src="/js/lodash.min.js"></script>
+  <script src="/js/ace/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
 
 </body>
 </html>

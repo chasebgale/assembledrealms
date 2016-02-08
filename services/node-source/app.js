@@ -125,6 +125,7 @@ app.use(function(req, res, next){
 app.get('/api/project/:id/create/:engine', project.create);
 app.get('/api/project/:id/open', project.open);
 app.get('/api/project/:id/destroy', project.destroy);
+app.get('/api/project/:id/history', project.history);
 
 app.post('/api/project/:id/save', project.save);
 app.post('/api/project/:id/debug', project.debug);

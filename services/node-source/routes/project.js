@@ -118,6 +118,46 @@ exports.create = function(req, res, next){
     }); // fx.mkdir
 }
 
+exports.history = function(req, res, next) {
+  // Open the repository directory.
+  git.Repository.open(__dirname + '/../projects/' + req.params.id)
+    // Open the master branch.
+    .then(function(repo) {
+      return repo.getMasterCommit();
+    })
+    // Display information about commits on master.
+    .then(function(firstCommitOnMaster) {
+      // Create a new history event emitter.
+      var history           = firstCommitOnMaster.history();
+      var commits_formatted = [];
+
+      // Listen for commit events from the history.
+      history.on("commit", function(commit) {
+
+        var commit_formatted = {};
+      
+        // Commit Author
+        var author = commit.author();
+        commit_formatted.author = author.name();
+      
+        // Commit Date
+        commit_formatted.date = commit.date();
+
+        // Commit Comment
+        commit_formatted.message = commit.message();
+        
+        commits_formatted.push(commit_formatted);
+      });
+      
+      history.on("end", function(commits) {
+        return res.json(commits_formatted);
+      });
+
+      // Start emitting events.
+      history.start();
+    });
+}
+
 exports.open = function(req, res, next){
   
     var files = [];

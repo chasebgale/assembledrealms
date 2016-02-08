@@ -564,6 +564,9 @@ Engine.prototype.addPlayer = function (player) {
 };
 
 Engine.prototype.removePlayer = function (player) {
+  
+  this.emit('destroy', player);
+  
   delete players[player.id];
   playerKeys = Object.keys(players);
 };

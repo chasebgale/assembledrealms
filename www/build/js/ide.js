@@ -13,7 +13,10 @@ var __editSessions      = {};
 var __mapDisplayed      = false;
 
 function resize() {
-    $("#editor").height( $("#tree").height() );
+  var h = $("#tree").height();
+  $("#editor").height(h);
+  $("#ulEditorTheme").css('max-height', (h-10) + 'px');
+  $("#ulEditorTheme").css('overflow-y', 'auto');
 }
 
 function initialize(projectID, projectDomain) {
@@ -100,8 +103,13 @@ function initialize(projectID, projectDomain) {
 		
       if ($(this).attr('href') == "#markdown") {
         $("#markdown").html(marked(__editor.getValue()));
-      } else if ($(this).attr('href') == "#editor") {
+      }
+      
+      if ($(this).attr('href') == "#editor") {
+        $("#editorOptions").fadeIn().css('display','inline-block');
         __editor.renderer.updateFull();
+      } else {
+        $("#editorOptions").fadeOut();
       }
       
       // show tab
@@ -119,6 +127,29 @@ function initialize(projectID, projectDomain) {
        
     });
 
+    $("#btnHistory").on("click", function () {
+      $('#modalHistory').modal('show');
+      
+      $.ajax({
+        url: __projectURL + '/history',
+        type: 'get',
+        dataType: 'json'
+      })
+      .done(function (data) {
+        
+        var html = "";
+        
+        for (var i = 0; i < data.length; i++) {
+          html += "<li>" + data[i].author + ", " + data[i].date + ", " + data[i].message + "</li>";
+        }
+        
+        $('#historyList').html(html);
+      })
+      .fail(function(data, param1, param2) {
+        console.log(data);
+      });
+    });
+    
     $("#btnCommit").on("click", function () {
         //$('#commitProgressbar').addClass('active');
         
@@ -749,7 +780,7 @@ function loadEditor(filename, content, displayRendered) {
       'js':   'ace/mode/javascript',
       'json': 'ace/mode/json',
       'html': 'ace/mode/html',
-      'md':   'ace/mode/plain_text'
+      'md':   'ace/mode/markdown'
   };
   
   switch (ext) {

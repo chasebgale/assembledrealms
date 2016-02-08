@@ -44,6 +44,21 @@ Actors.prototype.create = function (actors, renderer) {
   }
 };
 
+Actors.prototype.destroy = function (actor, renderer) {
+  
+  var player = this.players[actor.id];
+  player.sprite.children[player.direction].visible = false;
+  player.sprite.children[player.direction + 4].visible = false;
+  player.sprite.children[8].loop = false;
+  player.sprite.children[8].visible = true;
+  player.sprite.children[8].play();
+  player.health_bar.clear();
+  
+  // this.layer.removeChild(player.sprite);
+  delete this.players[player.id];
+  
+};
+
 Actors.prototype.update = function (actors) {
   // TODO: Check what properties were sent by the server for each npc/actor and only update those
   var keys = Object.keys(actors.players);
@@ -152,7 +167,23 @@ var Player = function (data) {
 
     self.sprite.addChild(clip);
   }
-        
+  
+  // Dead animation
+  textures = [];
+  for (j = 0; j < 6; j++) {
+    textures[j] = PIXI.utils.TextureCache["skeleton_hurt_0_" + j + ".png"];
+  }
+  
+  clip = new PIXI.extras.MovieClip(textures);
+  clip.position.x = -32;
+  clip.position.y = -32;
+  clip.animationSpeed = 0.2;
+  clip.loop = false;
+  clip.visible = false;
+
+  self.sprite.addChild(clip);
+  // Dead End (heh heh heh)
+    
   self.sprite.children[self.direction].visible = true;
   self.sprite.children[self.direction].gotoAndStop(0);
   

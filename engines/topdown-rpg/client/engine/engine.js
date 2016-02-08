@@ -56,6 +56,11 @@ Engine.prototype.initialize = function (container, host, port, cwd) {
   self.socket.on('create', function (actors) {
     self.actors.create(actors, self.renderer);
   });
+  
+  // The destroy message tells us another player or npc has left the map we are on
+  self.socket.on('destroy', function (actor) {
+    self.actors.destroy(actor, self.renderer);
+  });
     
   self.socket.on('debug', function (data) {
     console.log(data);

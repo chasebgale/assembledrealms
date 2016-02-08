@@ -117,6 +117,10 @@ function Map (target, toolbar, map) {
         
         if (resource.name == "terrain_") {
           document.getElementById('modalTilesBody').appendChild(resource.texture.baseTexture.source);
+          // Wonky-feeling attempt to set default add tile to a mushroom, lol
+          self.tile_index = 1018;
+          $("#brushIndicator").css('background-image', 'url(' + resource.url + ')');
+          $("#brushIndicator").css('background-position', '-832px -992px');
         } 
     });
       
@@ -481,34 +485,36 @@ Map.prototype.appendDOM = function () {
   var html = [
     // TOOLBAR:
     '<button type="button" class="btn btn-default navbar-btn btn-map-tool active" id="moveButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Navigate the map">',
-    '<div style="background-image: url(\'/build/img/cursors.png\'); width: 20px; height: 22px; background-position:-39px -8px"></div>',
+      '<div style="background-image: url(\'/build/img/cursors.png\'); width: 20px; height: 22px; background-position:-39px -8px"></div>',
     '</button>',
     '<button type="button" class="btn btn-default navbar-btn btn-map-tool" id="inspectButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Reveal details of selected tile">',
-    '<div style="background-image: url(\'/build/img/cursors.png\'); width: 20px; height: 22px; background-position:-179px -6px"></div>',
+      '<div style="background-image: url(\'/build/img/cursors.png\'); width: 20px; height: 22px; background-position:-179px -6px"></div>',
     '</button>',
     '<button type="button" class="btn btn-default navbar-btn btn-map-tool" id="eraseButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Erase tiles from the map">', 
-    '<div style="background-image: url(\'/build/img/cursors.png\'); width: 20px; height: 22px; background-position:-216px -6px"></div>',
+      '<div style="background-image: url(\'/build/img/cursors.png\'); width: 20px; height: 22px; background-position:-216px -6px"></div>',
     '</button>',
     '<button type="button" class="btn btn-default navbar-btn btn-map-tool" id="addButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Add tiles">',
     '<div style="background-image: url(\'/build/img/cursors.png\'); width: 20px; height: 22px; background-position:-6px -6px"></div>',
     '</button>',
-        '<div class="spacer"></div>', 
-        '<button type="button" id="tileModalButton" class="btn btn-default navbar-btn btn-map-tool" data-toggle="modal" data-target="#modalTiles">',
-            '<div id="brushIndicator" style="width: 32px; height: 32px; vertical-align: middle; display: inline-block;"></div>&nbsp',
-      '<span class="caret"></span>',
-        '</button>',
-    '<div class="dropdown btn-map-tool" style="display: inline;">',
-            '<button class="btn btn-default navbar-btn dropdown-toggle" type="button" id="layersMenu" data-toggle="dropdown" aria-expanded="true">',
-        'Editing Layer: 1 ',
+    '<div class="spacer"></div>', 
+    '<div id="addTools" style="display: none;">',
+      '<button type="button" id="tileModalButton" class="btn btn-default navbar-btn btn-map-tool" data-toggle="modal" data-target="#modalTiles">',
+        '<div id="brushIndicator" style="width: 32px; height: 32px; vertical-align: middle; display: inline-block;"></div>&nbsp',
         '<span class="caret"></span>',
-            '</button>',
-      '<ul class="dropdown-menu" role="menu" aria-labelledby="layersMenu" id="layersMenuList">',
-        '<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Layer 1, Walkable</a></li>',
-        '<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Layer 2, Walkable</a></li>',
-        '<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Layer 3, Non-Walkable</a></li>',
-        '<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Layer 4, Above Ground</a></li>',
-      '</ul>',
-        '</div>'
+      '</button>',
+      '<div class="dropdown btn-map-tool" style="display: inline;">',
+        '<button class="btn btn-default navbar-btn dropdown-toggle" type="button" id="layersMenu" data-toggle="dropdown" aria-expanded="true">',
+          'Editing Layer: 1 ',
+          '<span class="caret"></span>',
+        '</button>',
+        '<ul class="dropdown-menu" role="menu" aria-labelledby="layersMenu" id="layersMenuList">',
+          '<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Layer 1, Walkable</a></li>',
+          '<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Layer 2, Walkable</a></li>',
+          '<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Layer 3, Non-Walkable</a></li>',
+          '<li role="presentation"><a role="menuitem" tabindex="-1" href="#">Layer 4, Above Ground</a></li>',
+        '</ul>',
+      '</div>',
+    '</div>'
   ].join("\n");
         
   // ADD MARKUP TO DOM:
@@ -557,7 +563,7 @@ Map.prototype.appendDOM = function () {
     self.tile_index = (rows_to_add * row_tile_width) + Math.floor(point.x / 32);
     
     if (self.mode === self.modes.ADD_TILE) {
-        self.mouse_sprite.texture = PIXI.Texture.fromFrame('terrain_' + self.tile_index);
+      self.mouse_sprite.texture = PIXI.Texture.fromFrame('terrain_' + self.tile_index);
     }
     
     var background_x = (point.x - (point.x % 32)) * -1;
@@ -596,20 +602,29 @@ Map.prototype.appendDOM = function () {
   $("#moveButton").on("click", function () {
     self.setMode(self.modes.MOVE);
     $(this).addClass('active').siblings().removeClass('active');
+    self.resetToolbar();
   });
     
   $("#inspectButton").on("click", function () {
     self.setMode(self.modes.INSPECT);
     $(this).addClass('active').siblings().removeClass('active');
+    self.resetToolbar();
   });
         
   $("#eraseButton").on("click", function () {
     self.setMode(self.modes.DELETE_TILE);
     $(this).addClass('active').siblings().removeClass('active');
+    self.resetToolbar();
   });
   
   $("#addButton").on("click", function () {
     self.setMode(self.modes.ADD_TILE);
     $(this).addClass('active').siblings().removeClass('active');
+    self.resetToolbar();
+    $("#addTools").fadeIn().css('display','inline-block');
   });
+};
+
+Map.prototype.resetToolbar = function () {
+  $("#addTools").fadeOut();
 };
