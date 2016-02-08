@@ -190,6 +190,32 @@ function loadEngine() {
   engine.debugging = function (data) {
   };
   
+  BigScreen.onchange = function(element) {
+    
+    if (element) {      
+      var screenWidth = screen.width; 
+      var screenHeight = screen.height; 
+      var scaleToFitX = screenWidth / CANVAS_WIDTH; 
+      var scaleToFitY = screenHeight / CANVAS_HEIGHT; 
+       
+      var currentScreenRatio = screenWidth / screenHeight; 
+      var optimalRatio = Math.min(scaleToFitX, scaleToFitY); 
+       
+      if (currentScreenRatio >= 1.77 && currentScreenRatio <= 1.79) { 
+          element.style.width = screenWidth + "px"; 
+          element.style.height = screenHeight + "px"; 
+      } 
+      else { 
+          element.style.width = CANVAS_WIDTH * optimalRatio + "px"; 
+          element.style.height = CANVAS_HEIGHT * optimalRatio + "px"; 
+      }
+    } else {
+      element = $('#realm').children()[0];
+      element.style.width = CANVAS_WIDTH + "px";
+      element.style.height = CANVAS_HEIGHT + "px";
+    }
+  }
+  
   engine.initialize(document.getElementById('realm'),
                     HOST,
                     PORT,

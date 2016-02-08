@@ -77,12 +77,18 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
     </a>
   </div>
   <div id="realm-container" style="padding-top: 20px; display: none;">
-    <div style="margin: 20px auto; width: 896px; padding: 0; background-color: black;">
+    <div style="margin: 20px auto; width: 896px; padding: 0;">
+      <div id="commandBar" style="background: none;" class="clear-fix">
+        <div id="commandBarButtons" class="pull-right">
+          <button id="btn-fullscreen" class="btn btn-default btn-xs">
+            <i class="fa fa-expand fa-fw"></i> Fullscreen
+          </button>
+        </div>
+      </div>
       <div id="realm" style="margin: 0; width: 896px; height: 504px; padding: 0; display: none;"></div>
       <div id="queue" style="margin: 0; width: 896px; height: 504px; padding: 0;"></div>
     </div>
   </div>
-</div>
 </div>
 
 <script src="/js/pixi.min.js"></script>
@@ -94,6 +100,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php");
 ?>
 
 <script>
+
   $(function() {
     
     $.ajaxSetup({
@@ -101,6 +108,17 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php");
         xhrFields: {
             withCredentials: true
         }
+    });
+    
+    $("#btn-fullscreen").click( function() {
+      if (BigScreen.enabled) {
+        var realm = document.getElementById('realm');
+        BigScreen.request($('#realm').children()[0]);
+        // You could also use .toggle(element, onEnter, onExit, onError)
+      }
+      else {
+        // fallback for browsers that don't support full screen
+      }
     });
     
     $("#play-now-link").click( function() {
