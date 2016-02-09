@@ -125,6 +125,14 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php");
       }
     });
     
+    $("#btn-demo-play").click( function() {
+      window.location.href = '/account/register/0';
+    });
+    
+    $("#btn-demo-build").click( function() {
+      window.location.href = '/build';
+    });
+    
     $("#play-now-link").click( function() {
       
       $(this).attr('disabled', true);

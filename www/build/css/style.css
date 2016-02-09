@@ -73,6 +73,22 @@ div#mapContainer canvas {
     padding-right: 5px !important;
 }
 
+.hover-identifier-border-top {
+  background: url(/build/img/border-anim-h.gif) repeat-x left top;
+}
+
+.hover-identifier-border-left {
+  background: url(/build/img/border-anim-v-reversed.gif) repeat-y left top;
+}
+
+.hover-identifier-border-bottom {
+  background: url(/build/img/border-anim-h-reversed.gif) repeat-x left bottom;
+}
+
+.hover-identifier-border-right {
+  background: url(/build/img/border-anim-v.gif) repeat-y right top;
+}
+
 /*
 #mapTabs li.active a {
     background-color: #E0E0E0 !important;

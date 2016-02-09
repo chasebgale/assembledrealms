@@ -437,7 +437,7 @@ Map.prototype.draw = function (full) {
           
         index = layers[i];
         
-        if (index !== null) {
+        if ((index !== null) && (index !== undefined)) {
           sprite = new PIXI.Sprite(PIXI.Texture.fromFrame('terrain_' + index));
   
           sprite.position.x = ((col - self.coordinates.col) * self.TILE_WIDTH);
@@ -500,11 +500,11 @@ Map.prototype.appendDOM = function () {
     '</button>',
     '<div class="spacer"></div>', 
     '<div id="addTools" style="display: none;">',
-      '<button type="button" id="tileModalButton" class="btn btn-default navbar-btn btn-map-tool" data-toggle="modal" data-target="#modalTiles">',
+      '<button type="button" id="tileModalButton" class="btn btn-default navbar-btn btn-map-tool" data-consumers="addButton" data-toggle="modal" data-target="#modalTiles">',
         '<div id="brushIndicator" style="width: 32px; height: 32px; vertical-align: middle; display: inline-block;"></div>&nbsp',
         '<span class="caret"></span>',
       '</button>',
-      '<div class="dropdown btn-map-tool" style="display: inline;">',
+      '<div class="dropdown btn-map-tool" data-consumers="addButton eraseButton" style="display: inline;">',
         '<button class="btn btn-default navbar-btn dropdown-toggle" type="button" id="layersMenu" data-toggle="dropdown" aria-expanded="true">',
           'Editing Layer: 1 ',
           '<span class="caret"></span>',
@@ -527,20 +527,25 @@ Map.prototype.appendDOM = function () {
     '<div id="inspectorOutput" style="min-height: 200px;">',
     '</div>',
     // MODAL DIALOG:
-        '<div class="modal fade tiles-modal-lg" id="modalTiles" tabindex="-1" role="dialog" aria-hidden="true">',
-            '<div class="modal-dialog modal-lg">',
+    '<div class="modal fade tiles-modal-lg" id="modalTiles" tabindex="-1" role="dialog" aria-hidden="true">',
+      '<div class="modal-dialog modal-lg">',
         '<div class="modal-content">',
-                    '<div class="modal-header clearfix">',
-                        '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>',
-            '<h4 class="modal-title pull-left" style="width: 230px;">Select a tile from category: </h4>',
-            '<select id="categorySelection" class="form-control pull-left" style="display: inline-block; width: 125px; margin-top: -4px;">',
-              '<option data-id="terrain">Terrain</option>',
-              '<option data-id="objects">Objects</option>', 
-            '</select>',
-          '</div>',
-          '<div id="modalTilesBody" class="modal-body" style="overflow-x: scroll;">',
-            // TILE HOVER IDENTIFIER:
-            '<div id="tilesHoverIdentifier" style="width: 32px; height: 32px; outline: 2px solid magenta; position: relative; z-index: 9999; display: none; pointer-events: none;"></div>',
+            '<div class="modal-header clearfix">',
+              '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>',
+              '<h4 class="modal-title pull-left" style="width: 230px;">Select a tile from category: </h4>',
+              '<select id="categorySelection" class="form-control pull-left" style="display: inline-block; width: 125px; margin-top: -4px;">',
+                '<option data-id="terrain">Terrain</option>',
+                '<option data-id="objects">Objects</option>', 
+              '</select>',
+            '</div>',
+            '<div id="modalTilesBody" class="modal-body" style="overflow-x: scroll;">',
+              // TILE HOVER IDENTIFIER:
+              '<div id="tilesHoverIdentifier" style="width: 32px; height: 32px; position: relative; z-index: 9999; display: none; pointer-events: none;">',
+                '<div style="width: 32px; height: 32px; position: absolute; pointer-events: none; left: 0; top: 0;" class="hover-identifier-border-top"></div>',
+                '<div style="width: 32px; height: 32px; position: absolute; pointer-events: none; left: 0; top: 0;" class="hover-identifier-border-left"></div>',
+                '<div style="width: 32px; height: 32px; position: absolute; pointer-events: none; left: 0; top: 0;" class="hover-identifier-border-bottom"></div>',
+                '<div style="width: 32px; height: 32px; position: absolute; pointer-events: none; left: 0; top: 0;" class="hover-identifier-border-right"></div>',
+              '</div>',
             '</div>',
           '</div>',
         '</div>',
@@ -604,29 +609,38 @@ Map.prototype.appendDOM = function () {
   $("#moveButton").on("click", function () {
     self.setMode(self.modes.MOVE);
     $(this).addClass('active').siblings().removeClass('active');
-    self.resetToolbar();
+    self.resetToolbar("moveButton");
   });
     
   $("#inspectButton").on("click", function () {
     self.setMode(self.modes.INSPECT);
     $(this).addClass('active').siblings().removeClass('active');
-    self.resetToolbar();
+    self.resetToolbar("inspectButton");
   });
         
   $("#eraseButton").on("click", function () {
     self.setMode(self.modes.DELETE_TILE);
     $(this).addClass('active').siblings().removeClass('active');
-    self.resetToolbar();
+    self.resetToolbar("eraseButton");
   });
   
   $("#addButton").on("click", function () {
     self.setMode(self.modes.ADD_TILE);
     $(this).addClass('active').siblings().removeClass('active');
-    self.resetToolbar();
-    $("#addTools").fadeIn().css('display','inline-block');
+    self.resetToolbar("addButton");
   });
 };
 
-Map.prototype.resetToolbar = function () {
-  $("#addTools").fadeOut();
+Map.prototype.resetToolbar = function (selectedTool) {
+  $("#addTools").fadeOut(function () {
+    $("#addTools .btn-map-tool").each( function () {
+      if ($(this).attr('data-consumers').indexOf(selectedTool) > -1) {
+        $(this).show();
+      } else {
+        $(this).hide();
+      }
+    });
+    
+    $("#addTools").fadeIn().css('display', 'inline-block');
+  });
 };

@@ -56,6 +56,11 @@ https://github.com/chjj/marked
 stats - a javascript performance monitor  
 https://github.com/mrdoob/stats.js  
 
+Code Chunks / Technique
+--------
+Selected-tile indicator on map-editor tile-chooser
+https://github.com/odyniec/imgareaselect/
+
 JQuery  
 https://jquery.com/  
 
