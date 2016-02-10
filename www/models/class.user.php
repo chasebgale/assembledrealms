@@ -308,7 +308,7 @@ class loggedInUser {
 			// Paid tier
       // gatekeeper
 			$auth_token		= "2f15adf29c930d8281b0fb076b0a14062ef93d4d142f6f19f4cdbed71fff3394";
-			$target_url   = "http://gatekeeper.assembledrealms.com/launch/" . $realm_id;
+			$target_url   = "http://gatekeeper.assembledrealms.com/launch/play/private/" . $realm_id;
 
       curl_setopt_array($curl, array(
         CURLOPT_HTTPHEADER 		=> array('Authorization: ' . $auth_token),

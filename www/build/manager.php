@@ -365,7 +365,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 			</div>
 			<div class="col-md-6">
 				<?php 
-					if ($realm["status"] == 0) {
+					if ($realm["status"] < 1) {
 						echo '<button id="onlineOfflineBtn" class="btn btn-default" data-toggle="modal" data-target="#modalTakeRealmOnline">Take Realm Online</button>';
 					} else {
 						echo '<button id="onlineOfflineBtn" class="btn btn-default" data-toggle="modal" data-target="#modalTakeRealmOffline">Take Realm Offline</button>';

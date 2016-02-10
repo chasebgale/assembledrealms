@@ -71,124 +71,80 @@ app.post('/launch/:id', function (req, res, next) {
 
 	var auth = req.get('Authorization');
 
-    if (auth !== self_token) {
-        return res.status(401).send("Please don't try to break things :/");
-    }
+  if (auth !== self_token) {
+    return res.status(401).send("Please don't try to break things :/");
+  }
 
 	var realmID     = req.params.id;
 	var realmApp    = '/var/www/realms/' + realmID + '/server/app.js';
-    var realmErr    = '/var/www/logs/' + realmID + '-err.log';
-    var realmOut    = '/var/www/logs/' + realmID + '-out.log';
-    var found_proc  = [];
-    var close_proc  = [];
+  var realmErr    = '/var/www/logs/' + realmID + '-err.log';
+  var realmOut    = '/var/www/logs/' + realmID + '-out.log';
+  var found_proc  = [];
+  var close_proc  = [];
     
-    var destination 	= req.body.destination; // 01, 02, XX, etc... inserted here: play-XX.assembledrealms.com
-    var source  		= req.body.source;	    // 01, 02, XX, etc... inserted here: source-XX.assembledrealms.com
-    
-    if ((destination === undefined) || (source === undefined)) {
-        console.log("/launch called with missing body...");
-        return res.status(500).send("Please don't tinker...");
-    }
-    
-    var pm2_launch = function (callback) {
-        // Get all processes running
-        pm2.list(function(err, process_list) {
-            
-            // Search for running instance of requested realm
-            process_list.forEach(function(proc) {
-                console.log('checking: ' + proc.name);
-                if (proc.name == realmID) {
-                    found_proc.push(proc);
-                    return;
-                }
-                
-                db.get(realmID + "-clients",  function (error, reply) {
+  // Get all processes running
+  pm2.list(function(err, process_list) {
+    // Search for running instance of requested realm
+    process_list.forEach(function(proc) {
+      console.log('checking: ' + proc.name);
+      if (proc.name == realmID) {
+        found_proc.push(proc);
+        return;
+      }
         
-                    if (error) {
-                        return;
-                    }
-                    
-                    // If the server is empty, shut it down:
-                    // TODO: Maybe check the last activity time and only shudown proc if it's been idle for
-                    // over 5-10 minutes or something...
-                    if (reply == 0) {
-                        close_proc.push(proc);
-                    }
-                    
-                });
-                
-            });
-            
-            close_proc.forEach(function(proc) {
-                pm2.stop(proc, function(err, proc) {
-                    if (err) {
-                        console.log("Attempted to stop " + proc + " but errored: " + err.stack);
-                    }                   
-                });
-            });
-            
-            fs.truncate(realmErr, 0, function(){
-                fs.truncate(realmOut, 0, function(){
-                    if (found_proc.length === 0) {
-                        // No existing realm server running, spool up new one:
-                        // var options = { name: realmID, scriptArgs: ['debug'], error_file: realmErr, out_file: realmOut};
-                        var options = { name: realmID, error_file: realmErr, out_file: realmOut};
-                        
-                        console.log("Starting app with the following options: " + JSON.stringify(options));
-                        
-                        pm2.start(realmApp, options, function(err, proc) {
-                           
-                            if (err) {
-                                callback(err);
-                            }
+      db.get(proc.name + "-clients",  function (error, reply) {
 
-                            callback();
-                        });
-                    } else {
-                        // Existing realm server found, restart it
-                        pm2.restart(realmApp, function(err, proc) {
-                            
-                            if (err) {
-                                callback(err);
-                            }
-
-                            callback();
-                        });
-                    }
-                });
-            });
-            
-        });
-    };
-                
-				
-	request.post('http://source-' + source + '.assembledrealms.com/api/project/' + realmID + '/publish',
-				{ 
-                    form: { address: 'play-' + destination + '.assembledrealms.com', shared: true, minify: true},
-                    headers: {
-                        'Authorization': 'fb25e93db6100b687614730f8f317653bb53374015fc94144bd82c69dc4e6ea0'
-                    }
-                },
-				function (error, response, body) {
-			
-		if (error) {
-			return res.status(500).send(error.stack);
-		}
-		
-		if (response.statusCode !== 200) {
-			return res.status(500).send(body);
-		}
-		
-		console.log("Got valid response, calling pm2_launch");
-		
-		pm2_launch(function (err) {
-			if (err) {
-				return res.status(500).send(err.stack);
-			}
-			
-			return res.send('OK');
-		});
-	});
+        if (error) {
+          return;
+        }
+        
+        // If the server is empty, shut it down:
+        // TODO: Maybe check the last activity time and only shudown proc if it's been idle for
+        // over 5-10 minutes or something...
+        if (reply == 0) {
+          close_proc.push(proc);
+        }
+          
+      });
+        
+    });
+    
+    close_proc.forEach(function(proc) {
+      pm2.stop(proc, function(err, proc) {
+        if (err) {
+          console.log("Attempted to stop " + proc + " but errored: " + err.stack);
+        }                   
+      });
+    });
+    
+    fs.truncate(realmErr, 0, function(){
+      fs.truncate(realmOut, 0, function(){
+        if (found_proc.length === 0) {
+          // No existing realm server running, spool up new one:
+          // var options = { name: realmID, scriptArgs: ['debug'], error_file: realmErr, out_file: realmOut};
+          var options = { name: realmID, error_file: realmErr, out_file: realmOut};
+          
+          console.log("Starting app with the following options: " + JSON.stringify(options));
+          
+          pm2.start(realmApp, options, function(err, proc) {
+            if (err) {
+              return res.status(500).send(err.message);
+            }
+            return res.send('OK');
+          });
+        } else {
+          // Existing realm server found, restart it
+          pm2.restart(realmApp, function(err, proc) {
+            if (err) {
+              return res.status(500).send(err.message);
+            }
+            return res.send('OK');
+          });
+        }
+      });
+    });
+      
+  });
 
 });
 
