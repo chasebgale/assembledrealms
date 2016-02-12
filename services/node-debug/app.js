@@ -34,6 +34,91 @@ var REALM_ACTIVITY     = "realm_activity";        // Last timestamp a user joine
 // TODO: Don't flush the DB on restart in production...
 // db.flushdb();
 
+// Catch redis errors
+db.on("error", function onRedisError(err) {
+  console.error(err);
+});
+
+// Catch redis-listener messages
+dbListener.on('message', function (channel, message) {
+  // Test commands:
+  //    publish realm_notifications '{"type": "user_disconnected", "user_id": -1, "realm_id": -1}'
+  
+  if (channel === 'realm_notifications') {
+    var action = JSON.parse(message);
+    
+    if (action.type === 'user_disconnected') {
+      console.log('USER %s DISCONNECTED FROM %s', action.user_id, action.realm_id); 
+      db.zrem([ACTIVE_SESSIONS, action.user_id], function redisAddSession(error, remSessionReply) {
+        if (error) {
+          console.log('Error attempting to remove from ACTIVE_SESSIONS, check error log...');
+          console.error(error);
+        }
+        
+        // Alert queue if not empty
+        db.lpop(QUEUE, function redisGetFirstInQueue(error, user) {
+          if (user !== null) {
+            db.multi()
+              .zscore([QUEUE_LOOKUP, user])             // Lookup realmID the queued user is waiting for
+              .zrem([QUEUE_LOOKUP, user])               // Remove the queue lookup entry
+              .zrangebyscore([SESSION_MAP, user, user]) // Grab the user's php sesh
+              .lrange([QUEUE, 0, -1])                   // Get a list representing the remaining queue
+              .exec(function (error, replies) {
+                if (error) {
+                  console.error(error);
+                }
+                
+                console.log("QUEUE was not empty, first user [%s] has sesh [%s] and was waiting for realm [%s]", user, replies[2], replies[0]);
+                
+                // Alert user that was first in queue that they are cleared for takeoff
+                io.to(replies[2]).emit('ready');
+                
+                // Update the rest of the queue to what has happened
+                io.emit('info', {
+                  list: replies[3]
+                });
+              });
+            /*
+            // The queue wasn't empty, alert first user in queue to join via socket
+            // io.to(phpseshhhhh).emit('', '');
+            db.lrange([QUEUE, 0, -1], function (error, list) {
+              if (error) {
+                console.error(error);
+              }
+              io.emit('info', {
+                list: list
+              });
+            });
+            */
+          }
+        });
+      });
+    }
+    
+    if (action.type === 'user_connected') {
+      db.zadd([ACTIVE_SESSIONS, action.realm_id, action.user_id], function redisAddSession(error, addSessionReply) {
+        console.log('USER %s CONNECTED TO %s', action.user_id, action.realm_id);
+      });
+    }
+    
+    var now = Date.now();
+    
+    // Update user's/realm's last activity time
+    db.multi()
+      .zadd([REALM_ACTIVITY, now, action.realm_id])
+      .zadd([SESSION_LIST, now, action.session_id])
+      .exec(function (error, replies) {
+        if (error) {
+          console.error(error);
+        }
+      });
+  }
+});
+
+// EJS for templating
+app.set('view engine', 'ejs');
+
+// crossdomain middleware
 app.use(function(req, res, next) {
   res.header('Access-Control-Allow-Origin', 'http://www.assembledrealms.com');
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
@@ -45,25 +130,30 @@ app.use(function(req, res, next) {
   next();
 });
 
-app.use(bodyParser.json());       // to support JSON-encoded bodies
-app.use(bodyParser.urlencoded()); // to support URL-encoded bodies
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded());
 app.use(cookieParser('Assembled Realms is a land without secrets...'));
 
-// Catch redis errors
-db.on("error", function onRedisError(err) {
-  console.log("Error " + err);
-});
+// Serve up the realm files
+app.use('/realms', express.static(__dirname + '/realms'));
 
-app.set('view engine', 'ejs'); // set up EJS for templating
 
-app.post('/auth/:id', function httpPostAuth(req, res, next) {
+/////////////////////////////////
+// SERVER-TO-SERVER ROUTES
+
+app.use('/api', function(req, res, next) {
   var auth = req.get('Authorization');
 
   if (auth !== SECURITY_TOKEN) {
     console.log('/api/auth - Bad auth token - ' + SECURITY_TOKEN);
     return res.status(401).send("Please don't try to break things :/");
+  } else {
+    next();
   }
-  
+});
+
+app.post('/api/auth/:id', function httpPostAuth(req, res, next) {
+
   var php_sess    = req.body.php_sess;
   var user_id     = req.body.user_id;
   var owner       = req.body.owner;
@@ -96,13 +186,118 @@ app.post('/auth/:id', function httpPostAuth(req, res, next) {
     });
 });
 
-app.get('/stats', function httpGetStats(req, res, next) {
-  var auth = req.get('Authorization');
+app.get('/api/launch/:id', function httpGetLaunch(req, res, next) {
+  
+  var now            = Date.now();
+	var realmID        = req.params.id;
+  var realmProcess   = "realm-" + realmID;
+	var realmApp       = '/var/www/realms/realm-server.js';
+  var realmErr       = '/var/www/logs/' + realmID + '-err.log';
+  var realmOut       = '/var/www/logs/' + realmID + '-out.log';
+  var running        = false;
+  
+  var launchRealm = function (restart, launchRealmCallback) {
+    fs.unlink(realmErr, function onRemErrorLog(error){
+      fs.unlink(realmOut, function onRemOutLog(error){
+        
+        if (error) {
+          console.log(error);
+        }
+        
+        db.zadd([REALM_ACTIVITY, now, realmID], function (error, reply) {
+          
+          if (error) {
+            launchRealmCallback(error);
+          }
+          
+          if (restart) {
+            pm2.restart(realmApp, function onPmRestart(err, proc) {
+              
+              if (err) {
+                launchRealmCallback(err);
+              }
 
-  if (auth !== SECURITY_TOKEN) {
-    console.log('/api/auth - Bad auth token - ' + SECURITY_TOKEN);
-    return res.status(401).send("Please don't try to break things :/");
-  }
+              launchRealmCallback();
+            });        
+          } else {
+            var options = {
+              name:       realmProcess,
+              error:      realmErr,
+              output:     realmOut,
+              scriptArgs: [realmID, 'true'],
+              force:      true,
+              merge_logs: true
+            };
+            
+            console.log("Starting realm with the following options: " + JSON.stringify(options));
+
+            pm2.start(realmApp, options, function onPmStart(err, proc) {
+               
+              if (err) {
+                console.log("Error starting realm instance: ");
+                console.log(JSON.stringify(err));
+                launchRealmCallback(err);
+              }
+
+              launchRealmCallback();
+            });
+          }
+          
+        });
+      });
+    });
+  };
+    
+  // Get all processes running
+  pm2.list(function(err, processes) {
+    // Search for running instance of requested realm
+    processes.forEach(function(proc) {
+      if (proc.name == realmProcess) {
+        running = true;
+        
+        /*
+        pm2.describe(proc.name, function (err, list){
+          console.log(JSON.stringify(list));
+        });
+        */
+        
+        return;
+      }
+    });
+       
+    if (!running) {
+      // For now, check # of running realms, perhaps in the future when more data is available
+      // in terms of average memory consumption, it'll check for free mem
+      if (processes.length > MAX_RUNNING_REALMS) {
+        
+        db.rpush([REALM_QUEUE, realmID], function (error, reply) {
+          return res.send('QUEUED');
+        });
+        
+      } else {
+        // Realm not running and we have the space to spool a new one:
+        launchRealm(false, function (error) {
+          if (error) {
+            console.error(err);
+            return res.status(500).send(err.stack);
+          }
+          return res.send('OK');
+        });
+      }
+    } else {
+      // Realm is already running, simply restart it
+      launchRealm(true, function (error) {
+        if (error) {
+          console.error(err);
+          return res.status(500).send(err.stack);
+        }
+        return res.send('OK');
+      });
+    }
+  });
+});
+
+app.get('/api/stats', function httpGetStats(req, res, next) {
   
   async.series([
     function(callback) {
@@ -196,11 +391,10 @@ app.get('/stats', function httpGetStats(req, res, next) {
 
 });
 
-// Serve up the realm files, when requested:
-app.use('/realms', express.static(__dirname + '/realms'));
+/////////////////////////////////
+// USER ROUTES
 
-// PHP-session/auth wall
-app.use(function(req, res, next) {
+app.use('/realms', function(req, res, next) {
 
   var phpsession  = req.cookies["PHPSESSID"];
   
@@ -368,81 +562,8 @@ app.get('/realms/:id', function httpGetRealm(req, res, next) {
 	
 });
 
-// Test commands:
-//    publish realm_notifications '{"type": "user_disconnected", "user_id": -1, "realm_id": -1}'
-dbListener.on('message', function (channel, message) {
-  if (channel === 'realm_notifications') {
-    var action = JSON.parse(message);
-    
-    if (action.type === 'user_disconnected') {
-      console.log('USER %s DISCONNECTED FROM %s', action.user_id, action.realm_id); 
-      db.zrem([ACTIVE_SESSIONS, action.user_id], function redisAddSession(error, remSessionReply) {
-        if (error) {
-          console.log('Error attempting to remove from ACTIVE_SESSIONS, check error log...');
-          console.error(error);
-        }
-        
-        // Alert queue if not empty
-        db.lpop(QUEUE, function redisGetFirstInQueue(error, user) {
-          if (user !== null) {
-            db.multi()
-              .zscore([QUEUE_LOOKUP, user])             // Lookup realmID the queued user is waiting for
-              .zrem([QUEUE_LOOKUP, user])               // Remove the queue lookup entry
-              .zrangebyscore([SESSION_MAP, user, user]) // Grab the user's php sesh
-              .lrange([QUEUE, 0, -1])                   // Get a list representing the remaining queue
-              .exec(function (error, replies) {
-                if (error) {
-                  console.error(error);
-                }
-                
-                console.log("QUEUE was not empty, first user [%s] has sesh [%s] and was waiting for realm [%s]", user, replies[2], replies[0]);
-                
-                // Alert user that was first in queue that they are cleared for takeoff
-                io.to(replies[2]).emit('ready');
-                
-                // Update the rest of the queue to what has happened
-                io.emit('info', {
-                  list: replies[3]
-                });
-              });
-            /*
-            // The queue wasn't empty, alert first user in queue to join via socket
-            // io.to(phpseshhhhh).emit('', '');
-            db.lrange([QUEUE, 0, -1], function (error, list) {
-              if (error) {
-                console.error(error);
-              }
-              io.emit('info', {
-                list: list
-              });
-            });
-            */
-          }
-        });
-      });
-    }
-    
-    if (action.type === 'user_connected') {
-      db.zadd([ACTIVE_SESSIONS, action.realm_id, action.user_id], function redisAddSession(error, addSessionReply) {
-        console.log('USER %s CONNECTED TO %s', action.user_id, action.realm_id);
-      });
-    }
-    
-    var now = Date.now();
-    
-    // Update user's/realm's last activity time
-    db.multi()
-      .zadd([REALM_ACTIVITY, now, action.realm_id])
-      .zadd([SESSION_LIST, now, action.session_id])
-      .exec(function (error, replies) {
-        if (error) {
-          console.error(error);
-        }
-      });
-  }
-});
-
-// Sesh wall for sockets
+/////////////////////////////////
+// USER SOCKET ROUTES
 io.use(function(socket, next) {
   
   console.log(socket.request.headers);
@@ -507,7 +628,7 @@ io.on('connection', function socketConnected(socket) {
     });
 });
 
-// ADMIN session/auth wall
+/* // ADMIN session/auth wall
 app.use(function(req, res, next) {
   console.log(req.url + " using called");
   
@@ -530,115 +651,7 @@ app.use(function(req, res, next) {
     }
   });
 });
-
-app.get('/launch/:id', function httpGetLaunch(req, res, next) {
-  
-  var now            = Date.now();
-	var realmID        = req.params.id;
-  var realmProcess   = "realm-" + realmID;
-	var realmApp       = '/var/www/realms/realm-server.js';
-  var realmErr       = '/var/www/logs/' + realmID + '-err.log';
-  var realmOut       = '/var/www/logs/' + realmID + '-out.log';
-  var running        = false;
-  
-  var launchRealm = function (restart, launchRealmCallback) {
-    fs.unlink(realmErr, function onRemErrorLog(error){
-      fs.unlink(realmOut, function onRemOutLog(error){
-        
-        if (error) {
-          console.log(error);
-        }
-        
-        db.zadd([REALM_ACTIVITY, now, realmID], function (error, reply) {
-          
-          if (error) {
-            launchRealmCallback(error);
-          }
-          
-          if (restart) {
-            pm2.restart(realmApp, function onPmRestart(err, proc) {
-              
-              if (err) {
-                launchRealmCallback(err);
-              }
-
-              launchRealmCallback();
-            });        
-          } else {
-            var options = {
-              name:       realmProcess,
-              error:      realmErr,
-              output:     realmOut,
-              scriptArgs: [realmID, 'true'],
-              force:      true,
-              merge_logs: true
-            };
-            
-            console.log("Starting realm with the following options: " + JSON.stringify(options));
-
-            pm2.start(realmApp, options, function onPmStart(err, proc) {
-               
-              if (err) {
-                launchRealmCallback(err);
-              }
-
-              launchRealmCallback();
-            });
-          }
-          
-        });
-      });
-    });
-  };
-    
-  // Get all processes running
-  pm2.list(function(err, processes) {
-    // Search for running instance of requested realm
-    processes.forEach(function(proc) {
-      if (proc.name == realmProcess) {
-        running = true;
-        
-        /*
-        pm2.describe(proc.name, function (err, list){
-          console.log(JSON.stringify(list));
-        });
-        */
-        
-        return;
-      }
-    });
-       
-    if (!running) {
-      // For now, check # of running realms, perhaps in the future when more data is available
-      // in terms of average memory consumption, it'll check for free mem
-      if (processes.length > MAX_RUNNING_REALMS) {
-        
-        db.rpush([REALM_QUEUE, realmID], function (error, reply) {
-          return res.send('QUEUED');
-        });
-        
-      } else {
-        // Realm not running and we have the space to spool a new one:
-        launchRealm(false, function (error) {
-          if (error) {
-            console.error(err);
-            return res.status(500).send(err.stack);
-          }
-          return res.send('OK');
-        });
-      }
-    } else {
-      // Realm is already running, simply restart it
-      launchRealm(true, function (error) {
-        if (error) {
-          console.error(err);
-          return res.status(500).send(err.stack);
-        }
-        return res.send('OK');
-      });
-    }
-  });
-});
+*/
 
 var tickTock = setInterval(function () {
   var now            = Date.now();

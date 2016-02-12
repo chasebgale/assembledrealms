@@ -29,7 +29,7 @@ if ($method == 'POST') {
     $tempSQL = "screenshots <> '[]'";
     if (isset($_POST['screenshots'])) {
       if ($_POST['screenshots'] == 'false') {
-        $tempSQL = "screenshots == '[]'";
+        $tempSQL = "screenshots = '[]'";
       }
     }
     array_push($where, $tempSQL);
@@ -78,6 +78,12 @@ if ($method == 'POST') {
     $SQL .= $sort . " LIMIT " . $start . ", " . $count;
     
     $stmt = $mysqli->prepare($SQL);
+    
+    if (!$stmt) {
+      echo $SQL;
+      die();
+    }
+    
     $result = $stmt->execute();
     $stmt->bind_result($id,
                        $user_id,

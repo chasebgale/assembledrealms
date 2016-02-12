@@ -11,6 +11,13 @@ var __cpu_span				= undefined;
 
 $(document).ready(function () {
    
+  $.ajaxSetup({
+    crossDomain: true,
+    xhrFields: {
+      withCredentials: true
+    }
+  });
+   
     $('.monitored').on('input', function (e) {
         var prop = $(this).attr('data-id');
         __currentState[prop] = $(this).val();
@@ -99,29 +106,42 @@ $(document).ready(function () {
       }
     })
     .done(function (data) {
-      button.attr('disabled', false);
-      button.html('Bring Online');
-        
-      if (data.message == "OK") {
-        $("#onlineOfflineBtn").attr('data-target', '#modalTakeRealmOffline');
-        $("#onlineOfflineBtn").text('Take Realm Offline');
-        if (server_type > 0) {
-          $("#realmStatus").html("<span class='label label-warning'><i class='fa fa-cog fa-spin'></i>  Booting</span>");
-        } else {
-          $("#realmStatus").html("<span class='label label-success'><i class='fa fa-power-off'></i> Online</span>");
+      
+      $.ajax({
+        url: 'http://gatekeeper.assembledrealms.com/launch/play/shared/' + __realmID,
+        type: 'post',
+        dataType: 'json',
+        data: {
         }
-        $("#modalTakeRealmOnline").modal('hide');
-      } else {
-        alert("FAILURE!");
-      }
-    })
-    .fail(function(data) {
+      })
+      .done(function (data) {
+      
+        button.attr('disabled', false);
+        button.html('Bring Online');
+        
+        if (data.message == "OK") {
+          $("#onlineOfflineBtn").attr('data-target', '#modalTakeRealmOffline');
+          $("#onlineOfflineBtn").text('Take Realm Offline');
+          /*
+          if (server_type > 0) {
+            $("#realmStatus").html("<span class='label label-warning'><i class='fa fa-cog fa-spin'></i>  Booting</span>");
+          } else {
+          */
+          $("#realmStatus").html("<span class='label label-success'><i class='fa fa-power-off'></i> Online</span>");
+          //}
+          $("#modalTakeRealmOnline").modal('hide');
+        }
+      
+      })
+      .fail(function(data) {
         console.log(data);
         $('#realmOfflineAlert').text('Network Error: ' + data.statusText);
         button.attr('disabled', false);
         button.html('Bring Online');
         // Update DOM to reflect we messed up:
         //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
+      });
+      
     });
   });
    

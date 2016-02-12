@@ -489,30 +489,30 @@ exports.publish = function(req, res, next) {
   
   archive.pipe(output);
   
-    if (minify) {
-        new compressor.minify({
-            type: 'uglifyjs',
-            fileIn: project + 'client/**/*.js',
-            fileOut: project + 'client/engine.min.js',
-            callback: function(err, min){
-                if (err) {
-                    console.log(err);
-                }
-                
-                archive.bulk([
-                    { expand: true, cwd: project, src: ['**', '!.git']}
-                ]);
-
-                archive.finalize();
-                
-            }
-        });
-    } else {
+  if (minify) {
+    new compressor.minify({
+      type: 'uglifyjs',
+      fileIn: project + 'client/**/*.js',
+      fileOut: project + 'client/engine.min.js',
+      callback: function(err, min){
+        if (err) {
+            console.log(err);
+        }
+        
         archive.bulk([
             { expand: true, cwd: project, src: ['**', '!.git']}
         ]);
 
         archive.finalize();
-    }
+        
+      }
+    });
+  } else {
+    archive.bulk([
+      { expand: true, cwd: project, src: ['**', '!.git']}
+    ]);
+
+    archive.finalize();
+  }
 
 }

@@ -1,14 +1,17 @@
-var express     = require('express');
-var bodyParser  = require('body-parser');
-var app         = express();
-var server      = require('http').Server(app);
-var request     = require('request');
-var async       = require('async');
-var moment      = require('moment');
-var pg          = require('pg');
+var express      = require('express');
+var bodyParser   = require('body-parser');
+var cookieParser = require('cookie-parser');
+var app          = express();
+var server       = require('http').Server(app);
+var request      = require('request');
+var async        = require('async');
+var moment       = require('moment');
+var pg           = require('pg');
+var redis 			 = require('redis');
+var db 	         = redis.createClient();
 
-//var redis 			= require('redis');
-//var db 	        = redis.createClient();
+// TODO: REMOVE THIS FOR PRODUCTION
+db.flushdb();
 
 // TODO: For now we'll just keep the list of servers to check on in memory; however, this should really be stored
 // in redis or the like for fault tolerance in case this service crashes for some reason... if not someone could
@@ -18,10 +21,11 @@ var realms          = {};
 
 var ocean_token     = "254c9a09018914f98dd83d0ab1670f307b036fe761dda0d7eaeee851a37eb1cd";
 var realms_token    = "b2856c87d4416db5e3d1eaef2fbef317846b06549f1b5f3cce1ea9d639839224";
-var self_token      = "2f15adf29c930d8281b0fb076b0a14062ef93d4d142f6f19f4cdbed71fff3394";
+var SECURITY_TOKEN  = "2f15adf29c930d8281b0fb076b0a14062ef93d4d142f6f19f4cdbed71fff3394";
 var debug_token     = "1e4651af36b170acdec7ede7268cbd63b490a57b1ccd4d4ddd8837c8eff2ddb9";
 var play_token      = "e61f933bcc07050385b8cc08f9deee61de228b2ba31b8523bdc78230d1a72eb2";
 var source_token    = "fb25e93db6100b687614730f8f317653bb53374015fc94144bd82c69dc4e6ea0";
+var HOME_TOKEN      = "b2856c87d4416db5e3d1eaef2fbef317846b06549f1b5f3cce1ea9d639839224";
 
 var connection      = 'postgres://web:ENBRyvqa91MTzotLBppU@localhost:5432/gatekeeper';
 
@@ -29,6 +33,8 @@ var SESSION_LIST    = "sessions";            // Sessions added via /auth allowin
 var SESSION_MAP     = "session_to_user_map"; // Sessions mapped to user_id via ZSCORE
 var USER_REALMS     = "user_realms";         // Realms owned by user_id
 var ACTIVE_SESSIONS = "sessions_active";     // Sessions actually connected via SOCKET
+var REALM_STATUS    = "realm_status";        // Realm status as it is being brought online
+
 
 var allowCrossDomain = function(req, res, next) {
     res.header('Access-Control-Allow-Origin', 'http://www.assembledrealms.com');
@@ -41,21 +47,10 @@ var allowCrossDomain = function(req, res, next) {
     next();
 }
 
-//  options is an object for easy serialization\deserialization from redis
-var launch_shared = function (options, retry) {
-  //  options = {
-  //    realm_id,
-  //    source_server
-  //  }
-  //  retry = boolean true or undefined, if true we are launching from
-  //  the redis queue and something broke or timed-out on the initial pass
-  
-  
-};
-
 app.use( allowCrossDomain );
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
 app.use( bodyParser.urlencoded() ); // to support URL-encoded bodies
+app.use(cookieParser('Assembled Realms is a land without secrets...'));
 
 app.set('view engine', 'ejs'); // set up EJS for templating
 
@@ -73,31 +68,48 @@ app.post('/auth', function httpPostAuth(req, res, next) {
   var now         = Date.now();
   var php_sess    = req.body.php_sess;
   var user_id     = req.body.user_id;
-  var realms      = req.body.realms;
-  //  realms = [ {id: xx, source: xx} ]
+  var realm       = req.body.realm;
+  //  realm = {id: xx, source: xx}
   
-  
-  if ((php_sess === undefined) || (user_id === undefined) || (realms === undefined)) {
+  if ((php_sess === undefined) || (user_id === undefined) || (realm === undefined)) {
     console.log('/auth - Missing params: ' + JSON.stringify(req.body));
     return res.status(500).send("Missing parameters, bruh.");
   }
   
-  console.log("/auth requested: session: %s, user: %s, realms: %s",
-    php_sess, user_id, realms);
+  console.log("/auth requested: session: %s, user: %s, realm: %s",
+    php_sess, user_id, JSON.stringify(realm));
+    
+  db.get([USER_REALMS + '-' + user_id], function redisGetExistingAuth(error, reply) {
+    if (error) {
+      console.error(error);
+      return res.status(500).send(error.message);
+    }
+        
+    if (reply) {
+      var realms = JSON.parse(reply);
+      realms.push(realm);
+    } else {
+      var realms = [
+        realm
+      ];
+    }
+    
+    db.multi()
+      .zadd([SESSION_LIST, now, php_sess])    // Set session key and activity time for it
+      .zadd([SESSION_MAP, user_id, php_sess]) // Map session key to user id
+      .set([USER_REALMS + '-' + user_id, JSON.stringify(realms)])  // Add the user realms
+      .exec(function (err, replies) {
+        if (err) {
+          console.error(err);
+          return res.status(500).send(err.message);
+        }
+        console.log("/auth success, db replies: %s", JSON.stringify(replies));
+        
+        return res.send('OK');
+      });
+    
+  });
   
-  db.multi()
-    .zadd([SESSION_LIST, now, php_sess])     	   // Set session key and activity time for it
-    .zadd([SESSION_MAP, user_id, php_sess])      // Map session key to user id
-    .zadd([USER_REALMS, JSON.stringify(realms), user_id])  // Add the user realms
-    .exec(function (err, replies) {
-      if (err) {
-        console.error(err);
-        return res.status(500).send(err.message);
-      }
-      console.log("/auth success, db replies: %s", JSON.stringify(replies));
-      
-      return res.send('OK');
-    });
 });
 
 app.get('/stats', function (req, res, next) {
@@ -217,7 +229,7 @@ app.post('/test', function (req, res, next) {
 // PHP-session/auth wall
 app.use(function(req, res, next) {
 
-  var phpsession  = req.cookies["PHPSESSID"];
+  var phpsession = req.cookies["PHPSESSID"];
   
   // Are we missing an assembledrealms.com sesh?
   if ((phpsession == undefined) || (phpsession == "")) {
@@ -235,6 +247,8 @@ app.use(function(req, res, next) {
 		}
         
     if (reply) {
+      
+      console.log("PHPSESH wall found user: " + reply);
       
       req.user_id = reply;
       var now     = Date.now();
@@ -257,23 +271,22 @@ app.post('/launch/play/shared/:id', function (req, res, next) {
   var time        = new Date().getTime();
   var realm_id    = req.params.id;
   // TODO: Pick least congested
-  var realm_host  = 'http://play-' + '01' + '.assembledrealms.com';
-  var authorized  = false;
+  var realm_host  = 'play-' + '01' + '.assembledrealms.com';
   var realm;
   
   // Does this user have permission to modify this realm?
-  db.zscore([USER_REALMS, req.user_id], function redisGetUserRealms(error, reply) {
+  db.get([USER_REALMS + '-' + req.user_id], function redisGetUserRealms(error, reply) {
     var realms = JSON.parse(reply);
+    console.log('USER REALMS: ' + reply);
     
     for (var i = 0; i < realms.length; i++) {
       if (realms[i].id == realm_id) {
-        authorized = true;
         realm = realms[i];
         break;
       }
     }
     
-    if (authorized) {
+    if (realm) {
       
       var options = {
         url: 'http://source-' + realm.source + '.assembledrealms.com/api/project/' + realm.id + '/publish',
@@ -290,12 +303,68 @@ app.post('/launch/play/shared/:id', function (req, res, next) {
         }
       };
       
+      console.log("Posting to source to initiate xfer, options: " + JSON.stringify(options));
+      
       request.post(options, function(err, response, body) {
-        console.log(new Date().toISOString() + " Got launch response from DO: " + response.statusCode + " for " + req.params.id);
+        
+        if (err) {
+          console.error(err);
+          return res.status(500).send(err.message);
+        }
         
         if ((response.statusCode > 199) && (response.statusCode < 300)) {
+          // SUCCESSFULLY PUBLISH FROM SOURCE SERVER TO SHARED SERVER
+          var options = {
+            url: 'http://' + realm_host + '/api/launch/' + realm.id,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': play_token,
+              'Accept': '*/*'
+            },
+            json: true
+          };
           
-          return res.json({message: 'OK'});
+          console.log("Posting to play-xx to initiate launch...");
+          
+          request.get(options, function(err, response, body) {
+            if ((response.statusCode > 199) && (response.statusCode < 300)) {
+              // SUCCESSFULLY LAUNCHED ON PLAY-XX
+              
+              // UPDATE REALMS TABLE ON assembledrealms.com
+              var options = {
+                url: 'http://www.assembledrealms.com/external/gatekeeper.php',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': HOME_TOKEN,
+                  'Accept': '*/*'
+                },
+                formData: {
+                  realm_id: realm.id
+                }
+              };
+              
+              request.post(options, function(err, response, body) {
+        
+                if (err) {
+                  console.error(err);
+                  return res.status(500).send(err.message);
+                }
+                
+                if ((response.statusCode > 199) && (response.statusCode < 300)) {
+                  return res.json({message: 'OK'});
+                }
+              });
+              
+            } else {
+              console.log('Failure http code from launch request...');
+              return res.json({error: 'Failure http code from launch request...'});
+            }
+            
+            if (err) {
+              console.error(err);
+              return res.json({error: err.message});
+            }
+          });
           
         } else {
           // Successful request but failure on DO API side
@@ -309,37 +378,6 @@ app.post('/launch/play/shared/:id', function (req, res, next) {
     }
     
   });
-    
-  request.post(options, function(err, response, body) {
-    console.log(new Date().toISOString() + " Got launch response from DO: " + response.statusCode + " for " + req.params.id);
-    
-    if ((response.statusCode > 199) && (response.statusCode < 300)) {
-      // True success
-      
-      /*
-      NOW THAT DNS IS UP, NO NEED TO WAIT FOR THE IP TO COME BACK, D.O. WILL AUTOMATICALLY ROUTE THIS REALM BY IT'S
-      HOSTNAME TO IT'S IP
-      db.multi()
-        .hmset(["realm:" + id, "droplet", body.droplet.id, "requested", time, "address", ""])
-        .zadd(["queue", time, id])
-        .exec(function (error, replies) {
-          if (error) {
-            console.error(error);
-            return res.status(500).send(error.message);
-          }
-          
-          return res.json({message: 'OK'});
-        });
-      */
-      
-      return res.json({message: 'OK'});
-      
-    } else {
-      // Successful request but failure on DO API side
-      console.log("Failure message: " + body);
-      return res.status(500).send(body);
-    }
-  });
 });
 
 // Start a new droplet and deploy that realm to it:
@@ -350,7 +388,7 @@ app.get('/launch/play/private/:id', function (req, res, next) {
   var realm_host  = 'realm-' + id + '.assembledrealms.com';
   var time        = new Date().getTime();
   
-  if (auth !== self_token) {
+  if (auth !== SECURITY_TOKEN) {
       return res.status(401).send("Please don't try to break things :/");
   }
   
@@ -409,7 +447,7 @@ app.get('/shutdown/:id', function (req, res, next) {
     
   var auth = req.get('Authorization');
 
-  if (auth !== self_token) {
+  if (auth !== SECURITY_TOKEN) {
     return res.status(401).send("Please don't try to break things :/");
   }
   
@@ -451,6 +489,7 @@ server.listen(3000, function(){
 });
 
 // Acquire stats every minute
+// TODO: Move to stats app and run on second processor?
 setInterval(function(){
   var servers = [];
   var url     = '';

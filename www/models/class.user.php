@@ -300,25 +300,39 @@ class loggedInUser {
   public function onlineRealm($realm_id, $realm_level) {
 		global $mysqli,$db_table_prefix;
         
-    $logfile 	= '/home/tmp/gatekeeper_outbound.log';
-    $status 	= 0;
-		$curl 		= curl_init();
-		
-		if ($realm_level > 0) {
-			// Paid tier
-      // gatekeeper
-			$auth_token		= "2f15adf29c930d8281b0fb076b0a14062ef93d4d142f6f19f4cdbed71fff3394";
-			$target_url   = "http://gatekeeper.assembledrealms.com/launch/play/private/" . $realm_id;
-
-      curl_setopt_array($curl, array(
-        CURLOPT_HTTPHEADER 		=> array('Authorization: ' . $auth_token),
-        CURLOPT_HEADER          => true,
-        CURLOPT_RETURNTRANSFER 	=> true,
-        CURLOPT_SSL_VERIFYHOST 	=> 0,
-        CURLOPT_SSL_VERIFYPEER 	=> false,
-        CURLOPT_URL 			=> $target_url
-      ));
-      
+    $status 	    = 0;
+		$curl 		    = curl_init();
+		$realm_source = $this->fetchRealmSourceServer($realm_id);
+    $logfile 	    = '/home/tmp/gatekeeper_outbound.log';
+    $target_url   = "http://gatekeeper.assembledrealms.com/auth";
+    $auth_token	  = "2f15adf29c930d8281b0fb076b0a14062ef93d4d142f6f19f4cdbed71fff3394";
+    
+    $realm = array(
+      'id'      => $realm_id,
+      'source'  => $realm_source
+    );
+    
+    $post_body  = json_encode(array(
+      'php_sess' => session_id(),
+      'user_id' => $this->user_id,
+      'realm' => $realm
+    ));
+    
+    curl_setopt_array($curl, array(
+      CURLOPT_HTTPHEADER 		=> array(
+        'Authorization: ' . $auth_token, 
+        'Content-Type: application/json'
+      ),
+      CURLOPT_HEADER          => true,
+      CURLOPT_RETURNTRANSFER 	=> true,
+      CURLOPT_SSL_VERIFYHOST 	=> 0,
+      CURLOPT_SSL_VERIFYPEER 	=> false,
+      CURLOPT_POST            => true,
+      CURLOPT_POSTFIELDS      => $post_body,
+      CURLOPT_URL 			      => $target_url
+    ));
+     
+/*     
 		} else {
 			
       $stmt = $mysqli->prepare("SELECT source
@@ -350,36 +364,29 @@ class loggedInUser {
         CURLOPT_URL 			=> $target_url
       ));
     }
+*/
 
 		$resp       = curl_exec($curl);
 		$httpcode   = intval(curl_getinfo($curl, CURLINFO_HTTP_CODE));
 		
 		curl_close($curl);
 		
-		error_log($httpcode . ": " . $resp, 3, $logfile);
+		// error_log($httpcode . ": " . $resp, 3, $logfile);
 		
 		if (($httpcode < 200) && ($httpcode > 299)) {
 			// We have an error:
 			error_log($httpcode . ": " . $resp, 3, $logfile);
 			return false;
-		} else {
-			$status = 1;
 		}
+      
+    // Set status to 'SPOOLING'
+    $status = -2;
 		
-		if ($realm_level > 0) {
-			$stmt = $mysqli->prepare("UPDATE realms
-									  SET status = ?, level = ?
-									  WHERE
-									  id = ?");
-			$stmt->bind_param("iii", $status, $realm_level, $realm_id);
-		} else {
-			$stmt = $mysqli->prepare("UPDATE realms
-									  SET status = ?, level = ?, address = ?
-									  WHERE
-									  id = ?");
-			$stmt->bind_param("iisi", $status, $realm_level, $realm_address, $realm_id);
-		}
-        
+    $stmt = $mysqli->prepare("UPDATE realms
+                  SET status = ?, level = ?
+                  WHERE
+                  id = ?");
+    $stmt->bind_param("iii", $status, $realm_level, $realm_id);
     $stmt->execute();
     $stmt->close();
     
@@ -600,7 +607,23 @@ class loggedInUser {
 		$stmt->close();
 		return ($row);
 	}
+  
+  public function fetchRealmSourceServer($realm_id) {
+    global $mysqli,$db_table_prefix;
+		$stmt = $mysqli->prepare("SELECT 
+      realms.source
+      FROM realms
+      WHERE realms.id = ?"
+    );
+		$stmt->bind_param("i", $realm_id);
+		$stmt->execute();
+		$stmt->bind_result($source);
+		$stmt->fetch();
+		$stmt->close();
     
+    return $source;
+  }
+  
 	public function lovesRealm($realm_id)
 	{
 		global $mysqli,$db_table_prefix;
