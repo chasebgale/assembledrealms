@@ -85,11 +85,11 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
       $host       = "http://play-" . $realm['address'] . ".assembledrealms.com";
       $session_id = session_id();
       
-      $post_body  = http_build_query(array('session' => $session_id,
-                                           'user_id' => $loggedInUser->user_id,
-                                           'user_name' => $loggedInUser->displayname,
-                                           'user_image' => $loggedInUser->user_image,
-                                           'realm_id' => $realmID
+      $post_body  = http_build_query(array(
+        'session' => $session_id,
+        'user_id' => $loggedInUser->user_id,
+        'user_name' => $loggedInUser->displayname,
+        'user_image' => $loggedInUser->user_image
       ));
       
       $curl 			= curl_init();
@@ -103,7 +103,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
         CURLOPT_POSTFIELDS      => $post_body,
         CURLOPT_SSL_VERIFYHOST 	=> 0,
         CURLOPT_SSL_VERIFYPEER 	=> false,
-        CURLOPT_URL 			      => $host . '/auth'
+        CURLOPT_URL 			      => $host . '/auth/' . $realmID
       ));
 
       $resp       = curl_exec($curl);
@@ -324,6 +324,9 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 	var	loading		= false;
   var status    = <?php echo $realm['status']; ?>;
   var realmURL  = "<?php echo "http://play-" . $realm['address'] . ".assembledrealms.com/realms/" . $realmID . "/" ?>";
+  
+  // TODO: Add address to DB before this point...
+  realmURL  = "<?php echo "http://play-01.assembledrealms.com/realms/" . $realmID . "/" ?>";
 	
   function fundingMarkdown(data) {
      var variables = {};
@@ -344,6 +347,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
   $(document).ready(function () {
 		
     if (status > 0) {
+      /*
 		  engine = new Engine();
 
       engine.loaded = function () {
@@ -365,6 +369,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
       }
       
       engine.initialize( document.getElementById("realm") );
+      */
       
       __renderer = new marked.Renderer();
       __renderer.table = function(header, body) {
