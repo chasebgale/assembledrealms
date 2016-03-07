@@ -380,6 +380,120 @@ app.post('/launch/play/shared/:id', function (req, res, next) {
   });
 });
 
+// Deploy specfied realm to least congested shared debug server
+app.post('/launch/debug/shared/:id', function (req, res, next) {
+  var time        = new Date().getTime();
+  var realm_id    = req.params.id;
+  // TODO: Pick least congested
+  var realm_host  = 'debug-' + '01' + '.assembledrealms.com';
+  var realm;
+  
+  // Does this user have permission to modify this realm?
+  db.get([USER_REALMS + '-' + req.user_id], function redisGetUserRealms(error, reply) {
+    var realms = JSON.parse(reply);
+    console.log('USER REALMS: ' + reply);
+    
+    for (var i = 0; i < realms.length; i++) {
+      if (realms[i].id == realm_id) {
+        realm = realms[i];
+        break;
+      }
+    }
+    
+    if (realm) {
+      
+      var options = {
+        url: 'https://source-' + realm.source + '.assembledrealms.com/api/project/' + realm.id + '/publish',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': source_token,
+          'Accept': '*/*'
+        },
+        json: true,
+        body: {
+          address: realm_host, 
+          shared: true, 
+          minify: true
+        }
+      };
+      
+      console.log("Posting to source to initiate xfer, options: " + JSON.stringify(options));
+      
+      request.post(options, function(err, response, body) {
+        
+        if (err) {
+          console.error(err);
+          return res.status(500).send(err.message);
+        }
+        
+        if ((response.statusCode > 199) && (response.statusCode < 300)) {
+          // SUCCESSFULLY PUBLISH FROM SOURCE SERVER TO SHARED SERVER
+          var options = {
+            url: 'https://' + realm_host + '/api/launch/' + realm.id,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': play_token,
+              'Accept': '*/*'
+            },
+            json: true
+          };
+          
+          console.log("Posting to play-xx to initiate launch...");
+          
+          request.get(options, function(err, response, body) {
+            if ((response.statusCode > 199) && (response.statusCode < 300)) {
+              // SUCCESSFULLY LAUNCHED ON PLAY-XX
+              
+              // UPDATE REALMS TABLE ON assembledrealms.com
+              var options = {
+                url: 'http://www.assembledrealms.com/external/gatekeeper.php',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': HOME_TOKEN,
+                  'Accept': '*/*'
+                },
+                formData: {
+                  realm_id: realm.id
+                }
+              };
+              
+              request.post(options, function(err, response, body) {
+        
+                if (err) {
+                  console.error(err);
+                  return res.status(500).send(err.message);
+                }
+                
+                if ((response.statusCode > 199) && (response.statusCode < 300)) {
+                  return res.json({message: 'OK'});
+                }
+              });
+              
+            } else {
+              console.log('Failure http code from launch request...');
+              return res.json({error: 'Failure http code from launch request...'});
+            }
+            
+            if (err) {
+              console.error(err);
+              return res.json({error: err.message});
+            }
+          });
+          
+        } else {
+          // Successful request but failure on DO API side
+          console.log("Failure message: " + body);
+          return res.status(500).send(body);
+        }
+      });
+      
+    } else {
+      return res.status(401).send("Unauthorized.");
+    }
+    
+  });
+});
+
 // Start a new droplet and deploy that realm to it:
 app.get('/launch/play/private/:id', function (req, res, next) {
     

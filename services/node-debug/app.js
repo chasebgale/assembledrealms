@@ -8,6 +8,7 @@ var walk          = require('walk');
 var path          = require('path');
 var redis 			  = require('redis');
 var http 			    = require('http');
+var https			    = require('https');
 var fs            = require('fs');
 var os            = require('os');
 var uuid 			    = require('node-uuid');
@@ -120,7 +121,7 @@ app.set('view engine', 'ejs');
 
 // crossdomain middleware
 app.use(function(req, res, next) {
-  res.header('Access-Control-Allow-Origin', 'http://www.assembledrealms.com');
+  res.header('Access-Control-Allow-Origin', 'https://www.assembledrealms.com');
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
   res.header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type');
   res.header('Access-Control-Allow-Credentials', 'true');
@@ -805,5 +806,20 @@ pm2.connect(function(err) {
 	  console.log("Express server listening on port 3000, request to port 80 are redirected to 3000 by Fedora.");
     dbListener.subscribe('realm_notifications');
 	});
+  
+  var options = {
+    key:  fs.readFileSync('/etc/pki/tls/certs/www.assembledrealms.com.key').toString(),
+    cert: fs.readFileSync('/etc/pki/tls/certs/STAR_assembledrealms_com.crt').toString(),
+    ca:   [
+      fs.readFileSync('/etc/pki/tls/certs/AddTrustExternalCARoot.crt').toString(),
+      fs.readFileSync('/etc/pki/tls/certs/COMODORSAAddTrustCA.crt').toString(),
+      fs.readFileSync('/etc/pki/tls/certs/COMODORSADomainValidationSecureServerCA.crt').toString()
+    ],
+    passphrase: '8160'
+  };
+  
+  https.createServer(options, app).listen(8000, function () {
+    console.log("HTTPS started on port 8000");
+  }); //443
 	
 });

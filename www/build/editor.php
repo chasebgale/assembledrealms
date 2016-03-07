@@ -548,7 +548,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
   <script src="/build/js/utilities.js"></script>
   <script src="/build/js/stats.min.js"></script>
-  <script src="<?php echo 'http://' . $sourceURL . '/api/project/' . $realm_id . '/file/raw/client/maps/editor.js'; ?>"></script>
+  <script src="<?php echo 'https://' . $sourceURL . '/api/project/' . $realm_id . '/file/raw/client/maps/editor.js'; ?>"></script>
   <script src="/build/js/ide.js"></script>
   <script src="/build/js/jquery.treeview.js"></script>
   <script src="/build/js/md5.js"></script>

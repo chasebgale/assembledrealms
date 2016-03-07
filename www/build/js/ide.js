@@ -32,7 +32,7 @@ function initialize(projectID, projectDomain) {
     });
     
     __projectId = projectID;
-    __projectURL = 'http://' + projectDomain + '/api/project/' + __projectId;
+    __projectURL = 'https://' + projectDomain + '/api/project/' + __projectId;
     __trackedStorageId = __projectId + "-tracking";
     
     __editor = ace.edit("editor");
@@ -183,7 +183,7 @@ function initialize(projectID, projectDomain) {
       .done(function (data) {
 			
         var address 	= data.address;
-        var debug_url 	= 'http://www.assembledrealms.com/debug/realm/' + __projectId;
+        var debug_url 	= 'https://www.assembledrealms.com/debug/realm/' + __projectId;
         
         $('#debugProgressList').append('<li>Compressing latest commit and delivering it to ' + address + '</li>');
 
@@ -200,7 +200,7 @@ function initialize(projectID, projectDomain) {
             $('#debugProgressList').append('<li>Launching realm on ' + address + '</li>');
             
             $.ajax({
-              url: 'http://' + address + '/launch/' + __projectId,
+              url: 'https://' + address + '/launch/' + __projectId,
               type: 'get',
               dataType: 'text'
             })
