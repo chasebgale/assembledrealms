@@ -53,7 +53,7 @@ function setup() {
     loadingBar.filters  = [blurFilter];
     
     // Add this late as we might not have the PORT until now (realm was queued for launch)
-    SCRIPTS.push("//" + HOST + ":" + PORT + "/socket.io/socket.io.js");
+    SCRIPTS.push("//" + HOST + "/socket.io/socket.io.js");
     
     var l = new Loader();
     l.require(SCRIPTS, function onLoading() {

@@ -162,8 +162,61 @@ function initialize(projectID, projectDomain) {
         
     });
     
-    $("#btnDebug").on("click", function () {
+    $("#btnDebug").on("click", function (e) {
+      
+      e.preventDefault(); 
+      
+      var self = $(this);
+      
+      self.attr('disabled', true);
+      self.html('<i class="fa fa-spinner fa-pulse fa-fw"></i> Debug');
+      
+      var debugStatus = $('#commandBarStatus');
+      debugStatus.removeClass('alert-warning alert-success alert-danger');
+      
+      $.ajax({
+        url: 'editor.php',
+        type: 'post',
+        dataType: 'json',
+        data: {directive: 'debug', realm_id: __projectId}
+      })
+      .done(function (data) {
+			
+        var address = data.address;
         
+        $.ajax({
+          url: address,
+          type: 'post',
+          dataType: 'text',
+          data: {}
+        })
+        .done(function (data) {
+          console.log(data);
+          
+          self.html('<i class="fa fa-caret-square-o-right fa-fw"></i> Debug');
+          self.attr('disabled', false);
+          
+          debugStatus.addClass('alert-success');
+          debugStatus.html('Success! Click here to launch in a new window: <a href="/debug/realm/' + __projectId + '" target="_blank"  class="alert-link">https://www.assembledrealms.com/debug/realm/' + __projectId + '</a>');
+          debugStatus.fadeIn(function () {
+            setTimeout(function () {
+              debugStatus.fadeOut();
+            }, 15000);
+          });
+        })
+        .fail(function(d, textStatus, error) {
+          console.log(textStatus);
+          self.html('<i class="fa fa-caret-square-o-right fa-fw"></i> Debug');
+          self.attr('disabled', false);
+        });
+      })
+      .fail(function(d, textStatus, error) {
+        console.log(textStatus);
+        self.html('<i class="fa fa-caret-square-o-right fa-fw"></i> Debug');
+        self.attr('disabled', false);
+      });
+      
+      /*
       if ($('#debugProgressbar').hasClass('active') == false) {
           $('#debugProgressbar').addClass('active');
       }
@@ -234,6 +287,8 @@ function initialize(projectID, projectDomain) {
                 // Update DOM to reflect we messed up:
                 //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
       });
+      
+      */
     });
     
     $('#commitStart').on('click', function () {

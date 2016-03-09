@@ -297,14 +297,14 @@ class loggedInUser {
     }
 	}
     
-  public function onlineRealm($realm_id, $realm_level) {
+  public function onlineRealm($realm_id, $realm_level, $debug) {
 		global $mysqli,$db_table_prefix;
         
     $status 	    = 0;
 		$curl 		    = curl_init();
 		$realm_source = $this->fetchRealmSourceServer($realm_id);
     $logfile 	    = '/home/tmp/gatekeeper_outbound.log';
-    $target_url   = "http://gatekeeper.assembledrealms.com/auth";
+    $target_url   = "https://gatekeeper.assembledrealms.com/auth";
     $auth_token	  = "2f15adf29c930d8281b0fb076b0a14062ef93d4d142f6f19f4cdbed71fff3394";
     
     $realm = array(
@@ -380,15 +380,17 @@ class loggedInUser {
 		}
       
     // Set status to 'SPOOLING'
-    $status = -2;
-		
-    $stmt = $mysqli->prepare("UPDATE realms
-                  SET status = ?, level = ?
-                  WHERE
-                  id = ?");
-    $stmt->bind_param("iii", $status, $realm_level, $realm_id);
-    $stmt->execute();
-    $stmt->close();
+    if ($debug !== false) {
+      $status = -2;
+      
+      $stmt = $mysqli->prepare("UPDATE realms
+                    SET status = ?, level = ?
+                    WHERE
+                    id = ?");
+      $stmt->bind_param("iii", $status, $realm_level, $realm_id);
+      $stmt->execute();
+      $stmt->close();
+    }
     
     return true;
         

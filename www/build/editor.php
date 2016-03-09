@@ -62,17 +62,33 @@ if ($method == 'POST') {
   }
     
   if ($directive == 'debug') {
-          
-    $curl = curl_init();
+    
+    $success = $loggedInUser->onlineRealm($realm_id, $server_type, true);
+    
+    if ($success) {
+      echo json_encode( (object) [
+        'message' => 'OK', 
+        'address' => 'https://gatekeeper.assembledrealms.com/launch/debug/shared/' . $realm_id
+      ] );
+      die();
+    } else {
+      http_response_code(500);
+      echo 'FAILURE';
+      die();
+    }
     
     // TODO: Pick least congested play server, but for now:
+    /*
+    $curl = curl_init();
+    
     $realm_server   = "01";
     $realm_address  = "debug-" . $realm_server . ".assembledrealms.com";
-    $target_url     = "http://" . $realm_address . "/auth/" . $realm_id;
+    $target_url     = "https://" . $realm_address . "/auth/" . $realm_id;
     
     $post_body  = http_build_query(array('php_sess' => session_id(),
                                          'user_id' => $loggedInUser->user_id,
-                                         'owner' => true
+                                         'owner' => true,
+                                         'realm' => $realm_id
     ));
     
     curl_setopt_array($curl, array(
@@ -103,6 +119,7 @@ if ($method == 'POST') {
       echo json_encode( (object) ['message' => 'OK', 'address' => $realm_address] );
       die();
     }
+    */
   }
 }
 
@@ -289,6 +306,11 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
       <a href="http://www.assembledrealms.com" style="float: right;">
         <img src="/build/img/logo.png"></img>
       </a>
+    
+    </div>
+    
+    <div id="commandBarStatus" class="text-center alert" role="alert">
+      <span id="commandBarStatusText">TESTING...</span>
     </div>
     
     <div id="tree">

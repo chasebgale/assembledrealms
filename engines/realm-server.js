@@ -3,12 +3,26 @@ require('app-module-path').addPath(__dirname);
 var express     = require('express');
 var cookieParse = require('cookie-parser');
 var app         = express();
-var http        = require('http').Server(app);
-var io          = require('socket.io')(http);
+//var http        = require('http').Server(app);
+//var io          = require('socket.io')(http);
 var redis       = require('redis');
 var fs          = require('fs');
 var pm2         = require('pm2');
 var db          = redis.createClient();
+
+var options = {
+  key:  fs.readFileSync('/etc/pki/tls/certs/www.assembledrealms.com.key').toString(),
+  cert: fs.readFileSync('/etc/pki/tls/certs/STAR_assembledrealms_com.crt').toString(),
+  ca:   [
+    fs.readFileSync('/etc/pki/tls/certs/AddTrustExternalCARoot.crt').toString(),
+    fs.readFileSync('/etc/pki/tls/certs/COMODORSAAddTrustCA.crt').toString(),
+    fs.readFileSync('/etc/pki/tls/certs/COMODORSADomainValidationSecureServerCA.crt').toString()
+  ],
+  passphrase: '8160'
+};
+
+var serverSecure  = require('https').Server(options, app);
+var io 				    = require('socket.io')(serverSecure);
 
 var realm_id    = process.argv[2];
 var debug       = (process.argv[3] == 'true');
@@ -271,9 +285,9 @@ engine.initialize(function(error) {
       console.log(err.message);
     } else {
       // Listen on random port because lots (hopefully) of other nodes are running too!
-      http.listen(0, function(){
+      serverSecure.listen(0, function(){
         // Log the port to the console
-        console.log("port: " + http.address().port);
+        console.log("port: " + serverSecure.address().port);
 
         if (debug) {
           // In debug mode, trash any DB entries on (re)start so we don't get into trouble
@@ -289,7 +303,7 @@ engine.initialize(function(error) {
         }
         
         var data = {
-          "port":  http.address().port,
+          "port":  serverSecure.address().port,
           "time":  Date.now(),
           "error": ""
         };

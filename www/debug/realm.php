@@ -31,7 +31,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
       
   if ($realm['level'] == 0) {
     // Free realm hosting
-    $host       = "http://debug-" . $realm['address_debug'] . ".assembledrealms.com";
+    $host       = "https://debug-" . $realm['address_debug'] . ".assembledrealms.com";
     $session_id = session_id();
     $user_id    = $loggedInUser->user_id;
     $owner      = ($realm['user_id'] == $user_id);
@@ -54,7 +54,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
       CURLOPT_POSTFIELDS      => $post_body,
       CURLOPT_SSL_VERIFYHOST 	=> 0,
       CURLOPT_SSL_VERIFYPEER 	=> false,
-      CURLOPT_URL 			      => $host . '/auth/' . $realmID
+      CURLOPT_URL 			      => $host . '/api/auth/' . $realmID
     ));
 
     $resp       = curl_exec($curl);

@@ -2,11 +2,13 @@ var express      = require('express');
 var bodyParser   = require('body-parser');
 var cookieParser = require('cookie-parser');
 var app          = express();
+var https        = require('https');
 var server       = require('http').Server(app);
 var request      = require('request');
 var async        = require('async');
 var moment       = require('moment');
 var pg           = require('pg');
+var fs           = require('fs');
 var redis 			 = require('redis');
 var db 	         = redis.createClient();
 
@@ -37,7 +39,7 @@ var REALM_STATUS    = "realm_status";        // Realm status as it is being brou
 
 
 var allowCrossDomain = function(req, res, next) {
-    res.header('Access-Control-Allow-Origin', 'http://www.assembledrealms.com');
+    res.header('Access-Control-Allow-Origin', 'https://www.assembledrealms.com');
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
     res.header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type');
     res.header('Access-Control-Allow-Credentials', 'true');
@@ -214,16 +216,6 @@ app.get('/history', function (req, res, next) {
     });
     
   });
-});
-
-app.post('/test', function (req, res, next) {
-  res.send('OK');
-  res.end();
-  
-  setTimeout(function () {
-    console.log('this happened after');
-  }, 100);
-  
 });
 
 // PHP-session/auth wall
@@ -413,7 +405,7 @@ app.post('/launch/debug/shared/:id', function (req, res, next) {
         body: {
           address: realm_host, 
           shared: true, 
-          minify: true
+          minify: false
         }
       };
       
@@ -432,42 +424,18 @@ app.post('/launch/debug/shared/:id', function (req, res, next) {
             url: 'https://' + realm_host + '/api/launch/' + realm.id,
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': play_token,
+              'Authorization': debug_token,
               'Accept': '*/*'
             },
             json: true
           };
           
-          console.log("Posting to play-xx to initiate launch...");
+          console.log("Posting to debug-xx to initiate launch...");
           
           request.get(options, function(err, response, body) {
             if ((response.statusCode > 199) && (response.statusCode < 300)) {
-              // SUCCESSFULLY LAUNCHED ON PLAY-XX
-              
-              // UPDATE REALMS TABLE ON assembledrealms.com
-              var options = {
-                url: 'http://www.assembledrealms.com/external/gatekeeper.php',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': HOME_TOKEN,
-                  'Accept': '*/*'
-                },
-                formData: {
-                  realm_id: realm.id
-                }
-              };
-              
-              request.post(options, function(err, response, body) {
-        
-                if (err) {
-                  console.error(err);
-                  return res.status(500).send(err.message);
-                }
-                
-                if ((response.statusCode > 199) && (response.statusCode < 300)) {
-                  return res.json({message: 'OK'});
-                }
-              });
+              // SUCCESSFULLY LAUNCHED ON DEBUG-XX  
+              return res.json({message: 'OK'});
               
             } else {
               console.log('Failure http code from launch request...');
@@ -599,8 +567,23 @@ app.get('/shutdown/:id', function (req, res, next) {
 
 // Hey!! Listen!
 server.listen(3000, function(){
-    console.log("Express server listening on port 3000, request to port 80 are redirected to 3000 by Fedora.");
+  console.log("Express server listening on port 3000, request to port 80 are redirected to 3000 by Fedora.");
 });
+
+var options = {
+  key:  fs.readFileSync('/etc/pki/tls/certs/www.assembledrealms.com.key').toString(),
+  cert: fs.readFileSync('/etc/pki/tls/certs/STAR_assembledrealms_com.crt').toString(),
+  ca:   [
+    fs.readFileSync('/etc/pki/tls/certs/AddTrustExternalCARoot.crt').toString(),
+    fs.readFileSync('/etc/pki/tls/certs/COMODORSAAddTrustCA.crt').toString(),
+    fs.readFileSync('/etc/pki/tls/certs/COMODORSADomainValidationSecureServerCA.crt').toString()
+  ],
+  passphrase: '8160'
+};
+
+https.createServer(options, app).listen(8000, function () {
+  console.log("HTTPS started on port 8000");
+}); //443
 
 // Acquire stats every minute
 // TODO: Move to stats app and run on second processor?
@@ -626,10 +609,10 @@ setInterval(function(){
     
     query.on('row', function(row) {
       if (row.type == 0) {
-        url   = 'http://debug-';
+        url   = 'https://debug-';
         token = debug_token;
       } else {
-        url   = 'http://play-';
+        url   = 'https://play-';
         token = debug_token;
       }
       url += row.host + '.assembledrealms.com/stats';

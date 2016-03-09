@@ -15,10 +15,23 @@ var uuid 			    = require('node-uuid');
 var db 	          = redis.createClient();
 var dbListener    = redis.createClient();
 var server			  = http.Server(app);
-var io 				    = require('socket.io')(server);
 var request			  = require('request');
 var async         = require('async');
 var spawn         = require("child_process").spawn;
+
+var options = {
+  key:  fs.readFileSync('/etc/pki/tls/certs/www.assembledrealms.com.key').toString(),
+  cert: fs.readFileSync('/etc/pki/tls/certs/STAR_assembledrealms_com.crt').toString(),
+  ca:   [
+    fs.readFileSync('/etc/pki/tls/certs/AddTrustExternalCARoot.crt').toString(),
+    fs.readFileSync('/etc/pki/tls/certs/COMODORSAAddTrustCA.crt').toString(),
+    fs.readFileSync('/etc/pki/tls/certs/COMODORSADomainValidationSecureServerCA.crt').toString()
+  ],
+  passphrase: '8160'
+};
+
+var serverSecure  = https.Server(options, app);
+var io 				    = require('socket.io')(serverSecure);
 
 var SECURITY_TOKEN     = process.env.SECURITY_TOKEN;
 var MAX_CLIENTS_GLOBAL = parseInt(process.env.MAX_CLIENTS_GLOBAL);
@@ -533,6 +546,7 @@ app.get('/realms/:id', function httpGetRealm(req, res, next) {
         db.lrange([REALM_QUEUE, 0, -1], function (error, list) {
           
           if (error) {
+            console.error(error);
             return res.render('error', {message: "This realm is offline..."}); 
           }
           
@@ -807,18 +821,7 @@ pm2.connect(function(err) {
     dbListener.subscribe('realm_notifications');
 	});
   
-  var options = {
-    key:  fs.readFileSync('/etc/pki/tls/certs/www.assembledrealms.com.key').toString(),
-    cert: fs.readFileSync('/etc/pki/tls/certs/STAR_assembledrealms_com.crt').toString(),
-    ca:   [
-      fs.readFileSync('/etc/pki/tls/certs/AddTrustExternalCARoot.crt').toString(),
-      fs.readFileSync('/etc/pki/tls/certs/COMODORSAAddTrustCA.crt').toString(),
-      fs.readFileSync('/etc/pki/tls/certs/COMODORSADomainValidationSecureServerCA.crt').toString()
-    ],
-    passphrase: '8160'
-  };
-  
-  https.createServer(options, app).listen(8000, function () {
+  serverSecure.listen(8000, function () {
     console.log("HTTPS started on port 8000");
   }); //443
 	
