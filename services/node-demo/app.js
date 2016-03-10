@@ -8,16 +8,31 @@ var walk          = require('walk');
 var path          = require('path');
 var redis 			  = require('redis');
 var http 			    = require('http');
+var https         = require('https');
 var fs            = require('fs');
 var os            = require('os');
 var uuid 			    = require('node-uuid');
 var db 	          = redis.createClient();
 var dbListener    = redis.createClient();
 var server			  = http.Server(app);
-var io            = require('socket.io')(server);
+//var io            = require('socket.io')(server);
 var request			  = require('request');
 var async         = require('async');
 var spawn         = require("child_process").spawn;
+
+var options = {
+  key:  fs.readFileSync('/etc/pki/tls/certs/www.assembledrealms.com.key').toString(),
+  cert: fs.readFileSync('/etc/pki/tls/certs/STAR_assembledrealms_com.crt').toString(),
+  ca:   [
+    fs.readFileSync('/etc/pki/tls/certs/AddTrustExternalCARoot.crt').toString(),
+    fs.readFileSync('/etc/pki/tls/certs/COMODORSAAddTrustCA.crt').toString(),
+    fs.readFileSync('/etc/pki/tls/certs/COMODORSADomainValidationSecureServerCA.crt').toString()
+  ],
+  passphrase: '8160'
+};
+
+var serverSecure  = https.Server(options, app);
+var io 				    = require('socket.io')(serverSecure);
 
 var SECURITY_TOKEN     = process.env.SECURITY_TOKEN;
 var MAX_CLIENTS_GLOBAL = parseInt(process.env.MAX_CLIENTS_GLOBAL);
@@ -36,7 +51,7 @@ var DEMO_USER_ID_COUNT = -1;
 db.flushdb();
 
 app.use(function(req, res, next) {
-  res.header('Access-Control-Allow-Origin', 'http://www.assembledrealms.com');
+  res.header('Access-Control-Allow-Origin', 'https://www.assembledrealms.com');
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
   res.header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type');
   res.header('Access-Control-Allow-Credentials', 'true');
@@ -729,7 +744,9 @@ pm2.connect(function(err) {
   if (err) {
     console.log(err.message);
   }
-    
+  
+  serverSecure.listen(8000);
+  
 	// Hey!! Listen!
 	server.listen(3000, function onServerListen() {
 	  console.log("Express server listening on port 3000, request to port 80 are redirected to 3000 by Fedora.");

@@ -50,7 +50,8 @@ function setup() {
     loadingBar.filters  = [blurFilter];
     
     // Add this late as we might not have the PORT until now (realm was queued for launch)
-    SCRIPTS.push("//" + HOST + ":" + PORT + "/socket.io/socket.io.js");
+    //SCRIPTS.push("//" + HOST + ":" + PORT + "/socket.io/socket.io.js");
+    SCRIPTS.push("//" + HOST + "/socket.io/socket.io.js");
     SCRIPTS.push("/build/js/utilities.js");
     SCRIPTS.push("/js/keyboard.js");
     SCRIPTS.push("/js/bigscreen.min.js");

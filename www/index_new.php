@@ -7,7 +7,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method == 'POST') {
   // TODO: Pick least congested server, if I'm lucky and anyone actually enjoys this :0
-  $host       = "http://demo-01.assembledrealms.com";
+  $host       = "https://demo-01.assembledrealms.com";
   $session_id = session_id();  
   $realmID    = 1;
   $realm      = fetchRealm($realmID);
