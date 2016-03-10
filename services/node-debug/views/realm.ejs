@@ -12,9 +12,9 @@
   
   var SCRIPTS = [
     <% for(var i=0; i<scripts.length-1; i++) { %>
-    "//<%= host %><%= scripts[i] %>",
+    "https://<%= host %><%= scripts[i] %>",
     <% } %>
-    "//<%= host %><%= scripts[scripts.length-1] %>"
+    "https://<%= host %><%= scripts[scripts.length-1] %>"
   ];
   
   var Loader = function (){};

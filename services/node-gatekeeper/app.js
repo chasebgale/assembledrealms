@@ -117,7 +117,7 @@ app.post('/auth', function httpPostAuth(req, res, next) {
 app.get('/stats', function (req, res, next) {
   
   var servers = [];
-  servers.push("http://debug-01.assembledrealms.com/stats");
+  servers.push("https://debug-01.assembledrealms.com/stats");
   
   var data = {
     servers: []
@@ -281,7 +281,7 @@ app.post('/launch/play/shared/:id', function (req, res, next) {
     if (realm) {
       
       var options = {
-        url: 'http://source-' + realm.source + '.assembledrealms.com/api/project/' + realm.id + '/publish',
+        url: 'https://source-' + realm.source + '.assembledrealms.com/api/project/' + realm.id + '/publish',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': source_token,
@@ -307,7 +307,7 @@ app.post('/launch/play/shared/:id', function (req, res, next) {
         if ((response.statusCode > 199) && (response.statusCode < 300)) {
           // SUCCESSFULLY PUBLISH FROM SOURCE SERVER TO SHARED SERVER
           var options = {
-            url: 'http://' + realm_host + '/api/launch/' + realm.id,
+            url: 'https://' + realm_host + '/api/launch/' + realm.id,
             headers: {
               'Content-Type': 'application/json',
               'Authorization': play_token,
@@ -319,12 +319,18 @@ app.post('/launch/play/shared/:id', function (req, res, next) {
           console.log("Posting to play-xx to initiate launch...");
           
           request.get(options, function(err, response, body) {
+            
+            if (err) {
+              console.error(err);
+              return res.status(500).send(err.message);
+            }
+            
             if ((response.statusCode > 199) && (response.statusCode < 300)) {
               // SUCCESSFULLY LAUNCHED ON PLAY-XX
               
               // UPDATE REALMS TABLE ON assembledrealms.com
               var options = {
-                url: 'http://www.assembledrealms.com/external/gatekeeper.php',
+                url: 'https://www.assembledrealms.com/external/gatekeeper.php',
                 headers: {
                   'Content-Type': 'application/json',
                   'Authorization': HOME_TOKEN,
@@ -344,6 +350,8 @@ app.post('/launch/play/shared/:id', function (req, res, next) {
                 
                 if ((response.statusCode > 199) && (response.statusCode < 300)) {
                   return res.json({message: 'OK'});
+                } else {
+                  return res.status(500).send('Response fauilure: ' + response.statusCode);
                 }
               });
               
@@ -615,7 +623,7 @@ setInterval(function(){
         url   = 'https://play-';
         token = debug_token;
       }
-      url += row.host + '.assembledrealms.com/stats';
+      url += row.host + '.assembledrealms.com/api/stats';
       
       servers.push({
         id:    row.id,
@@ -650,13 +658,16 @@ setInterval(function(){
             });
 
           } else {
-            
-            if (error.code === 'ETIMEDOUT') {
-              if (error.connect === true) {
-                console.error(options.url + ' timed out establishing connection...');
-              } else {
-                console.error(options.url + ' timed out after establishing connection...');
+            if (error) {
+              if (error.code === 'ETIMEDOUT') {
+                if (error.connect === true) {
+                  console.error(options.url + ' timed out establishing connection...');
+                } else {
+                  console.error(options.url + ' timed out after establishing connection...');
+                }
               }
+            } else {
+              console.error(options.url + '::' + response.statusCode);
             }
             
             callback();

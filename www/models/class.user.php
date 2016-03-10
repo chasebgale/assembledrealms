@@ -297,7 +297,7 @@ class loggedInUser {
     }
 	}
     
-  public function onlineRealm($realm_id, $realm_level, $debug) {
+public function onlineRealm($realm_id, $realm_level, $debug = false) {
 		global $mysqli,$db_table_prefix;
         
     $status 	    = 0;

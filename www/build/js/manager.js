@@ -88,12 +88,14 @@ $(document).ready(function () {
     });
     
   $("#takeRealmOnline").on('click', function (e) {
-    var button = $(this);
+    var button = $("#onlineOfflineBtn");
   
     button.attr('disabled', true);
-    button.html('<i class="fa fa-cog fa-spin"></i> Bring Online');
+    button.html('<i class="fa fa-cog fa-spin"></i> Take Realm Online');
     
     var server_type = $("input[name=serverTypeRadios]:checked").val();
+    
+    $("#modalTakeRealmOnline").modal('hide');
     
     $.ajax({
       url: 'manager.php',
@@ -108,20 +110,18 @@ $(document).ready(function () {
     .done(function (data) {
       
       $.ajax({
-        url: 'http://gatekeeper.assembledrealms.com/launch/play/shared/' + __realmID,
+        url: 'https://gatekeeper.assembledrealms.com/launch/play/shared/' + __realmID,
         type: 'post',
         dataType: 'json',
         data: {
         }
       })
       .done(function (data) {
-      
-        button.attr('disabled', false);
-        button.html('Bring Online');
         
         if (data.message == "OK") {
-          $("#onlineOfflineBtn").attr('data-target', '#modalTakeRealmOffline');
-          $("#onlineOfflineBtn").text('Take Realm Offline');
+          button.attr('disabled', false);
+          button.attr('data-target', '#modalTakeRealmOffline');
+          button.html('Take Realm Offline');
           /*
           if (server_type > 0) {
             $("#realmStatus").html("<span class='label label-warning'><i class='fa fa-cog fa-spin'></i>  Booting</span>");
@@ -129,7 +129,6 @@ $(document).ready(function () {
           */
           $("#realmStatus").html("<span class='label label-success'><i class='fa fa-power-off'></i> Online</span>");
           //}
-          $("#modalTakeRealmOnline").modal('hide');
         }
       
       })
@@ -137,7 +136,7 @@ $(document).ready(function () {
         console.log(data);
         $('#realmOfflineAlert').text('Network Error: ' + data.statusText);
         button.attr('disabled', false);
-        button.html('Bring Online');
+        button.html('Take Realm Online');
         // Update DOM to reflect we messed up:
         //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
       });
