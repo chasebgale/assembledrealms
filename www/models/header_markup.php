@@ -28,7 +28,7 @@
           </a>
         </li>
         <li>
-          <a href='/account' class='header-link' style="padding-top: 5px !important;">
+          <a href='/account' class='header-link' style="padding-top: 5px !important; margin-right: 8px;">
             <img src='<?php echo $loggedInUser->user_image; ?>' width='24' /><span class='badge' style='background-color: #4C4C4C; vertical-align: top; text-align: left; line-height: 1.5em; height: 24px; border-radius: 0;'>
               <?php echo $loggedInUser->displayname; ?>
               <div class='spacer'></div>
