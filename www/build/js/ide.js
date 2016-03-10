@@ -11,6 +11,7 @@ var __trackedFiles      = [];
 var __commitFiles       = [];
 var __editSessions      = {};
 var __mapDisplayed      = false;
+var __commitOnDebug     = false;
 
 function resize() {
   var h = $("#tree").height();
@@ -166,55 +167,7 @@ function initialize(projectID, projectDomain) {
       
       e.preventDefault(); 
       
-      var self = $(this);
-      
-      self.attr('disabled', true);
-      self.html('<i class="fa fa-spinner fa-pulse fa-fw"></i> Debug');
-      
-      var debugStatus = $('#commandBarStatus');
-      debugStatus.removeClass('alert-warning alert-success alert-danger');
-      
-      $.ajax({
-        url: 'editor.php',
-        type: 'post',
-        dataType: 'json',
-        data: {directive: 'debug', realm_id: __projectId}
-      })
-      .done(function (data) {
-			
-        var address = data.address;
-        
-        $.ajax({
-          url: address,
-          type: 'post',
-          dataType: 'text',
-          data: {}
-        })
-        .done(function (data) {
-          console.log(data);
-          
-          self.html('<i class="fa fa-caret-square-o-right fa-fw"></i> Debug');
-          self.attr('disabled', false);
-          
-          debugStatus.addClass('alert-success');
-          debugStatus.html('Success! Click here to launch in a new window: <a href="/debug/realm/' + __projectId + '" target="_blank"  class="alert-link">https://www.assembledrealms.com/debug/realm/' + __projectId + '</a>');
-          debugStatus.fadeIn(function () {
-            setTimeout(function () {
-              debugStatus.fadeOut();
-            }, 15000);
-          });
-        })
-        .fail(function(d, textStatus, error) {
-          console.log(textStatus);
-          self.html('<i class="fa fa-caret-square-o-right fa-fw"></i> Debug');
-          self.attr('disabled', false);
-        });
-      })
-      .fail(function(d, textStatus, error) {
-        console.log(textStatus);
-        self.html('<i class="fa fa-caret-square-o-right fa-fw"></i> Debug');
-        self.attr('disabled', false);
-      });
+      debug();
       
       /*
       if ($('#debugProgressbar').hasClass('active') == false) {
@@ -534,56 +487,193 @@ function addToExplorer(path, name, sha) {
 
 function listCommitFiles() {
     
-    __commitFiles = [];
+  __commitFiles = [];
+  
+  if (sessionStorage[__trackedStorageId]) {
+    __processingFiles = JSON.parse(sessionStorage[__trackedStorageId]);
     
-    if (sessionStorage[__trackedStorageId]) {
-        __processingFiles = JSON.parse(sessionStorage[__trackedStorageId]);
-        
-        var fileMD5;
-        var file;
-        var fileName;
-        var filePath;
+    var fileMD5;
+    var file;
+    var fileName;
+    var filePath;
+
+    var commitProgressList = $("#commitProgressList");
+    commitProgressList.empty();
     
-        var commitProgressList = $("#commitProgressList");
-        commitProgressList.empty();
-        
-        if (_.isArray(__processingFiles)) {
-            __processingFiles = $.grep(__processingFiles, function (fileId, i) {
-				
-				if (isImageFile(fileId)) {
-					commitProgressList.append('<li><span style="font-weight: bold; width: 200px; display: inline-block;">' + fileId + '</span><span></span></li>');
-					__commitFiles.push({
-						name: fileId,
-						resource: true
-					});
-					return true;
-				} else {
-				
-					file = sessionStorage[fileId];
-					fileName = sessionStorage[fileId + '-name'];
-					filePath = sessionStorage[fileId + '-path'];
-					fileMD5 = sessionStorage[fileId + '-commit-md5'];
+    if (_.isArray(__processingFiles)) {
+      __processingFiles = $.grep(__processingFiles, function (fileId, i) {
+    
+        if (isImageFile(fileId)) {
+          commitProgressList.append('<li><span style="font-weight: bold; width: 200px; display: inline-block;">' + fileId + '</span><span></span></li>');
+          __commitFiles.push({
+            name: fileId,
+            resource: true
+          });
+          return true;
+        } else {
+    
+          file = sessionStorage[fileId];
+          fileName = sessionStorage[fileId + '-name'];
+          filePath = sessionStorage[fileId + '-path'];
+          fileMD5 = sessionStorage[fileId + '-commit-md5'];
                 
-					if (md5(file) !== fileMD5) {
-						// Push to git
-						commitProgressList.append('<li id="' + fileId + '"><span style="font-weight: bold; width: 200px; display: inline-block;">' + fileName + '</span><span></span></li>');
-						
-						__commitFiles.push({
-							content: file,
-							name: fileName,
-							path: filePath,
-							sha: fileId,
-							resource: false
-						});
-						
-						return true;
-					} else {
-						return false;
-					}
-				}
+          if (md5(file) !== fileMD5) {
+            // Push to git
+            commitProgressList.append('<li id="' + fileId + '"><span style="font-weight: bold; width: 200px; display: inline-block;">' + fileName + '</span><span></span></li>');
+            
+            __commitFiles.push({
+              content: file,
+              name: fileName,
+              path: filePath,
+              sha: fileId,
+              resource: false
             });
+            
+            return true;
+          } else {
+            return false;
+          }
         }
+      });
     }
+  }
+}
+
+function buttonOverrideDebugWarning() {
+  $('#commandBarStatus').fadeOut();
+  debug(true);
+}
+
+function debug(force) {
+  
+  var debugButton = $('#btnDebug');
+  debugButton.attr('disabled', true);
+  debugButton.html('<i class="fa fa-spinner fa-pulse fa-fw"></i> Debug');
+  
+  var debugStatus = $('#commandBarStatus');
+  debugStatus.removeClass('alert-warning alert-success alert-danger');
+  
+  if (!force) {
+    if (commitRequired()) {
+      debugButton.html('<i class="fa fa-spinner fa-fw"></i> Debug');
+      debugStatus.addClass('alert-warning');
+      debugStatus.html('You have <strong>uncommitted</strong> changes that won\'t appear when debugging, continue without your changes? ' + 
+      '<a id="ignoreCommitAndDebug" class="btn btn-default btn-xs" href="#" role="button" onclick="buttonOverrideDebugWarning();return false;">YES</a> ' +
+      '<a id="cancelDebug" class="btn btn-default btn-xs" href="#" role="button">NO</a> '
+      );
+      debugStatus.fadeIn();
+      return;
+    }
+  }
+  
+  if (__commitOnDebug) {
+    // User already pushed latest commit to debug...
+    debugButton.html('<i class="fa fa-caret-square-o-right fa-fw"></i> Debug');
+    debugButton.attr('disabled', false);
+    
+    debugStatus.addClass('alert-success');
+    debugStatus.html('Success! Click here to launch in a new window: <a href="/debug/realm/' + __projectId + '" target="_blank"  class="alert-link">https://www.assembledrealms.com/debug/realm/' + __projectId + '</a>');
+    debugStatus.fadeIn(function () {
+      setTimeout(function () {
+        debugStatus.fadeOut();
+      }, 15000);
+    });
+    return;
+  }
+  
+  $.ajax({
+    url: 'editor.php',
+    type: 'post',
+    dataType: 'json',
+    data: {directive: 'debug', realm_id: __projectId}
+  })
+  .done(function (data) {
+  
+    var address = data.address;
+    
+    $.ajax({
+      url: address,
+      type: 'post',
+      dataType: 'text',
+      data: {}
+    })
+    .done(function (data) {
+      console.log(data);
+      
+      __commitOnDebug = true;
+      
+      debugButton.html('<i class="fa fa-caret-square-o-right fa-fw"></i> Debug');
+      debugButton.attr('disabled', false);
+      
+      debugStatus.addClass('alert-success');
+      debugStatus.html('Success! Click here to launch in a new window: <a href="/debug/realm/' + __projectId + '" target="_blank"  class="alert-link">https://www.assembledrealms.com/debug/realm/' + __projectId + '</a>');
+      debugStatus.fadeIn(function () {
+        setTimeout(function () {
+          debugStatus.fadeOut();
+        }, 15000);
+      });
+    })
+    .fail(function(d, textStatus, error) {
+      console.log(textStatus);
+      debugButton.html('<i class="fa fa-caret-square-o-right fa-fw"></i> Debug');
+      debugButton.attr('disabled', false);
+    });
+  })
+  .fail(function(d, textStatus, error) {
+    console.log(textStatus);
+    debugButton.html('<i class="fa fa-caret-square-o-right fa-fw"></i> Debug');
+    debugButton.attr('disabled', false);
+  });
+}
+
+function commitRequired() {
+    
+  __commitableFiles = [];
+  
+  if (sessionStorage[__trackedStorageId]) {
+    __processingFiles = JSON.parse(sessionStorage[__trackedStorageId]);
+    
+    var fileMD5;
+    var file;
+    var fileName;
+    var filePath;
+    
+    if (_.isArray(__processingFiles)) {
+      __processingFiles = $.grep(__processingFiles, function (fileId, i) {
+    
+        if (isImageFile(fileId)) {
+          __commitableFiles.push({
+            name: fileId,
+            resource: true
+          });
+          return true;
+        } else {
+    
+          file = sessionStorage[fileId];
+          fileName = sessionStorage[fileId + '-name'];
+          filePath = sessionStorage[fileId + '-path'];
+          fileMD5 = sessionStorage[fileId + '-commit-md5'];
+                
+          if (md5(file) !== fileMD5) {
+            
+            __commitableFiles.push({
+              content: file,
+              name: fileName,
+              path: filePath,
+              sha: fileId,
+              resource: false
+            });
+            
+            return true;
+          } else {
+            return false;
+          }
+        }
+      });
+    }
+  }
+  
+  return (__commitableFiles.length > 0);
 }
 
 function commit() {
@@ -631,6 +721,8 @@ function commit() {
                 $('#commitStart').removeAttr('disabled');
                 $('#commitStart').html('Commit');
                 $("#commitProgressMessage").text('');
+                
+                __commitOnDebug = false;
                 
                 $('#modalCommit').modal('hide');
             },
