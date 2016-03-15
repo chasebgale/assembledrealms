@@ -197,9 +197,13 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     -->
     
   <div id="realm-container">
-    <div style="margin: 0 auto; width: 896px; padding: 0; background-color: black;">
+    <div style="margin: 0 auto; width: 896px; height: 504px; padding: 0; background-color: black;">
       <div id="realm" style="margin: 0; width: 896px; height: 504px; padding: 0; display: none;"></div>
-      <div id="queue" style="margin: 0; width: 896px; height: 504px; padding: 0;"></div>
+      <div id="queue" style="margin: 0; width: 896px; height: 504px; padding: 0;">
+        <div style="padding-top: 216px; text-align: center; color: white;">
+          <h3><i class="fa fa-spinner fa-spin fa-fw"></i> Connecting...</h3>
+        </div>
+      </div>
     </div>
   </div>
   
@@ -330,6 +334,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
   var REALM_URL = "<?php echo "https://play-" . $realm['address'] . ".assembledrealms.com/realms/" . $realmID . "/" ?>";
   var renderer;
   var timeoutID;
+  var timeoutInterval = 1;
    
   $.ajaxSetup({
     crossDomain: true,

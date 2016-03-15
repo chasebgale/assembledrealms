@@ -1,7 +1,8 @@
 <script type="text/javascript">
 
   timeoutID = window.setTimeout(function () {
+    timeoutInterval++;
     retryConnection();
-  }, 5000);
+  }, timeoutInterval * 1000);
   
 </script>

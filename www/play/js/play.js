@@ -24,8 +24,9 @@ function setup() {
   // create an new instance of a pixi stage
   var queueStage = new PIXI.Container();
   // add the renderer view element to the DOM
+  document.getElementById('queue').innerHTML = '';
   document.getElementById('queue').appendChild(queueRenderer.view);
-  
+
   blurFilter = new PIXI.filters.BlurFilter();
   blurFilter.blur = 0;
   
@@ -147,10 +148,6 @@ function loadEngine() {
   engine 	= new Engine();
   // Stats not needed for 'play'
   //stats 	= new Stats();
-  
-  $.post('', function (data) {
-    
-  });
 
   engine.ready = function () {
     if (OWNER) {			
