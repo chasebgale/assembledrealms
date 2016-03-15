@@ -443,3 +443,16 @@ div#play-now {
   display: block;
   line-height: 1.15em;
 }
+
+#realmActionItems {
+  margin-top: 24px;
+}
+
+#realmActionItems ul {
+  list-style: none;
+}
+
+#realmActionItems ul li {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}

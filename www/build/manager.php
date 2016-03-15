@@ -65,7 +65,8 @@ if ($method == 'POST') {
     }
     
     if ($directive == 'offline') {
-        $success = $loggedInUser->offlineRealm($realm_id);
+      
+        $success = $loggedInUser->authGatekeeper($realm_id);
         if ($success !== false) {
             echo json_encode( (object) ['message' => 'OK'] );
         } else {
@@ -77,17 +78,22 @@ if ($method == 'POST') {
     if ($directive == 'online') {
         $server_type = $_POST['server'];
         
-        // TODO: THIS SHOULD SEND A MESSAGE TO GATEWAY TO LAUNCH, EVEN WITH A 
-        // SHARED REALM, ASYNC, THAT WAY GATEWAY CAN FIND THE LEAST USED SERVER BY
-        // CHECKING THE STATS FROM THE JOB THAT RUNS EVERY ~10 MIN
-        $success = $loggedInUser->onlineRealm($realm_id, $server_type);
+        if ($loggedInUser->authGatekeeper($realm_id)) {
         
-        if ($success !== false) {
+          // TODO: THIS SHOULD SEND A MESSAGE TO GATEWAY TO LAUNCH, EVEN WITH A 
+          // SHARED REALM, ASYNC, THAT WAY GATEWAY CAN FIND THE LEAST USED SERVER BY
+          // CHECKING THE STATS FROM THE JOB THAT RUNS EVERY ~10 MIN
+          $success = $loggedInUser->onlineRealm($realm_id, $server_type);
+          
+          if ($success === true) {
             echo json_encode( (object) ['message' => 'OK'] );
-        } else {
+          } else {
             echo json_encode( (object) ['message' => 'FAILURE'] );
+          }
+          die();
+        } else {
+          echo json_encode( (object) ['message' => 'FAILURE'] );
         }
-        die();
     }
     
     if ($directive == 'destroy') {
@@ -336,24 +342,23 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 		</div>
 	</div>
     
-	<div style="margin-top: 24px;">
+	<div id="realmActionItems">
 		<div class="row">
-			<div class="col-md-1">
-				<p class="text-muted"><strong>Balance</strong></p>
-			</div>
-			<div class="col-md-3">
-				<span class="h3" id="realmFunds">$ <?php echo $realm_funds ?></span>
-			</div>
-			<div class="col-md-3">
-				<button class="btn btn-default" data-toggle="modal" data-target="#modalDeposit">Deposit Funds</button>
-			</div>
-		</div>
-		<div class="row">
-			<div class="col-md-1">
-				<p class="text-muted"><strong>Server</strong></p>
-			</div>
-			<div class="col-md-3">
-				<span class="h3" id="realmStatus">
+			<div class="col-md-4">
+        <div class="well">
+          <ul>
+            <li><strong>Funding</strong></li>
+            <li><span id="realmFunds">$ <?php echo $realm_funds ?></span></li>
+            <li><button class="btn btn-default" data-toggle="modal" data-target="#modalDeposit">Deposit Funds</button></li>
+          </ul>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="well">
+          <ul>
+            <li><strong>Server</strong></li>
+            <li>
+              <span id="realmStatus">
                 <?php if ($realm["status"] == 0) { ?>
                     Offline
                 <?php } else if ($realm["status"] == 1) { ?>
@@ -361,113 +366,114 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                 <?php } else if ($realm["status"] == 2) { ?>
                     <span class='label label-warning'><i class='fa fa-cog fa-spin'></i> Booting</span>
                 <?php } ?>
-                </span>
-			</div>
-			<div class="col-md-6">
-				<?php 
-					if ($realm["status"] < 1) {
-						echo '<button id="onlineOfflineBtn" class="btn btn-default" data-toggle="modal" data-target="#modalTakeRealmOnline">Take Realm Online</button>';
-					} else {
-						echo '<button id="onlineOfflineBtn" class="btn btn-default" data-toggle="modal" data-target="#modalTakeRealmOffline">Take Realm Offline</button>';
-					}
-				?>
-				<button class="btn btn-danger" id="button-destroy-realm" data-toggle="modal" data-target="#modalDestroy"><i class="fa fa-exclamation-triangle"></i> Destroy Realm</button>
-			</div>
-		</div>
-		<div class="row">
-			<div class="col-md-1">
-				<p class="text-muted"><strong>Code</strong></p>
-			</div>
-			<div class="col-md-3">
-				<span>03/22/2015 02:22 PM<br/>"Commit Message"</span>
-			</div>
-			<div class="col-md-6">
-				<button class="btn btn-default">Publish Latest Code</button>
-				<button class="btn btn-default" disabled><i class="fa fa-reply"></i> Restore to Version</button>
-			</div>
-		</div>
+              </span>
+            </li>
+            <li>
+              <?php 
+                if ($realm["status"] < 1) {
+                  echo '<button id="onlineOfflineBtn" class="btn btn-default" data-toggle="modal" data-target="#modalTakeRealmOnline">Take Realm Online</button>';
+                } else {
+                  echo '<button id="onlineOfflineBtn" class="btn btn-default" data-toggle="modal" data-target="#modalTakeRealmOffline">Take Realm Offline</button>';
+                }
+              ?>
+            </li>
+            <li><button class="btn btn-danger" id="button-destroy-realm" data-toggle="modal" data-target="#modalDestroy"><i class="fa fa-exclamation-triangle"></i> Destroy Realm</button></li>
+          </ul>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="well">
+          <ul>
+            <li><strong>Code</strong></li>
+            <li><span>03/22/2015 02:22 PM<br/>"Commit Message"</span></li>
+            <li><button class="btn btn-default">Publish Latest Code</button></li>
+            <li><button class="btn btn-default" disabled><i class="fa fa-reply"></i> Restore to Version</button></li>
+          </ul>
+        </div>
+      </div>
+    </div>
 	</div>
     
-    <div class="panel panel-default">
-        <div class="panel-heading">Display Settings</div>
-        <div class="panel-body">
-            <div class="row">
-                <div class="col-md-3">
-                    <p class="text-right text-muted"><strong>Title</strong></p>
-                </div>
-                <div class="col-md-9">
-                    <span><?php echo $realm["title"] ?></span>
-                </div>
-            </div>
-            <div class="row" style="padding-top: 8px;">
-                <div class="col-md-3">
-                    <p class="text-right text-muted"><strong>Description</strong></p>
-                </div>
-                <div class="col-md-9">
-                    <textarea id="details-description" class="form-control monitored" data-id="description" rows="4"><?php echo $realm["description"] ?></textarea>
-                </div>
-            </div>
-            <div class="row" style="padding-top: 8px;">
-                <div class="col-md-3">
-                    <p class="text-right text-muted"><strong>Display Crowd Funding</strong></p>
-                </div>
-                <div class="col-md-9">
-                    <div class="checkbox" style="display:inline">
-						<label>
-						   <input id="chkFunding" type="checkbox" <?php if ($realm["show_funding"]) echo 'checked="checked"' ?> style="float:inherit;"/>
-						</label>
-					</div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-3">
-                    <p class="text-right text-muted"><strong>Screenshots</strong></p>
-                </div>
-                <div class="col-md-9" id="screenshotsCol">
-                  <!-- Screenshots are in the format {id}-{#}-thumb.jpg and {id}-{#}.jpg, e.g. 42-1.jpg and 42-1-thumb.jpg -->
-                  <?php
-                      $screenshot_count = 0;
-                      foreach ($screenshots as $screenshot) {
-                        $screenshot_count++;
-                        echo '<div class="thumbnail screenshotHolder" data-id="' . $screenshot . '" style="display: inline-block; margin: 8px;">';
-                        echo '<a href="/play/img/' . $screenshot . '.jpg" data-toggle="lightbox" ';
-                        echo 'data-title="' . $realm["title"] . '<small> screenshot #' . $screenshot_count . '</small>" data-parent=".wrapper-parent" ';
-                        echo 'data-gallery="gallery-' . $realm["id"] . '"> ';
-                        echo '<img src="/play/img/' . $screenshot . '-thumb.jpg"></a>'; 
-                        echo '<div class="caption"><a href="#" class="btn removeScreenshot" data-id="' . $screenshot . '"><i class="fa fa-trash-o"></i> Remove</a></div></div>';
-                      }
-                  ?>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-3">
-                    <p class="text-right text-muted"><strong>&nbsp;</strong></p>
-                </div>
-                <div class="col-md-9">
-                    <?php
-                        if (count($screenshots) < 6) {
-                            echo '<div id="addNewShot" style="display: inline-block; margin: 8px; vertical-align: top;">';
-                            echo '<form enctype="multipart/form-data" action="" method="POST" role="form" id="uploadScreenshotForm">
-                                    <div class="form-group">
-                                        <label for="upfile">Add a new screenshot:</label>
-                                        <input type="hidden" name="MAX_FILE_SIZE" value="200000" />
-                                        <input name="upfile" id="upfile" type="file" accept="image/gif, image/png, image/jpeg" />
-                                    </div>
-                                </form>';
-                            echo '<div id="uploadProgress" class="progress" style="width: 200px; display: none;">
-                                    <div id="uploadProgressbar" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
-                                    </div>
-                                 </div>';
-                            echo '</div>';
-                        }
-                    ?>
-                </div>
-            </div>
+  <div class="panel panel-default">
+    <div class="panel-heading">Display Settings</div>
+    <div class="panel-body">
+      <div class="row">
+        <div class="col-md-3">
+          <p class="text-right text-muted"><strong>Title</strong></p>
         </div>
+        <div class="col-md-9">
+          <span><?php echo $realm["title"] ?></span>
+        </div>
+      </div>
+      <div class="row" style="padding-top: 8px;">
+        <div class="col-md-3">
+          <p class="text-right text-muted"><strong>Description</strong></p>
+        </div>
+        <div class="col-md-9">
+          <textarea id="details-description" class="form-control monitored" data-id="description" rows="4"><?php echo $realm["description"] ?></textarea>
+        </div>
+      </div>
+      <div class="row" style="padding-top: 8px;">
+        <div class="col-md-3">
+          <p class="text-right text-muted"><strong>Display Crowd Funding</strong></p>
+        </div>
+        <div class="col-md-9">
+          <div class="checkbox" style="display:inline">
+            <label>
+              <input id="chkFunding" type="checkbox" <?php if ($realm["show_funding"]) echo 'checked="checked"' ?> style="float:inherit;"/>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-3">
+          <p class="text-right text-muted"><strong>Screenshots</strong></p>
+        </div>
+        <div class="col-md-9" id="screenshotsCol">
+          <!-- Screenshots are in the format {id}-{#}-thumb.jpg and {id}-{#}.jpg, e.g. 42-1.jpg and 42-1-thumb.jpg -->
+          <?php
+            $screenshot_count = 0;
+            foreach ($screenshots as $screenshot) {
+              $screenshot_count++;
+              echo '<div class="thumbnail screenshotHolder" data-id="' . $screenshot . '" style="display: inline-block; margin: 8px;">';
+              echo '<a href="/play/img/' . $screenshot . '.jpg" data-toggle="lightbox" ';
+              echo 'data-title="' . $realm["title"] . '<small> screenshot #' . $screenshot_count . '</small>" data-parent=".wrapper-parent" ';
+              echo 'data-gallery="gallery-' . $realm["id"] . '"> ';
+              echo '<img src="/play/img/' . $screenshot . '-thumb.jpg"></a>'; 
+              echo '<div class="caption"><a href="#" class="btn removeScreenshot" data-id="' . $screenshot . '"><i class="fa fa-trash-o"></i> Remove</a></div></div>';
+            }
+          ?>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-3">
+          <p class="text-right text-muted"><strong>&nbsp;</strong></p>
+        </div>
+        <div class="col-md-9">
+          <?php
+            if (count($screenshots) < 6) {
+              echo '<div id="addNewShot" style="display: inline-block; margin: 8px; vertical-align: top;">';
+              echo '<form enctype="multipart/form-data" action="" method="POST" role="form" id="uploadScreenshotForm">
+                      <div class="form-group">
+                          <label for="upfile">Add a new screenshot:</label>
+                          <input type="hidden" name="MAX_FILE_SIZE" value="200000" />
+                          <input name="upfile" id="upfile" type="file" accept="image/gif, image/png, image/jpeg" />
+                      </div>
+                  </form>';
+              echo '<div id="uploadProgress" class="progress" style="width: 200px; display: none;">
+                      <div id="uploadProgressbar" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+                      </div>
+                   </div>';
+              echo '</div>';
+            }
+          ?>
+        </div>
+      </div>
+    </div>
 		<div class="panel-footer clearfix">
 			<button id="savebutton" class="btn btn-default pull-right">Save Changes!</button>
 		</div>
-    </div>
+  </div>
 </div>
 
 <div class="modal fade" id="modalTakeRealmOnline" tabindex="-1" role="dialog" aria-hidden="true">

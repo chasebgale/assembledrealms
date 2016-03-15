@@ -333,6 +333,52 @@ app.get('/api/launch/:id', function httpGetLaunch(req, res, next) {
 
 app.get('/api/shutdown/:id', function httpGetLaunch(req, res, next) {
   
+  var realmID      = req.params.id;
+  var realmProcess = "realm-" + realmID;
+  var realmDB      = "realm_" + realmID;
+  var running      = false;
+  
+  pm2.list(function(err, processes) {
+    // Search for running instance of requested realm
+    processes.forEach(function(proc) {
+      if (proc.name == realmProcess) {
+        running = true;
+        return;
+      }
+    });
+       
+    if (!running) {
+      db.del(realmDB, function (error, reply) {
+        if (error) {
+          console.error(error.stack);
+          return res.status(500).send(error.stack);
+        }
+        
+        return res.send('OK');
+        
+      });
+    } else {
+      pm2.delete(realmProcess, function onPmStop(err, proc) {
+        if (err) {
+          console.error("Attempted to stop " + proc.name + " but errored: " + err.stack);
+          return res.status(500).send(err.stack);
+        }
+        
+        db.del(realmDB, function (error, reply) {
+          if (error) {
+            console.error(error.stack);
+            return res.status(500).send(error.stack);
+          }
+          
+          return res.send('OK');
+          
+        });
+        
+      });
+    }
+  });
+  
+  
 });
 
 app.get('/api/stats', function httpGetStats(req, res, next) {

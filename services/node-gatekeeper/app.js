@@ -337,7 +337,8 @@ app.post('/launch/play/shared/:id', function (req, res, next) {
                   'Accept': '*/*'
                 },
                 formData: {
-                  realm_id: realm.id
+                  realm_id: realm.id,
+                  realm_status: 1
                 }
               };
               
@@ -370,6 +371,93 @@ app.post('/launch/play/shared/:id', function (req, res, next) {
           // Successful request but failure on DO API side
           console.log("Failure message: " + body);
           return res.status(500).send(body);
+        }
+      });
+      
+    } else {
+      return res.status(401).send("Unauthorized.");
+    }
+    
+  });
+});
+
+app.get('/shutdown/play/shared/:id', function (req, res, next) {
+  var time        = new Date().getTime();
+  var realm_id    = req.params.id;
+  // TODO: Pick least congested
+  var realm_host  = 'play-' + '01' + '.assembledrealms.com';
+  var realm;
+  
+  // Does this user have permission to modify this realm?
+  db.get([USER_REALMS + '-' + req.user_id], function redisGetUserRealms(error, reply) {
+    var realms = JSON.parse(reply);
+    console.log('USER REALMS: ' + reply);
+    
+    for (var i = 0; i < realms.length; i++) {
+      if (realms[i].id == realm_id) {
+        realm = realms[i];
+        break;
+      }
+    }
+    
+    if (realm) {
+      // SUCCESSFULLY PUBLISH FROM SOURCE SERVER TO SHARED SERVER
+      var options = {
+        url: 'https://' + realm_host + '/api/shutdown/' + realm.id,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': play_token,
+          'Accept': '*/*'
+        },
+        json: true
+      };
+      
+      console.log("Posting to play-xx to initiate shutdown...");
+      
+      request.get(options, function(err, response, body) {
+        
+        if (err) {
+          console.error(err);
+          return res.status(500).send(err.message);
+        }
+        
+        if ((response.statusCode > 199) && (response.statusCode < 300)) {
+          // UPDATE REALMS TABLE ON assembledrealms.com
+          var options = {
+            url: 'https://www.assembledrealms.com/external/gatekeeper.php',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': HOME_TOKEN,
+              'Accept': '*/*'
+            },
+            formData: {
+              realm_id: realm.id,
+              realm_status: 0
+            }
+          };
+          
+          request.post(options, function(err, response, body) {
+    
+            if (err) {
+              console.error(err);
+              return res.status(500).send(err.message);
+            }
+            
+            if ((response.statusCode > 199) && (response.statusCode < 300)) {
+              return res.json({message: 'OK'});
+            } else {
+              return res.status(500).send('Response fauilure: ' + response.statusCode);
+            }
+          });
+          
+        } else {
+          console.log('Failure http code from launch request...');
+          return res.status(500).send('Response fauilure: Failure http code from launch request...');
+        }
+        
+        if (err) {
+          console.error(err);
+          return res.json({error: err.message});
         }
       });
       
@@ -533,16 +621,10 @@ app.get('/launch/play/private/:id', function (req, res, next) {
     
 });
 
-app.get('/shutdown/:id', function (req, res, next) {
+app.get('/shutdown/play/private/:id', function (req, res, next) {
     
-  var auth = req.get('Authorization');
-
-  if (auth !== SECURITY_TOKEN) {
-    return res.status(401).send("Please don't try to break things :/");
-  }
-  
   // Check console logs...
-  console.log(new Date().toISOString() + ' Received valid request to /shutdown/' + req.params.id);
+  console.log(new Date().toISOString() + ' Received valid request to /shutdown/play/shared/' + req.params.id);
   
   if (realms[req.params.id]) {
     var options = {

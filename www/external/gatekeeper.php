@@ -24,7 +24,8 @@
   if(isset($_SERVER['Authorization'])) {
     if ($_SERVER['Authorization'] == $self_token) {
       
-      $realm_id  = $_POST['realm_id'];
+      $realm_id     = $_POST['realm_id'];
+      $realm_status = $_POST['realm_status'];
       
       $db_host = "assembledrealms.db";    // Host address
       $db_name = "www";                   // Name of Database
@@ -38,10 +39,10 @@
       } else {
           
           $stmt = $mysqli->prepare("UPDATE realms
-            SET status = 1
+            SET status = ?
             WHERE
             id = ?");
-          $stmt->bind_param("i", $realm_id);
+          $stmt->bind_param("ii", $realm_status, $realm_id);
           $stmt->execute();
           $stmt->close();
           

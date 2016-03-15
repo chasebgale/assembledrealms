@@ -51,41 +51,56 @@ $(document).ready(function () {
         
     });
    
-    $("#takeRealmOffline").on('click', function (e) {
-        var button = $(this);
+  $("#takeRealmOffline").on('click', function (e) {
+    var button = $("#onlineOfflineBtn");
+  
+    button.attr('disabled', true);
+    button.html('<i class="fa fa-cog fa-spin"></i> Take Realm Offline');
+    
+    $("#modalTakeRealmOffline").modal('hide');
+    
+    $.ajax({
+      url: 'manager.php',
+      type: 'post',
+      dataType: 'json',
+      data: {
+        directive: 'offline',
+        realm_id: __realmID
+      }
+    })
+    .done(function (data) {
       
-        button.attr('disabled', true);
-        button.html('<i class="fa fa-cog fa-spin"></i> Yes');
+      $.ajax({
+        url: 'https://gatekeeper.assembledrealms.com/shutdown/play/shared/' + __realmID,
+        type: 'get'
+      })
+      .done(function (data) {
         
-        $.ajax({
-            url: 'manager.php',
-            type: 'post',
-            dataType: 'json',
-            data: {
-                directive: 'offline',
-                realm_id: __realmID
-            }
-        })
-        .done(function (data) {
-            button.attr('disabled', false);
-            button.html('Yes');
-            
-            if (data.message == "OK") {
-                $("#onlineOfflineBtn").attr('data-target', '#modalTakeRealmOnline');
-                $("#onlineOfflineBtn").text('Take Realm Online');
-                $("#realmStatus").text('Offline');
-                $("#modalTakeRealmOffline").modal('hide');
-            }
-        })
-        .fail(function(data) {
-            console.log(data);
-            $('#realmOfflineAlert').text('Network Error: ' + data.statusText);
-            button.attr('disabled', false);
-            button.html('Yes');
-            // Update DOM to reflect we messed up:
-            //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
-        });
+        if (data.message == "OK") {
+          button.attr('disabled', false);
+          button.attr('data-target', '#modalTakeRealmOnline');
+          button.html('Take Realm Online');
+          /*
+          if (server_type > 0) {
+            $("#realmStatus").html("<span class='label label-warning'><i class='fa fa-cog fa-spin'></i>  Booting</span>");
+          } else {
+          */
+          $("#realmStatus").html("Offline");
+          //}
+        }
+      
+      })
+      .fail(function(data) {
+        console.log(data);
+        $('#realmOfflineAlert').text('Network Error: ' + data.statusText);
+        button.attr('disabled', false);
+        button.html('Take Realm Offline');
+        // Update DOM to reflect we messed up:
+        //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
+      });
+      
     });
+  });
     
   $("#takeRealmOnline").on('click', function (e) {
     var button = $("#onlineOfflineBtn");
