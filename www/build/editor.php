@@ -564,7 +564,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
   
   <script type="text/javascript">
       $(document).ready(function () {
-          initialize(<?php echo $realm_id; ?>, "<?php echo $sourceURL; ?>");
+        initialize(<?php echo $realm_id; ?>, "<?php echo $sourceURL; ?>");
       });
   </script>
 

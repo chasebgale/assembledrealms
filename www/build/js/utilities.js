@@ -1,6 +1,4 @@
-﻿var _token = null;
-
-function getRandomInt(min, max) {
+﻿function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
@@ -13,55 +11,6 @@ function generateUUID(){
     });
     return uuid;
 };
-
-function getGitlabSession() {
-
-    // This cookie approach is awesome but gitlab trashes sessions too fast
-    //var cached = readCookie("gitlab");
-
-    if (_token) {
-        return _token;
-    } else {
-
-        var parsed;
-
-        var result = $.ajax({
-            type: "POST",
-            url: "/account/gitlab.php",
-            async: false,
-            cache: false
-        });
-
-        
-        if (result.status == 200) {
-            parsed = JSON.parse(result.responseText);
-        }
-
-        var parameters = {};
-        parameters.login = parsed.user_id;
-        parameters.password = parsed.auth;
-
-        result = null;
-
-        result = $.ajax({
-            type: "POST",
-            url: "http://source-01.assembledrealms.com/api/v3/session",
-            data: parameters,
-            async: false,
-            cache: false
-        });
-
-        if (result.status == 201) {
-            parsed = JSON.parse(result.responseText);
-            //createCookie("gitlab", parsed.private_token, 1);
-            _token = parsed.private_token;
-            return _token;
-        }
-
-        return null;
-
-    }
-}
 
 function createCookie(name, value, days) {
     var expires;
@@ -90,3 +39,13 @@ function readCookie(name) {
 function eraseCookie(name) {
     createCookie(name, "", -1);
 }
+
+String.prototype.endsWith = function (suffix) {
+  return this.indexOf(suffix, this.length - suffix.length) !== -1;
+};
+
+String.prototype.toTitleCase = function() {
+  return this.replace(/\w\S*/g, function(txt) {
+    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+  });
+};

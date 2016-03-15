@@ -44,6 +44,7 @@ var QUEUE              = "queue";
 var QUEUE_LOOKUP       = "queue_lookup";          // Quickly determine if user is in queue and for what realm...
 var REALM_QUEUE        = "realm_queue";           // Realms waiting to be launched
 var REALM_ACTIVITY     = "realm_activity";        // Last timestamp a user joined or left
+var REALM_AVAILABILITY = "realm_availability";    // Realms that can be launched
 
 // TODO: Don't flush the DB on restart in production...
 // db.flushdb();
@@ -151,59 +152,8 @@ app.use(cookieParser('Assembled Realms is a land without secrets...'));
 // Serve up the realm files
 app.use('/realms', express.static(__dirname + '/realms'));
 
-
-/////////////////////////////////
-// SERVER-TO-SERVER ROUTES
-
-app.use('/api', function(req, res, next) {
-  var auth = req.get('Authorization');
-
-  if (auth !== SECURITY_TOKEN) {
-    console.log('/api/auth - Bad auth token - ' + SECURITY_TOKEN);
-    return res.status(401).send("Please don't try to break things :/");
-  } else {
-    next();
-  }
-});
-
-app.post('/api/auth/:id', function httpPostAuth(req, res, next) {
-
-  var php_sess    = req.body.php_sess;
-  var user_id     = req.body.user_id;
-  var owner       = req.body.owner;
-  var realm_id    = req.params.id;
-  
-  if ((php_sess === undefined) || (user_id === undefined) || (owner === undefined)) {
-    console.log('/auth - Missing params: ' + JSON.stringify(req.body));
-    return res.status(500).send("Missing parameters, bruh.");
-  }
-  
-  console.log("/auth requested: session: %s, user: %s, realm: %s, owner: %s",
-    php_sess, user_id, realm_id, owner);
-
-  var realm     = "realm_" + realm_id + "_access";
-  var privilege = (owner == true) ? 1 : 0;
-  var now       = Date.now();
-  
-  db.multi()
-    .zadd([SESSION_LIST, now, php_sess])     	   // Set session key and activity time for it
-    .zadd([SESSION_MAP, user_id, php_sess])      // Map session key to user id
-    .zadd([realm, privilege, user_id]) 	         // Add the user permission (1 = privileged)
-    .exec(function (err, replies) {
-      if (err) {
-        console.error(err);
-        return res.status(500).send(err.message);
-      }
-      console.log("/auth success, db replies: %s", JSON.stringify(replies));
-      
-      return res.send('OK');
-    });
-});
-
-app.get('/api/launch/:id', function httpGetLaunch(req, res, next) {
-  
+var startRealm = function (realmID, startRealmCallback) {
   var now            = Date.now();
-	var realmID        = req.params.id;
   var realmProcess   = "realm-" + realmID;
 	var realmApp       = '/var/www/realms/realm-server.js';
   var realmErr       = '/var/www/logs/' + realmID + '-err.log';
@@ -285,30 +235,104 @@ app.get('/api/launch/:id', function httpGetLaunch(req, res, next) {
       if (processes.length > MAX_RUNNING_REALMS) {
         
         db.rpush([REALM_QUEUE, realmID], function (error, reply) {
-          return res.send('QUEUED');
+          startRealmCallback(null, 'QUEUED');
         });
         
       } else {
         // Realm not running and we have the space to spool a new one:
         launchRealm(false, function (error) {
           if (error) {
-            console.error(err);
-            return res.status(500).send(err.stack);
+            console.error(error);
+            startRealmCallback(error);
           }
-          return res.send('OK');
+          
+          db.sadd([REALM_AVAILABILITY, realmID], function (error, reply) {
+            startRealmCallback(null, 'QUEUED');
+          });
+          
+          startRealmCallback(null, 'OK');
         });
       }
     } else {
       // Realm is already running, simply restart it
       launchRealm(true, function (error) {
         if (error) {
-          console.error(err);
-          return res.status(500).send(err.stack);
+          console.error(error);
+          startRealmCallback(error);
         }
-        return res.send('OK');
+        
+        db.sadd([REALM_AVAILABILITY, realmID], function (error, reply) {
+          startRealmCallback(null, 'QUEUED');
+        });
+        
+        startRealmCallback(null, 'OK');
       });
     }
   });
+};
+
+/////////////////////////////////
+// SERVER-TO-SERVER ROUTES
+
+app.use('/api', function(req, res, next) {
+  var auth = req.get('Authorization');
+
+  if (auth !== SECURITY_TOKEN) {
+    console.log('/api/auth - Bad auth token - ' + SECURITY_TOKEN);
+    return res.status(401).send("Please don't try to break things :/");
+  } else {
+    next();
+  }
+});
+
+app.post('/api/auth/:id', function httpPostAuth(req, res, next) {
+
+  var php_sess    = req.body.php_sess;
+  var user_id     = req.body.user_id;
+  var owner       = req.body.owner;
+  var realm_id    = req.params.id;
+  
+  if ((php_sess === undefined) || (user_id === undefined) || (owner === undefined)) {
+    console.log('/auth - Missing params: ' + JSON.stringify(req.body));
+    return res.status(500).send("Missing parameters, bruh.");
+  }
+  
+  console.log("/auth requested: session: %s, user: %s, realm: %s, owner: %s",
+    php_sess, user_id, realm_id, owner);
+
+  var realm     = "realm_" + realm_id + "_access";
+  var privilege = (owner == true) ? 1 : 0;
+  var now       = Date.now();
+  
+  db.multi()
+    .zadd([SESSION_LIST, now, php_sess])     	   // Set session key and activity time for it
+    .zadd([SESSION_MAP, user_id, php_sess])      // Map session key to user id
+    .zadd([realm, privilege, user_id]) 	         // Add the user permission (1 = privileged)
+    .exec(function (err, replies) {
+      if (err) {
+        console.error(err);
+        return res.status(500).send(err.message);
+      }
+      console.log("/auth success, db replies: %s", JSON.stringify(replies));
+      
+      return res.send('OK');
+    });
+});
+
+app.get('/api/launch/:id', function httpGetLaunch(req, res, next) {
+  
+  startRealm(req.params.id, function (err, status) {
+    if (err) {
+      return res.status(500).send(err.stack);
+    }
+    
+    return res.send(status);
+  });
+  
+});
+
+app.get('/api/shutdown/:id', function httpGetLaunch(req, res, next) {
+  
 });
 
 app.get('/api/stats', function httpGetStats(req, res, next) {
@@ -558,7 +582,17 @@ app.get('/realms/:id', function httpGetRealm(req, res, next) {
             //return res.render('error', {message: "This realm is queued for launch..."});
             renderRealm(-1, queued);
           } else {
-            return res.render('error', {message: "This realm is offline....."});
+            // The realm was powered down due to inactivity, bring it back up:
+            startRealm(req.params.id, function (err, status) {
+              if (err) {
+                return res.render('error', {message: "Realm broke after restart." + err.stack}); 
+              }
+              
+              return res.render('retry');
+              
+            });
+            
+            //return res.render('error', {message: "This realm is offline....."});
           }
         });
       } else {

@@ -42,7 +42,7 @@ function initialize(projectID, projectDomain) {
     var editorTheme = localStorage.getItem("editorTheme");
     if (editorTheme !== null) {
       __editor.setTheme('ace/theme/' + editorTheme);
-      $("#btnEditorTheme").html(toTitleCase(editorTheme.replace(new RegExp("_", "g"), " ")) + ' <span class="caret"></span>');
+      $("#btnEditorTheme").html(editorTheme.replace(new RegExp("_", "g"), " ").toTitleCase() + ' <span class="caret"></span>');
     }
     
     var editorFontSize = localStorage.getItem("editorFontSize");
@@ -539,9 +539,15 @@ function listCommitFiles() {
   }
 }
 
-function buttonOverrideDebugWarning() {
+function buttonOverrideDebugWarning(cancel) {
   $('#commandBarStatus').fadeOut();
-  debug(true);
+  if (!cancel) {
+    debug(true);
+  } else {
+    var debugButton = $('#btnDebug');
+    debugButton.attr('disabled', false);
+    debugButton.html('<i class="fa fa-caret-square-o-right fa-fw"></i> Debug');
+  }
 }
 
 function debug(force) {
@@ -558,8 +564,8 @@ function debug(force) {
       debugButton.html('<i class="fa fa-spinner fa-fw"></i> Debug');
       debugStatus.addClass('alert-warning');
       debugStatus.html('You have <strong>uncommitted</strong> changes that won\'t appear when debugging, continue without your changes? ' + 
-      '<a id="ignoreCommitAndDebug" class="btn btn-default btn-xs" href="#" role="button" onclick="buttonOverrideDebugWarning();return false;">YES</a> ' +
-      '<a id="cancelDebug" class="btn btn-default btn-xs" href="#" role="button">NO</a> '
+      '<a id="ignoreCommitAndDebug" class="btn btn-default btn-xs" href="#" role="button" onclick="buttonOverrideDebugWarning(false);return false;">YES</a> ' +
+      '<a id="cancelDebug" class="btn btn-default btn-xs" href="#" role="button" onclick="buttonOverrideDebugWarning(true);return false;">NO</a> '
       );
       debugStatus.fadeIn();
       return;
@@ -1075,13 +1081,3 @@ function encode_utf8(s) {
 function decode_utf8(s) {
     return decodeURIComponent(escape(s));
 }
-
-function toTitleCase(str) {
-  return str.replace(/\w\S*/g, function(txt) {
-    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-  });
-}
-
-String.prototype.endsWith = function (suffix) {
-    return this.indexOf(suffix, this.length - suffix.length) !== -1;
-};

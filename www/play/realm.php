@@ -196,119 +196,121 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     ?>
     -->
     
-    <div id="realm-container">
-      <div style="margin: 20px auto; width: 896px; padding: 0; background-color: black;">
-        <div id="realm" style="margin: 0; width: 896px; height: 504px; padding: 0; display: none;"></div>
-        <div id="queue" style="margin: 0; width: 896px; height: 504px; padding: 0;"></div>
+  <div id="realm-container">
+    <div style="margin: 0 auto; width: 896px; padding: 0; background-color: black;">
+      <div id="realm" style="margin: 0; width: 896px; height: 504px; padding: 0; display: none;"></div>
+      <div id="queue" style="margin: 0; width: 896px; height: 504px; padding: 0;"></div>
+    </div>
+  </div>
+  
+  <div id="tabsContainer" style="display: none;">
+    <div style="margin: 0 auto; width: 896px; padding: 0;">
+      <ul id="tabs" class="nav nav-tabs" role="tablist">
+        <li class="active"><a href="#tab_readme" role="tab" data-toggle="tab">Readme</a></li>
+        <?php if ($realm['show_funding']) { ?>
+        <li><a href="#tab_funding" role="tab" data-toggle="tab">Funding</a></li>
+        <?php } ?>
+        <li><a href="#tab_comments" role="tab" data-toggle="tab">Comments</a></li>
+        <li><a href="#tab_credits" role="tab" data-toggle="tab">Credits</a></li>
+      </ul>
+    
+      <!-- Tab panes -->
+      <div class="tab-content" style="min-height: 400px; margin-top: 20px;">
+      
+        <div id="tab_readme" class="tab-pane active"></div>
+      
+        <?php if ($realm['show_funding']) { ?>
+        <div id="tab_funding" class="tab-pane clearfix">
+          <div id="funding"></div>
+          <div id="realmFundingDonate" style="float: right;">
+            <form class="form-horizontal" role="form">
+              <div class="form-group">
+                <label class="col-sm-6 control-label">
+                  <img src="/img/profiles/<?=$loggedInUser->user_id . ".jpg?" . time() ?>" />
+                </label>
+                <div class="col-sm-6">
+                  <p class="form-control-static"><?=$loggedInUser->displayname?></p>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-6 control-label">Account Balance</label>
+                <div class="col-sm-6">
+                  <p class="form-control-static">$ <?=$loggedInUser->funds()?></p>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-6 control-label" for="donationAmount">Donation Amount</label>
+                <div class="col-sm-6 left-inner-addon">
+                  <span>$</span>
+                  <input id="donationAmount" type="text" class="form-control" style="display: inline; width: 92%;" />
+                </div>
+              </div>
+              <button type="button" class="btn btn-default pull-right">Donate</button>
+            </form>
+          </div>
+        </div>
+        <?php } ?>
+      
+        <div id="tab_comments" class="tab-pane">
+          <div id="comment" style="margin-top: 0px;" class="clearfix">
+            <textarea class="form-control" rows="5" cols="100" id="commentContent" placeholder="Add your voice to the conversation..."></textarea>
+            <button id="btnAddComment" style="margin-top: 10px;" class="btn btn-default pull-right">Add Comment</button>
+          </div>
+          
+          <div>
+            <ul id="comments" class="media-list">
+            </ul>
+          </div>    
+        </div>
+        
+        <div id="tab_credits" class="tab-pane"></div>
+      
       </div>
     </div>
-  <div id="tabsContainer" style="display: none;">
-        
-		<ul id="tabs" class="nav nav-tabs" role="tablist" style="margin-top: 60px;">
-			<li class="active"><a href="#tab_readme" role="tab" data-toggle="tab">Readme</a></li>
-			<?php if ($realm['show_funding']) { ?>
-			<li><a href="#tab_funding" role="tab" data-toggle="tab">Funding</a></li>
-			<?php } ?>
-			<li><a href="#tab_comments" role="tab" data-toggle="tab">Comments</a></li>
-			<li><a href="#tab_credits" role="tab" data-toggle="tab">Credits</a></li>
-		</ul>
-    
-		<!-- Tab panes -->
-		<div class="tab-content">
-    
-			<div id="tab_readme" style="margin-top: 32px;" class="tab-pane active"></div>
-		
-			<?php if ($realm['show_funding']) { ?>
-			<div id="tab_funding" class="tab-pane clearfix" style="margin-top: 32px;">
-				<div id="funding"></div>
-				<div id="realmFundingDonate" style="float: right;">
-					<form class="form-horizontal" role="form">
-						<div class="form-group">
-							<label class="col-sm-6 control-label">
-								<img src="/img/profiles/<?=$loggedInUser->user_id . ".jpg?" . time() ?>" />
-							</label>
-							<div class="col-sm-6">
-								<p class="form-control-static"><?=$loggedInUser->displayname?></p>
-							</div>
-						</div>
-						<div class="form-group">
-							<label class="col-sm-6 control-label">Account Balance</label>
-							<div class="col-sm-6">
-								<p class="form-control-static">$ <?=$loggedInUser->funds()?></p>
-							</div>
-						</div>
-						<div class="form-group">
-							<label class="col-sm-6 control-label" for="donationAmount">Donation Amount</label>
-							<div class="col-sm-6 left-inner-addon">
-								<span>$</span>
-								<input id="donationAmount" type="text" class="form-control" style="display: inline; width: 92%;" />
-							</div>
-						</div>
-						<button type="button" class="btn btn-default pull-right">Donate</button>
-					</form>
-				</div>
-			</div>
-			<?php } ?>
-		
-			<div id="tab_comments" class="tab-pane" style="margin-top: 32px;">
-				<div id="comment" style="margin-top: 0px;" class="clearfix">
-					<textarea class="form-control" rows="5" cols="100" id="commentContent" placeholder="Add your voice to the conversation..."></textarea>
-					<button id="btnAddComment" style="margin-top: 10px;" class="btn btn-default pull-right">Add Comment</button>
-				</div>
-				
-				<div>
-					<ul id="comments" class="media-list">
-					</ul>
-				</div>    
-			</div>
-			
-			<div id="tab_credits" class="tab-pane"></div>
-		
-		</div>
 	</div>
 </div>
 
 <script id="comments_template" type="text/template">
     
-<% _.each( comments, function( comment ){ %>
-    
+  <% _.each( comments, function( comment ) { %>
+      
     <% if (!comment.parent_id) { %>
     <li class="media">
-        <a class="pull-left" href="/user/?<%-comment.user_id%>">
-            <img width="50" height="50" class="media-object" src="/img/profiles/<%- comment.user_id + ".jpg" %>">
-        </a>
-        <div class="media-body" data-id="<%- comment.id %>">
-            <h4 class="media-heading">
-                <small><i>
-                <%= '<a href="/user/?' + comment.user_id + '">' + comment.display_name + '</a> commented ' + moment(comment.timestamp + '+00:00').fromNow() %>
-                <button class="btn btn-default btn-xs reply"><i class="fa fa-reply"></i></button>
-                </i></small>
-            </h4>
-            <p><%- comment.content %></p>
-        </div>
+      <a class="pull-left" href="/user/?<%-comment.user_id%>">
+        <img width="50" height="50" class="media-object" src="/img/profiles/<%- comment.user_id + ".jpg" %>">
+      </a>
+      <div class="media-body" data-id="<%- comment.id %>">
+        <h4 class="media-heading">
+          <small><i>
+          <%= '<a href="/user/?' + comment.user_id + '">' + comment.display_name + '</a> commented ' + moment(comment.timestamp + '+00:00').fromNow() %>
+          <button class="btn btn-default btn-xs reply"><i class="fa fa-reply"></i></button>
+          </i></small>
+        </h4>
+        <p><%- comment.content %></p>
+      </div>
     </li>
     <% } %>
-        
-<% }); %>
+          
+  <% }); %>
 
 </script>
 
 <script id="comment_reply_template" type="text/template">
     
-    <div class="media">
-        <a class="pull-left" href="/user/?<%-comment.user_id%>">
-            <img width="50" height="50" class="media-object" src="/img/profiles/<%- comment.user_id + ".jpg" %>">
-        </a>
-        <div class="media-body" data-id="<%- comment.id %>">
-            <h4 class="media-heading">
-                <small><i>
-                <%= '<a href="/user/?' + comment.user_id + '">' + comment.display_name + '</a> commented ' + moment(comment.timestamp + '+00:00').fromNow() %>
-                <button class="btn btn-default btn-xs reply"><i class="fa fa-reply"></i></button>
-                </i></small>
-            </h4>
-            <p><%- comment.content %></p>
-        </div>
+  <div class="media">
+    <a class="pull-left" href="/user/?<%-comment.user_id%>">
+      <img width="50" height="50" class="media-object" src="/img/profiles/<%- comment.user_id + ".jpg" %>">
+    </a>
+    <div class="media-body" data-id="<%- comment.id %>">
+      <h4 class="media-heading">
+        <small><i>
+        <%= '<a href="/user/?' + comment.user_id + '">' + comment.display_name + '</a> commented ' + moment(comment.timestamp + '+00:00').fromNow() %>
+        <button class="btn btn-default btn-xs reply"><i class="fa fa-reply"></i></button>
+        </i></small>
+      </h4>
+      <p><%- comment.content %></p>
     </div>
+  </div>
 
 </script>
 
@@ -324,17 +326,74 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
 <script type="text/javascript">
    
+  var REALM_ID  = "<?=$realmID?>";
+  var REALM_URL = "<?php echo "https://play-" . $realm['address'] . ".assembledrealms.com/realms/" . $realmID . "/" ?>";
+  var renderer;
+  var timeoutID;
+   
   $.ajaxSetup({
     crossDomain: true,
     xhrFields: {
       withCredentials: true
     }
   });
+  
+  var retryConnection = function() {
+    $.get("<?php echo $url_from_auth; ?>", function (data) {
+      $("#realm-container").append(data);
+    });
+  };
     
   $(document).ready(function () {
+    
+    renderer = new marked.Renderer();
+    renderer.table = function(header, body) {
+      return '<table class="table table-striped"><thead>' + header + '</thead><tbody>' + body + '</tbody></table>';
+    }
+
+    marked.setOptions({
+      sanitize: true,
+      renderer: renderer
+    });
+    
+    async.parallel([
+      function(callback){
+        $.post( "realm.php", { directive: "comment", realmID: REALM_ID })
+          .done(function( data ) {
+            if (data !== "null") {
+              data = JSON.parse( data );
+              $("#comments").html(templateFn({ 'comments': data }));
+              
+              for (var i =0; i < data.length; i++) {
+                if (data[i].parent_id) {
+                  var target = $('#comments').find('[data-id="' + data[i].parent_id + '"]');
+                  target.append(templateReplyFn({'comment': data[i]}));
+                }
+              }
+            } 
+            callback(null, true);
+          });
+      },
+      function(callback){
+        $.get(REALM_URL + "README.md", function (data) {
+          $("#tab_readme").html(marked(data));
+          callback(null, true);
+        });
+      },
+      function(callback){
+        $.get(REALM_URL + "CREDITS.md", function (data) {
+          $("#tab_credits").html(marked(data));
+          callback(null, true);
+        });
+      }
+    ],
+    function(err, results){
+      $('#tabsContainer').fadeIn();
+      $('#actionButtons').fadeIn();
+    });
+        
+    
     $.get("<?php echo $url_from_auth; ?>", function (data) {
-      console.log("ON DOC READY HANDLER:");
-      console.log(data);
       $("#realm-container").append(data);
     });
   });
