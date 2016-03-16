@@ -348,23 +348,25 @@ $(document).ready(function () {
         
     });
    
-    var depositToHours = Math.floor(__realmFunds / 0.9);
-    $("#realmLifespan").text(depositToHours + " hours, or about " + moment.duration(depositToHours, 'hours').humanize() );
-   
-   
-    __chart 	    = new SmoothieChart({millisPerPixel: 100,
-									grid: {fillStyle:'#4C4C4C',strokeStyle:'#777777'},
-									yRangeFunction: function(range) { 
-										return {min: 0, max: (range.max + 10 > 100) ? 100 : range.max + 10}; 
-									},
-									yMinFormatter: function(min, precision) {
-										return parseFloat(min).toFixed(0) + " %";
-									},
-									yMaxFormatter: function(max, precision) {
-										return parseFloat(max).toFixed(0) + " %";
-									}});
-									 
-    __chart_canvas  = document.getElementById('chart-server');
+  var depositToHours = Math.floor(__realmFunds / 0.9);
+  $("#realmLifespan").text(depositToHours + " hours, or about " + moment.duration(depositToHours, 'hours').humanize() );
+  
+  /*
+  __chart = new SmoothieChart({
+    millisPerPixel: 100,
+    grid: {fillStyle:'#4C4C4C',strokeStyle:'#777777'},
+    yRangeFunction: function(range) { 
+      return {min: 0, max: (range.max + 10 > 100) ? 100 : range.max + 10}; 
+    },
+    yMinFormatter: function(min, precision) {
+      return parseFloat(min).toFixed(0) + " %";
+    },
+    yMaxFormatter: function(max, precision) {
+      return parseFloat(max).toFixed(0) + " %";
+    }
+  });
+                 
+  __chart_canvas  = document.getElementById('chart-server');
 	
 	__memory_series = new TimeSeries();
 	__cpu_series 	= new TimeSeries();
@@ -375,10 +377,10 @@ $(document).ready(function () {
 	__chart.addTimeSeries(__memory_series, {lineWidth:2.3,strokeStyle:'#00ff00',fillStyle:'rgba(0,255,0,0.11)'});
 	__chart.addTimeSeries(__cpu_series, {lineWidth:2.3,strokeStyle:'#ffffff',fillStyle:'rgba(255,255,255,0.11)'});
    
-    if (__realmOnline && (__realmLevel > 0)) {
-        enableChart();
-    }
-   
+  if (__realmOnline && (__realmLevel > 0)) {
+    enableChart();
+  }
+  */
 });
 
 function enableChart() {

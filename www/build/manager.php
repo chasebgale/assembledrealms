@@ -309,38 +309,14 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
 <div id="content" class="container">
 
-	<div>
-		<!--<h2></h2>-->
-		<div style="height: 42px; background-color: #4C4C4C;">
-			<div style="display: inline-block; vertical-align: top; padding-right: 28px;">
-				<h3 class="manager-title" style="margin-top: 0;"> <?php echo $realm["title"] ?>
-					<div style="display: inline-block; margin-left: 24px;">
-						<small style="vertical-align: middle;">
-						
-						<!--  Users  -->
-							<span style="margin-left: 6px;"><i class="fa fa-child"></i> 8</span>
-						
-							<div class="spacer"></div>
-						
-						<!--  Loves -->
-							<span style="margin-left: 6px;"><i class="fa fa-heart"></i> 15</span>
-							
-						</small>
-					</div>
-				</h3>
-			</div>
-			<div id="chart-container" style="opacity: 0.25; background-color: #4C4C4C; padding: 0; height: 42px; text-align: right; display: inline-block; vertical-align: top;" class="pull-right">
-				<div style="display: inline-block; font-size: 0.75em; vertical-align: top; margin-top: 6px;">
-					<span style="color: #ffffff;"><span id="cpu_display"></span> CPU <i class="fa fa-square"></i></span>
-					<br />
-					<span style="color: #00ff00;"><span id="mem_display"></span> MB <i class="fa fa-square"></i></span>
-				</div>
-				<div style="display: inline-block;">
-					<canvas id="chart-server" width="300" height="42" style="display: inline-block;"></canvas>
-				</div>
-			</div>
-		</div>
-	</div>
+  <h1><?php echo $realm["title"] ?>
+    <small>
+      <span style="margin-left: 12px;"><i class="fa fa-child fa-fw"></i> <?php echo (($realm["players_online"]) ? $realm["players_online"] : "N/A") ?></span>
+      <span style="margin-left: 12px;"><i class="fa fa-heart fa-fw"></i> <?php echo $realm["loves"] ?></span>
+    </small>
+  </h1>
+  
+  
     
 	<div id="realmActionItems">
 		<div class="row">
@@ -368,6 +344,20 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
                 <?php } ?>
               </span>
             </li>
+            <!--
+            <li>
+              <div id="chart-container" style="opacity: 0.25; background-color: #4C4C4C; padding: 0; height: 42px; text-align: right; display: inline-block; vertical-align: top;" class="pull-right">
+                <div style="display: inline-block; font-size: 0.75em; vertical-align: top; margin-top: 6px;">
+                  <span style="color: #ffffff;"><span id="cpu_display"></span> CPU <i class="fa fa-square"></i></span>
+                  <br />
+                  <span style="color: #00ff00;"><span id="mem_display"></span> MB <i class="fa fa-square"></i></span>
+                </div>
+                <div style="display: inline-block;">
+                  <canvas id="chart-server" width="200" height="42" style="display: inline-block;"></canvas>
+                </div>
+              </div>
+            </li>
+            -->
             <li>
               <?php 
                 if ($realm["status"] < 1) {

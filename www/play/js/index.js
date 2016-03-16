@@ -40,6 +40,10 @@ function searchRealms(initial) {
             $('#btnSearch').html('Update Search');
             $('#btnSearch').removeAttr('disabled');
         }
+      } else {
+        $("#realmList").html('<p class="text-muted">No realms found.</p>');
+        $('#btnSearch').html('Update Search');
+        $('#btnSearch').removeAttr('disabled');
       }
     });
 }
