@@ -18,45 +18,43 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method == 'POST') {
     
-    if (isset($_POST['directive'])) {
+  if (isset($_POST['directive'])) {
+      
+    $directive = $_POST['directive'];
+    
+    if ($directive == 'comment') {
+        if (isset($_POST['realmID'])) {
+            if (is_numeric($_POST['realmID'])) {
         
-        $directive = $_POST['directive'];
-        
-        if ($directive == 'comment') {
-            if (isset($_POST['realmID'])) {
-                if (is_numeric($_POST['realmID'])) {
-            
-                    if (isset($_POST['comment'])) {
-                        // POST COMMENT
-                        if (isset($_POST['parentID'])) {
-                            $row = $loggedInUser->createRealmComment($_POST['realmID'], $_POST['comment'], $_POST['parentID']);
-                        } else {
-                            $row = $loggedInUser->createRealmComment($_POST['realmID'], $_POST['comment']);
-                        }
-                        echo json_encode($row);
+                if (isset($_POST['comment'])) {
+                    // POST COMMENT
+                    if (isset($_POST['parentID'])) {
+                        $row = $loggedInUser->createRealmComment($_POST['realmID'], $_POST['comment'], $_POST['parentID']);
                     } else {
-                        // FETCH COMMENTS
-                        $row = $loggedInUser->fetchRealmComments($_POST['realmID']);
-                        echo json_encode($row);
+                        $row = $loggedInUser->createRealmComment($_POST['realmID'], $_POST['comment']);
                     }
-                    
+                    echo json_encode($row);
+                } else {
+                    // FETCH COMMENTS
+                    $row = $loggedInUser->fetchRealmComments($_POST['realmID']);
+                    echo json_encode($row);
                 }
+                
             }
         }
-        
-        if ($directive == 'love') {
-            if (isset($_POST['realmID'])) {
-                if (is_numeric($_POST['realmID'])) {
-                    if ($loggedInUser->loveRealm($_POST['realmID'])) {
-                        echo "OK";
-                    }
-                }
-            }
-        }
-        
     }
     
-    die();
+    if ($directive == 'love') {
+      if (isset($_POST['realmID'])) {
+        if (is_numeric($_POST['realmID'])) {
+          echo $loggedInUser->loveRealm($_POST['realmID']);
+        }
+      }
+    }
+      
+  }
+  
+  die();
 }
 
 require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
@@ -67,6 +65,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
   $realmID = $_SERVER['QUERY_STRING'];
   $realm   = $loggedInUser->fetchRealm($realmID);
   $loved   = $loggedInUser->lovesRealm($realmID);
+  $publish = $loggedInUser->fetchRealmPublish($realmID);
   
   $creator = fetchUserDetails(NULL, NULL, $realm['user_id']);
   
@@ -146,58 +145,57 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 ?>
 
 <div id="content" class="container">    
-  <div id="realmBar" class="center-block clearfix" style="margin-bottom: 40px;">
-    <div class="container-fluid">
-      <div class="row">
-        <div class="col-md-10" style="padding-left: 0;"><h1 style="margin-top: 0;"><?=$realm['title']?></h1></div>
-        <div class="col-md-2" style="padding-right: 0;">
-          <h4 class="text-right"><small>
-            <i class="fa fa-heart"></i>&nbsp;<span id="loveCount"><?=$realm['loves']?></span>
-            &nbsp;&nbsp;
-            <i class="fa fa-comments"></i>&nbsp;<span id="commentCount"><?=$realm['comments']?></span>
-          </small></h4>
-        </div>
-      </div>      
-    </div>
-
-    <div class="media pull-left">
-      <a class="pull-left" href="#">
-      <?php if ($creator['has_image'] == 1) { ?>
-        <img width="50" height="50" class="media-object" src="/img/profiles/<?=$realm['user_id'] . ".jpg?" . time() ?>">
-      <?php } else { ?>
-        <img width="50" height="50" class="media-object" src="/img/anonymous.png" />
-      <?php } ?>
-      </a>
-      <div class="media-body">
-        <h4 class="media-heading"><?=$realm['display_name']?><br />
-        <small>published this realm on 12.03.14</small></h4>
-      </div>
-    </div>
-      
-    <div class="pull-right" id="actionButtons" style="display: none;">
-    <?php if ($loved) { ?>
-      <button id="btnLove" type="button" class="btn btn-default navbar-btn" disabled="disabled"><i class="fa fa-heart"></i> Loved!</button>
-    <?php } else { ?>
-      <button id="btnLove" type="button" class="btn btn-default navbar-btn" data-toggle="button"><i class="fa fa-heart-o"></i> Love</button>
-    <?php } ?>  
-      <button id="btnComment" type="button" class="btn btn-default navbar-btn"><i class="fa fa-comments-o"></i> Comment</button>
-    </div>
   
+  <div id="realmBar" class="center-block clearfix" style="margin-bottom: 20px; width: 896px;">
+    <div class="row">
+    
+      <div class="col-md-6">
+        <h1 style="margin-top: 0;"><?=$realm['title']?></h1>
+      </div>
+      
+      <div class="col-md-6">
+        <div class="media pull-right">
+          <a class="pull-right" href="#">
+          <?php if ($creator['has_image'] == 1) { ?>
+            <img width="50" height="50" class="media-object" src="/img/profiles/<?=$realm['user_id'] . ".jpg?" . time() ?>" />
+          <?php } else { ?>
+            <img width="50" height="50" class="media-object" src="/img/anonymous.png" />
+          <?php } ?>
+          </a>
+          <div class="media-body">
+            <h4 class="media-heading text-right" style="line-height: 1.25em;">
+              <small>created by</small> <span><?=$realm['display_name']?><br></span>
+              <span style="display: none;">
+                <small>published on <span id="publish-date"><?=$publish?></span></small>
+              </span>
+            </h4>
+          </div>
+        </div>
+      </div>
+      
+    </div>
   </div>
-    
-    <!--
-    <?php
-    $style = 'border: 0; width:896px; height:504px; display: block; margin: 0 auto;';
-    if ($alert) {
-      echo '<div style="background-color: #eee; ' . $style . '"><div class="absoluteCenter text-danger" style="margin-top: 215px; text-align: center; width: 400px;">' . $alert . '</div></div>';
-    } else {
-      echo '<div id="realm-container" style="' . $style . '">' . $resp . '</div>';
-    }
-    ?>
-    -->
-    
+
   <div id="realm-container">
-    <div style="margin: 0 auto; width: 896px; height: 504px; padding: 0; background-color: black;">
+    <div style="margin: 0 auto; width: 896px; padding: 0; background-color: black;">
+      <div id="commandBar">
+        <div id="commandBarButtons" class="clearfix" style="margin: 0; padding-top: 2px; padding-left: 6px; padding-right: 6px; width: 100%;">
+          <?php if ($loved) { ?>
+            <button type="button" id="btnLove" class="btn btn-default btn-xs" disabled="true">
+              <i class="fa fa-fw fa-heart" style="color: pink;"></i> <?=($realm['loves'] > 1) ? $realm['loves'] . ' Loves' : $realm['loves'] . ' Love' ?>
+            </button>
+          <?php } else { ?>
+            <button type="button" id="btnLove" class="btn btn-default btn-xs" data-toggle="button"><i class="fa fa-heart-o"></i> <?=($realm['loves'] > 1) ? $realm['loves'] . ' Loves' : $realm['loves'] . ' Love' ?></button>
+          <?php } ?>  
+          <div class="spacer"></div>
+          <button type="button" id="btnComment" class="btn btn-default btn-xs">
+            <i class="fa fa-comments fa-fw"></i> <?=$realm['comments']?> Comments
+          </button>
+          <button type="button" id="btnFullscreen" class="btn btn-default btn-xs pull-right">
+            <i class="fa fa-expand fa-fw"></i> Fullscreen
+          </button>
+        </div>
+      </div>
       <div id="realm" style="margin: 0; width: 896px; height: 504px; padding: 0; display: none;"></div>
       <div id="queue" style="margin: 0; width: 896px; height: 504px; padding: 0;">
         <div style="padding-top: 216px; text-align: center; color: white;">
@@ -351,6 +349,12 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     
   $(document).ready(function () {
     
+    $("#publish-date").text(
+      moment($("#publish-date").text()+ " +0000").format("MMMM Do YYYY, h:mm:ss a")
+    );
+    
+    $("#publish-date").parent().parent().fadeIn();
+    
     renderer = new marked.Renderer();
     renderer.table = function(header, body) {
       return '<table class="table table-striped"><thead>' + header + '</thead><tbody>' + body + '</tbody></table>';
@@ -397,10 +401,40 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
       $('#actionButtons').fadeIn();
     });
         
-    
     $.get("<?php echo $url_from_auth; ?>", function (data) {
       $("#realm-container").append(data);
     });
+    
+    $("#btnLove").on("click", function (e) {
+      e.preventDefault();
+      
+      var self = $(this);
+      
+      self.html('<i class="fa fa-spinner fa-spin fa-fw"></i> Loving...');
+      self.attr('disabled', true);
+      
+      //realmID
+      $.post(window.location, {realmID: <?=$realmID?>, directive: 'love'}, function(data) {
+        // Love
+        if (parseInt(data) > 1) {
+          self.html('<i class="fa fa-fw fa-heart" style="color: pink;"></i> ' + data + '  Loves');
+        } else {
+          self.html('<i class="fa fa-fw fa-heart" style="color: pink;"></i> ' + data + '  Love');
+        }
+      });
+    });
+    
+    $("#btnFullscreen").click( function() {
+      if (BigScreen.enabled) {
+        var realm = document.getElementById('realm');
+        BigScreen.request($('#realm').children()[0]);
+        // You could also use .toggle(element, onEnter, onExit, onError)
+      }
+      else {
+        // fallback for browsers that don't support full screen
+      }
+    });
+    
   });
     
 </script>

@@ -46,6 +46,14 @@
           $stmt->execute();
           $stmt->close();
           
+          if ($realm_status == 1) {
+            $stmt = $mysqli->prepare("INSERT INTO realm_publishes (realm_id)
+              VALUES (?)");
+            $stmt->bind_param("i", $realm_id);
+            $stmt->execute();
+            $stmt->close();
+          }
+          
           mysqli_close($mysqli);
           
           echo json_encode( (object) ['message' => 'OK'] );

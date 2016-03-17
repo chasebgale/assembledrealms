@@ -515,6 +515,22 @@ class loggedInUser {
 		return ($row);
 	}
   
+  public function fetchRealmPublish($realm_id) {
+    global $mysqli,$db_table_prefix;
+		$stmt = $mysqli->prepare("SELECT timestamp FROM realm_publishes 
+      WHERE realm_id = ? 
+      ORDER BY timestamp DESC 
+      LIMIT 1"
+    );
+		$stmt->bind_param("i", $realm_id);
+		$stmt->execute();
+		$stmt->bind_result($timestamp);
+		$stmt->fetch();
+		$stmt->close();
+    
+    return $timestamp;
+  }
+  
   public function fetchRealmSourceServer($realm_id) {
     global $mysqli,$db_table_prefix;
 		$stmt = $mysqli->prepare("SELECT 
@@ -587,7 +603,15 @@ class loggedInUser {
 			$mysqli->autocommit(TRUE);
 		}
 		
-		return true;
+		$stmt = $mysqli->prepare("SELECT loves
+			FROM realms
+			WHERE id = ?");
+		$stmt->bind_param("i", $realm_id);
+		$stmt->execute();
+		$stmt->bind_result($loves);
+		$stmt->fetch();
+		$stmt->close();
+		return ($loves);
 	}
 	
 	public function fetchRealmComments($realm_id)

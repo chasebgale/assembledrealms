@@ -442,7 +442,7 @@ exports.publish = function(req, res, next) {
         new compressor.minify({
           type: 'uglifyjs',
           fileIn: project + 'client/**/*.js',
-          fileOut: temp + 'engine.min.js',
+          fileOut: temp + 'engine.js',
           callback: function(error, min){
             if (error) {
               if (error) return callback(error);
@@ -452,14 +452,11 @@ exports.publish = function(req, res, next) {
               { 
                 expand: true, 
                 cwd: project, 
-                src: ['**', '!.git', '!.js']
-              },{
-                expand: true, 
-                cwd: project,
-                src: temp + 'engine.min.js',
-                dest: "client"
+                src: ['**', '!.git', '!client/**/*.js']
               }
             ]);
+            
+            archive.append(fs.createReadStream(temp + 'engine.js'), {name: '/client/engine/engine.js'});
             
             archive.finalize();
           }
