@@ -117,21 +117,30 @@ app.post('/auth', function httpPostAuth(req, res, next) {
 app.get('/stats', function (req, res, next) {
   
   var servers = [];
-  servers.push("https://debug-01.assembledrealms.com/stats");
+  
+  servers.push({
+    url: "https://debug-01.assembledrealms.com/api/stats",
+    token: debug_token
+  });
+  
+  servers.push({
+    url: "https://play-01.assembledrealms.com/api/stats",
+    token: play_token
+  });
   
   var data = {
     servers: []
   };
   
-  async.each(servers, function(address, callback) {
+  async.each(servers, function(server, callback) {
     var serverData = {
-      title:    address,
+      title:    server.url,
       queue:    []
     };
     var options = {
-      url: address,
+      url: server.url,
       headers: {
-        'Authorization': debug_token
+        'Authorization': server.token
       }
     };
     request(options, function (error, response, body) {
@@ -186,7 +195,11 @@ app.get('/stats', function (req, res, next) {
         data.servers.push(serverData);
         callback();
       } else {
-        callback();
+        if (error) {
+          callback(error);
+        } else {
+          callback({message: response.statusCode});
+        }
       }
     })
   }, function (err) {

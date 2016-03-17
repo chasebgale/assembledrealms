@@ -176,6 +176,9 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
             <td>
                 <a class="btn btn-default btn-xs" target="_blank" href="editor/<%- realm.id %>/"><i class="fa fa-code"></i> Edit Code</a>
                 <a class="btn btn-default btn-xs" href="manager/<%- realm.id %>"><span class="glyphicon glyphicon-eye-open"></span> Manage</a>
+                <% if (realm.status === 1) { %>
+                  <a class="btn btn-default btn-xs" href="/play/realm/<%- realm.id %>" target="_blank"><span class="glyphicon glyphicon-new-window"></span> Join Game</a>
+                <% } %>
             </td>
         
         </tr>

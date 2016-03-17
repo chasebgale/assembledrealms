@@ -61,11 +61,9 @@ if ($method == 'POST') {
     }
   }
     
-  if ($directive == 'debug') {
-    
-    $success = $loggedInUser->onlineRealm($realm_id, $server_type, true);
-    
-    if ($success) {
+  if ($directive == 'debug') { 
+    $success = $loggedInUser->authGatekeeper($realm_id);
+    if ($success !== false) {
       echo json_encode( (object) [
         'message' => 'OK', 
         'address' => 'https://gatekeeper.assembledrealms.com/launch/debug/shared/' . $realm_id
@@ -76,51 +74,9 @@ if ($method == 'POST') {
       echo 'FAILURE';
       die();
     }
-    
-    // TODO: Pick least congested play server, but for now:
-    /*
-    $curl = curl_init();
-    
-    $realm_server   = "01";
-    $realm_address  = "debug-" . $realm_server . ".assembledrealms.com";
-    $target_url     = "https://" . $realm_address . "/auth/" . $realm_id;
-    
-    $post_body  = http_build_query(array('php_sess' => session_id(),
-                                         'user_id' => $loggedInUser->user_id,
-                                         'owner' => true,
-                                         'realm' => $realm_id
-    ));
-    
-    curl_setopt_array($curl, array(
-      CURLOPT_HTTPHEADER      => array('Authorization: ' . $auth_token),
-      CURLOPT_HEADER          => false,
-      CURLOPT_RETURNTRANSFER  => true,
-      CURLOPT_POST            => true,
-      CURLOPT_POSTFIELDS      => $post_body,
-      CURLOPT_SSL_VERIFYHOST  => 0,
-      CURLOPT_SSL_VERIFYPEER  => false,
-      CURLOPT_URL             => $target_url
-    ));
-
-    $resp       = curl_exec($curl);
-    $httpcode   = intval(curl_getinfo($curl, CURLINFO_HTTP_CODE));
-    
-    curl_close($curl);
-    
-    if (($httpcode < 200) && ($httpcode > 299)) {
-      // We have an error:
-      error_log($httpcode . ": " . $resp, 3, $logfile);
-      echo json_encode( (object) ['message' => 'Failure at source.'] );
-      die();
-    } else {
-      
-      $loggedInUser->updateRealmDebug($realm_id, $realm_server);
-      
-      echo json_encode( (object) ['message' => 'OK', 'address' => $realm_address] );
-      die();
-    }
-    */
+    die();
   }
+  
 }
 
 if (is_numeric($_SERVER['QUERY_STRING'])) {

@@ -352,19 +352,18 @@ exports.debug = function(req, res, next) {
             
             stream.on('exit', function(code, signal) {
               
-			  conn.exec('rm -f /var/www/realms/' + req.params.id + '.zip', function(error, stream) {
-			    if (error) return next(error);
+              conn.exec('rm -f /var/www/realms/' + req.params.id + '.zip', function(error, stream) {
+                if (error) return next(error);
 				
-				stream.on('exit', function(code, signal) {
-				  // Hmm
-				}).on('close', function() {
-				  console.log('SSH2 - DELETE :: Success.');
-				  conn.end();
-				}).stderr.on('data', function(data) {
-				  console.log('DELETE STDERR: ' + data);
-				});
-				
-			  });
+                stream.on('exit', function(code, signal) {
+                  // Hmm
+                }).on('close', function() {
+                  console.log('SSH2 - DELETE :: Success.');
+                  conn.end();
+                }).stderr.on('data', function(data) {
+                  console.log('DELETE STDERR: ' + data);
+                });
+              });
 			  
               res.send('OK');
             }).on('close', function() {
@@ -372,11 +371,8 @@ exports.debug = function(req, res, next) {
             }).stderr.on('data', function(data) {
               console.log('STDERR: ' + data);
             });
-            
           });
-          
         });
-        
       });
     }).connect({
       host: '10.132.227.95', // internal IP of debug-01, TODO: choose internal ip of least loaded debug server
@@ -419,6 +415,7 @@ exports.publish = function(req, res, next) {
   var conn  		= new ssh2();
   var project   	= __dirname + "/../projects/" + realm_id + "/";
   var zip 			= __dirname + "/../archive/" + realm_id + ".zip";
+  var temp 			= __dirname + "/../archive/" + realm_id + "/";
   var destination 	= "/var/www/realms/"+ realm_id + ".zip";
   var output 		= fs.createWriteStream(zip);
   var archive 		= archiver('zip');
@@ -427,92 +424,123 @@ exports.publish = function(req, res, next) {
   var usr			= "web";
   var pwd			= shared ? "87141eeda7861e0b41801ad48ff19904" : "0S0Wjf4vYvJ3QJx6yBci";
   
-  utilities.logMessage('pwd: ' + pwd);
-  
-  output.on('close', function() {
-    console.log('ZIP :: ' + archive.pointer() + ' total bytes after compression.');
-    
-    conn.on('ready', function() {
-      console.log('SSH2 :: Connection established.');
-      conn.sftp(function(error, sftp) {
-        if (error) return next(error);
-        
-        sftp.fastPut(zip, destination, function (error) {
-          if (error) return next(error);
-          console.log('SSH2 :: Zip upload complete.');
-          
-          conn.exec('unzip -o /var/www/realms/' + realm_id + ' -d /var/www/realms/' + realm_id, function(error, stream) {
-            if (error) return next(error);
-            
-            stream.on('exit', function(code, signal) {
-              
-			  conn.exec('rm -f /var/www/realms/' + realm_id + '.zip', function(error, stream) {
-			    if (error) return next(error);
-				
-				stream.on('exit', function(code, signal) {
-				  // Hmm
-				}).on('close', function() {
-				  console.log('SSH2 - DELETE :: Success.');
-				  conn.end();
-				}).stderr.on('data', function(data) {
-				  console.log('DELETE STDERR: ' + data);
-				});
-				
-			  });
-			  
-              res.send('OK');
-            }).on('close', function() {
-              console.log('SSH2 - UNZIP :: Decompressed successfully.');
-            }).stderr.on('data', function(data) {
-              console.log('STDERR: ' + data);
-            });
-            
-          });
-          
-        });
-        
+  async.waterfall([
+    function(callback) {
+      // Zip up project
+      archive.on('error', function(error) {
+        if (error) return callback(error);
       });
-    }).connect({
-      host: address, //'104.131.114.6',
-      port: 22,
-      username: usr,
-      password: pwd
-    });
-    
-  });
-  
-  
-  
-  archive.on('error', function(error) {
-    if (error) return next(error);
-  });
-  
-  archive.pipe(output);
-  
-  if (minify) {
-    new compressor.minify({
-      type: 'uglifyjs',
-      fileIn: project + 'client/**/*.js',
-      fileOut: project + 'client/engine.min.js',
-      callback: function(err, min){
-        if (err) {
-            console.log(err);
-        }
-        
+      
+      archive.pipe(output);
+      
+      output.on('close', function() {
+        console.log('ZIP :: ' + archive.pointer() + ' total bytes after compression.');
+        callback(null);
+      });
+      
+      if (minify) {
+        new compressor.minify({
+          type: 'uglifyjs',
+          fileIn: project + 'client/**/*.js',
+          fileOut: temp + 'engine.min.js',
+          callback: function(error, min){
+            if (error) {
+              if (error) return callback(error);
+            }
+            
+            archive.bulk([
+              { 
+                expand: true, 
+                cwd: project, 
+                src: ['**', '!.git', '!.js']
+              },{
+                expand: true, 
+                cwd: project,
+                src: temp + 'engine.min.js',
+                dest: "client"
+              }
+            ]);
+            
+            archive.finalize();
+          }
+        });
+      } else {
         archive.bulk([
-            { expand: true, cwd: project, src: ['**', '!.git']}
+          { expand: true, cwd: project, src: ['**', '!.git']}
         ]);
 
         archive.finalize();
-        
       }
-    });
-  } else {
-    archive.bulk([
-      { expand: true, cwd: project, src: ['**', '!.git']}
-    ]);
-
-    archive.finalize();
-  }
-
+    },
+    function(callback) {
+      // Establish SSH Connection
+      conn.on('ready', function() {
+        console.log('SSH2 :: Connection established.');
+        callback(null);
+      }).connect({
+        host: address, //'104.131.114.6',
+        port: 22,
+        username: usr,
+        password: pwd
+      });
+    },
+    function (callback) {
+      // Delete existing source
+      conn.exec('rm -rf /var/www/realms/' + realm_id, function(error, stream) { 
+        if (error) return next(error);
+        
+        stream.on('exit', function(code, signal) {
+          callback(null);
+        }).stderr.on('data', function(data) {
+          console.log('DELETE EXISTING CODE STDERR: ' + data);
+        });
+      });
+    },
+    function (callback) {
+      // Upload Zip via SSH/SFTP
+      conn.sftp(function(error, sftp) {
+        if (error) return callback(error);
+        
+        sftp.fastPut(zip, destination, function (error) {
+          if (error) return callback(error);
+          console.log('SSH2 :: Zip upload complete.');
+          callback(null);
+        });
+      });
+    },
+    function (callback) {
+      // Unzip source
+      conn.exec('unzip -o /var/www/realms/' + realm_id + ' -d /var/www/realms/' + realm_id, function(error, stream) {
+        if (error) return callback(error);
+            
+        stream.on('exit', function(code, signal) {
+          callback(null);
+        }).stderr.on('data', function(data) {
+          console.log('UNZIP STDERR: ' + data);
+        });
+      });
+    },
+    function (callback) {
+      // Delete zip
+      conn.exec('rm -f /var/www/realms/' + realm_id + '.zip', function(error, stream) {
+        if (error) return callback(error);
+            
+        stream.on('exit', function(code, signal) {
+          callback(null);
+        }).stderr.on('data', function(data) {
+          console.log('DELETE ZIP STDERR: ' + data);
+        });
+      });
+    },
+    function(callback) {
+      // Disconnect
+      conn.end();
+      callback(null, "OK");
+    }
+  ], function (err, result) {
+    if (err) {
+      return res.status(500).send(err.message);
+    }
+    return res.send(result);
+  });
 }
