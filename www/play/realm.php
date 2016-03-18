@@ -23,25 +23,24 @@ if ($method == 'POST') {
     $directive = $_POST['directive'];
     
     if ($directive == 'comment') {
-        if (isset($_POST['realmID'])) {
-            if (is_numeric($_POST['realmID'])) {
-        
-                if (isset($_POST['comment'])) {
-                    // POST COMMENT
-                    if (isset($_POST['parentID'])) {
-                        $row = $loggedInUser->createRealmComment($_POST['realmID'], $_POST['comment'], $_POST['parentID']);
-                    } else {
-                        $row = $loggedInUser->createRealmComment($_POST['realmID'], $_POST['comment']);
-                    }
-                    echo json_encode($row);
-                } else {
-                    // FETCH COMMENTS
-                    $row = $loggedInUser->fetchRealmComments($_POST['realmID']);
-                    echo json_encode($row);
-                }
-                
+      if (isset($_POST['realmID'])) {
+        if (is_numeric($_POST['realmID'])) {
+          if (isset($_POST['comment'])) {
+            // POST COMMENT
+            if (isset($_POST['parentID'])) {
+                $row = $loggedInUser->createRealmComment($_POST['realmID'], $_POST['comment'], $_POST['parentID']);
+            } else {
+                $row = $loggedInUser->createRealmComment($_POST['realmID'], $_POST['comment']);
             }
+            echo json_encode($row);
+          } else {
+            // FETCH COMMENTS
+            $row = $loggedInUser->fetchRealmComments($_POST['realmID']);
+            echo json_encode($row);
+          }
+            
         }
+      }
     }
     
     if ($directive == 'love') {
@@ -318,7 +317,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
 <script src="/play/js/marked.js"></script>
 <script src="/build/js/utilities.js"></script>
-<script src="/js/keyboard.js"></script>
+<script src="/js/keyboard.min.js"></script>
 <script src="/js/pixi.min.js"></script>
 <script src="/js/bigscreen.min.js"></script>
 <script src="/js/async.js"></script>
@@ -365,9 +364,12 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
       renderer: renderer
     });
     
+    var templateFn = _.template($('#comments_template').html());
+    var templateReplyFn = _.template($('#comment_reply_template').html());
+    
     async.parallel([
       function(callback){
-        $.post( "realm.php", { directive: "comment", realmID: REALM_ID })
+        $.post(window.location, { directive: "comment", realmID: REALM_ID })
           .done(function( data ) {
             if (data !== "null") {
               data = JSON.parse( data );
@@ -409,11 +411,9 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
       e.preventDefault();
       
       var self = $(this);
-      
       self.html('<i class="fa fa-spinner fa-spin fa-fw"></i> Loving...');
       self.attr('disabled', true);
-      
-      //realmID
+     
       $.post(window.location, {realmID: <?=$realmID?>, directive: 'love'}, function(data) {
         // Love
         if (parseInt(data) > 1) {
@@ -424,7 +424,8 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
       });
     });
     
-    $("#btnFullscreen").click( function() {
+    $("#btnFullscreen").click( function(e) {
+      e.preventDefault();
       if (BigScreen.enabled) {
         var realm = document.getElementById('realm');
         BigScreen.request($('#realm').children()[0]);
@@ -433,6 +434,109 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
       else {
         // fallback for browsers that don't support full screen
       }
+    });
+    
+    $("#replyToCommentContent").on("focus", function () {    
+      KeyboardJS.pause();
+    });
+    
+    $("#commentContent").on("focus", function () {    
+      KeyboardJS.pause();
+    });
+    
+    $("#realm").on("click", function () {    
+      KeyboardJS.resume();
+    });
+    
+    $('#btnComment').on('click', function (e) {
+      e.preventDefault();
+      
+      $('#tabs a[href="#tab_comments"]').tab('show');
+      
+      $('html, body').animate({
+          scrollTop: $("#comment").offset().top - 100
+      }, 400);
+            
+    });
+       
+    $('#btnAddComment').on('click', function (e) {
+        
+      var button = $(this);
+      button.attr('disabled', true);
+      button.html('<i class="fa fa-cog fa-spin"></i> Adding Comment');
+      
+      $.post( "realm.php", { directive: "comment", realmID: "<?=$realmID?>", comment: $('#commentContent').val() })
+        .done(function( data ) {
+          if (data !== "null") {
+              
+            data = JSON.parse( data );
+            
+            $("#comments").append(templateFn({ 'comments': [data] }));
+            button.removeAttr('disabled');
+            button.html('Add Comment');
+            $('#commentContent').val('');
+            
+            // Update comment count:
+            var commentCountSpan = $("#commentCount");
+            var commentCount = parseInt(commentCountSpan.text()) + 1;
+            commentCountSpan.text(commentCount);
+            
+            // Scroll page to new comment:
+            $('html, body').animate({
+                scrollTop: $('#comments').find('[data-id="' + data.id + '"]').offset().top
+            }, 1000);
+
+          }
+        });
+            
+    });
+       
+    $('#comments').on('click', '.reply', function (e) {
+      var button = $(this);
+      var contentBlock = button.closest('div [data-id]');
+      var commentID = contentBlock.attr('data-id');
+      
+      var existingReplyToBlock = $('#replyTo');
+      
+      if (existingReplyToBlock.length > 0) {
+        existingReplyToBlock.remove();
+      }
+      
+      contentBlock.append('<div id="replyTo" style="display: none;" class="well clearfix">' +
+                          '<textarea class="form-control" rows="5" cols="100" id="replyToCommentContent" placeholder="Add your voice to the conversation..."></textarea>' +
+                          '<button id="replyToComment" data-id="' + commentID + '" style="margin-top: 10px;" class="btn btn-default pull-right">Add Comment</button>' +
+                          '</div>'
+                          );
+      
+      $('#replyTo').fadeIn();
+    });
+       
+    $('#comments').on('click', '#replyToComment', function (e) {
+      var button = $(this);
+      
+      button.attr('disabled', true);
+      button.html('<i class="fa fa-cog fa-spin"></i> Add Comment');
+      
+      var commentID = button.attr('data-id');
+      
+      $.post( "realm.php", { directive: "comment", realmID: "<?=$realmID?>", comment: $("#replyToCommentContent").val(), parentID: commentID })
+        .done(function( data ) {
+          if (data !== "null") {
+              
+            data = JSON.parse( data );
+            
+            var target = $('#comments').find('[data-id="' + commentID + '"]');
+            target.append(templateReplyFn({'comment': data}));
+            
+            $('#replyTo').remove();
+            
+            // Scroll page to new comment:
+            $('html, body').animate({
+                scrollTop: $('#comments').find('[data-id="' + data.id + '"]').offset().top
+            }, 1000);
+
+          }
+      });
     });
     
   });
