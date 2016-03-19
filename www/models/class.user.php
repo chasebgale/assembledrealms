@@ -268,9 +268,10 @@ class loggedInUser {
     );
     
     $post_body  = json_encode(array(
-      'php_sess' => session_id(),
-      'user_id' => $this->user_id,
-      'realm' => $realm
+      'php_sess'    => session_id(),
+      'user_id'     => $this->user_id,
+      'displayname' => $this->displayname,
+      'realm'       => $realm
     ));
     
     curl_setopt_array($curl, array(

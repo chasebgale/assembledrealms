@@ -86,7 +86,8 @@ dbListener.on('message', function (channel, message) {
                 console.log("QUEUE was not empty, first user [%s] has sesh [%s] and was waiting for realm [%s]", user, replies[2], replies[0]);
                 
                 // Alert user that was first in queue that they are cleared for takeoff
-                io.to(replies[2]).emit('ready');
+                // io.to(replies[2]).emit('ready');
+                io.to(JSON.parse(replies[2]).id).emit('ready');
                 
                 // Update the rest of the queue to what has happened
                 io.emit('info', {
@@ -289,25 +290,33 @@ app.post('/api/auth/:id', function httpPostAuth(req, res, next) {
 
   var php_sess    = req.body.php_sess;
   var user_id     = req.body.user_id;
+  var displayname = req.body.displayname;
   var owner       = req.body.owner;
   var realm_id    = req.params.id;
   
-  if ((php_sess === undefined) || (user_id === undefined) || (owner === undefined)) {
+  var user_obj = {
+    display: displayname,
+    session: php_sess
+  }
+  
+  if ((php_sess === undefined) || (user_id === undefined) || (owner === undefined) || (displayname === undefined)) {
     console.log('/auth - Missing params: ' + JSON.stringify(req.body));
     return res.status(500).send("Missing parameters, bruh.");
   }
   
-  console.log("/auth requested: session: %s, user: %s, realm: %s, owner: %s",
-    php_sess, user_id, realm_id, owner);
+  console.log("/auth requested: session: %s, user: %s, displayname: %s, realm: %s, owner: %s",
+    php_sess, user_id, displayname, realm_id, owner);
 
-  var realm     = "realm_" + realm_id + "_access";
-  var privilege = (owner == true) ? 1 : 0;
+  var realm_access_db = "realm_" + realm_id + "_access";
+  var user_db         = "user_" + user_id;
+  //var privilege = (owner == true) ? 1 : 0;
   var now       = Date.now();
   
   db.multi()
-    .zadd([SESSION_LIST, now, php_sess])     	   // Set session key and activity time for it
-    .zadd([SESSION_MAP, user_id, php_sess])      // Map session key to user id
-    .zadd([realm, privilege, user_id]) 	         // Add the user permission (1 = privileged)
+    .zadd([SESSION_LIST, now, php_sess]) // Set session key and activity time for it    	   
+    .zadd([SESSION_MAP, user_id, php_sess]) // Map session key to user id
+    .zadd([realm_access_db, owner, user_id]) // Add the user permission (1 = privileged)
+    .hmset(user_db, user_obj) // Remember user details
     .exec(function (err, replies) {
       if (err) {
         console.error(err);
@@ -490,16 +499,16 @@ app.use('/realms', function(req, res, next) {
   
   // /api/auth gets called by assembledrealms.com php and injects the user sesh, if it's
   // missing, call shennanigans 
-	db.zscore([SESSION_MAP, phpsession], function redisGetUserID(error, reply) {
+	db.zscore([SESSION_MAP, phpsession], function redisGetUserID(error, user_id) {
 		
     if (error) {
 			console.error(error);
 			return res.status(500).send(error.message);
 		}
         
-    if (reply) {
+    if (user_id) {
       
-      req.user_id = reply;
+      req.user_id = user_id;
       var now     = Date.now();
       
       db.zadd([SESSION_LIST, now, phpsession], function redisUpdateSessionTime(error, reply) {
@@ -517,21 +526,33 @@ app.use('/realms', function(req, res, next) {
 
 app.get('/realms/:id', function httpGetRealm(req, res, next) {
 
-  var userID       = req.user_id;
-  var realmID      = req.params.id;
-  var realmKey     = "realm_" + realmID;
-  var realmAccess  = "realm_" + realmID + "_access";
-  var owner        = false;
-  var now          = Date.now();
+  var userID            = req.user_id;
+  var realmID           = req.params.id;
+  var realmKey          = "realm_" + realmID;
+  var realm_access_db   = "realm_" + realmID + "_access";
+  var owner             = false;
+  var now               = Date.now();
   
   var queueUser = function (callback) {
     // First, is the user already in the queue? (user refreshed browser, etc)
     
+    console.log("userID: %s, realmID: %s, realmKey: %s, realm_access_db: %s",
+      userID, realmID, realmKey, realm_access_db
+    );
+    
     db.multi()
-      .zscore([realmAccess, userID])         // Check the user permission (1 = privileged)
+      .zscore([realm_access_db, userID])         // Check the user permission (1 = privileged)
       .zscore([QUEUE_LOOKUP, userID])        // Check if user is in queue
       .zadd([REALM_ACTIVITY, now, realmID])  // Update/create realm activity entry
       .exec(function (err, replies) {
+        
+        if (err) {
+          console.error(err);
+          return res.status(500).send(err.message);
+        }
+        
+        console.log('queueUser db.multi() replies: ' + JSON.stringify(replies));
+        
         var accessReply  = replies[0];
         var queueReply   = replies[1];
         
@@ -676,19 +697,19 @@ io.use(function(socket, next) {
   if (phpsession !== '') {
     
     // Grab the player id associated with this session
-    db.zscore([SESSION_MAP, phpsession], function redisGetSession(error, reply) {
+    db.zscore([SESSION_MAP, phpsession], function redisGetSession(error, user_id) {
       if (error) {
         console.log("Error with zscore query");
         console.error(error);
         return next(new Error('not authorized'));
       }
       
-      if (reply !== null) {
+      if (user_id !== null) {
 
         // Set the content of the session object to the redis/cookie key
-        socket.request.user_id = reply
+        socket.request.user_id = user_id;
         socket.join(phpsession);
-        console.log("user_id set to %s", reply);
+        console.log("user_id set to %s", user_id);
         
         return next();
       } else {
@@ -836,7 +857,7 @@ var tickTock = setInterval(function () {
         multiSessionToUserLookup.zscore([SESSION_MAP, replies[m]]); 
       }
       
-      multiSessionToUserLookup.exec(function (error, userIDs) {
+      multiSessionToUserLookup.exec(function (error, users) {
         if (error) {
           console.log(error.stack);
           return console.error(error);
@@ -844,8 +865,8 @@ var tickTock = setInterval(function () {
         
         var multiSessionsActive = db.multi();
         
-        for (var u = 0; u < userIDs.length; u++) {
-          multiSessionsActive.zscore([ACTIVE_SESSIONS, userIDs[u]]);
+        for (var u = 0; u < users.length; u++) {
+          multiSessionsActive.zscore([ACTIVE_SESSIONS, users[u]]);
         }
         
         multiSessionsActive.exec(function (error, sessionLookups) {

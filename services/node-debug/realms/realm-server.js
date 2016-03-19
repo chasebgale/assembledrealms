@@ -32,8 +32,6 @@ var Engine      = require(realm_id + '/server/engine');
 var SESSION_MAP        = "session_to_user_map";
 var ACTIVE_SESSIONS    = "sessions_active";
 
-// Increment and assign the smallest ids to clients
-var counter = 0;
 var engine  = new Engine();
 
 engine.on('create', function engineCreate(actors) {
@@ -73,19 +71,35 @@ io.use(function(socket, next) {
     phpsession = parts.pop().split(";").shift();
     
     // Grab the player object in redis for this user
-    db.zscore([SESSION_MAP, phpsession], function redisGetUserID(error, reply) {
-      if (reply !== null) {
+    db.zscore([SESSION_MAP, phpsession], function redisGetUserID(error, user_id) {
+     
+      if (error) {
+        next(error);
+      }
+
+      if (user_id !== null) {
         
-        var key = "realm_" + realm_id + ":" + reply;
+        var user_db = "user_" + user_id;
         
-        // Set the content of the session object to the redis/cookie key
-        socket.request.session = {
-          player_key: key, 
-          user_id: reply,
-          id: phpsession
-        };
+        db.hmget([user_db, "display"], function (error, display) {
         
-        next();
+          if (error) {
+            next(error);
+          }
+        
+          var key = "realm_" + realm_id + ":" + user_id;
+          
+          // Set the content of the session object to the redis/cookie key
+          socket.request.session = {
+            player_key: key, 
+            user_id: user_id,
+            id: phpsession,
+            display: display[0]
+          };
+          
+          next();
+        });
+        
       }
     });
   }
@@ -99,19 +113,34 @@ io.on('connection', function socketConnected(socket) {
   
   var userID     = socket.request.session.user_id;
   var playerKey  = socket.request.session.player_key;
+  var playerName = socket.request.session.display;
   var session    = socket.request.session.id;
   var player;
   
+  console.log("io.on(CONNECTION) {");
+  console.log("  io.on(CONNECTION) userID: %s, playerKey: %s, playerName: %s, session: %s",
+    userID,
+    playerKey,
+    playerName,
+    session
+  );
+  
   var enterGame = function () {
     
-    db.get(playerKey, function redisGetPlayer(error, data) {
+    db.get(playerKey, function redisGetPlayer(error, player) {
       
-      player = data;
+      if (error) {
+        console.log(error.message);
+        console.error(error);
+      }
+      
       if (player === null) {
         
-        counter++;
         player = engine.createPlayer();
-        player.id = counter;
+        player.id = userID;
+        player.name = playerName;
+        
+        console.log("CREATED player: " + JSON.stringify(player));
         
         db.set(playerKey, JSON.stringify(player), function redisSetPlayer(error) {
         
@@ -122,6 +151,7 @@ io.on('connection', function socketConnected(socket) {
         });
       } else {
         player = JSON.parse(player);
+        console.log("RESUMED player: " + JSON.stringify(player));
       }
       
       engine.addPlayer(player);
@@ -134,13 +164,6 @@ io.on('connection', function socketConnected(socket) {
       };
       db.publish('realm_notifications', JSON.stringify(action));
       
-      var data = {};
-      data.players = {};
-      data.players[player.id] = player;
-      
-      // Tell other clients this client has connected
-      socket.broadcast.emit('create', data);
-      
       socket.on('ready', function (data) {
         // Send initial data with all npc/pc locations, stats, etc
         var data        = {};
@@ -149,6 +172,13 @@ io.on('connection', function socketConnected(socket) {
         data.npcs       = engine.npcs();
         
         socket.emit('sync', data);
+        
+        data = {};
+        data.players = {};
+        data.players[player.id] = player;
+        
+        // Tell other clients this client has connected
+        socket.broadcast.emit('create', data);
       });
       
       // Wire up events:

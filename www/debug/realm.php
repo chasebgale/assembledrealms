@@ -34,10 +34,12 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     $host       = "https://debug-" . $realm['address_debug'] . ".assembledrealms.com";
     $session_id = session_id();
     $user_id    = $loggedInUser->user_id;
+    
     $owner      = ($realm['user_id'] == $user_id);
     
     $post_body  = http_build_query(array('php_sess' => $session_id,
                                          'user_id' => $user_id,
+                                         'displayname' => $loggedInUser->displayname,
                                          'owner' => $owner
     ));
     
@@ -151,7 +153,6 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
 <script src="/build/js/stats.min.js"></script>
 <script src="/build/js/utilities.js"></script>
-<script src="/js/keyboard.min.js"></script>
 <script src="/js/pixi.min.js"></script>
 <script src="/js/bigscreen.min.js"></script>
 <script src="/js/async.js"></script>

@@ -70,16 +70,22 @@ app.post('/auth', function httpPostAuth(req, res, next) {
   var now         = Date.now();
   var php_sess    = req.body.php_sess;
   var user_id     = req.body.user_id;
+  var displayname = req.body.displayname;
   var realm       = req.body.realm;
   //  realm = {id: xx, source: xx}
   
-  if ((php_sess === undefined) || (user_id === undefined) || (realm === undefined)) {
+  var user = {
+    id: user_id,
+    display: displayname
+  }
+  
+  if ((php_sess === undefined) || (user_id === undefined) || (realm === undefined) || (displayname === undefined)) {
     console.log('/auth - Missing params: ' + JSON.stringify(req.body));
     return res.status(500).send("Missing parameters, bruh.");
   }
   
-  console.log("/auth requested: session: %s, user: %s, realm: %s",
-    php_sess, user_id, JSON.stringify(realm));
+  console.log("/auth requested: session: %s, user: %s, realm: %s, displayname: %s",
+    php_sess, user_id, JSON.stringify(realm), displayname);
     
   db.get([USER_REALMS + '-' + user_id], function redisGetExistingAuth(error, reply) {
     if (error) {
