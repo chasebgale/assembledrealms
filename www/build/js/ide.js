@@ -563,7 +563,7 @@ function debug(force) {
     if (commitRequired()) {
       debugButton.html('<i class="fa fa-spinner fa-fw"></i> Debug');
       debugStatus.addClass('alert-warning');
-      debugStatus.html('You have <strong>uncommitted</strong> changes that won\'t appear when debugging, continue without your changes? ' + 
+      debugStatus.html('Continue debugging without your <strong>uncommitted</strong> changes? ' + 
       '<a id="ignoreCommitAndDebug" class="btn btn-default btn-xs" href="#" role="button" onclick="buttonOverrideDebugWarning(false);return false;">YES</a> ' +
       '<a id="cancelDebug" class="btn btn-default btn-xs" href="#" role="button" onclick="buttonOverrideDebugWarning(true);return false;">NO</a> '
       );
@@ -785,52 +785,52 @@ function commit() {
 
 function loadRealmRoot() {
             
-    $.ajax({
-        url: __projectURL + '/open'
-    })
-    .done(function (data) {
-        
-        // Process folders first:
-        var json = _.sortBy(data, function (item) {
-            return !item.hasChildren;
-        });
-        
-        var templateFnFiles = _.template($('#root_files_template').html());
-        var templateChildFnFiles = _.template($('#child_files_template').html());
-        
-        $("#explorer").html(templateFnFiles({ 'model': json, 'templateChildFnFiles': templateChildFnFiles }));
-
-        $("#explorer").treeview({
-            animated: "fast"
-        });
-        
-        var folderList = $('#newfileLocation');
-        
-        _.each(json, function (val) {
-           if (val.hasChildren) {
-                folderList.append('<a href="#" class="list-group-item" data-path="' + val.path + '"><i class="fa fa-folder-o"></i> /' + val.path + '</a>');
-            }
-        });
-        
-        // Initial file display
-        var welcomeDOM = $('#explorer [data-path="WELCOME.md"]');
-        if (welcomeDOM) {
-            welcomeDOM.addClass('activefile');
-        
-            loadRealmFile(welcomeDOM.attr('data-id'), 'WELCOME.md', 'WELCOME.md', true);
-        }
-        
-        $("#loading").fadeOut(500, function () {
-            $("#workspace").fadeIn();
-            resize();
-        });
-        
-    })
-    .fail(function(d, textStatus, error) {
-        $('#loading').fadeOut();
-        $('#errorMessage').text(textStatus);
-        $('#errorMessage').fadeIn();
+  $.ajax({
+    url: __projectURL + '/open'
+  })
+  .done(function (data) {
+      
+    // Process folders first:
+    var json = _.sortBy(data, function (item) {
+      return !item.hasChildren;
     });
+    
+    var templateFnFiles = _.template($('#root_files_template').html());
+    var templateChildFnFiles = _.template($('#child_files_template').html());
+    
+    $("#explorer").html(templateFnFiles({ 'model': json, 'templateChildFnFiles': templateChildFnFiles }));
+
+    $("#explorer").treeview({
+      animated: "fast"
+    });
+    
+    var folderList = $('#newfileLocation');
+    
+    _.each(json, function (val) {
+      if (val.hasChildren) {
+        folderList.append('<a href="#" class="list-group-item" data-path="' + val.path + '"><i class="fa fa-folder-o"></i> /' + val.path + '</a>');
+      }
+    });
+    
+    // Initial file display
+    var welcomeDOM = $('#explorer [data-path="WELCOME.md"]');
+    if (welcomeDOM) {
+      welcomeDOM.addClass('activefile');
+  
+      loadRealmFile(welcomeDOM.attr('data-id'), 'WELCOME.md', 'WELCOME.md', true);
+    }
+    
+    $("#loading").fadeOut(500, function () {
+      $("#workspace").fadeIn();
+      resize();
+    });
+      
+  })
+  .fail(function(d, textStatus, error) {
+      $('#loading').fadeOut();
+      $('#errorMessage').text(textStatus);
+      $('#errorMessage').fadeIn();
+  });
         
 }
 

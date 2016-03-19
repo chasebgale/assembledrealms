@@ -18,7 +18,7 @@ db.flushdb();
 // TODO: For now we'll just keep the list of servers to check on in memory; however, this should really be stored
 // in redis or the like for fault tolerance in case this service crashes for some reason... if not someone could
 // potentially be waiting in perpetuity for their realm to come online...
-var check_list      = [];
+var realm_history   = {};
 var realms          = {};
 
 var ocean_token     = "254c9a09018914f98dd83d0ab1670f307b036fe761dda0d7eaeee851a37eb1cd";
@@ -356,6 +356,7 @@ app.post('/launch/play/shared/:id', function (req, res, next) {
                   'Accept': '*/*'
                 },
                 formData: {
+                  directive: 'update_realm_status',
                   realm_id: realm.id,
                   realm_status: 1
                 }
@@ -450,6 +451,7 @@ app.get('/shutdown/play/shared/:id', function (req, res, next) {
               'Accept': '*/*'
             },
             formData: {
+              directive: 'update_realm_status',
               realm_id: realm.id,
               realm_status: 0
             }
@@ -700,7 +702,10 @@ setInterval(function(){
   var servers = [];
   var url     = '';
   var token   = '';
+  var host    = '';
   var time    = moment().format();
+  var current = {};
+  var updates = {};
   
   pg.connect(connection, function(error, client, done) {
 
@@ -717,18 +722,22 @@ setInterval(function(){
     });
     
     query.on('row', function(row) {
+      
+      url   = 'https://';
+      
       if (row.type == 0) {
-        url   = 'https://debug-';
+        host = 'debug-' + row.host;
         token = debug_token;
       } else {
-        url   = 'https://play-';
+        host = 'play-' + row.host;
         token = debug_token;
       }
-      url += row.host + '.assembledrealms.com/api/stats';
+      url += host + '.assembledrealms.com/api/stats';
       
       servers.push({
         id:    row.id,
         url:   url,
+        name:  host,
         token: token
       });
     });
@@ -755,9 +764,35 @@ setInterval(function(){
               if (error) {
                 console.error(error);
               }
+              
+              // Updating realm user counts in memory
+              for (var q = 0; q < responseData.active_sessions.length - 1; q+=2) {
+                var userID  = responseData.active_sessions[q];
+                var realmID = responseData.active_sessions[q+1];
+                if (current[realmID] == undefined) {
+                  current[realmID] = 0;
+                }
+                
+                current[realmID]++;
+              }
+              
+              var current_keys = Object.keys(current);
+              for (var i = 0; i < current_keys.length; i++) {
+                var realm_id = current_keys[i];
+                if (realm_history[realm_id] == undefined) {
+                  realm_history[realm_id] = current[realm_id];
+                  updates[realm_id] = current[realm_id];
+                } else {
+                  if (realm_history[realm_id] !== current[realm_id]) {
+                    realm_history[realm_id] = current[realm_id];
+                    updates[realm_id] = current[realm_id];
+                  }
+                }
+              }
+              
               callback();
             });
-
+            
           } else {
             if (error) {
               if (error.code === 'ETIMEDOUT') {
@@ -780,9 +815,39 @@ setInterval(function(){
           return;
         }
         
-        done();
-        collectingStats = false;
-        
+        // TODO: Update gatekeeper with usercounts...
+        if (Object.keys(updates).length > 0) {
+          var options = {
+            url: 'https://www.assembledrealms.com/external/gatekeeper.php',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': HOME_TOKEN,
+              'Accept': '*/*'
+            },
+            form: {
+              directive: 'update_users',
+              realm_updates: JSON.stringify(updates)
+            }
+          };
+          request.post(options, function (error, response, body) {
+            if (error) {
+              console.error(error);
+            }
+            
+            if (response.statusCode !== 200) {
+              console.log('!== 200 reply when saving user counts');
+            }
+            
+            done();
+            collectingStats = false;
+          });
+        } else {        
+          console.log("No need to update... ");
+          console.log("current: " + JSON.stringify(current));
+          console.log("updates: " + JSON.stringify(updates));
+          done();
+          collectingStats = false;
+        }
       });
       
     });

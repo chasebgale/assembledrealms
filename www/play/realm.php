@@ -437,11 +437,11 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     });
     
     $("#replyToCommentContent").on("focus", function () {    
-      KeyboardJS.pause();
+      //KeyboardJS.pause();
     });
     
     $("#commentContent").on("focus", function () {    
-      KeyboardJS.pause();
+      //KeyboardJS.pause();
     });
     
     $("#realm").on("click", function () {    

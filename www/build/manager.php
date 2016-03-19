@@ -292,6 +292,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 if (is_numeric($_SERVER['QUERY_STRING'])) {
     $realm        = $loggedInUser->fetchRealm($_SERVER['QUERY_STRING']);
     $screenshots  = json_decode($realm["screenshots"]);
+    $published    = $loggedInUser->fetchRealmPublish($_SERVER['QUERY_STRING']);
     
     $funding_opacity = "0.3";
     if ($realm["show_funding"]) {
@@ -375,8 +376,8 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
         <div class="well">
           <ul>
             <li><strong>Code</strong></li>
-            <li><span>03/22/2015 02:22 PM<br/>"Commit Message"</span></li>
-            <li><button class="btn btn-default">Publish Latest Code</button></li>
+            <li><span id="publish-date"><?=$published?></span></li>
+            <li><button class="btn btn-default" id="publish-latest-code">Publish Latest Code</button></li>
             <li><button class="btn btn-default" disabled><i class="fa fa-reply"></i> Restore to Version</button></li>
           </ul>
         </div>
@@ -637,6 +638,10 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
         event.preventDefault();
         $(this).ekkoLightbox();
     });
+    
+    $("#publish-date").text(
+      moment($("#publish-date").text()+ " +0000").format("MMMM Do YYYY, h:mm:ss a")
+    );
 
     var __markdownCreateNewDB = true;
     var __realmID = <?php echo $_SERVER['QUERY_STRING'] ?>;

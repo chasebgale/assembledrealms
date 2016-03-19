@@ -159,6 +159,38 @@ $(document).ready(function () {
     });
   });
    
+  $('#publish-latest-code').on('click', function (e) {
+    var button = $(this);
+    
+    button.attr('disabled', true);
+    button.html('<i class="fa fa-cog fa-spin"></i> Publishing...');
+    
+    $.ajax({
+      url: 'https://gatekeeper.assembledrealms.com/launch/play/shared/' + __realmID,
+      type: 'post',
+      dataType: 'json',
+      data: {}
+    })  
+    .done(function (data) {
+      
+      if (data.message == "OK") {
+        button.attr('disabled', false);
+        button.html('Publish Latest Code');
+ 
+        $("#publish-date").html(moment().format("MMMM Do YYYY, h:mm:ss a"));
+      }
+    
+    })
+    .fail(function(data) {
+      console.log(data);
+      button.attr('disabled', false);
+      button.html('Publish Latest Code');
+    });
+    
+    button.html('Publish Latest Code');
+    
+  });
+   
     $("#savebutton").on('click', function (e) {
         var button = $(this);
       
