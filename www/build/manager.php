@@ -312,7 +312,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
   <h1><?php echo $realm["title"] ?>
     <small>
-      <span style="margin-left: 12px;"><i class="fa fa-child fa-fw"></i> <?php echo (($realm["players_online"]) ? $realm["players_online"] : "N/A") ?></span>
+      <span style="margin-left: 12px;"><i class="fa fa-child fa-fw"></i> <?=(($realm["players"]) ? $realm["players"] : "N/A")?></span>
       <span style="margin-left: 12px;"><i class="fa fa-heart fa-fw"></i> <?php echo $realm["loves"] ?></span>
     </small>
   </h1>

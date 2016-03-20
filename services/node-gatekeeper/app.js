@@ -9,6 +9,7 @@ var async        = require('async');
 var moment       = require('moment');
 var pg           = require('pg');
 var fs           = require('fs');
+var extend       = require('util')._extend;
 var redis 			 = require('redis');
 var db 	         = redis.createClient();
 
@@ -699,7 +700,23 @@ https.createServer(options, app).listen(8000, function () {
 // Acquire stats every minute
 // TODO: Move to stats app and run on second processor?
 setInterval(function(){
-  var servers = [];
+  
+  // TODO: Query www host for current servers on startup
+  var servers = [
+    {
+      id:     1,
+      url:    "https://debug-01.assembledrealms.com/api/stats",
+      name:   "debug-01",
+      token:  debug_token
+    }, {
+      id:     2,
+      url:    "https://play-01.assembledrealms.com/api/stats",
+      name:   "play-01",
+      token:  play_token,
+      track:  true
+    }
+  ];
+  
   var url     = '';
   var token   = '';
   var host    = '';
@@ -714,56 +731,30 @@ setInterval(function(){
 			return;
 		}
     
-    var query = client.query('SELECT * FROM servers WHERE online = true');
-
-    query.on('error', function(error) {
-      console.error(error);
-			return;
-    });
-    
-    query.on('row', function(row) {
+    async.each(servers, function(server, callback) {
+      var options = {
+        url: server.url,
+        headers: {
+          'Authorization': server.token
+        },
+        timeout: 30000
+      };
       
-      url   = 'https://';
-      
-      if (row.type == 0) {
-        host = 'debug-' + row.host;
-        token = debug_token;
-      } else {
-        host = 'play-' + row.host;
-        token = debug_token;
-      }
-      url += host + '.assembledrealms.com/api/stats';
-      
-      servers.push({
-        id:    row.id,
-        url:   url,
-        name:  host,
-        token: token
-      });
-    });
-    
-    query.on('end', function() {
-      
-      async.each(servers, function(server, callback) {
-        var options = {
-          url: server.url,
-          headers: {
-            'Authorization': server.token
-          },
-          timeout: 30000
-        };
-        request(options, function (error, response, body) {
-          if (!error && response.statusCode == 200) {
-            var responseData   = JSON.parse(body);
-            var connectedUsers = responseData.active_sessions.length / 2;
-            var runningRealms  = responseData.processes.length - 1;
-            var cpu            = Math.round(responseData.system.load[2] * 100);
-            var memory         = Math.round(responseData.system.memory.percentUsed);
+      request(options, function (error, response, body) {
+        if (!error && response.statusCode == 200) {
+          var responseData   = JSON.parse(body);
+          var connectedUsers = responseData.active_sessions.length / 2;
+          var runningRealms  = responseData.processes.length - 1;
+          var cpu            = Math.round(responseData.system.load[2] * 100);
+          var memory         = Math.round(responseData.system.memory.percentUsed);
+          
+          client.query('INSERT INTO history (timestamp, cpu, memory, connected_users, running_realms, server_id) VALUES ($1, $2, $3, $4, $5, $6)', [time, cpu, memory, connectedUsers, runningRealms, server.id], function(error) {
+            if (error) {
+              console.error(error);
+            }
             
-            client.query('INSERT INTO history (timestamp, cpu, memory, connected_users, running_realms, server_id) VALUES ($1, $2, $3, $4, $5, $6)', [time, cpu, memory, connectedUsers, runningRealms, server.id], function(error) {
-              if (error) {
-                console.error(error);
-              }
+            // If we need stats from this server, usually just play-XX servers
+            if (server.track) {
               
               // Updating realm user counts in memory
               for (var q = 0; q < responseData.active_sessions.length - 1; q+=2) {
@@ -777,79 +768,93 @@ setInterval(function(){
               }
               
               var current_keys = Object.keys(current);
-              for (var i = 0; i < current_keys.length; i++) {
-                var realm_id = current_keys[i];
-                if (realm_history[realm_id] == undefined) {
-                  realm_history[realm_id] = current[realm_id];
-                  updates[realm_id] = current[realm_id];
-                } else {
-                  if (realm_history[realm_id] !== current[realm_id]) {
-                    realm_history[realm_id] = current[realm_id];
-                    updates[realm_id] = current[realm_id];
+              var history_keys = Object.keys(realm_history);
+              
+              console.log(server.name + ' - current keys: ' + JSON.stringify(current_keys));
+              console.log(server.name + ' - history keys: ' + JSON.stringify(history_keys));
+              
+              if (history_keys.length === 0) {
+                updates = current;
+                realm_history = extend({}, current);
+              } else {
+              
+                for (var i = 0; i < history_keys.length; i++) {
+                  var realm_id = history_keys[i];
+                  
+                  if (current_keys.indexOf(realm_id) > -1) {
+                    // If previously recorded user count found, server has at least 1 user
+                    if (realm_history[realm_id] !== current[realm_id]) {
+                      realm_history[realm_id] = current[realm_id];
+                      updates[realm_id] = current[realm_id];
+                    }
+                  } else {
+                    // Missing update from server, it's empty
+                    delete realm_history[realm_id];
+                    updates[realm_id] = 0;
                   }
                 }
+                
               }
               
-              callback();
-            });
-            
-          } else {
-            if (error) {
-              if (error.code === 'ETIMEDOUT') {
-                if (error.connect === true) {
-                  console.error(options.url + ' timed out establishing connection...');
-                } else {
-                  console.error(options.url + ' timed out after establishing connection...');
-                }
-              }
-            } else {
-              console.error(options.url + '::' + response.statusCode);
+              
             }
             
             callback();
-          }
-        });
-      }, function (error) {
-        if (error) {
-          console.error(error);
-          return;
-        }
-        
-        // TODO: Update gatekeeper with usercounts...
-        if (Object.keys(updates).length > 0) {
-          var options = {
-            url: 'https://www.assembledrealms.com/external/gatekeeper.php',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': HOME_TOKEN,
-              'Accept': '*/*'
-            },
-            form: {
-              directive: 'update_users',
-              realm_updates: JSON.stringify(updates)
-            }
-          };
-          request.post(options, function (error, response, body) {
-            if (error) {
-              console.error(error);
-            }
-            
-            if (response.statusCode !== 200) {
-              console.log('!== 200 reply when saving user counts');
-            }
-            
-            done();
-            collectingStats = false;
           });
-        } else {        
-          console.log("No need to update... ");
-          console.log("current: " + JSON.stringify(current));
-          console.log("updates: " + JSON.stringify(updates));
-          done();
-          collectingStats = false;
+          
+        } else {
+          if (error) {
+            if (error.code === 'ETIMEDOUT') {
+              if (error.connect === true) {
+                console.error(options.url + ' timed out establishing connection...');
+              } else {
+                console.error(options.url + ' timed out after establishing connection...');
+              }
+            }
+          } else {
+            console.error(options.url + '::' + response.statusCode);
+          }
+          
+          callback();
         }
       });
+    }, function (error) {
+      if (error) {
+        console.error(error);
+        return;
+      }
       
+      // TODO: Update gatekeeper with usercounts...
+      if (Object.keys(updates).length > 0) {
+        var options = {
+          url: 'https://www.assembledrealms.com/external/gatekeeper.php',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': HOME_TOKEN,
+            'Accept': '*/*'
+          },
+          form: {
+            directive: 'update_users',
+            realm_updates: JSON.stringify(updates)
+          }
+        };
+        request.post(options, function (error, response, body) {
+          if (error) {
+            console.error(error);
+          }
+          
+          if (!response) {
+            console.log('!== 200 reply when saving user counts');
+          }
+          
+          done();
+          collectingStats = false;
+        });
+      } else {        
+        console.log("No need to update... ");
+        done();
+        collectingStats = false;
+      }
     });
 
   });

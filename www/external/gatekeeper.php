@@ -40,7 +40,7 @@
       }
       
       if ($directive === 'update_users') {
-        $realm_updates = $_POST['realm_updates'];
+        $realm_updates = json_decode($_POST['realm_updates'], true);
         $working_sql = 'INSERT INTO realms (id, players_online) VALUES ';
         
         foreach ($realm_updates as $realm_id => $user_count) {
@@ -51,7 +51,7 @@
         }
         $working_sql = rtrim($working_sql, ',');
         
-        $working_sql .= 'ON DUPLICATE KEY UPDATE players_online=VALUES(players_online)';
+        $working_sql .= ' ON DUPLICATE KEY UPDATE players_online=VALUES(players_online)';
         
         error_log(date('[Y-m-d H:i e] ') . $working_sql . PHP_EOL, 3, $logfile);
         error_log($realm_updates . PHP_EOL, 3, $logfile);

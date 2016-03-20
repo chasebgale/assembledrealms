@@ -86,11 +86,12 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
       $owner      = ($realm['user_id'] == $user_id);
       
       $post_body  = http_build_query(array(
-        'php_sess'   => $session_id,
-        'user_id'    => $loggedInUser->user_id,
-        'user_name'  => $loggedInUser->displayname,
-        'user_image' => $loggedInUser->user_image,
-        'owner'      => $owner
+        'php_sess'    => $session_id,
+        'user_id'     => $loggedInUser->user_id,
+        'user_name'   => $loggedInUser->displayname,
+        'user_image'  => $loggedInUser->user_image,
+        'owner'       => $owner,
+        'displayname' => $loggedInUser->displayname
       ));
       
       $curl 			= curl_init();
