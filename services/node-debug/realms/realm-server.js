@@ -236,7 +236,16 @@ io.on('connection', function socketConnected(socket) {
         };
         
         db.publish('realm_notifications', JSON.stringify(action));
-        engine.removePlayer(player);
+        
+        db.set(playerKey, JSON.stringify(player), function redisSetPlayer(error) {
+        
+          if (error) {
+            console.error(error);
+          }
+          
+          engine.removePlayer(player);
+          
+        });
       });
       
     });

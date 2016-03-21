@@ -30,7 +30,7 @@ $(document).ready(function () {
         var id = $(this).attr('data-id');
 
         $.ajax({
-            url: 'http://source-01.assembledrealms.com/api/project/' + id + '/destroy',
+            url: '//source-01.assembledrealms.com/api/project/' + id + '/destroy',
             type: 'GET',
             dataType: 'json',
             success: function (data) {
@@ -42,7 +42,7 @@ $(document).ready(function () {
                 $.post("/build/manager.php", parameters, function (data) {
                     data = JSON.parse(data);
                     if (data.message == "OK") {
-                        window.location = "http://www.assembledrealms.com/build";
+                        window.location = "//www.assembledrealms.com/build";
                     }
                 });
 
@@ -71,7 +71,7 @@ $(document).ready(function () {
     .done(function (data) {
       
       $.ajax({
-        url: 'https://gatekeeper.assembledrealms.com/shutdown/play/shared/' + __realmID,
+        url: '//gatekeeper.assembledrealms.com/shutdown/play/shared/' + __realmID,
         type: 'get'
       })
       .done(function (data) {
@@ -125,7 +125,7 @@ $(document).ready(function () {
     .done(function (data) {
       
       $.ajax({
-        url: 'https://gatekeeper.assembledrealms.com/launch/play/shared/' + __realmID,
+        url: '//gatekeeper.assembledrealms.com/launch/play/shared/' + __realmID,
         type: 'post',
         dataType: 'json',
         data: {
@@ -166,7 +166,7 @@ $(document).ready(function () {
     button.html('<i class="fa fa-cog fa-spin"></i> Publishing...');
     
     $.ajax({
-      url: 'https://gatekeeper.assembledrealms.com/launch/play/shared/' + __realmID,
+      url: '//gatekeeper.assembledrealms.com/launch/play/shared/' + __realmID,
       type: 'post',
       dataType: 'json',
       data: {}
@@ -416,7 +416,7 @@ $(document).ready(function () {
 });
 
 function enableChart() {
-	var socket = io('http://debug-01.assembledrealms.com/');
+	var socket = io('//debug-01.assembledrealms.com/');
 	socket.on('connect', function () {
 		socket.emit('subscribe', {id: '99'});
 	});

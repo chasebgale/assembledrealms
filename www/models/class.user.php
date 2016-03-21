@@ -496,6 +496,64 @@ class loggedInUser {
 		$stmt->close();
 		return ($row);
 	}
+  
+  public function fetchRealmsExtended()
+	{
+		global $mysqli,$db_table_prefix;
+		$stmt = $mysqli->prepare("SELECT realms.*, timestamps.latest
+      FROM realms
+      LEFT JOIN (
+        SELECT realm_id, max(timestamp) as latest
+          FROM realm_publishes
+          GROUP BY realm_id
+      ) AS timestamps
+      ON timestamps.realm_id = realms.id
+      WHERE realms.user_id = ? AND realms.status > -10");
+		$stmt->bind_param("i", $this->user_id);
+		$stmt->execute();
+        
+		$stmt->bind_result(
+      $id,
+      $user_id,
+      $title,
+      $description,
+      $level,
+      $status,
+      $players,
+      $funds,
+      $screenshots,
+      $loves,
+      $comments,
+      $source,
+      $show_funding,
+      $address,
+      $address_debug,
+      $published
+    );
+        
+		while ($stmt->fetch()){
+      $row[] = array(
+        'id' => $id,
+        'user_id' => $user_id,
+        'title' => $title,
+        'description' => $description,
+        'level' => $level,
+        'status' => $status,
+        'players' => $players,
+        'funds' => $funds,
+        'screenshots' => $screenshots,
+        'loves' => $loves,
+        'comments' => $comments,
+        'source' => $source,
+        'show_funding' => $show_funding,
+        'address' => $address,
+        'address_debug' => $address_debug,
+        'published' => $published
+      );
+		}
+		$stmt->close();
+		return ($row);
+	}
 	
     public function fetchRealmIDs()
 	{

@@ -27,7 +27,7 @@ if ($method == 'POST') {
     }
     
     if ($directive == 'list') {
-        $realms = $loggedInUser->fetchRealms();
+        $realms = $loggedInUser->fetchRealmsExtended();
         
         if ($realms) {
             echo json_encode(array_values($realms));
@@ -166,7 +166,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
             <td><%- realm.title %></td>
             <td>
                 <% if (realm.published) { %>
-                    <%- realm.published %>
+                    <%- moment(realm.published + " +0000").format("MMMM Do YYYY, h:mm:ss a") %>
                 <% } else { %>
                     N/A
                 <% } %>

@@ -42,8 +42,8 @@ $(document).ready(function () {
         parameters.description = $("#realmDescription").val();
         parameters.engine = 0; //$("#realm-engine-carousel .carousel-indicators .active").index();
 
-        $.post("http://www.assembledrealms.com/build/index.php", parameters, function ( response ) {
-            var jqxhr = $.get( "http://source-" + response.source + ".assembledrealms.com/api/project/" + response.project_id + "/create/" + parameters.engine, function( sourceResponse ) {
+        $.post("//www.assembledrealms.com/build/index.php", parameters, function ( response ) {
+            var jqxhr = $.get( "//source-" + response.source + ".assembledrealms.com/api/project/" + response.project_id + "/create/" + parameters.engine, function( sourceResponse ) {
                 button.removeAttr('disabled');
                 button.html('<span class="glyphicon glyphicon-flash"></span> Create');
                 if (sourceResponse.message === "OK") {

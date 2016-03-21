@@ -336,7 +336,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
             <li><strong>Server</strong></li>
             <li>
               <span id="realmStatus">
-                <?php if ($realm["status"] == 0) { ?>
+                <?php if ($realm["status"] < 1) { ?>
                     Offline
                 <?php } else if ($realm["status"] == 1) { ?>
                     <span class='label label-success'><i class='fa fa-power-off'></i> Online</span>
@@ -639,9 +639,11 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
         $(this).ekkoLightbox();
     });
     
+<?php if ($published) { ?>
     $("#publish-date").text(
       moment($("#publish-date").text()+ " +0000").format("MMMM Do YYYY, h:mm:ss a")
     );
+<? } ?>
 
     var __markdownCreateNewDB = true;
     var __realmID = <?php echo $_SERVER['QUERY_STRING'] ?>;

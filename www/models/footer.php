@@ -5,22 +5,6 @@
   <script src='//netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js'></script>
   <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
   
-  <div>
-    <img src="/img/logo.png" />
-  </div>
-  
-  <div id="footer-nav">
-    <a href="#">Home</a>
-    &nbsp;·&nbsp;
-    <a href="#">Account</a>
-    &nbsp;·&nbsp;
-    <a href="#">Build</a>
-    &nbsp;·&nbsp;
-    <a href="#">Play</a>
-    &nbsp;·&nbsp;
-    <a href="#">About</a>
-  </div>
-  
   <div id="footer-ad">
     <ins id="footer_ad" class="adsbygoogle"
          style="display:inline-block;width:970px;height:90px;"
@@ -51,6 +35,22 @@
       <h3>If you enjoy this site, please white-list it in your ad-blocking plug-in!</h3>
       <p>I am self-funding so a little extra cash from advertising would be awesome.</p>
     </div>
+  </div>
+  
+  <div style="margin-top: 20px;">
+    <img src="/img/logo.png" />
+  </div>
+  
+  <div id="footer-nav">
+    <a href="#">Home</a>
+    &nbsp;·&nbsp;
+    <a href="#">Account</a>
+    &nbsp;·&nbsp;
+    <a href="#">Build</a>
+    &nbsp;·&nbsp;
+    <a href="#">Play</a>
+    &nbsp;·&nbsp;
+    <a href="#">About</a>
   </div>
 
 </div>
