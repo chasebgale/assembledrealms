@@ -216,7 +216,7 @@ io.on('connection', function socketConnected(socket) {
       });
       
       socket.on('text', function (data) {
-        io.emit('text', {id: player.id, blurb: data});
+        io.emit('text', {player: {id: player.id, blurb: data}});
       });
       
       socket.on('join_debug', function (data) {
@@ -236,6 +236,9 @@ io.on('connection', function socketConnected(socket) {
         };
         
         db.publish('realm_notifications', JSON.stringify(action));
+        
+        // Remove attackers as player is leaving realm
+        player.attackers = {};
         
         db.set(playerKey, JSON.stringify(player), function redisSetPlayer(error) {
         

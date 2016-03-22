@@ -318,7 +318,6 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
 <script src="/play/js/marked.js"></script>
 <script src="/build/js/utilities.js"></script>
-<script src="/js/keyboard.min.js"></script>
 <script src="/js/pixi.min.js"></script>
 <script src="/js/bigscreen.min.js"></script>
 <script src="/js/async.js"></script>
@@ -438,15 +437,15 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     });
     
     $("#replyToCommentContent").on("focus", function () {    
-      //KeyboardJS.pause();
+      engine.watch(false);
     });
     
     $("#commentContent").on("focus", function () {    
-      //KeyboardJS.pause();
+      engine.watch(false);
     });
     
     $("#realm").on("click", function () {    
-      KeyboardJS.resume();
+      engine.watch(true);
     });
     
     $('#btnComment').on('click', function (e) {
