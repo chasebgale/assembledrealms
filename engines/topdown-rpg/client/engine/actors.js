@@ -18,11 +18,10 @@ Actors.prototype.create = function (actors, renderer) {
   if (actors.players !== undefined) {
     keys = Object.keys(actors.players);
     for (i = 0; i < keys.length; i++) {  
-      if (actors.player !== undefined) {
-        if (keys[i] == actors.player.id) {
-          this.avatarID = actors.player.id;
-          continue;
-        }
+      
+      // Skip ourself, the server sends back *all* players
+      if (keys[i] == this.avatarID) {
+        continue;
       }
 
       var player = new Player( actors.players[keys[i]] );
@@ -44,31 +43,24 @@ Actors.prototype.create = function (actors, renderer) {
   }
 };
 
-Actors.prototype.destroy = function (actor, renderer) {
-  
-  var player = this.players[actor.id];
-  player.sprite.children[player.direction].visible = false;
-  player.sprite.children[player.direction + 4].visible = false;
-  player.sprite.children[8].loop = false;
-  player.sprite.children[8].visible = true;
-  player.sprite.children[8].play();
-  player.health_bar.clear();
-  
-  // this.layer.removeChild(player.sprite);
-  delete this.players[player.id];
-  
-};
-
 Actors.prototype.update = function (actors) {
   // TODO: Check what properties were sent by the server for each npc/actor and only update those
   var keys = Object.keys(actors.players);
   var i;
   for (i = 0; i < keys.length; i++) {
+    
+    var actor = actors.players[keys[i]];
+    
     if (keys[i] == this.avatarID) {
-        this.engine.avatar.update(actors.players[keys[i]]);
+        this.engine.avatar.update(actor);
       continue;
     }   
-    this.players[keys[i]].move(actors.players[keys[i]]);
+    if (actor.remove) {
+      //this.layer.removeChild(this.players[keys[i]].sprite);
+      this.players[keys[i]].remove();
+    } else {
+      this.players[keys[i]].update(actor);
+    }
   }
   
   keys = Object.keys(actors.npcs);
@@ -78,9 +70,18 @@ Actors.prototype.update = function (actors) {
 };
 
 Actors.prototype.text = function (actors) {
-    if (actors.player) {
-        this.players[actors.player.id].text(actors.player.blurb);
+  if (actors.player) {
+    var player = this.players[actors.player.id];
+    if (player) {
+      player.emote(actors.player.blurb);
     }
+  }
+  if (actors.npc) {
+    var npc = this.npc[actors.npc.id];
+    if (npc) {
+      npc.emote(actors.npc.blurb);
+    }
+  }
 };
 
 Actors.prototype.tick = function () {
@@ -103,16 +104,30 @@ Actors.prototype.tick = function () {
   
 };
 
+Actors.prototype.names = function () {
+  var self = this;
+  var keys = Object.keys(self.players);
+  
+  for (var i = 0; i < keys.length; i++) {
+    self.players[keys[i]].nametag.alpha = 1;
+  }
+};
 
 var Player = function (data) {
   
   // Public properties
   this.sprite           = new PIXI.Container();
   this.sprite.position  = data.position;
-  this.text             = new PIXI.extras.BitmapText('Hello, just testing!', { font: '16px UO Classic (rough)', align: 'center' });
-  this.text.position.x  = -1 * Math.round(this.text.textWidth / 2);
-  this.text.position.y  = -32;
+  
+  this.text             = new PIXI.extras.BitmapText('This is just a test', { font: '16px UO Classic (rough)', align: 'center' });
+  this.text.position.x  = 0;
+  this.text.position.y  = -60;
   this.text.alpha       = 0;
+  
+  this.nametag              = new PIXI.extras.BitmapText(data.name, { font: '16px UO Classic (rough)', align: 'center' });
+  this.nametag.position.x   =  -1 * Math.round((data.name.length * 6) / 2);
+  this.nametag.position.y   = 0;
+  this.nametag.alpha        = 0.5;
   
   this.direction  = DIRECTION_S;
   this.health     = 100;
@@ -120,7 +135,10 @@ var Player = function (data) {
   this.experience = 0;
   this.moving     = false;
   this.attacking  = false;
+  this.dying      = false;
   this.id         = data.id;
+  
+  this.blurFilter = new PIXI.filters.BlurFilter();
   
   // Constructor variables
   var prefix      = "skeleton";
@@ -143,7 +161,7 @@ var Player = function (data) {
     
     clip = new PIXI.extras.MovieClip(textures);
     clip.position.x = -32;
-    clip.position.y = -32;
+    clip.position.y = -60;
     clip.animationSpeed = 0.2;
     clip.visible = false;
 
@@ -160,82 +178,92 @@ var Player = function (data) {
     
     clip = new PIXI.extras.MovieClip(textures);
     clip.position.x = -32;
-    clip.position.y = -32;
+    clip.position.y = -60;
     clip.animationSpeed = 0.2;
     clip.loop = false;
     clip.visible = false;
 
     self.sprite.addChild(clip);
   }
-  
-  // Dead animation
-  textures = [];
-  for (j = 0; j < 6; j++) {
-    textures[j] = PIXI.utils.TextureCache["skeleton_hurt_0_" + j + ".png"];
-  }
-  
-  clip = new PIXI.extras.MovieClip(textures);
-  clip.position.x = -32;
-  clip.position.y = -32;
-  clip.animationSpeed = 0.2;
-  clip.loop = false;
-  clip.visible = false;
-
-  self.sprite.addChild(clip);
-  // Dead End (heh heh heh)
-    
+        
   self.sprite.children[self.direction].visible = true;
   self.sprite.children[self.direction].gotoAndStop(0);
   
   self.sprite.addChild(this.text);
-  
+  self.sprite.addChild(this.nametag);
 };
 
-Player.prototype.move = function(player) {
+Player.prototype.update = function(player) {
   
   var self = this;
   
-  if (!self.moving) {
-    self.sprite.children[self.direction].play();
+  if (player.stamina !== undefined) {
+    self.stamina = player.stamina;
   }
   
-  if (self.direction !== player.direction) {
-    self.sprite.children[self.direction].visible = false;
-    self.sprite.children[self.direction].stop();
+  if (player.position !== undefined) {
+    if (!self.moving) {
+      self.sprite.children[self.direction].play();
+    }
+    
+    if (self.direction !== player.direction) {
+      self.sprite.children[self.direction].visible = false;
+      self.sprite.children[self.direction].stop();
 
-    self.sprite.children[player.direction].visible = true;
-    self.sprite.children[player.direction].play();
-  }
-  
-  self.direction = player.direction;
-  
-  if ((self.sprite.position.x == player.position.x) &&
-    (self.sprite.position.y == player.position.y)) {
-    self.moving = false;
-    self.sprite.children[self.direction].gotoAndStop(0);
-  } else {
-    self.moving = true;
-    self.sprite.position = player.position;
+      self.sprite.children[player.direction].visible = true;
+      self.sprite.children[player.direction].play();
+    }
+    
+    self.direction = player.direction;
+    
+    if ((self.sprite.position.x == player.position.x) &&
+      (self.sprite.position.y == player.position.y)) {
+      self.moving = false;
+      self.sprite.children[self.direction].gotoAndStop(0);
+    } else {
+      self.moving = true;
+      self.sprite.position = player.position;
+    }
   }
 };
 
-Player.prototype.text = function(data) {
-    if (data.substring(0, 4) == '/me ') {
-      data = '*' + data.substring(4) + '*';
-      this.text.font.tint = 11184810;
-    } else {
-      this.text.font.tint = 16777215;
-    }
-    
-    this.text.alpha       = 1;
-    this.text.text        = data;
-    this.text.position.x  = -1 * Math.round(this.text.textWidth / 2);
+Player.prototype.emote = function(data) {
+  if (data.substring(0, 4) == '/me ') {
+    data = '*' + data.substring(4) + '*';
+    this.text.font.tint = 11184810;
+  } else {
+    this.text.font.tint = 16777215;
+  }
+  
+  this.text.text          = data;
+  this.text.position.x    = -1 * Math.round((data.length * 6) / 2);
+  this.text.alpha         = 1;
 };
 
 Player.prototype.tick = function(data) {
-    if (this.text.alpha > 0) {
-      this.text.alpha -= 0.002;
+  if (this.text.alpha > 0) {
+    this.text.alpha -= 0.007;
+  }
+  
+  if (this.nametag.alpha > 0) {
+    this.nametag.alpha -= 0.007;
+  }
+  
+  if (this.dying) {
+    
+    if (this.sprite.alpha < 0) {
+      engine.actors.layer.removeChild(this.sprite);
+      delete engine.actors.players[this.id];
     }
+    
+    this.blurFilter.blurX += 2;
+    this.sprite.alpha -= 0.025;
+  }
+};
+
+Player.prototype.remove = function() {
+  this.sprite.filters = [this.blurFilter];
+  this.dying = true;
 };
 
 var NPC = function (npc, renderer) {
@@ -244,13 +272,13 @@ var NPC = function (npc, renderer) {
   this.sprite         = new PIXI.Container();
   this.sprite.position  = npc.position;
   
-  this.text  = new PIXI.extras.BitmapText(EMOTES_NPC_CREATED[getRandomInt(0, EMOTES_NPC_CREATED.length-1)], {
+  this.text  = new PIXI.extras.BitmapText('', {
     font: '16px UO Classic (rough)',
     align: 'left'
   });
   
   this.text.position.x  = -1 * Math.round(this.text.textWidth / 2);
-  this.text.position.y  = -32;
+  this.text.position.y  = -60;
   this.text.alpha       = 1;
   this.direction        = DIRECTION_S;
   this.attacking        = false;
@@ -261,37 +289,38 @@ var NPC = function (npc, renderer) {
   
   this.health_bar = new PIXI.Graphics();
   this.health_bar.position.x = -16;
-  this.health_bar.position.y = 36;
+  this.health_bar.position.y = 4;
   
   // set a fill and line style
   this.health_bar.beginFill(0x00FF00);
   this.health_bar.lineStyle(2, 0x000000, 1);
   this.health_bar.drawRect(0, 0, 32, 5);
-  
+
   // Server response will create npcs with: npc.layers = [0, 4, 7, 8, 9];
   this.npc_assets = [
-    "BELT_leather.png",                         // 0
-    "BELT_rope.png",                            // 1
-    "FEET_plate_armor_shoes.png",               // 2
-    "FEET_shoes_brown.png",                     // 3
-    "HANDS_plate_armor_gloves.png",             // 4
-        "HEAD_chain_armor_helmet.png",          // 5
-        "HEAD_chain_armor_hood.png",            // 6
-        "HEAD_hair_blonde.png",                 // 7
-        "HEAD_leather_armor_hat.png",           // 8
-        "HEAD_plate_armor_helmet.png",          // 9
-        "HEAD_robe_hood.png",                   // 10
-        "LEGS_pants_greenish.png",              // 11
-        "LEGS_plate_armor_pants.png",           // 12
-        "TORSO_chain_armor_jacket_purple.png",  // 13
-        "TORSO_chain_armor_torso.png",          // 14
-        "TORSO_leather_armor_shirt_white.png",  // 15
-        "TORSO_leather_armor_torso.png",        // 16
-        "TORSO_plate_armor_torso.png",          // 17
-        "TORSO_robe_shirt_brown.png",           // 18
-        "TORSO_leather_armor_bracers.png",      // 19
-        "TORSO_leather_armor_shoulders.png",    // 20
-        "TORSO_plate_armor_arms_shoulders.png"  // 21
+    "BELT_leather.png",                     // 0
+    "BELT_rope.png",                        // 1
+    "FEET_plate_armor_shoes.png",           // 2
+    "FEET_shoes_brown.png",                 // 3
+    "HANDS_plate_armor_gloves.png",         // 4
+    "HEAD_chain_armor_helmet.png",          // 5
+    "HEAD_chain_armor_hood.png",            // 6
+    "HEAD_hair_blonde.png",                 // 7
+    "HEAD_leather_armor_hat.png",           // 8
+    "HEAD_plate_armor_helmet.png",          // 9
+    "HEAD_robe_hood.png",                   // 10
+    "LEGS_pants_greenish.png",              // 11
+    "LEGS_plate_armor_pants.png",           // 12
+    "LEGS_robe_skirt.png",                  // 13
+    "TORSO_chain_armor_jacket_purple.png",  // 14
+    "TORSO_chain_armor_torso.png",          // 15
+    "TORSO_leather_armor_shirt_white.png",  // 16
+    "TORSO_leather_armor_torso.png",        // 17
+    "TORSO_plate_armor_torso.png",          // 18
+    "TORSO_robe_shirt_brown.png",           // 19
+    "TORSO_leather_armor_bracers.png",      // 20
+    "TORSO_leather_armor_shoulders.png",    // 21
+    "TORSO_plate_armor_arms_shoulders.png"  // 22
   ];
   
   // Constructor variables
@@ -354,7 +383,7 @@ var NPC = function (npc, renderer) {
       
       clip = new PIXI.extras.MovieClip(textures);
       clip.position.x = -32;
-      clip.position.y = -32;
+      clip.position.y = -60;
       clip.animationSpeed = 0.2;
       clip.visible = false;
   
@@ -372,6 +401,7 @@ var NPC = function (npc, renderer) {
   self.sprite.addChild(self.text);
   self.sprite.addChild(self.health_bar);
   
+  self.emote(EMOTES_NPC_CREATED[getRandomInt(0, EMOTES_NPC_CREATED.length-1)]);
 };
 
 NPC.prototype.update = function(npc) {
@@ -422,6 +452,7 @@ NPC.prototype.update = function(npc) {
         self.sprite.children[8].play();
         self.health_bar.clear();
       } else {
+        self.health_bar.alpha = 1.0;
         self.health_bar.clear();
         self.health_bar.lineStyle(2, 0x000000, 1);
         self.health_bar.drawRect(0, 0, 32, 5);
@@ -429,6 +460,10 @@ NPC.prototype.update = function(npc) {
         self.health_bar.lineStyle(0);
         self.health_bar.drawRect(1, 1, Math.floor(32 * (self.health / 100)) - 1, 4);
       }
+  } else {
+    if ((self.health_bar.alpha > 0) && (self.health < 100)) {
+      self.health_bar.alpha = self.health_bar.alpha - 0.025;
+    }
   }
   
   if (npc.attack === true) {
@@ -438,9 +473,13 @@ NPC.prototype.update = function(npc) {
     self.sprite.children[self.direction + 4].gotoAndPlay(0);
   }
   
+  if (npc.blurb !== undefined) {
+    self.emote(npc.blurb);
+  }
+  
 };
 
-NPC.prototype.text = function(data) {
+NPC.prototype.emote = function(data) {
   if (data.substring(0, 4) == '/me ') {
     data = '*' + data.substring(4) + '*';
     this.text.font.tint = 11184810;
@@ -449,12 +488,12 @@ NPC.prototype.text = function(data) {
   }
   
   this.text.text          = data;
-  this.text.position.x    = -1 * Math.round(this.text.textWidth / 2);
+  this.text.position.x    = -1 * Math.round((data.length * 6) / 2);
   this.text.alpha         = 1;
 };
 
 NPC.prototype.tick = function(data) {
   if (this.text.alpha > 0) {
-    this.text.alpha -= 0.002;
+    this.text.alpha -= 0.007;
   }
 };

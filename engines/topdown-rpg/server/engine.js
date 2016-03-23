@@ -2,18 +2,32 @@ var EventEmitter  = require('events').EventEmitter;
 var util          = require('util');
 var fs            = require('fs');
 
-var DIRECTION_N = 0;
-var DIRECTION_W = 1;
-var DIRECTION_S = 2;
-var DIRECTION_E = 3;
+var DIRECTION_N   = 0;
+var DIRECTION_W   = 1;
+var DIRECTION_S   = 2;
+var DIRECTION_E   = 3;
+
+var DIRECTION_NE  = 4;
+var DIRECTION_NW  = 5;
+var DIRECTION_SE  = 6;
+var DIRECTION_SW  = 7;
+
 
 var TILE_WIDTH  = 32;
 var TILE_HEIGHT = 32;
 
+var TAUNTS = [
+  "I have given you life... now honor me with DEATH!",
+  "Destroy these fleshy fools!",
+  "Purge these foolish humans from my lair!!",
+  "/me scowls",
+  "ATTACK! Attack the humans!"
+];
+
 var npcs            = {};
 var npcKeys         = [];
 var players         = {};
-var npcSpawnCount   = 0;
+var npcSpawnCount   = 1;
 var tickCount       = 0;
 var playerKeys      = [];
 var maps            = [];
@@ -55,7 +69,32 @@ Engine.prototype.initialize = function (callback) {
       return callback(error);
     }
     maps.push(JSON.parse(data));
+    
+    // Create the dark necromancer 'Chase'
+    npcs[0] = {
+      id:         0,
+      direction:  0,
+      health:     1000,
+      experience: 1000,
+      layers:     [10, 19, 1, 2, 4, 13],
+      step:       0,
+      steps:      [],     // Pathfinding
+      counter:    0,      // Sleep/wait
+      taunt:      30 * 3, // 30 ticks per second times 3 = 90 ticks or 3 second delay
+      attacking:  false,
+      cooldown:   0,
+      target:     -1,
+      map:        0,    // Index of map in map array this npc is on
+      position:   {
+        x: 14 * 32,
+        y: 2 * 32
+      }
+    };
+    
+    npcKeys = Object.keys(npcs);
+    
     self.spawn();
+    
     callback();
   });
 
@@ -69,9 +108,8 @@ Engine.prototype.tick = function () {
   var col            = 0;
   var modified       = false;
   var distance       = 0;
-  var original       = 0;
   var direction      = -1;
-  var difference     = 0;
+  var difference     = 4;
   var attackBounding = 32;
   var player;
   var map;
@@ -98,14 +136,14 @@ Engine.prototype.tick = function () {
     
     if (player.death) {
       if (player.counter > 220) {
-          
-        player.position   = {x: 220, y: 220};
+        player.position   = {x: 448, y: 192};
         player.direction  = 0;
         player.health     = 100;
         player.stamina    = 100;
         player.experience = 0;
         player.death      = false;
         player.counter    = 0;
+        player.attackers  = {};
         
         broadcast.players[player.id] = player;
       }
@@ -113,7 +151,7 @@ Engine.prototype.tick = function () {
     }
     
     // Is this player triggering an unfortunate NPC?
-    for (j = 0; j < npcKeys.length; j++) {
+    for (j = 1; j < npcKeys.length; j++) {
       npc = npcs[npcKeys[j]];
       
       // If this npc is attacking a player, move on to the next npc
@@ -125,8 +163,10 @@ Engine.prototype.tick = function () {
       distance = Math.sqrt( (npc.position.x-player.position.x)*(npc.position.x-player.position.x) + (npc.position.y-player.position.y)*(npc.position.y-player.position.y) );
       
       if (distance < 300) {
-        npc.attacking = true;
-        npc.target    = playerKeys[i];
+        npc.attacking     = true;
+        npc.target        = playerKeys[i];
+        
+        player.attackers[npcKeys[j]] = npc;
         
         this.emit('debug', 'NPC[' + npcKeys[j] + '] spotted a player...');
         
@@ -171,6 +211,7 @@ Engine.prototype.tick = function () {
       
       if (player.death) {
         npc.attacking = false;
+        this.emit('debug', 'NPC[' + npcKeys[i] + '] skipped as player is dead...');
         continue;
       }
       
@@ -185,8 +226,13 @@ Engine.prototype.tick = function () {
         }
       }
       
+      var distance_x = npc.position.x-player.position.x;
+      var distance_y = npc.position.y-player.position.y;
+      
+      distance = Math.sqrt( Math.pow(distance_x , 2) + Math.pow(distance_y,2) );
+      
       if (npc.counter % 2) {
-        distance = Math.sqrt( (npc.position.x-player.position.x)*(npc.position.x-player.position.x) + (npc.position.y-player.position.y)*(npc.position.y-player.position.y) );
+        
         if (distance < 33) {
           
           npc.cooldown = 1;
@@ -207,8 +253,12 @@ Engine.prototype.tick = function () {
             }
           } else {
             // Player dies, oh no
-            player.counter  = 0;
-            player.death    = true;
+            player.counter    = 0;
+            player.death      = true;
+            player.attackers  = {};
+            
+            npc.target = -1;
+            npc.attacking = false;
             
             broadcast.players[player.id] = player;
           }
@@ -220,60 +270,49 @@ Engine.prototype.tick = function () {
       if (npc.counter > 45) {
         // Once per second and a half we check if the player has ran out of range
         npc.counter = 0;
-        distance = Math.sqrt( (npc.position.x-player.position.x)*(npc.position.x-player.position.x) + (npc.position.y-player.position.y)*(npc.position.y-player.position.y) );
+        
         if (distance > 300) {
           npc.attacking = false;  
+          npc.target = -1;
+          delete player.attackers[npcKeys[i]];
           continue;
         }
       }
       
-      // Y calculations
-      difference = Math.abs(npc.position.y - player.position.y);
-      if (difference > attackBounding) {
-        if (difference > attackBounding + 2) {
-          difference = 3;   
+      // NPC should follow it's target
+      if (distance > 32) {
+  
+        var originalX = npc.position.x;
+        var originalY = npc.position.y;
+  
+        // Vertical movement
+        if (Math.abs(distance_y) > difference) {
+          if (npc.position.y < player.position.y) {
+            npc.position.y += difference;
+            npc.direction   = DIRECTION_S;
+          } else {
+            npc.position.y -= difference; 
+            npc.direction   = DIRECTION_N;
+          }
         }
         
-        original = npc.position.y;
-        
-        if (npc.position.y < player.position.y) {
-          npc.position.y += difference;
-          npc.direction   = DIRECTION_S;
-        } else {
-          npc.position.y -= difference; 
-          npc.direction   = DIRECTION_N;
-        }
-        
-        col = Math.floor( npc.position.x / TILE_WIDTH );
-        row = Math.floor( npc.position.y / TILE_HEIGHT );
-        
-        if (!this.walkable( map, row, col )) {
-          npc.position.y = original;
-        }
-      }
-      
-      // X calculations
-      difference = Math.abs(npc.position.x - player.position.x);
-      if (difference > attackBounding) {
-        if (difference > attackBounding + 2) {
-          difference = 3;   
-        }
-        
-        original = npc.position.x;
-        
-        if (npc.position.x < player.position.x) {
-          npc.position.x += difference;
-          npc.direction   = DIRECTION_E;
-        } else {
-          npc.position.x -= difference; 
-          npc.direction   = DIRECTION_W;
+        // Horizontal movement
+        if (Math.abs(distance_x) > difference) {
+          if (npc.position.x < player.position.x) {
+            npc.position.x += difference;
+            npc.direction   = DIRECTION_E;
+          } else {
+            npc.position.x -= difference; 
+            npc.direction   = DIRECTION_W;
+          }
         }
         
         col = Math.floor( npc.position.x / TILE_WIDTH );
         row = Math.floor( npc.position.y / TILE_HEIGHT );
         
         if (!this.walkable( map, row, col )) {
-          npc.position.x = original;
+          npc.position.y = originalY;
+          npc.position.x = originalX;
         }
       }
       
@@ -293,12 +332,12 @@ Engine.prototype.tick = function () {
       continue;
     }
     
-    if (npcs[npcKeys[i]].step === npcs[npcKeys[i]].steps.length) {
+    if (npc.step === npc.steps.length) {
       // If we have a step equal to the length of the step array, we walked em all, 
       // we need to generate a new walking path
       
-      npcs[npcKeys[i]].steps.length  = 0;
-      npcs[npcKeys[i]].step      = 0;
+      npc.steps.length  = 0;
+      npc.step      = 0;
       
       // ~25% chance of resuming a walk
       if (Math.random() < 0.26) {
@@ -308,8 +347,8 @@ Engine.prototype.tick = function () {
         var walkRandom  = 0;
         
         // What row/col are we in?
-        col = Math.floor( npcs[npcKeys[i]].position.x / TILE_WIDTH );
-        row = Math.floor( npcs[npcKeys[i]].position.y / TILE_HEIGHT );
+        col = Math.floor( npc.position.x / TILE_WIDTH );
+        row = Math.floor( npc.position.y / TILE_HEIGHT );
         
         // NPC can move maximum five tiles away
         for (j = 0; j < 5; j++) {
@@ -361,25 +400,25 @@ Engine.prototype.tick = function () {
             
             switch (direction) {
               case DIRECTION_N:
-                npcs[npcKeys[i]].steps.push({
+                npc.steps.push({
                   x: (col * 32) + 16 + walkRandom, 
                   y: ((row - 1) * 32) + 16 + walkRandom
                 });
                 break;
               case DIRECTION_E:
-                npcs[npcKeys[i]].steps.push({
+                npc.steps.push({
                   x: ((col + 1) * 32) + 16 + walkRandom,
                   y: ((row * 32) + 16 + walkRandom)
                 });
                 break;
               case DIRECTION_S:
-                npcs[npcKeys[i]].steps.push({
+                npc.steps.push({
                   x: (col * 32) + 16 + walkRandom,
                   y: ((row + 1) * 32) + 16 + walkRandom
                 });
                 break;
               case DIRECTION_W:
-                npcs[npcKeys[i]].steps.push({
+                npc.steps.push({
                   x: ((col - 1) * 32) + 16 + walkRandom,
                   y: ((row * 32) + 16 + walkRandom)
                 });
@@ -392,47 +431,66 @@ Engine.prototype.tick = function () {
         }
       } else {
         // If we aren't resuming our walk, sleep for a second or two
-        npcs[npcKeys[i]].counter   = Math.floor( Math.random() * 100 );
+        npc.counter   = Math.floor( Math.random() * 100 );
         broadcast.npcs[npcKeys[i]] = {
-          position: npcs[npcKeys[i]].position,
-          direction: npcs[npcKeys[i]].direction
+          position: npc.position,
+          direction: npc.direction
         };
       }
     }
     
-    if (npcs[npcKeys[i]].steps.length > 0) {
+    if (npc.steps.length > 0) {
       
-      var npc_step  = npcs[npcKeys[i]].steps[npcs[npcKeys[i]].step];
+      var npc_step  = npc.steps[npc.step];
 
-      direction = npcs[npcKeys[i]].direction;
+      direction = npc.direction;
       
-      if (npcs[npcKeys[i]].position.y > npc_step.y) {
+      if (npc.position.y > npc_step.y) {
         direction = DIRECTION_N;
-        npcs[npcKeys[i]].position.y--;
-      } else if (npcs[npcKeys[i]].position.y < npc_step.y) {
+        npc.position.y--;
+      } else if (npc.position.y < npc_step.y) {
         direction = DIRECTION_S;
-        npcs[npcKeys[i]].position.y++;
+        npc.position.y++;
       }
       
-      if (npcs[npcKeys[i]].position.x > npc_step.x) {
+      if (npc.position.x > npc_step.x) {
         direction = DIRECTION_W;
-        npcs[npcKeys[i]].position.x--;
-      } else if (npcs[npcKeys[i]].position.x < npc_step.x) {
+        npc.position.x--;
+      } else if (npc.position.x < npc_step.x) {
         direction = DIRECTION_E;
-        npcs[npcKeys[i]].position.x++;
+        npc.position.x++;
       }
       
-      if ((npcs[npcKeys[i]].position.x == npc_step.x) &&
-        (npcs[npcKeys[i]].position.y == npc_step.y)) {
-        npcs[npcKeys[i]].step++;
+      if ((npc.position.x == npc_step.x) &&
+        (npc.position.y == npc_step.y)) {
+        npc.step++;
       }
       
-      npcs[npcKeys[i]].direction = direction;
+      npc.direction = direction;
       broadcast.npcs[npcKeys[i]] = {
-        position: npcs[npcKeys[i]].position,
-        direction: npcs[npcKeys[i]].direction
+        position: npc.position,
+        direction: npc.direction
       };
     }
+  }
+  
+  // Special primary NPC action
+  npc = npcs[0];
+  npc.taunt--;
+  if (npc.taunt === 0) {
+    var taunt = TAUNTS[getRandomInt(0, TAUNTS.length - 1)];
+    
+    this.emit('debug', 'NPC[0] is taunting: ' + taunt);
+    
+    if (broadcast.npcs[0]) {
+      broadcast.npcs[0].blurb = taunt;
+    } else {
+      broadcast.npcs[0] = {
+        blurb: taunt
+      };
+    }
+    
+    npc.taunt = 30 * getRandomInt(15, 30);
   }
     
 };
@@ -457,6 +515,14 @@ Engine.prototype.attack = function (player) {
     return;   
   }
   
+  if (!player.attackers) {
+    return;
+  }
+  
+  if (player.attackers == {}) {
+    return;
+  }
+  
   var tx = 0;
   var ty = 0;
   var th = 0;
@@ -474,24 +540,30 @@ Engine.prototype.attack = function (player) {
   
   this.emit('debug', 'Player ' + player.id + ' is attacking: ' + tx + ', ' + ty);
   
-  for (var i = 0; i < npcKeys.length; i++) {
-    npc = npcs[npcKeys[i]];
+  var attackers = Object.keys(player.attackers);
+  
+  console.log('player.attackers: ' + JSON.stringify(player.attackers));
+  console.log('attackers: ' + JSON.stringify(attackers));
+  
+  for (var i = 0; i < attackers.length; i++) {
+    npc = npcs[attackers[i]];
     
     // this.emit('debug', 'testing attack against ' + JSON.stringify(npc.position));
     
     if ((npc.position.x > tx) && (npc.position.x < (tx + tw))) {
       if ((npc.position.y > ty) && (npc.position.y < (ty + th))) {
         npc.health -= 10;
-        if (broadcast.npcs[npcKeys[i]]) {
-          broadcast.npcs[npcKeys[i]].health = npc.health;
+        if (broadcast.npcs[attackers[i]]) {
+          broadcast.npcs[attackers[i]].health = npc.health;
         } else {
-          broadcast.npcs[npcKeys[i]] = {
+          broadcast.npcs[attackers[i]] = {
             health: npc.health
           };
         }
         
         if (npc.health < 1) {
-          delete npcs[npcKeys[i]];
+          delete npcs[attackers[i]];
+          delete player.attackers[attackers[i]];
           npcKeys = Object.keys(npcs);
         }
         
@@ -550,9 +622,10 @@ Engine.prototype.createPlayer = function () {
     counter:    0,
     map:        0,
     position:   {
-      x: 220,
-      y: 220
+      x: 448,
+      y: 192
     },
+    attackers:  {}
   };
   
   return player;
@@ -564,9 +637,7 @@ Engine.prototype.addPlayer = function (player) {
 };
 
 Engine.prototype.removePlayer = function (player) {
-  
-  this.emit('destroy', player);
-  
+  broadcast.players[player.id] = {remove: true};
   delete players[player.id];
   playerKeys = Object.keys(players);
 };
@@ -598,17 +669,17 @@ Engine.prototype.spawn = function() {
   // Head: 5-10
   npcs[npcSpawnCount].layers.push(getRandomInt(5, 10));
   
-  // Torso: 13-18
-  npcs[npcSpawnCount].layers.push(getRandomInt(13, 18));
+  // Torso: 14-19
+  npcs[npcSpawnCount].layers.push(getRandomInt(14, 19));
   
-  // Torso detail: 19-21
-  npcs[npcSpawnCount].layers.push(getRandomInt(19, 21));
+  // Torso detail: 20-22
+  npcs[npcSpawnCount].layers.push(getRandomInt(20, 22));
   
   // Belt: 0-1
   npcs[npcSpawnCount].layers.push(getRandomInt(0, 1));
   
-  // Legs: 11-12
-  npcs[npcSpawnCount].layers.push(getRandomInt(11, 12));
+  // Legs: 11-13
+  npcs[npcSpawnCount].layers.push(getRandomInt(11, 13));
   
   // Feet: 2-3
   npcs[npcSpawnCount].layers.push(getRandomInt(2, 3));

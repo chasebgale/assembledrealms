@@ -17,12 +17,13 @@ var Engine = function () {
   this.position       = {x: 220, y: 220};
   this.alternator     = false;
   this.initialized    = false;
+  this.focus          = false;
 };
 
 Engine.prototype.initialize = function (container, host, port, cwd) {
 
   // If we are inside of nested functions, 'this' can be reassigned, let's keep a reference to 'this'
-  // as it initially references our Engine instance 'engine'
+  // as it initially references our Engine instance 'engine' 
   var self = this;
   
   self.host = host;
@@ -36,11 +37,14 @@ Engine.prototype.initialize = function (container, host, port, cwd) {
   // This message is sent after a player successfully makes a connection to our server. The message
   // contains the locations of other players, npcs and this players last (or initial) position.
   self.socket.on('sync', function (actors) {
+    self.position = actors.player.position;
     self.avatar.create(actors.player);
+    
+    self.actors.avatarID = actors.player.id;
     self.actors.create(actors, self.renderer);
     
     self.position = actors.player.position;
-    
+    self.watch(true);
     self.initialized = true;
     self.ready();
   });
@@ -54,12 +58,9 @@ Engine.prototype.initialize = function (container, host, port, cwd) {
   
   // The create message tells us another player or npc has entered the map we are on
   self.socket.on('create', function (actors) {
-    self.actors.create(actors, self.renderer);
-  });
-  
-  // The destroy message tells us another player or npc has left the map we are on
-  self.socket.on('destroy', function (actor) {
-    self.actors.destroy(actor, self.renderer);
+    if (self.initialized) {
+      self.actors.create(actors, self.renderer);
+    }
   });
     
   self.socket.on('debug', function (data) {
@@ -143,6 +144,7 @@ Engine.prototype.load = function (map) {
     "HEAD_robe_hood.png",
     "LEGS_pants_greenish.png",
     "LEGS_plate_armor_pants.png",
+    "LEGS_robe_skirt.png",
     "TORSO_chain_armor_jacket_purple.png",
     "TORSO_chain_armor_torso.png",
     "TORSO_leather_armor_shirt_white.png",
@@ -256,6 +258,22 @@ Engine.prototype.render = function () {
   
   self.renderer.render(self.stage);
 
+};
+
+Engine.prototype.watch = function(gainedFocus) {
+  var self = this;
+  
+  if (gainedFocus && !self.focus) {
+    document.addEventListener("keydown", self.avatar.keydown, false);
+    document.addEventListener("keyup", self.avatar.keyup, false);
+    self.focus = true;
+  }
+  
+  if (!gainedFocus && self.focus) {
+    document.removeEventListener("keydown", self.avatar.keydown, false);
+    document.removeEventListener("keyup", self.avatar.keyup, false);
+    self.focus = false;
+  }
 };
 
 Engine.prototype.debug = function (enabled) {

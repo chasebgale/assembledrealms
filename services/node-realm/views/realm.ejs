@@ -1,67 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
+<script type="text/javascript">
+  var DEBUG    = true;
+  var HOST     = '<%= host %>';
+  var PORT     = <%= port %>;
+  var QUEUE    = <%= queue %>;
+  var USER_ID  = <%= userID %>;
+  var REALM_ID = <%= id %>;
+  
+  var OWNER   = <%= owner %>;
+  var ROOT    = '//' + HOST + '/realms/<%= id %>/';
+  var STATS   = '//' + HOST + '/realms/<%= id %>/stats';
+  
+  var SCRIPTS = [
+    <% for(var i=0; i<scripts.length-1; i++) { %>
+    "https://<%= host %><%= scripts[i] %>",
+    <% } %>
+    "https://<%= host %><%= scripts[scripts.length-1] %>"
+  ];
+  
+  var Loader = function (){};
+  Loader.prototype = {
+    require: function (scripts, loading, finished) {
+      this.loadCount      = 0;
+      this.totalRequired  = scripts.length;
+      this.finished       = finished;
+      this.loading        = loading;
 
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+      for (var i = 0; i < scripts.length; i++) {
+        this.writeScript(scripts[i]);
+      }
+    },
+    loaded: function (evt) {
+      this.loadCount++;
+      
+      this.loading.call();
 
-        <title>Assembled Realms - PLAY</title>
-        
-        <style>
-            html, body {
-                height:     100%;
-                width:      100%:
-                padding:    0;
-                margin:     0;
-            }
-        </style>
-        
-    </head>
-
-    <body>
-
-        <div id="realm">
-        </div>
-
-        <!-- Your realm hosts up it's own copy of socket.io -->
-        <script type="text/javascript" src="/socket.io/socket.io.js"></script>
-        
-        <!-- All of the realms' scripts are served up dynamically... -->
-        <% for(var i=0; i<scripts.length; i++) { %>
-            <script type="text/javascript" src="<%= scripts[i] %>"></script>
-        <% } %>
-        
-        <!-- ...except for a few of the building blocks -->
-        <script type="text/javascript" src="//www.assembledrealms.com/build/js/utilities.js"></script>
-        <script type="text/javascript" src="//www.assembledrealms.com/js/keyboard.js"></script>
-        <script type="text/javascript" src="//www.assembledrealms.com/js/pixi.min.js"></script>
-        <script type="text/javascript" src="//www.assembledrealms.com/js/bigscreen.min.js"></script>
-        <script type="text/javascript" src="//www.assembledrealms.com/js/async.js"></script>
-    
-        <script type="text/javascript">
-            
-            var engine 	= new Engine();
-            
-            $(document).ready(function () {  
-        
-                engine.loaded = function () {
-                
-                    animate();
-                    
-                };
-                
-                function animate() {
-                    
-                    engine.render();
-                    requestAnimationFrame(animate);
-
-                }
-                
-                engine.initialize( document.getElementById("realm") );
-                
-            });
-        </script>
-    
-    </body>
-</html>
+      if (this.loadCount == this.totalRequired && typeof this.finished == 'function') this.finished.call();
+    },
+    writeScript: function (src) {
+      var self = this;
+      var s = document.createElement('script');
+      s.type = "text/javascript";
+      s.async = true;
+      s.src = src;
+      s.addEventListener('load', function (e) { self.loaded(e); }, false);
+      var head = document.getElementsByTagName('head')[0];
+      head.appendChild(s);
+    }
+  };
+  
+  setup();
+  
+</script>

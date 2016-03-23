@@ -1,7 +1,6 @@
 A massive **thank you** to everyone who has contributed directly or indirectly to this project! If you contributed to any entry below and  
 don't see your name listed or want an attribution updated, please contact me directly: [chase@assembledrealms.com](mailto:chase@assembledrealms.com) [@chasebgale](https://twitter.com/chasebgale)  
-#### **You deserve the credit.**
----
+
 Actor Sprites
 --------
 http://opengameart.org/content/lpc-medieval-fantasy-character-sprites  
@@ -28,18 +27,29 @@ johannc@poufpoufproduction.fr
 
 Skyler Robert Colladay   
 
-Ultima Online Inspired Font
+Font Sprites
 --------
+Ultima Online Inspired Font
 zym@zymdragon.com 
 
-NodeJS
+NodeJS Libraries
 --------
 https://nodejs.org  
-socket.io - http://socket.io  
-express   - http://expressjs.com  
-PM2 - http://pm2.keymetrics.io  
-node_redis - https://github.com/NodeRedis/node_redis  
-moment - http://momentjs.com  
+
+socket.io 
+http://socket.io  
+
+Express 
+http://expressjs.com  
+
+PM2 
+http://pm2.keymetrics.io  
+
+node_redis  
+https://github.com/NodeRedis/node_redis  
+
+moment  
+http://momentjs.com  
 
 Browser Libraries
 --------
@@ -55,11 +65,6 @@ https://github.com/chjj/marked
 
 stats - a javascript performance monitor  
 https://github.com/mrdoob/stats.js  
-
-Code Chunks / Technique
---------
-Selected-tile indicator on map-editor tile-chooser
-https://github.com/odyniec/imgareaselect/
 
 JQuery  
 https://jquery.com/  

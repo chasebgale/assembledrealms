@@ -1,6 +1,7 @@
 var Avatar = function (engine) {
   this.direction  = 0;
   this.sprite     = new PIXI.Container();
+  this.active     = undefined;
   this.moving     = false;
   this.attacking  = false;
   this.typing     = false;
@@ -12,6 +13,7 @@ var Avatar = function (engine) {
   this.id         = "";
   this.engine     = engine;
   this.text       = undefined;
+  this.keys       = {};
 };
 
 Avatar.prototype.create = function (avatar) {
@@ -26,13 +28,13 @@ Avatar.prototype.create = function (avatar) {
     align: 'center' 
   });
   this.text.position.x    = 0;
-  this.text.position.y    = -34;
+  this.text.position.y    = -60;
   this.text.alpha         = 0;
 
   this.statsBar = new PIXI.Graphics();
   this.statsBar.alpha = 0.5;
   this.statsBar.position.x = -16;
-  this.statsBar.position.y = 36;
+  this.statsBar.position.y = 2;
   // set a fill and line style
   this.statsBar.beginFill(0x00FF00);
   this.statsBar.lineStyle(2, 0x000000, 1);
@@ -103,7 +105,7 @@ Avatar.prototype.update = function (avatar) {
     self.statsBar.lineStyle(0);
     self.statsBar.drawRect(1, 1, Math.floor(32 * (self.health / 100)) - 1, 4);
     self.statsBar.drawRect(1, 7, Math.floor(32 * (self.stamina / 100)) - 1, 4);
-    self.statsBar.alpha = 0.5;
+    self.statsBar.alpha = 0.5; //
   }
 };
     
@@ -149,7 +151,7 @@ Avatar.prototype.load = function (complete) {
       clip = new PIXI.extras.MovieClip(textures[i]);
 
       clip.position.x = -32; //(CANVAS_WIDTH / 2) - 32;
-      clip.position.y = -32; //(CANVAS_HEIGHT / 2) - 32;
+      clip.position.y = -60; //(CANVAS_HEIGHT / 2) - 32;
       clip.animationSpeed = 0.2;
       clip.visible = false;
 
@@ -161,16 +163,25 @@ Avatar.prototype.load = function (complete) {
   process_layer(ROOT + "client/resource/actors/slash/BODY_skeleton.png", "slash");
   process_layer(ROOT + "client/resource/actors/hurt/BODY_skeleton.png", "hurt");
               
-  self.direction = DIRECTION_S;
+  self.direction  = DIRECTION_S;
+  self.active     = self.sprite.children[self.direction];
         
-  self.sprite.children[self.direction].visible = true;
-  self.sprite.children[self.direction].gotoAndStop(0);
+  self.active.visible = true;
+  self.active.gotoAndStop(0);
   
-  KeyboardJS.on('space', function(e) {
-    e.preventDefault();
-  });
+  /*
+  var amount            = 4;
+  var animationSpeed    = 0.2;
+  var wasMoving         = self.moving;
+  var oldDirection      = self.direction;
+  var oldPosition       = $.extend(true, {}, self.engine.position);
+  */
   
-  KeyboardJS.on('enter', function() {
+  //document.addEventListener("keydown", self.keydown, false);
+  //document.addEventListener("keyup", self.keyup, false);
+  
+  /*
+  keyboardJS.bind('enter', function(e) {
     
     if (self.typing) {
       // Send our text string, then clear it
@@ -180,6 +191,7 @@ Avatar.prototype.load = function (complete) {
       self.blurb                  = ""; 
       self.engine.textInput.text  = "";
       
+      keyboardJS.resume();
       document.removeEventListener("keydown", self.keydown, false);
     } else {
       // Stop our avatar and show the carrot blinking for input
@@ -192,116 +204,158 @@ Avatar.prototype.load = function (complete) {
           self.engine.socket.emit('move', {position: self.engine.position, direction: self.direction});
       }
       
+      keyboardJS.pause();
       document.addEventListener("keydown", self.keydown, false);
     }
     self.typing = !self.typing;
   });
+  */
   
   complete();
     
 };
 
 Avatar.prototype.keydown = function (e) {
-    
-  var letter = '';
+  var self    = this;
+  var letter  = '';
+  var name    = KEY_CODES[e.keyCode];
   
-  // Backspace
-  if (e.keyCode == 8) {
-    engine.avatar.blurb = engine.avatar.blurb.substring(0, engine.avatar.blurb.length - 1);
-  } else if (e.keyCode == 32) {
-    engine.avatar.blurb += ' ';
-  } else if ((e.keyCode > 64) && (e.keyCode < 91)) {
-    // Letter     
-    letter = String.fromCharCode(e.keyCode);
-    if (!e.shiftKey) {
-      letter = letter.toLowerCase();
-    }
-    engine.avatar.blurb += letter;
-  } else if ((e.keyCode > 47) && (e.keyCode < 58)) {
-    // Numbers
-    letter = String.fromCharCode(e.keyCode);
-    if (e.shiftKey) {
-      switch (letter) {
-        case '1':
-          letter = '!';
-          break;
-        case '2':
-          letter = '@';
-          break;
-        case '3':
-          letter = '#';
-          break;
-        case '4':
-          letter = '$';
-          break;
-        case '5':
-          letter = '%';
-          break;
-        case '6':
-          letter = '^';
-          break;
-        case '7':
-          letter = '&';
-          break;
-        case '8':
-          letter = '*';
-          break;
-        case '9':
-          letter = '(';
-          break;
-        case '0':
-          letter = ')';
-          break;
-        default:
-          letter = '';
-          break;
-      }
-    }
-    engine.avatar.blurb += letter;
-  } else if ((e.keyCode > 185) && (e.keyCode < 193)) {
-    switch (e.keyCode) {
-      case 186:
-        letter = e.shiftKey ? ':' : ';';
-        break;
-      case 187:
-        letter = e.shiftKey ? '+' : '=';
-        break;
-      case 188:
-        letter = e.shiftKey ? '<' : ',';
-        break;
-      case 189:
-        letter = e.shiftKey ? '_' : '-';
-        break;
-      case 190:
-        letter = e.shiftKey ? '>' : '.';
-        break;
-      case 191:
-        letter = e.shiftKey ? '?' : '/';
-        break;
-      case 192:
-        letter = e.shiftKey ? '~' : '`';
-        break;
-    }
-    engine.avatar.blurb += letter;
-  } else if ((e.keyCode > 218) && (e.keyCode < 223)) {
-    switch (e.keyCode) {
-      case 219:
-        letter = e.shiftKey ? '{' : '[';
-        break;
-      case 220:
-        letter = e.shiftKey ? '|' : '\\';
-        break;
-      case 221:
-        letter = e.shiftKey ? '}' : ']';
-        break;
-      case 222:
-        letter = e.shiftKey ? '"' : '\'';
-        break;
-    }
-    engine.avatar.blurb += letter;
+  // Spacebar and Enter and Arrow keys mess with the browser, so prevent them from bubbling:
+  if ((name == "spacebar") || (name == "enter") || (name == "up") || (name == "down") || (name == "left") || (name == "right")) {
+    e.preventDefault();
   }
   
-  engine.textInput.text  = engine.avatar.blurb;
+  if (engine.avatar.typing) {
+    if (e.keyCode == 8) {
+      // Backspace
+      engine.avatar.blurb = engine.avatar.blurb.substring(0, engine.avatar.blurb.length - 1);
+    } else if (e.keyCode == 13) {
+      // Enter
+      engine.socket.emit('text', engine.avatar.blurb);
+      engine.avatar.emote(engine.avatar.blurb);
+      engine.avatar.typing = false;
+      engine.avatar.blurb    = ""; 
+      engine.textInput.text  = "";
+    } else if (e.keyCode == 32) {
+      // Space
+      engine.avatar.blurb += ' ';
+    } else if ((e.keyCode > 64) && (e.keyCode < 91)) {
+      // Letter     
+      letter = String.fromCharCode(e.keyCode);
+      if (!e.shiftKey) {
+        letter = letter.toLowerCase();
+      }
+      engine.avatar.blurb += letter;
+    } else if ((e.keyCode > 47) && (e.keyCode < 58)) {
+      // Numbers
+      letter = String.fromCharCode(e.keyCode);
+      if (e.shiftKey) {
+        switch (letter) {
+          case '1':
+            letter = '!';
+            break;
+          case '2':
+            letter = '@';
+            break;
+          case '3':
+            letter = '#';
+            break;
+          case '4':
+            letter = '$';
+            break;
+          case '5':
+            letter = '%';
+            break;
+          case '6':
+            letter = '^';
+            break;
+          case '7':
+            letter = '&';
+            break;
+          case '8':
+            letter = '*';
+            break;
+          case '9':
+            letter = '(';
+            break;
+          case '0':
+            letter = ')';
+            break;
+          default:
+            letter = '';
+            break;
+        }
+      }
+      engine.avatar.blurb += letter;
+    } else if ((e.keyCode > 185) && (e.keyCode < 193)) {
+      switch (e.keyCode) {
+        case 186:
+          letter = e.shiftKey ? ':' : ';';
+          break;
+        case 187:
+          letter = e.shiftKey ? '+' : '=';
+          break;
+        case 188:
+          letter = e.shiftKey ? '<' : ',';
+          break;
+        case 189:
+          letter = e.shiftKey ? '_' : '-';
+          break;
+        case 190:
+          letter = e.shiftKey ? '>' : '.';
+          break;
+        case 191:
+          letter = e.shiftKey ? '?' : '/';
+          break;
+        case 192:
+          letter = e.shiftKey ? '~' : '`';
+          break;
+      }
+      engine.avatar.blurb += letter;
+    } else if ((e.keyCode > 218) && (e.keyCode < 223)) {
+      switch (e.keyCode) {
+        case 219:
+          letter = e.shiftKey ? '{' : '[';
+          break;
+        case 220:
+          letter = e.shiftKey ? '|' : '\\';
+          break;
+        case 221:
+          letter = e.shiftKey ? '}' : ']';
+          break;
+        case 222:
+          letter = e.shiftKey ? '"' : '\'';
+          break;
+      }
+      engine.avatar.blurb += letter;
+    }
+    
+    engine.textInput.text  = engine.avatar.blurb;
+  } else {
+    if (e.keyCode == 13) {
+      // Enter
+      if (engine.avatar.moving) {
+        engine.avatar.moving = false;
+        engine.avatar.sprite.children[engine.avatar.direction].gotoAndStop(0);
+        
+        // Sending one more 'move' with duplicate coords as the last update will tell all clients this
+        // actor has stopped moving
+        engine.socket.emit('move', {position: engine.position, direction: engine.avatar.direction});
+      }
+      
+      engine.avatar.typing = true;
+      
+    } else if (e.keyCode == 78) {
+      // 'n' key, used to show all player names
+      engine.actors.names();
+    } else {
+      engine.avatar.keys[KEY_CODES[e.keyCode]] = true;
+    }
+  }
+};
+
+Avatar.prototype.keyup = function (e) {
+  engine.avatar.keys[KEY_CODES[e.keyCode]] = false;
 };
 
 
@@ -342,144 +396,178 @@ Avatar.prototype.tick = function () {
     return;
   }
   
+  var keys              = self.keys;
   var amount            = 4;
   var animationSpeed    = 0.2;
   var wasMoving         = self.moving;
-  var oldDirection      = self.direction;
-  var oldPosition       = $.extend(true, {}, self.engine.position);
-  var keys              = KeyboardJS.activeKeys();
+  var newDirection      = self.direction;
+  var newPosition       = $.extend(true, {}, self.engine.position);
+  var positionChanged   = false;
   
-  var isStepLegal = function () {
+  var step = function () {
+    var col = Math.floor(newPosition.x / TILE_WIDTH);
+    var row = Math.floor(newPosition.y / TILE_HEIGHT);
     
-    var col = Math.floor(self.engine.position.x / TILE_WIDTH);
-    var row = Math.ceil(self.engine.position.y / TILE_HEIGHT);
+    var stop = function () {
+      self.active.gotoAndStop(0);
+      self.moving = false;
+      
+      // Sending one more 'move' with duplicate coords as the last update will tell all clients this
+      // actor has stopped moving
+      self.engine.socket.emit('move', {position: self.engine.position, direction: self.direction});
+    };
     
+    // Check for illegal step and return if it's illegal
     if (self.engine.map.terrain.index[row] !== undefined) {
       if (self.engine.map.terrain.index[row][col] !== undefined) {
         if ((self.engine.map.terrain.index[row][col][2] !== undefined) &&
             (self.engine.map.terrain.index[row][col][2] !== null)) {
-          self.engine.position = oldPosition;
+          stop();
+          return;
         }
       } else {
-        self.engine.position = oldPosition;
+        stop();
+        return;
       }
     } else {
-      self.engine.position = oldPosition;
-    }
-    
-    var flag = false;
-
-    if (!wasMoving && self.moving) {
-      self.sprite.children[self.direction].play();  
-    }
-
-    if ((oldDirection !== self.direction) || (flag)) {
-
-      self.sprite.children[oldDirection].visible = false;
-      self.sprite.children[oldDirection].stop();
-
-      self.sprite.children[self.direction].visible = true;
-      self.sprite.children[self.direction].play();
-    
-    }
-    
-    self.sprite.children[self.direction].animationSpeed = animationSpeed;
-    
-    self.sprite.position = self.engine.position; 
-  
-    self.engine.socket.emit('move', {position: self.engine.position, direction: self.direction});
-      
-  };
-  
-  if ($.inArray('space', keys) > -1) {
-      
-    if (self.stamina < 10) {
-      self.emote('/me oof');
+      stop();
       return;
     }
     
-    self.sprite.children[self.direction].stop();
-    self.sprite.children[self.direction].visible = false;
+    var drawDirection = -1;
+    self.moving = true;
     
-    self.sprite.children[self.direction + 4].onComplete = function () {
-      self.attacking = false;
-      self.sprite.children[self.direction + 4].visible = false;
-      self.sprite.children[self.direction + 4].gotoAndStop(0);
-      self.sprite.children[self.direction].visible = true;
-      
-      if (self.moving) {
-        self.sprite.children[self.direction].play();   
-      }
-    };
-    
-    self.sprite.children[self.direction + 4].loop = false;
-    self.sprite.children[self.direction + 4].visible = true;
-    self.sprite.children[self.direction + 4].gotoAndPlay(0);
-    
-    self.attacking = true;
-    
-    self.engine.socket.emit('attack');
-    return;
-  }
-  
-  if ($.inArray('shift', keys) > -1) {
-    amount *= 2;
-    animationSpeed *= 2;
-  }
-  
-  if ($.inArray('w', keys) > -1) {
-  
-    if ($.inArray('a', keys) > -1) {
-      amount *= MOVEMENT_ANGLE;
-      self.engine.position.x -= amount;
-      self.direction = DIRECTION_W;
-    } else if ($.inArray('d', keys) > -1) {
-      amount *= MOVEMENT_ANGLE;
-      self.engine.position.x += amount;
-      self.direction = DIRECTION_E;
+    // (NE and SE both display as E) 
+    if ((newDirection == 4) || (newDirection == 6)) {
+      drawDirection = DIRECTION_E;
+    } else if ((newDirection == 5) || (newDirection == 7)) {
+      drawDirection = DIRECTION_W;
     } else {
-      self.direction = DIRECTION_N;
+      drawDirection = newDirection;
     }
   
-    self.engine.position.y -= amount;
-    self.moving = true;
-    isStepLegal();
+    if (drawDirection !== self.direction) {
+      self.active.visible = false;
+      self.active.stop();
+      
+      self.active = self.sprite.children[drawDirection];
+      
+      self.active.visible = true;
+      self.active.play();
+    } else {
+      if (!wasMoving && self.moving) {
+        self.active.play();
+      }
+    }
+    
+    self.active.animationSpeed = animationSpeed;
+    
+    self.direction        = newDirection;
+    self.engine.position  = newPosition;
+    self.sprite.position  = self.engine.position; 
+  
+    self.engine.socket.emit('move', {position: self.engine.position, direction: self.direction});
+  };
+  
+  if (self.keys.spacebar) {
+      
+    if (self.stamina < 10) {
+      self.emote('/me oof');
+    } else {
+      self.active.stop();
+      self.active.visible = false;
+      
+      var drawDirection = -1;
+      
+      // (NE and SE both display as E)
+      if ((self.direction == 4) || (self.direction == 6)) {
+        drawDirection = DIRECTION_E;
+      } else if ((self.direction == 5) || (self.direction == 7)) {
+        drawDirection = DIRECTION_W;
+      } else {
+        drawDirection = self.direction;
+      }
+      
+      var attackClip = self.sprite.children[drawDirection + 4];
+      
+      attackClip.onComplete = function () {
+        self.attacking = false;
+        attackClip.visible = false;
+        attackClip.gotoAndStop(0);
+        self.active.visible = true;
+        
+        if (self.moving) {
+          self.active.play();   
+        }
+      };
+      
+      attackClip.loop = false;
+      attackClip.visible = true;
+      attackClip.gotoAndPlay(0);
+      
+      self.attacking = true;
+      
+      self.engine.socket.emit('attack');
+      return;
+    }
+  }
+  
+  if (self.keys.shift) {
+    if (self.stamina > 0) {
+      amount *= 2;
+      animationSpeed *= 2;
+    }
+  }
+  
+  if (self.keys['w'] || self.keys['up']) {
+  
+    if (self.keys['a'] || self.keys['left']) {
+      amount *= MOVEMENT_ANGLE;
+      newPosition.x -= amount;
+      newDirection = DIRECTION_NW;
+    } else if (self.keys['d'] || self.keys['right']) {
+      amount *= MOVEMENT_ANGLE;
+      newPosition.x += amount;
+      newDirection = DIRECTION_NE;
+    } else {
+      newDirection = DIRECTION_N;
+    }
+  
+    newPosition.y -= amount;
+    step();
     return;
   }
 
-  if ($.inArray('s', keys) > -1) {
+  if (self.keys['s'] || self.keys['down']) {
   
-    if ($.inArray('a', keys) > -1) {
+    if (self.keys['a'] || self.keys['left']) {
       amount *= MOVEMENT_ANGLE;
-      self.engine.position.x -= amount;
-      self.direction = DIRECTION_W;
-    } else if ($.inArray('d', keys) > -1) {
+      newPosition.x -= amount;
+      newDirection = DIRECTION_SW;
+    } else if (self.keys['d'] || self.keys['right']) {
       amount *= MOVEMENT_ANGLE;
-      self.engine.position.x += amount;
-      self.direction = DIRECTION_E;
+      newPosition.x += amount;
+      newDirection = DIRECTION_SE;
     } else {
-      self.direction = DIRECTION_S;
+      newDirection = DIRECTION_S;
     }
   
-    self.engine.position.y += amount;
-    self.moving = true;
-    isStepLegal();
+    newPosition.y += amount;
+    step();
     return;
   }
   
-  if ($.inArray('a', keys) > -1) {
-    self.engine.position.x -= amount;
-    self.moving = true;
-    self.direction = DIRECTION_W;
-    isStepLegal();
+  if (self.keys['a'] || self.keys['left']) {
+    newPosition.x -= amount;
+    newDirection = DIRECTION_W;
+    step();
     return;
   }
   
-  if ($.inArray('d', keys) > -1) {
-    self.engine.position.x += amount;
-    self.moving = true;
-    self.direction = DIRECTION_E;
-    isStepLegal();
+  if (self.keys['d'] || self.keys['right']) {
+    newPosition.x += amount;
+    newDirection = DIRECTION_E;
+    step();
     return;
   }
   
@@ -494,4 +582,5 @@ Avatar.prototype.tick = function () {
     // actor has stopped moving
     self.engine.socket.emit('move', {position: self.engine.position, direction: self.direction});
   }
+
 };

@@ -21,11 +21,7 @@ After (optionally) adding a description to the changes you have made, clicking t
 >
 > Assembled Realms uses GIT as it's source control system - [check 'em out](https://git-scm.com/). 
 
-Now that the server is synced with your local work, you can click the "Debug" button on the command bar. You'll see various status updates letting you know what the server is doing - once it is finished deploying your realm to a free server, you'll be given a link to view your game.
-
-![Debug Window](/img/welcome/debug_window.png)
-
-Clicking the link will open in a new window where you can see your realm running with your applied changes!
+Now that the server is synced with your local work, you can click the "Debug" button on the command bar - once it is finished deploying your realm to a free server, you'll be given a link to view your game.
 
 ## Inform Your Players
 
