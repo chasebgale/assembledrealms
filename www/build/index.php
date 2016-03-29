@@ -128,7 +128,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
                             <th></th>
                             <th>ID</th>
                             <th>Title</th>
-                            <th>Published</th>
+                            <th>Published to <a href="/play">/play</a></th>
                             <th>Funds</th>
                             <th>Loves</th>
                             <th></th>

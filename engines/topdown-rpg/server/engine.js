@@ -21,7 +21,9 @@ var TAUNTS = [
   "Destroy these fleshy fools!",
   "Purge these foolish humans from my lair!!",
   "/me scowls",
-  "ATTACK! Attack the humans!"
+  "ATTACK! Attack the humans!",
+  "Hmmmm... It's so bright in here... Why no dynamic lighting?",
+  "All you can do is punch? Pathetic coding..."
 ];
 
 var npcs            = {};
@@ -552,7 +554,7 @@ Engine.prototype.attack = function (player) {
     
     if ((npc.position.x > tx) && (npc.position.x < (tx + tw))) {
       if ((npc.position.y > ty) && (npc.position.y < (ty + th))) {
-        npc.health -= 10;
+        npc.health -= (10 + player.experience);
         if (broadcast.npcs[attackers[i]]) {
           broadcast.npcs[attackers[i]].health = npc.health;
         } else {
@@ -565,6 +567,15 @@ Engine.prototype.attack = function (player) {
           delete npcs[attackers[i]];
           delete player.attackers[attackers[i]];
           npcKeys = Object.keys(npcs);
+          player.experience++;
+          
+          if (broadcast.players[player.id]) {
+            broadcast.players[player.id].experience = player.experience;
+          } else {
+            broadcast.players[player.id] = {
+              experience: player.experience
+            };
+          }
         }
         
         break;
@@ -612,26 +623,25 @@ Engine.prototype.players = function () {
   return players;
 };
 
-Engine.prototype.createPlayer = function () {
-  var player = {
-    id:         0, // Note: This value will be overwritten
-    direction:  0,
-    health:     100,
-    stamina:    100,
-    experience: 0,
-    counter:    0,
-    map:        0,
-    position:   {
+// Add player from the DB definition, player has joined before
+Engine.prototype.addPlayer = function (player) {
+  
+  // If we are missing the experience attribute the database has no record of this player so 
+  // we set the default values, a player's structure is saved to the database when they disconnect
+  if (player.experience === undefined) {
+    player.direction  = 0;
+    player.health     = 100;
+    player.stamina    = 100;
+    player.experience = 0;
+    player.counter    = 0;
+    player.map        = 0;
+    player.attackers  = {};
+    player.position   = {
       x: 448,
       y: 192
-    },
-    attackers:  {}
-  };
+    };
+  }
   
-  return player;
-};
-  
-Engine.prototype.addPlayer = function (player) {
   players[player.id] = player;
   playerKeys = Object.keys(players);
 };

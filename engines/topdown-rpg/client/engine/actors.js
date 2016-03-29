@@ -44,7 +44,6 @@ Actors.prototype.create = function (actors, renderer) {
 };
 
 Actors.prototype.update = function (actors) {
-  // TODO: Check what properties were sent by the server for each npc/actor and only update those
   var keys = Object.keys(actors.players);
   var i;
   for (i = 0; i < keys.length; i++) {
@@ -201,6 +200,15 @@ Player.prototype.update = function(player) {
     self.stamina = player.stamina;
   }
   
+  if (player.experience !== undefined) {
+    self.experience = player.experience;
+    
+    for (var i = 0; i < 8; i++) {
+      // Tint all moving/fighting clips a degree of red for every EXP point
+      self.sprite.children[i].tint = parseInt(shadeColor2("#FF0000", (100 - self.experience) / 100).replace("#", "0x"), 16);
+    }
+  }
+  
   if (player.position !== undefined) {
     if (!self.moving) {
       self.sprite.children[self.direction].play();
@@ -236,7 +244,7 @@ Player.prototype.emote = function(data) {
   }
   
   this.text.text          = data;
-  this.text.position.x    = -1 * Math.round((data.length * 6) / 2);
+  this.text.position.x    = data.length * -3;
   this.text.alpha         = 1;
 };
 
@@ -461,7 +469,7 @@ NPC.prototype.update = function(npc) {
         self.health_bar.drawRect(1, 1, Math.floor(32 * (self.health / 100)) - 1, 4);
       }
   } else {
-    if ((self.health_bar.alpha > 0) && (self.health < 100)) {
+    if ((self.health_bar.alpha > 0) && (self.health >= 100)) {
       self.health_bar.alpha = self.health_bar.alpha - 0.025;
     }
   }

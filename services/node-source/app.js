@@ -122,6 +122,8 @@ app.use(function(req, res, next){
     // If we are this far along, we are going to clear access, so update the activity
     php_sess.activity = Date.now();
     
+    req.user_id = php_sess.user_id;
+    
     next();
 });
 

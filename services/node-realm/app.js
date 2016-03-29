@@ -19,7 +19,7 @@ var request			  = require('request');
 var async         = require('async');
 var spawn         = require("child_process").spawn;
 
-var options = {
+var sslCerts = {
   key:  fs.readFileSync('/etc/pki/tls/certs/www.assembledrealms.com.key').toString(),
   cert: fs.readFileSync('/etc/pki/tls/certs/STAR_assembledrealms_com.crt').toString(),
   ca:   [
@@ -30,13 +30,16 @@ var options = {
   passphrase: '8160'
 };
 
-var serverSecure  = https.Server(options, app);
+var serverSecure  = https.Server(sslCerts, app);
 var io 				    = require('socket.io')(serverSecure);
 
 var SECURITY_TOKEN     = process.env.SECURITY_TOKEN;
 var MAX_CLIENTS_GLOBAL = parseInt(process.env.MAX_CLIENTS_GLOBAL);
 var MAX_CLIENTS_REALM  = parseInt(process.env.MAX_CLIENTS_REALM);
 var MAX_RUNNING_REALMS = parseInt(process.env.MAX_RUNNING_REALMS);
+var MODE_DEMO          = (process.env.MODE_DEMO === "true");
+var MODE_DEBUG         = (process.env.MODE_DEBUG === "true");
+var DEMO_USER_ID_COUNT = -1;
 var SESSION_LIST       = "sessions";              // Sessions added via /auth allowing access
 var SESSION_MAP        = "session_to_user_map";   // Sessions mapped to user_id via ZSCORE
 var ACTIVE_SESSIONS    = "sessions_active";       // Sessions actually connected via SOCKET
@@ -294,14 +297,26 @@ app.post('/api/auth/:id', function httpPostAuth(req, res, next) {
   var owner       = req.body.owner;
   var realm_id    = req.params.id;
   
-  var user_obj = {
-    display: displayname,
-    session: php_sess
-  }
-  
   if ((php_sess === undefined) || (user_id === undefined) || (owner === undefined) || (displayname === undefined)) {
     console.log('/auth - Missing params: ' + JSON.stringify(req.body));
     return res.status(500).send("Missing parameters, bruh.");
+  }
+  
+  if (MODE_DEMO) {
+    // THIS IS FOR "DEMO" MODE, NO USER REGISTRATION REQ
+    if (user_id === 0) {
+      // Demo user w/o an account or not logged in, assign a negative user_id...
+      // Using negatives here for a reason, if a logged in user with a positive id
+      // lis logged in at the same time that id is given, collisions occur (lol)
+      user_id = DEMO_USER_ID_COUNT;
+      DEMO_USER_ID_COUNT--;
+      displayname = "skele #" + user_id; 
+    }
+  }
+  
+  var user_obj = {
+    display: displayname,
+    session: php_sess
   }
   
   console.log("/auth requested: session: %s, user: %s, displayname: %s, realm: %s, owner: %s",
@@ -769,146 +784,148 @@ app.use(function(req, res, next) {
 });
 */
 
-var tickTock = setInterval(function () {
-  var now            = Date.now();
-  var expiredSession = now - 1800000; // 1.8 million milliseconds = 30 minutes
-  var expiredRealm   = now - 120000;  // 2 min
-  
-  // Expired realms
-  pm2.list(function(error, processes) {
+if (!MODE_DEMO) {
+  var tickTock = setInterval(function () {
+    var now            = Date.now();
+    var expiredSession = now - 1800000; // 1.8 million milliseconds = 30 minutes
+    var expiredRealm   = now - 120000;  // 2 min
     
-    if (error) {
-      console.log(error.stack);
-      return callback(error);
-    }
-    
-    async.each(processes, function(process, callback) {
-      if (process.name !== "realm-host") {
-        var id = process.name.split('-')[1];
-        db.zcount([ACTIVE_SESSIONS, id, id], function (error, count) {
-          if (error) {
-            console.log(process.name + "  " + error.stack);
-            return callback(error);
-          }
-          
-          if (count === 0) {
+    // Expired realms
+    pm2.list(function(error, processes) {
+      
+      if (error) {
+        console.log(error.stack);
+        return callback(error);
+      }
+      
+      async.each(processes, function(process, callback) {
+        if (process.name !== "realm-host") {
+          var id = process.name.split('-')[1];
+          db.zcount([ACTIVE_SESSIONS, id, id], function (error, count) {
+            if (error) {
+              console.log(process.name + "  " + error.stack);
+              return callback(error);
+            }
             
-            console.log("Found a process with no users, testing for acitivty...");
-            
-            db.zscore([REALM_ACTIVITY, id], function (error, lastActivity) {
-              if (error) {
-                console.log(error.stack);
-                return callback(error);
-              }
+            if (count === 0) {
               
-              console.log("...last active at %s, going to stop it: %s", lastActivity, (lastActivity < expiredRealm));
+              console.log("Found a process with no users, testing for acitivty...");
               
-              if (lastActivity < expiredRealm) {
-                pm2.delete(process.name, function onPmStop(err, proc) {
-                  if (err) {
-                    console.log("Attempted to stop " + process.name + " but errored: " + err.stack);
-                    return callback(err);
-                  }
-                  
-                  db.del("realm_" + id, function (error, reply) {
-                    if (error) {
-                      console.log(error.stack);
-                      return callback(error);
+              db.zscore([REALM_ACTIVITY, id], function (error, lastActivity) {
+                if (error) {
+                  console.log(error.stack);
+                  return callback(error);
+                }
+                
+                console.log("...last active at %s, going to stop it: %s", lastActivity, (lastActivity < expiredRealm));
+                
+                if (lastActivity < expiredRealm) {
+                  pm2.delete(process.name, function onPmStop(err, proc) {
+                    if (err) {
+                      console.log("Attempted to stop " + process.name + " but errored: " + err.stack);
+                      return callback(err);
                     }
                     
-                    // Boot up first queued realm, if any are queued
-                    
-                    
-                    callback();
+                    db.del("realm_" + id, function (error, reply) {
+                      if (error) {
+                        console.log(error.stack);
+                        return callback(error);
+                      }
+                      
+                      // Boot up first queued realm, if any are queued
+                      
+                      
+                      callback();
+                    });
                   });
-                });
-              } else {
-                callback();
-              }
-              
-            });
-          } else {
-            callback();
-          }
-        });
-      } else {
-        callback();
-      }
-    }, function (error) {
-      if (error) {
-        console.error(error.stack);
-      }
-    });
-  });
-  
-  
-  // Expired user sessions
-  db.zrangebyscore([SESSION_LIST, 0, expiredSession], function redisGetExpiredSessions(error, replies) {
-    
-    if (error) {
-      return console.error(error);
-    }
-    
-    if (replies.length > 0) {
-      // Remove any sessions that have active connections from the removal list
-      var multiSessionToUserLookup = db.multi();
-      
-      for (var m = 0; m < replies.length; m++) {
-        multiSessionToUserLookup.zscore([SESSION_MAP, replies[m]]); 
-      }
-      
-      multiSessionToUserLookup.exec(function (error, users) {
-        if (error) {
-          console.log(error.stack);
-          return console.error(error);
-        }
-        
-        var multiSessionsActive = db.multi();
-        
-        for (var u = 0; u < users.length; u++) {
-          multiSessionsActive.zscore([ACTIVE_SESSIONS, users[u]]);
-        }
-        
-        multiSessionsActive.exec(function (error, sessionLookups) {
-          // check for active sessions
-          for (var s = sessionLookups.length; s > -1; s--) {
-            if (sessionLookups[s] !== null) {
-              // Remove session that is actively connected from list to be purged
-              replies.splice(s, 1);
+                } else {
+                  callback();
+                }
+                
+              });
+            } else {
+              callback();
             }
+          });
+        } else {
+          callback();
+        }
+      }, function (error) {
+        if (error) {
+          console.error(error.stack);
+        }
+      });
+    });
+    
+    
+    // Expired user sessions
+    db.zrangebyscore([SESSION_LIST, 0, expiredSession], function redisGetExpiredSessions(error, replies) {
+      
+      if (error) {
+        return console.error(error);
+      }
+      
+      if (replies.length > 0) {
+        // Remove any sessions that have active connections from the removal list
+        var multiSessionToUserLookup = db.multi();
+        
+        for (var m = 0; m < replies.length; m++) {
+          multiSessionToUserLookup.zscore([SESSION_MAP, replies[m]]); 
+        }
+        
+        multiSessionToUserLookup.exec(function (error, users) {
+          if (error) {
+            console.log(error.stack);
+            return console.error(error);
           }
           
-          if (replies.length > 0) {
-            // Add the target memory table to the beginning of the array so it is formatted properly e.g.
-            // ["table_id", "value", "value"]
-            replies.unshift(SESSION_MAP);
-            
-            db.zrem(replies, function redisDeleteSessionMap(error, count) {
-              if (error) {
-                console.log(error.stack);
-                return console.error(error);
+          var multiSessionsActive = db.multi();
+          
+          for (var u = 0; u < users.length; u++) {
+            multiSessionsActive.zscore([ACTIVE_SESSIONS, users[u]]);
+          }
+          
+          multiSessionsActive.exec(function (error, sessionLookups) {
+            // check for active sessions
+            for (var s = sessionLookups.length; s > -1; s--) {
+              if (sessionLookups[s] !== null) {
+                // Remove session that is actively connected from list to be purged
+                replies.splice(s, 1);
               }
+            }
+            
+            if (replies.length > 0) {
+              // Add the target memory table to the beginning of the array so it is formatted properly e.g.
+              // ["table_id", "value", "value"]
+              replies.unshift(SESSION_MAP);
               
-              db.zremrangebyscore([SESSION_LIST, 0, expiredSession], function redisDeleteSessionList(error, counted) {
+              db.zrem(replies, function redisDeleteSessionMap(error, count) {
                 if (error) {
                   console.log(error.stack);
                   return console.error(error);
                 }
                 
-                return true;
+                db.zremrangebyscore([SESSION_LIST, 0, expiredSession], function redisDeleteSessionList(error, counted) {
+                  if (error) {
+                    console.log(error.stack);
+                    return console.error(error);
+                  }
+                  
+                  return true;
+                });
               });
-            });
-          }
+            }
+            
+          });
           
         });
-        
-      });
-    }
+      }
+      
+      
+    });
     
-    
-  });
-  
-}, 60000);
+  }, 60000);
+}
 
 pm2.connect(function(err) {
 	
@@ -924,6 +941,13 @@ pm2.connect(function(err) {
   
   serverSecure.listen(8000, function () {
     console.log("HTTPS started on port 8000");
+    
+    if (MODE_DEMO) {
+      startRealm("1", function () {
+        console.log("DEMO REALM 1 LAUNCHED OK");
+      });
+    }
+    
   }); //443
 	
 });

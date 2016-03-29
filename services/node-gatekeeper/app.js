@@ -29,6 +29,7 @@ var debug_token     = "1e4651af36b170acdec7ede7268cbd63b490a57b1ccd4d4ddd8837c8e
 var play_token      = "e61f933bcc07050385b8cc08f9deee61de228b2ba31b8523bdc78230d1a72eb2";
 var source_token    = "fb25e93db6100b687614730f8f317653bb53374015fc94144bd82c69dc4e6ea0";
 var HOME_TOKEN      = "b2856c87d4416db5e3d1eaef2fbef317846b06549f1b5f3cce1ea9d639839224";
+var DEMO_TOKEN      = "045603f288bcdb3391ba819eb9fc8346bc81f4276a7911471bfc5a1881ceff37";
 
 var connection      = 'postgres://web:ENBRyvqa91MTzotLBppU@localhost:5432/gatekeeper';
 
@@ -133,6 +134,11 @@ app.get('/stats', function (req, res, next) {
   servers.push({
     url: "https://play-01.assembledrealms.com/api/stats",
     token: play_token
+  });
+  
+  servers.push({
+    url: "https://demo-01.assembledrealms.com/api/stats",
+    token: DEMO_TOKEN
   });
   
   var data = {

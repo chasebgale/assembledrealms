@@ -5,7 +5,7 @@
   <script src='//netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js'></script>
   <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
   
-  <div id="footer-ad">
+  <div id="footer-above-nav-block">
     <ins id="footer_ad" class="adsbygoogle"
          style="display:inline-block;width:970px;height:90px;"
          data-ad-client="ca-pub-4898800745718155"

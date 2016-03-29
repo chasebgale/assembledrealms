@@ -30,6 +30,15 @@ Avatar.prototype.create = function (avatar) {
   this.text.position.x    = 0;
   this.text.position.y    = -60;
   this.text.alpha         = 0;
+  
+  this.textEXP = new PIXI.extras.BitmapText('Hello, World!', {
+    font: '16px UO Classic (rough)', 
+    align: 'center' 
+  });
+  this.textEXP.position.x    = 0;
+  this.textEXP.position.y    = -60;
+  this.textEXP.alpha         = 0;
+  this.textEXP.tint          = 16776960;
 
   this.statsBar = new PIXI.Graphics();
   this.statsBar.alpha = 0.5;
@@ -43,7 +52,13 @@ Avatar.prototype.create = function (avatar) {
 
   this.sprite.addChild(this.text);
   this.sprite.addChild(this.statsBar);
+  this.sprite.addChild(this.textEXP);
   this.sprite.position = this.engine.position; 
+  
+  for (var i = 0; i < 8; i++) {
+    // Tint all moving/fighting clips a degree of red for every EXP point
+    this.sprite.children[i].tint = parseInt(shadeColor2("#FF0000", (100 - this.experience) / 100).replace("#", "0x"), 16);
+  }
 };
 
 Avatar.prototype.update = function (avatar) {
@@ -58,6 +73,17 @@ Avatar.prototype.update = function (avatar) {
   if (avatar.health !== undefined) {
     self.health = avatar.health;
     draw = true;
+  }
+  
+  if (avatar.experience !== undefined) {
+    self.experience = avatar.experience;
+    self.textEXP.text = "+1 exp";
+    self.textEXP.alpha = 1.0;
+    
+    for (var i = 0; i < 8; i++) {
+      // Tint all moving/fighting clips a degree of red for every EXP point
+      self.sprite.children[i].tint = parseInt(shadeColor2("#FF0000", (100 - self.experience) / 100).replace("#", "0x"), 16);
+    }
   }
   
   if (avatar.death === true) {
@@ -156,6 +182,7 @@ Avatar.prototype.load = function (complete) {
       clip.visible = false;
 
       self.sprite.addChild(clip);
+      
     }
   };
 
@@ -168,48 +195,6 @@ Avatar.prototype.load = function (complete) {
         
   self.active.visible = true;
   self.active.gotoAndStop(0);
-  
-  /*
-  var amount            = 4;
-  var animationSpeed    = 0.2;
-  var wasMoving         = self.moving;
-  var oldDirection      = self.direction;
-  var oldPosition       = $.extend(true, {}, self.engine.position);
-  */
-  
-  //document.addEventListener("keydown", self.keydown, false);
-  //document.addEventListener("keyup", self.keyup, false);
-  
-  /*
-  keyboardJS.bind('enter', function(e) {
-    
-    if (self.typing) {
-      // Send our text string, then clear it
-      self.engine.socket.emit('text', self.blurb);
-      self.emote(self.blurb);
-      
-      self.blurb                  = ""; 
-      self.engine.textInput.text  = "";
-      
-      keyboardJS.resume();
-      document.removeEventListener("keydown", self.keydown, false);
-    } else {
-      // Stop our avatar and show the carrot blinking for input
-      if (self.moving) {
-          self.moving = false;
-          self.sprite.children[self.direction].gotoAndStop(0);
-
-          // Sending one more 'move' with duplicate coords as the last update will tell all clients this
-          // actor has stopped moving
-          self.engine.socket.emit('move', {position: self.engine.position, direction: self.direction});
-      }
-      
-      keyboardJS.pause();
-      document.addEventListener("keydown", self.keydown, false);
-    }
-    self.typing = !self.typing;
-  });
-  */
   
   complete();
     
@@ -332,8 +317,7 @@ Avatar.prototype.keydown = function (e) {
     
     engine.textInput.text  = engine.avatar.blurb;
   } else {
-    if (e.keyCode == 13) {
-      // Enter
+    if (name == "enter") {
       if (engine.avatar.moving) {
         engine.avatar.moving = false;
         engine.avatar.sprite.children[engine.avatar.direction].gotoAndStop(0);
@@ -345,10 +329,18 @@ Avatar.prototype.keydown = function (e) {
       
       engine.avatar.typing = true;
       
-    } else if (e.keyCode == 78) {
-      // 'n' key, used to show all player names
+    } else if (name == "n") {
+      // Show all player names when 'n' is pressed
       engine.actors.names();
+    } else if (name == "x") {
+      // Show EXP when 'x' is pressed
+      var exp = engine.avatar.experience + " exp";
+      engine.avatar.textEXP.text = exp;
+      engine.avatar.textEXP.position.x = exp.length * -3;
+      engine.avatar.textEXP.position.y = -60;
+      engine.avatar.textEXP.alpha = 1.0;
     } else {
+      // Process in the key in the game loop
       engine.avatar.keys[KEY_CODES[e.keyCode]] = true;
     }
   }
@@ -384,6 +376,13 @@ Avatar.prototype.tick = function () {
   
   if (self.text.alpha > 0) {
     self.text.alpha -= 0.003;
+  }
+  
+  if (self.textEXP.alpha > 0) {
+    self.textEXP.alpha -= 0.025;
+    self.textEXP.y = self.textEXP.y - 1;
+  } else {
+   self.textEXP.y = -60; 
   }
   
   if (self.statsBar.alpha > 0) {

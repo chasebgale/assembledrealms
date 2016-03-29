@@ -36,16 +36,16 @@ NodeJS Libraries
 --------
 https://nodejs.org  
 
-socket.io 
+socket.io  
 http://socket.io  
 
-Express 
+Express  
 http://expressjs.com  
 
-PM2 
+PM2  
 http://pm2.keymetrics.io  
 
-node_redis  
+node_redis   
 https://github.com/NodeRedis/node_redis  
 
 moment  

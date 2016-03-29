@@ -127,8 +127,9 @@ exports.create = function(req, res, next) {
                   //get latest commit (will be the parent commit)
                   repo.getCommit(head, function(error, parent) {
                     if (error) return next(error);
-                    var author = git.Signature.now("Chase Gale", "chase.b.gale@gmail.com");
-                    var committer = git.Signature.now("Chase Gale", "chase.b.gale@gmail.com");
+                    var userid    = "user_" + req.user_id;
+                    var author    = git.Signature.now(userid, userid + "@assembledrealms.com");
+                    var committer = git.Signature.now(userid, userid + "@assembledrealms.com");
   
                     //commit
                     repo.createCommit('HEAD', author, committer, 'message', oid, [parent], function(error, commitId) {
@@ -204,8 +205,10 @@ exports.upload = function(req, res, next) {
 						  //get latest commit (will be the parent commit)
 						  repo.getCommit(head, function(error, parent) {
 							if (error) return next(error);
-							var author = git.Signature.now("Chase Gale", "chase.b.gale@gmail.com");
-							var committer = git.Signature.now("Chase Gale", "chase.b.gale@gmail.com");
+              
+              var userid    = "user_" + req.user_id;
+							var author    = git.Signature.now(userid, userid + "@assembledrealms.com");
+							var committer = git.Signature.now(userid, userid + "@assembledrealms.com");
 
 							//commit
 							var commitMessage = 'uploaded ' + fullPath;

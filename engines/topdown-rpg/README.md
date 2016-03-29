@@ -1,18 +1,15 @@
 Controls
 --------
 
-![keyboard](http://i.imgur.com/efajygA.gif)
-
 | Keys   | Description 
 | ------ | ----------- 
-| blue   | Inventory management. 
-| orange | Movement 
-| purple | I don't know, use your imagination! 
+| w,a,s,d | Movement 
+| shift | Sprint 
+| spacebar | Attack
+| x | Display your experience level
+| n | Display the name of all on-screen players
+| enter | Start or send a message
 
 Strategy
 --------
-If this weren't a sample, I'd be discussing how to play in the realm; However, this __is__ a sample,
-so I'll have to copypasta some latin. Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
-Vestibulum sed arcu mi. Phasellus pulvinar ultrices justo non egestas. Vestibulum dictum elit ac ligula tristique, 
-nec finibus ligula feugiat. Curabitur pharetra, turpis at vulputate finibus, ligula ligula commodo lectus, 
-vel elementum quam leo nec erat.
+This is the skeletal frame of a game meant to be built upon. Strategy? Kill human invaders and gain experience. Experience makes you hit harder, thus allowing you to kill invaders more efficiently. The real strategy should be to open this game up in the IDE and make it awesome. 

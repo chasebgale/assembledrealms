@@ -73,39 +73,7 @@ function getPixel (imageData, x, y) {
 			a: imageData.data[index+3]};
 }
 
-
-
-
-function zombieSpriteJSON() {
-    var container = {};
-    var prefix_worker = "";
-    var rows, cols;
-
-    var prefix = "skeleton_row";
-
-    container.frames = {};
-
-    for (rows = 0; rows < 8; rows++) {
-        for (cols = 0; cols < 36; cols++) {
-            prefix_worker = prefix + rows + "_" + "col" + cols + ".png";
-            container.frames[prefix_worker] = {};
-            container.frames[prefix_worker].frame = { "x": cols * 128, "y": rows * 128, "w": 128, "h": 128 };
-            container.frames[prefix_worker].rotated = false;
-            container.frames[prefix_worker].trimmed = false;
-            container.frames[prefix_worker].spriteSourceSize = { "x": 0, "y": 0, "w": 128, "h": 128 };
-            container.frames[prefix_worker].sourceSize = { "w": 128, "h": 128 };
-        }
-    }
-
-    container.meta = {
-        "app": "http://www.texturepacker.com",
-        "version": "1.0",
-        "image": "skeleton_0.png",
-        "format": "RGBA8888",
-        "size": { "w": 1345, "h": 299 },
-        "scale": "1",
-        "smartupdate": "$TexturePacker:SmartUpdate:17e4a2d92ff3e27832c3f4938cec7c85$"
-    };
-
-    return JSON.stringify(container);
+function shadeColor2(color, percent) {   
+  var f=parseInt(color.slice(1),16),t=percent<0?0:255,p=percent<0?percent*-1:percent,R=f>>16,G=f>>8&0x00FF,B=f&0x0000FF;
+  return "#"+(0x1000000+(Math.round((t-R)*p)+R)*0x10000+(Math.round((t-G)*p)+G)*0x100+(Math.round((t-B)*p)+B)).toString(16).slice(1);
 }

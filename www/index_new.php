@@ -22,7 +22,8 @@ if ($method == 'POST') {
   $post_body  = http_build_query(array(
     'php_sess' => $session_id,
     'user_id' => $user_id,
-    'owner' => $owner
+    'owner' => $owner,
+    'displayname' => ' '
   ));
   
   $curl 			= curl_init();
@@ -36,7 +37,7 @@ if ($method == 'POST') {
     CURLOPT_POSTFIELDS      => $post_body,
     CURLOPT_SSL_VERIFYHOST 	=> 0,
     CURLOPT_SSL_VERIFYPEER 	=> false,
-    CURLOPT_URL 			      => $host . '/auth/'
+    CURLOPT_URL 			      => $host . '/api/auth/1'
   ));
 
   $resp       = curl_exec($curl);
@@ -78,7 +79,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
         <button id="btn-demo-play" class="btn btn-default btn-xs" title="Register an account, then choose any game to play! Choose from the official version of this game or any user-created games!" data-toggle="tooltip" data-placement="bottom">
           <i class="fa fa-external-link fa-fw"></i> Play For Real
         </button>
-        <button id="btn-demo-build" class="btn btn-default btn-xs" title="Things are broken? Fix it. Awesome idea you want to add? Make it so." data-toggle="tooltip" data-placement="bottom">
+        <button id="btn-demo-build" class="btn btn-default btn-xs" title="Something feels broken? Fix it. Awesome idea you want to add? Make it so." data-toggle="tooltip" data-placement="bottom">
           <i class="fa fa-external-link fa-fw"></i> Make Changes!
         </button>
         <button id="btn-fullscreen" class="btn btn-default btn-xs">

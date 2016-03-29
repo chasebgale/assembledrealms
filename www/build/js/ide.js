@@ -133,6 +133,7 @@ function initialize(projectID, projectDomain) {
     });
 
     $("#btnHistory").on("click", function () {
+      $('#tableHistoryContainer').html('<div style="margin: 0 auto; width: 100px; text-align: center; padding-top: 100px;"><i class="fa fa-spinner fa-pulse fa-3x"></i></div>');
       $('#modalHistory').modal('show');
       
       $.ajax({
@@ -141,7 +142,7 @@ function initialize(projectID, projectDomain) {
         dataType: 'json'
       })
       .done(function (data) {
-        
+        /*
         var html = "";
         
         for (var i = 0; i < data.length; i++) {
@@ -149,6 +150,20 @@ function initialize(projectID, projectDomain) {
         }
         
         $('#historyList').html(html);
+        */
+        var templateFnHistory = _.template($('#history_template').html());
+        
+        for (var i = 0; i < data.length; i++) {
+          var id = data[i].author.substring(5);
+          if (id === USER_ID) {
+            data[i].author = USER_DISPLAY;
+          } else {
+            data[i].author = "Uknown";
+          }
+        }
+        
+        $('#tableHistoryContainer').html(templateFnHistory({'model': data}));
+        
       })
       .fail(function(data, param1, param2) {
         console.log(data);

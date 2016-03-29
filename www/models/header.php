@@ -7,7 +7,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Assembled Realms - Create and Play MMOs, All Online!</title>
+<title>Assembled Realms - Build and Play Awesome MMOs in Your Browser!</title>
 
 <link rel='shortcut icon' href='/img/favicon.png')'>
 

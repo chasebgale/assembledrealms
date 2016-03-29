@@ -155,6 +155,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
   <script src='/models/funcs.js' type='text/javascript'></script>
   <script src='/js/lodash.min.js'></script>
+  <script src='/js/moment.min.js'></script>
     
   <style>
     html, body {
@@ -330,11 +331,11 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
           <h4 class="modal-title">Commit History</h4>
         </div>
         <div class="modal-body">
-          <ul id="historyList" style="min-height: 300px; list-style: none;">
-            <li style="text-align: center;">
+          <div id="tableHistoryContainer" style="min-height: 300px;">
+            <div style="margin: 0 auto; width: 100px; text-align: center; padding-top: 100px;">
               <i class="fa fa-spinner fa-pulse fa-3x"></i>
-            </li>
-          </ul>
+            </div>
+          </div>
         </div>
         <div class="modal-footer">
           <div id="historyAlert" class="alert alert-danger" style="display: none;"></div>
@@ -515,13 +516,44 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
       </div>
   </script>
   
+  <script id="history_template" type="text/template">
+    <table id="tableHistory" class="table table-striped">
+      <thead> 
+        <tr>
+          <th>Timestamp</th>
+          <th>Author</th>
+          <th>Note</th>
+        </tr>
+      </thead>
+      <tbody>
+      <% _.each(model, function(commit) { %>
+        <tr>
+          <td>
+            <span><%- moment(commit.date).format("MMMM Do YYYY, h:mm:ss a") %></span>
+          </td>
+          <td>
+            <span><%- commit.author %></span>
+          </td>
+          <td>
+            <span><%- commit.message %></span>
+          </td>
+        </tr>
+      <% }); %>
+      </tbody>
+    </table>
+  </script>
+  
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
   <script src="//netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
   
   <script type="text/javascript">
-      $(document).ready(function () {
-        initialize(<?php echo $realm_id; ?>, "<?php echo $sourceURL; ?>");
-      });
+    
+    var USER_DISPLAY = "<?= $loggedInUser->displayname ?>";
+    var USER_ID      = "<?= $loggedInUser->user_id ?>";
+  
+    $(document).ready(function () {
+      initialize(<?php echo $realm_id; ?>, "<?php echo $sourceURL; ?>");
+    });
   </script>
 
   <script src="/build/js/utilities.js"></script>

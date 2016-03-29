@@ -43,7 +43,7 @@ engine.on('debug', function engineDebug(message) {
 });
 
 app.use(function(req, res, next) {
-  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Origin', 'https://www.assembledrealms.com');
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
   res.header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type');
 
@@ -136,10 +136,13 @@ io.on('connection', function socketConnected(socket) {
       
       if (player === null) {
         
-        player = engine.createPlayer();
-        player.id = userID;
-        player.name = playerName;
+        //player = engine.createPlayer();
+        player = { 
+          id:   userID,
+          name: playerName
+        };
         
+        /*
         console.log("CREATED player: " + JSON.stringify(player));
         
         db.set(playerKey, JSON.stringify(player), function redisSetPlayer(error) {
@@ -149,6 +152,7 @@ io.on('connection', function socketConnected(socket) {
           }
           
         });
+        */
       } else {
         player = JSON.parse(player);
         console.log("RESUMED player: " + JSON.stringify(player));
