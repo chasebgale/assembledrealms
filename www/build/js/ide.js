@@ -25,413 +25,418 @@ function resize() {
 
 function initialize(projectID, projectDomain) {
     
-    $.ajaxSetup({
-        crossDomain: true,
-        xhrFields: {
-            withCredentials: true
-        }
-    });
-    
-    __projectId = projectID;
-    __projectURL = 'https://' + projectDomain + '/api/project/' + __projectId;
-    __trackedStorageId = __projectId + "-tracking";
-    
-    __editor = ace.edit("editor");
-    __editor.setShowPrintMargin(false);
-    
-    var editorTheme = localStorage.getItem("editorTheme");
-    if (editorTheme !== null) {
-      __editor.setTheme('ace/theme/' + editorTheme);
-      $("#btnEditorTheme").html(editorTheme.replace(new RegExp("_", "g"), " ").toTitleCase() + ' <span class="caret"></span>');
+  $.ajaxSetup({
+    crossDomain: true,
+    xhrFields: {
+        withCredentials: true
     }
-    
-    var editorFontSize = localStorage.getItem("editorFontSize");
-    if (editorFontSize !== null) {
-      document.getElementById('editor').style.fontSize = editorFontSize;
-      $("#btnEditorFontSize").html(editorFontSize + ' <span class="caret"></span>');
-    }
-    
-    __renderer = new marked.Renderer();
-    __renderer.table = function(header, body) {
-        return '<table class="table table-striped"><thead>' + header + '</thead><tbody>' + body + '</tbody></table>';
-    }
-
-    marked.setOptions({
-        sanitize: true,
-        renderer: __renderer
-    });
-
-    if (sessionStorage[__trackedStorageId]) {
-        __trackedFiles = JSON.parse(sessionStorage[__trackedStorageId]);
-    }
-    
-    $( window ).resize(function() {
-        resize();
-    });
-    
-    $("#explorer").on("click", ".file", function () {
-
-        var root = $(this);
-
-        __editor.off("change", editor_onChange);
-
-        $("#explorer .file").removeClass('activefile');
-        root.addClass('activefile');
-
-        var id      = root.attr('data-id');
-        var path    = root.attr('data-path');
-        var name = root.text().trim();
-
-        loadRealmFile(id, path, name);
-
-    });
-    
-    $('#ulEditorFontSize a').on("click", function (e) {
-      e.preventDefault();
-      document.getElementById('editor').style.fontSize = $(this).text();
-      $("#btnEditorFontSize").html($(this).text() + ' <span class="caret"></span>');
-      localStorage.setItem("editorFontSize",  $(this).text());
-    });
-    
-    $('#ulEditorTheme a').on("click", function (e) {
-      e.preventDefault();
-      __editor.setTheme('ace/theme/' + $(this).text().toLowerCase().replace(new RegExp(" ", "g"), "_"));
-      $("#btnEditorTheme").html($(this).text() + ' <span class="caret"></span>');
-      localStorage.setItem("editorTheme",  $(this).text().toLowerCase().replace(new RegExp(" ", "g"), "_"));
-    });
-
-    $('#ulView a').on("click", function (e) {
-        e.preventDefault();
-        // Hide all tabs
-      $("#tabs .tab-pane").hide();
-		
-      if ($(this).attr('href') == "#markdown") {
-        $("#markdown").html(marked(__editor.getValue()));
-        $("#markdown a").attr('target', '_blank');
-      }
-      
-      if ($(this).attr('href') == "#editor") {
-        $("#editorOptions").fadeIn().css('display','inline-block');
-        __editor.renderer.updateFull();
-      } else {
-        $("#editorOptions").fadeOut();
-      }
-      
-      // show tab
-      $($(this).attr('href')).show();
-      
-      $("#btnView").html('<i class="fa fa-eye"></i> ' + $(this).text() + ' <span class="caret"></span>');
-    });
-    
-    $("#categorySelection").on('change', function () {
-       var category = '#' + $(this).find(":selected").attr('data-id');
-       
-        $('#modalTerrain .tileContainer').fadeOut(function () {
-            $(category).fadeIn();
-        });
-       
-    });
-
-    $("#btnHistory").on("click", function () {
-      $('#tableHistoryContainer').html('<div style="margin: 0 auto; width: 100px; text-align: center; padding-top: 100px;"><i class="fa fa-spinner fa-pulse fa-3x"></i></div>');
-      $('#modalHistory').modal('show');
-      
-      $.ajax({
-        url: __projectURL + '/history',
-        type: 'get',
-        dataType: 'json'
-      })
-      .done(function (data) {
-        /*
-        var html = "";
-        
-        for (var i = 0; i < data.length; i++) {
-          html += "<li>" + data[i].author + ", " + data[i].date + ", " + data[i].message + "</li>";
-        }
-        
-        $('#historyList').html(html);
-        */
-        var templateFnHistory = _.template($('#history_template').html());
-        
-        for (var i = 0; i < data.length; i++) {
-          var id = data[i].author.substring(5);
-          if (id === USER_ID) {
-            data[i].author = USER_DISPLAY;
-          } else {
-            data[i].author = "Uknown";
-          }
-        }
-        
-        $('#tableHistoryContainer').html(templateFnHistory({'model': data}));
-        
-      })
-      .fail(function(data, param1, param2) {
-        console.log(data);
-      });
-    });
-    
-    $("#btnCommit").on("click", function () {
-        //$('#commitProgressbar').addClass('active');
-        
-        listCommitFiles();
-        $('#modalCommit').modal('show');
-        
-    });
-    
-    $("#btnDebug").on("click", function (e) {
-      
-      e.preventDefault(); 
-      
-      debug();
-      
-      /*
-      if ($('#debugProgressbar').hasClass('active') == false) {
-          $('#debugProgressbar').addClass('active');
-      }
-      
-      $('#debugProgressList').empty();
-      
-      $('#modalDebug').modal('show');
+  });
   
-      $('#debugProgressList').append('<li>Selecting least congested server...</li>');
-		
+  __projectId = projectID;
+  __projectURL = 'https://' + projectDomain + '/api/project/' + __projectId;
+  __trackedStorageId = __projectId + "-tracking";
+  
+  __editor = ace.edit("editor");
+  __editor.setShowPrintMargin(false);
+  
+  var editorTheme = localStorage.getItem("editorTheme");
+  if (editorTheme !== null) {
+    __editor.setTheme('ace/theme/' + editorTheme);
+    $("#btnEditorTheme").html(editorTheme.replace(new RegExp("_", "g"), " ").toTitleCase() + ' <span class="caret"></span>');
+  }
+  
+  var editorFontSize = localStorage.getItem("editorFontSize");
+  if (editorFontSize !== null) {
+    document.getElementById('editor').style.fontSize = editorFontSize;
+    $("#btnEditorFontSize").html(editorFontSize + ' <span class="caret"></span>');
+  }
+  
+  __renderer = new marked.Renderer();
+  __renderer.table = function(header, body) {
+      return '<table class="table table-striped"><thead>' + header + '</thead><tbody>' + body + '</tbody></table>';
+  }
+
+  marked.setOptions({
+    sanitize: true,
+    renderer: __renderer
+  });
+
+  if (sessionStorage[__trackedStorageId]) {
+      __trackedFiles = JSON.parse(sessionStorage[__trackedStorageId]);
+  }
+  
+  $( window ).resize(function() {
+      resize();
+  });
+  
+  $("#explorer").on("click", ".file", function () {
+
+      var root = $(this);
+
+      __editor.off("change", editor_onChange);
+
+      $("#explorer .file").removeClass('activefile');
+      root.addClass('activefile');
+
+      var id      = root.attr('data-id');
+      var path    = root.attr('data-path');
+      var name = root.text().trim();
+
+      loadRealmFile(id, path, name);
+
+  });
+  
+  $('#ulEditorFontSize a').on("click", function (e) {
+    e.preventDefault();
+    document.getElementById('editor').style.fontSize = $(this).text();
+    $("#btnEditorFontSize").html($(this).text() + ' <span class="caret"></span>');
+    localStorage.setItem("editorFontSize",  $(this).text());
+  });
+  
+  $('#ulEditorTheme a').on("click", function (e) {
+    e.preventDefault();
+    __editor.setTheme('ace/theme/' + $(this).text().toLowerCase().replace(new RegExp(" ", "g"), "_"));
+    $("#btnEditorTheme").html($(this).text() + ' <span class="caret"></span>');
+    localStorage.setItem("editorTheme",  $(this).text().toLowerCase().replace(new RegExp(" ", "g"), "_"));
+  });
+
+  $('#ulView a').on("click", function (e) {
+      e.preventDefault();
+      // Hide all tabs
+    $("#tabs .tab-pane").hide();
+  
+    if ($(this).attr('href') == "#markdown") {
+      $("#markdown").html(marked(__editor.getValue()));
+      $("#markdown a").attr('target', '_blank');
+    }
+    
+    if ($(this).attr('href') == "#editor") {
+      $("#editorOptions").fadeIn().css('display','inline-block');
+      __editor.renderer.updateFull();
+    } else {
+      $("#editorOptions").fadeOut();
+    }
+    
+    // show tab
+    $($(this).attr('href')).show();
+    
+    $("#btnView").html('<i class="fa fa-eye"></i> ' + $(this).text() + ' <span class="caret"></span>');
+  });
+  
+  $("#categorySelection").on('change', function () {
+     var category = '#' + $(this).find(":selected").attr('data-id');
+     
+      $('#modalTerrain .tileContainer').fadeOut(function () {
+          $(category).fadeIn();
+      });
+     
+  });
+
+  $("#btnHistory").on("click", function () {
+    $('#tableHistoryContainer').html('<div style="margin: 0 auto; width: 100px; text-align: center; padding-top: 100px;"><i class="fa fa-spinner fa-pulse fa-3x"></i></div>');
+    $('#modalHistory').modal('show');
+    
+    $.ajax({
+      url: __projectURL + '/history',
+      type: 'get',
+      dataType: 'json'
+    })
+    .done(function (data) {
+      /*
+      var html = "";
+      
+      for (var i = 0; i < data.length; i++) {
+        html += "<li>" + data[i].author + ", " + data[i].date + ", " + data[i].message + "</li>";
+      }
+      
+      $('#historyList').html(html);
+      */
+      var templateFnHistory = _.template($('#history_template').html());
+      
+      for (var i = 0; i < data.length; i++) {
+        var id = data[i].author.substring(5);
+        if (id === USER_ID) {
+          data[i].author = USER_DISPLAY;
+        } else {
+          data[i].author = "Uknown";
+        }
+      }
+      
+      $('#tableHistoryContainer').html(templateFnHistory({'model': data}));
+      
+    })
+    .fail(function(data, param1, param2) {
+      console.log(data);
+    });
+  });
+  
+  $("#btnCommit").on("click", function () {
+      //$('#commitProgressbar').addClass('active');
+      
+      listCommitFiles();
+      $('#modalCommit').modal('show');
+      
+  });
+  
+  $("#btnDebug").on("click", function (e) {
+    
+    e.preventDefault(); 
+    
+    debug();
+    
+    /*
+    if ($('#debugProgressbar').hasClass('active') == false) {
+        $('#debugProgressbar').addClass('active');
+    }
+    
+    $('#debugProgressList').empty();
+    
+    $('#modalDebug').modal('show');
+
+    $('#debugProgressList').append('<li>Selecting least congested server...</li>');
+  
+    $.ajax({
+      url: 'editor.php',
+      type: 'post',
+      dataType: 'json',
+      data: {directive: 'debug', realm_id: __projectId}
+    })
+    .done(function (data) {
+    
+      var address 	= data.address;
+      var debug_url 	= 'https://www.assembledrealms.com/debug/realm/' + __projectId;
+      
+      $('#debugProgressList').append('<li>Compressing latest commit and delivering it to ' + address + '</li>');
+
       $.ajax({
-        url: 'editor.php',
+        url: __projectURL + '/publish',
         type: 'post',
-        dataType: 'json',
-        data: {directive: 'debug', realm_id: __projectId}
+        dataType: 'text',
+        data: {address: address, shared: true}
       })
       .done(function (data) {
-			
-        var address 	= data.address;
-        var debug_url 	= 'https://www.assembledrealms.com/debug/realm/' + __projectId;
-        
-        $('#debugProgressList').append('<li>Compressing latest commit and delivering it to ' + address + '</li>');
+        if (data === "OK") {
+         
+          $('#debugProgressList').append('<li>Published to debug server successfully!</li>');
+          $('#debugProgressList').append('<li>Launching realm on ' + address + '</li>');
+          
+          $.ajax({
+            url: 'https://' + address + '/launch/' + __projectId,
+            type: 'get',
+            dataType: 'text'
+          })
+          .done(function (data) {
+            $('#debugProgressList').append('<li><strong>Success!</strong> Your debug URL: <a target="_blank" href="' + debug_url + '"><i class="fa fa-external-link"></i> ' + debug_url + '</a></li>');
+          })
+          .fail(function(data) {
+            $('#debugProgressList').append('<li class="text-danger"><strong><i class="fa fa-exclamation-triangle"></i> Fatal Error:' + data.responseText + '</strong> Please try again in a few minutes, monkeys are furiously typing away to fix this problem.</li>');
+          })
+          .always(function() {
+            $('#debugClose').attr('disabled', false);
+            $('#debugProgressbar').removeClass('active');
+          });
 
-        $.ajax({
-          url: __projectURL + '/publish',
-          type: 'post',
-          dataType: 'text',
-          data: {address: address, shared: true}
-        })
-        .done(function (data) {
-          if (data === "OK") {
-           
-            $('#debugProgressList').append('<li>Published to debug server successfully!</li>');
-            $('#debugProgressList').append('<li>Launching realm on ' + address + '</li>');
-            
-            $.ajax({
-              url: 'https://' + address + '/launch/' + __projectId,
-              type: 'get',
-              dataType: 'text'
-            })
-            .done(function (data) {
-              $('#debugProgressList').append('<li><strong>Success!</strong> Your debug URL: <a target="_blank" href="' + debug_url + '"><i class="fa fa-external-link"></i> ' + debug_url + '</a></li>');
-            })
-            .fail(function(data) {
-              $('#debugProgressList').append('<li class="text-danger"><strong><i class="fa fa-exclamation-triangle"></i> Fatal Error:' + data.responseText + '</strong> Please try again in a few minutes, monkeys are furiously typing away to fix this problem.</li>');
-            })
-            .always(function() {
-              $('#debugClose').attr('disabled', false);
-              $('#debugProgressbar').removeClass('active');
-            });
-
-          }
-        })
-        .fail(function(d, textStatus, error) {
-          console.log(textStatus);
-          $('#debugAlert').html('<li class="text-danger"><strong><i class="fa fa-exclamation-triangle"></i> Error: </strong> ' + textStatus);
-          $('#debugAlert').fadeIn();
-          $('#debugClose').attr('disabled', false);
-            // Update DOM to reflect we messed up:
-            //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
-        });
+        }
       })
       .fail(function(d, textStatus, error) {
         console.log(textStatus);
         $('#debugAlert').html('<li class="text-danger"><strong><i class="fa fa-exclamation-triangle"></i> Error: </strong> ' + textStatus);
         $('#debugAlert').fadeIn();
         $('#debugClose').attr('disabled', false);
-                // Update DOM to reflect we messed up:
-                //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
+          // Update DOM to reflect we messed up:
+          //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
+      });
+    })
+    .fail(function(d, textStatus, error) {
+      console.log(textStatus);
+      $('#debugAlert').html('<li class="text-danger"><strong><i class="fa fa-exclamation-triangle"></i> Error: </strong> ' + textStatus);
+      $('#debugAlert').fadeIn();
+      $('#debugClose').attr('disabled', false);
+              // Update DOM to reflect we messed up:
+              //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
+    });
+    
+    */
+  });
+  
+  $('#commitStart').on('click', function () {
+      $(this).attr('disabled', true);
+      $(this).html('<i class="fa fa-cog fa-spin"></i> Commit');
+      $("#commitProgressMessage").text('Initiating commit to branch.');
+      commit();
+  });
+  
+  $("#btnNewFile").on("click", function () {
+      $('#modalNewFile').modal('show');
+  });
+  
+  $("#btnUploadResource").on("click", function () {
+      
+      var bar =       $('#uploadProgressbarFill');
+      var alert =     $('#uploadAlert');
+      
+      bar.width("0%");
+      bar.text("");
+      alert.hide();
+      alert.removeClass('alert-success alert-danger');
+      alert.text("");
+      
+      $('#modalUploadResource').modal('show');
+  });
+  
+  $("#newfileLocation").on("click", "a", function (e) {
+      e.preventDefault();
+      
+      $("#newfileLocation a").removeClass("active");
+      $(this).addClass("active");
+      
+  });
+  
+  $("#uploadStart").on("click", function (e) {
+    e.preventDefault();
+
+    var button =    $(this);
+    var progress =  $('#uploadProgressbar');
+    var bar =       $('#uploadProgressbarFill');
+    var alert =     $('#uploadAlert');
+    
+    bar.width("0%");
+    alert.hide();
+    alert.removeClass('alert-success alert-danger');
+    alert.text("");
+    
+    button.attr('disabled', true);
+    
+    var upload = document.getElementById('inputFile').files[0];
+    var uri = __projectURL + "/file/upload";
+    var xhr = new XMLHttpRequest();
+    var fd = new FormData();
+    
+    xhr.withCredentials = true;
+    
+    xhr.open("POST", uri, true);
+    xhr.upload.onprogress = function (event) {
+      if (event.lengthComputable) {
+        //evt.loaded the bytes browser receive
+        //evt.total the total bytes seted by the header
+        var percentComplete = Math.round((event.loaded / event.total) * 100) + "%";  
+        bar.width(percentComplete);
+        bar.text(percentComplete);
+      } 
+    };
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState == 4) {
+        if (xhr.status == 200) {
+          var json = JSON.parse(xhr.responseText);
+          if (json.message == "OK") {
+            button.attr('disabled', false);
+            
+            $("#explorer .file").removeClass('activefile');
+            addToExplorer('client/resource', upload.name, '');
+            
+            alert.addClass('alert-success');
+            alert.html("<strong>" + upload.name + "</strong> was successfully added to your resource folder!");
+            alert.fadeIn();
+            $('#uploadForm').trigger('reset');
+          }
+        } else {
+          button.attr('disabled', false);
+          bar.addClass('progress-bar-danger');
+          bar.text('Error occurred during upload...');
+        }
+      }
+    };
+    fd.append('file', upload);
+    xhr.send(fd);
+    
+  });
+  
+  $("#btnNewFileCreate").on("click", function (e) {
+      e.preventDefault();
+  
+      var button = $(this);
+      
+      button.attr('disabled', true);
+      button.html('<i class="fa fa-cog fa-spin"></i> Create');
+      
+      var selectedFolder = $("#newfileLocation .active");
+      var path = selectedFolder.attr("data-path");
+      var name = $("#newfileName").val();
+      var post = {};
+      
+      if (path === "") {
+          post.fullpath = name;
+      } else {
+          post.fullpath = path + '/' + name;
+      }
+      
+      $.ajax({
+          url: __projectURL + '/file/create',
+          type: 'post',
+          dataType: 'json',
+          data: post
+      })
+      .done(function (data) {
+          console.log(data);
+          if (data.message === "OK") {
+              
+              __editor.off("change", editor_onChange);
+              $("#explorer .file").removeClass('activefile');
+              
+              addToExplorer(path, name, data.sha);
+              
+              /*
+              if (path === "") {
+                  $("#explorer").append('<li><span class="file activefile" data-id="' + data.sha + '" data-path="' + name + '">' + name + '</span></li>');
+              } else {
+                  var parentFolder = $("#explorer [data-path='" + path + "']").children("ul");
+                  parentFolder.append('<li><span class="file activefile" data-id="' + data.sha + '" data-path="' + path + "/" + name + '">' + name + '</span></li>');
+              }
+              */
+              
+              var tracking_id = __projectId + '-' + data.sha;
+              
+              // Add entries to session storage
+              sessionStorage[tracking_id] = data.content;
+              sessionStorage[tracking_id + '-name'] = name;
+              sessionStorage[tracking_id + '-path'] = path + '/' + name;
+              sessionStorage[tracking_id + '-commit-md5'] = md5(data.content);
+              
+              // Update tracked files array in session storage
+              __trackedFiles.push(tracking_id);
+              sessionStorage[__trackedStorageId] = JSON.stringify(__trackedFiles);
+              
+              // Display new file and update UI
+              loadEditor(name, data.content);
+              __fileId = tracking_id;
+              
+              $('#modalNewFile').modal('hide');
+              $('#newFileCreateAlert').hide();
+          } else {
+              $('#newFileCreateAlert').text('Creation Error: ' + data.message);
+              $('#newFileCreateAlert').fadeIn();
+          }
+          
+      })
+      .fail(function(data) {
+          console.log(data);
+          $('#newFileCreateAlert').text('Network Error: ' + data.statusText);
+          $('#newFileCreateAlert').fadeIn();
+              // Update DOM to reflect we messed up:
+              //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
+      })
+      .always(function () {
+          button.attr('disabled', false);
+          button.html('Create');
       });
       
-      */
-    });
-    
-    $('#commitStart').on('click', function () {
-        $(this).attr('disabled', true);
-        $(this).html('<i class="fa fa-cog fa-spin"></i> Commit');
-        $("#commitProgressMessage").text('Initiating commit to branch.');
-        commit();
-    });
-    
-    $("#btnNewFile").on("click", function () {
-        $('#modalNewFile').modal('show');
-    });
-    
-    $("#btnUploadResource").on("click", function () {
-        
-        var bar =       $('#uploadProgressbarFill');
-        var alert =     $('#uploadAlert');
-        
-        bar.width("0%");
-        bar.text("");
-        alert.hide();
-        alert.removeClass('alert-success alert-danger');
-        alert.text("");
-        
-        $('#modalUploadResource').modal('show');
-    });
-    
-    $("#newfileLocation").on("click", "a", function (e) {
-        e.preventDefault();
-        
-        $("#newfileLocation a").removeClass("active");
-        $(this).addClass("active");
-        
-    });
-    
-    $("#uploadStart").on("click", function (e) {
-        e.preventDefault();
-    
-        var button =    $(this);
-        var progress =  $('#uploadProgressbar');
-        var bar =       $('#uploadProgressbarFill');
-        var alert =     $('#uploadAlert');
-        
-        bar.width("0%");
-        alert.hide();
-        alert.removeClass('alert-success alert-danger');
-        alert.text("");
-        
-        button.attr('disabled', true);
-        
-        var upload = document.getElementById('inputFile').files[0];
-        var uri = __projectURL + "/file/upload";
-        var xhr = new XMLHttpRequest();
-        var fd = new FormData();
-        
-        xhr.open("POST", uri, true);
-        xhr.upload.onprogress = function (event) {
-            if (event.lengthComputable) {
-                //evt.loaded the bytes browser receive
-                //evt.total the total bytes seted by the header
-                var percentComplete = Math.round((event.loaded / event.total) * 100) + "%";  
-                bar.width(percentComplete);
-                bar.text(percentComplete);
-            } 
-        };
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState == 4 && xhr.status == 200) {
-                
-                var json = JSON.parse(xhr.responseText);
-                if (json.message == "OK") {
-                    button.attr('disabled', false);
-                    
-					$("#explorer .file").removeClass('activefile');
-                    addToExplorer('client/resource', upload.name, '');
-                    
-                    alert.addClass('alert-success');
-                    alert.html("<strong>" + upload.name + "</strong> was successfully added to your resource folder!");
-                    alert.fadeIn();
-                    $('#uploadForm').trigger('reset');
-                }
-            } else {
-                
-            }
-        };
-        fd.append('file', upload);
-        xhr.send(fd);
-        
-    });
-    
-    $("#btnNewFileCreate").on("click", function (e) {
-        e.preventDefault();
-    
-        var button = $(this);
-        
-        button.attr('disabled', true);
-        button.html('<i class="fa fa-cog fa-spin"></i> Create');
-        
-        var selectedFolder = $("#newfileLocation .active");
-        var path = selectedFolder.attr("data-path");
-        var name = $("#newfileName").val();
-        var post = {};
-        
-        if (path === "") {
-            post.fullpath = name;
-        } else {
-            post.fullpath = path + '/' + name;
-        }
-        
-        $.ajax({
-            url: __projectURL + '/file/create',
-            type: 'post',
-            dataType: 'json',
-            data: post
-        })
-        .done(function (data) {
-            console.log(data);
-            if (data.message === "OK") {
-                
-                __editor.off("change", editor_onChange);
-                $("#explorer .file").removeClass('activefile');
-                
-                addToExplorer(path, name, data.sha);
-                
-                /*
-                if (path === "") {
-                    $("#explorer").append('<li><span class="file activefile" data-id="' + data.sha + '" data-path="' + name + '">' + name + '</span></li>');
-                } else {
-                    var parentFolder = $("#explorer [data-path='" + path + "']").children("ul");
-                    parentFolder.append('<li><span class="file activefile" data-id="' + data.sha + '" data-path="' + path + "/" + name + '">' + name + '</span></li>');
-                }
-                */
-                
-                var tracking_id = __projectId + '-' + data.sha;
-                
-                // Add entries to session storage
-                sessionStorage[tracking_id] = data.content;
-                sessionStorage[tracking_id + '-name'] = name;
-                sessionStorage[tracking_id + '-path'] = path + '/' + name;
-                sessionStorage[tracking_id + '-commit-md5'] = md5(data.content);
-                
-                // Update tracked files array in session storage
-                __trackedFiles.push(tracking_id);
-                sessionStorage[__trackedStorageId] = JSON.stringify(__trackedFiles);
-                
-                // Display new file and update UI
-                loadEditor(name, data.content);
-                __fileId = tracking_id;
-                
-                $('#modalNewFile').modal('hide');
-                $('#newFileCreateAlert').hide();
-            } else {
-                $('#newFileCreateAlert').text('Creation Error: ' + data.message);
-                $('#newFileCreateAlert').fadeIn();
-            }
-            
-        })
-        .fail(function(data) {
-            console.log(data);
-            $('#newFileCreateAlert').text('Network Error: ' + data.statusText);
-            $('#newFileCreateAlert').fadeIn();
-                // Update DOM to reflect we messed up:
-                //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
-        })
-        .always(function () {
-            button.attr('disabled', false);
-            button.html('Create');
-        });
-        
-        
-        
-    });
-    
-    //$("#mapToolbar [data-toggle='tooltip']").tooltip();
+      
+      
+  });
+  
+  //$("#mapToolbar [data-toggle='tooltip']").tooltip();
 
-    loadRealmRoot();
+  loadRealmRoot();
 	
 	// Tooltips
 	$("[data-toggle='tooltip']").tooltip();

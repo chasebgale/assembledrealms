@@ -153,7 +153,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
 <script src="/build/js/stats.min.js"></script>
 <script src="/build/js/utilities.js"></script>
-<script src="/js/pixi.min.js"></script>
+<script src="/js/pixi.js"></script>
 <script src="/js/bigscreen.min.js"></script>
 <script src="/js/async.js"></script>
 <script src="/js/smoothie.js"></script>

@@ -1,13 +1,10 @@
-/* global __dirname */
-var git = require('nodegit'),
-    path = require('path'),
-    utilities = require('../utilities'),
-    fs = require('fs'),
-    busboy = require('connect-busboy');
-
-// https://github.com/nodegit/nodegit/tree/master/example
-
-var EOL = require('os').EOL;
+var git       = require('nodegit');
+var Promise   = require("nodegit-promise");
+var path      = require('path');
+var utilities = require('../utilities');
+var fs        = require('fs');
+var busboy    = require('connect-busboy');
+var EOL       = require('os').EOL;
 
 exports.raw = function(req, res, next){
   
@@ -169,81 +166,70 @@ exports.create = function(req, res, next) {
 
 exports.upload = function(req, res, next) {
   var fstream;
+  var repository;
+  var index;
+  var oid;
+  var sha;
   req.pipe(req.busboy);
   req.busboy.on('file', function (fieldname, file, filename) {
-      console.log("Uploading: " + filename);
+    console.log("Uploading: " + filename);
 
-      //Path where image will be uploaded
-      fstream = fs.createWriteStream(__dirname + "/../projects/" + req.params.id + '/client/resource/' + filename);
-      file.pipe(fstream);
-      fstream.on('close', function () {    
-          console.log("Upload Finished of " + filename);  
-		  var fullPath = 'client/resource/' + filename;
-          
-          git.Repo.open(__dirname + "/../projects/" + req.params.id, function(error, repo) {
-			if (error) return next(error);
+    //Path where image will be uploaded
+    fstream = fs.createWriteStream(__dirname + "/../projects/" + req.params.id + '/client/resource/' + filename);
+    file.pipe(fstream);
+    
+    fstream.on('close', function () {    
+      console.log("Upload Finished of " + filename);  
+      var fullPath = 'client/resource/' + filename;
+      
+      git.Repository.open(__dirname + '/../projects/' + req.params.id)
+      // Open the master branch.
+      .then(function(repo) {
+        repository = repo;
+        return repo.openIndex();
+      })
+      .then(function(idx) {
+        index = idx;
+        return idx.read();
+      })
+      .then(function() {
+        index.addByPath(fullPath);
+        index.write();
+        return index.writeTree();
+      })
+      .then(function(oidResult) {
+        oid = oidResult;
+        return git.Reference.nameToId(repository, "HEAD");
+      })
+      .then(function(head) {
+        return repository.getCommit(head);
+      })
+      .then(function(parent) {
+        var userid          = "user_" + req.user_id;
+        var author          = git.Signature.now(userid, userid + "@assembledrealms.com");
+        var committer       = git.Signature.now(userid, userid + "@assembledrealms.com");
+        var commit_message  = 'uploaded ' + fullPath;
 
-			repo.openIndex(function(error, index) {
-				if (error) return next(error);
-
-				index.read(function(error) {
-				  if (error) return next(error);
-
-				  index.addByPath(fullPath, function(error) {
-					if (error) return next(error);
-
-					index.write(function(error) {
-					  if (error) return next(error);
-
-					  index.writeTree(function(error, oid) {
-						if (error) return next(error);
-
-						//get HEAD
-						git.Reference.oidForName(repo, 'HEAD', function(error, head) {
-						  if (error) return next(error);
-
-						  //get latest commit (will be the parent commit)
-						  repo.getCommit(head, function(error, parent) {
-							if (error) return next(error);
-              
-              var userid    = "user_" + req.user_id;
-							var author    = git.Signature.now(userid, userid + "@assembledrealms.com");
-							var committer = git.Signature.now(userid, userid + "@assembledrealms.com");
-
-							//commit
-							var commitMessage = 'uploaded ' + fullPath;
-							repo.createCommit('HEAD', author, committer, commitMessage, oid, [parent], function(error, commitId) {
-							  if (error) return next(error);
-							  
-							  repo.getCommit(commitId, function(error, latest) {
-								if (error) return next(error);
-								
-								latest.getEntry(fullPath, function(error, entry) {
-								  if (error) return next(error);
-								  
-								  utilities.logMessage('Added RESOURCE: ' + entry.oid().sha() + ' (' + fullPath + ')');
-								  
-								  var formatted = {};
-								  formatted.commit = commitId.sha();
-								  formatted.sha = entry.oid().sha();
-								  formatted.message = "OK";
-								  
-								  res.json(formatted);
-								  
-								});
-								
-							  });
-							});
-						  });
-						});
-					  });
-					});
-				  });
-				});
-			});
-
-		  });
-          
+        return repository.createCommit("HEAD", author, committer, commit_message, oid, [parent]);
+      })
+      .then(function(commitId) {
+        return repository.getCommit(commitId);
+      })
+      .then(function(latest) {
+        sha = latest.sha();
+        return latest.getEntry(fullPath);
+      })
+      .done(function(entry) {
+        utilities.logMessage('Added RESOURCE: ' + entry.sha() + ' (' + fullPath + ')');
+                    
+        var formatted = {};
+        formatted.commit = sha;
+        formatted.sha = entry.sha();
+        formatted.message = "OK";
+        
+        res.json(formatted);
       });
+      
+    });
   });
 }

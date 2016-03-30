@@ -121,41 +121,41 @@ exports.create = function(req, res, next){
 exports.history = function(req, res, next) {
   // Open the repository directory.
   git.Repository.open(__dirname + '/../projects/' + req.params.id)
-    // Open the master branch.
-    .then(function(repo) {
-      return repo.getMasterCommit();
-    })
-    // Display information about commits on master.
-    .then(function(firstCommitOnMaster) {
-      // Create a new history event emitter.
-      var history           = firstCommitOnMaster.history();
-      var commits_formatted = [];
+  // Open the master branch.
+  .then(function(repo) {
+    return repo.getMasterCommit();
+  })
+  // Display information about commits on master.
+  .then(function(firstCommitOnMaster) {
+    // Create a new history event emitter.
+    var history           = firstCommitOnMaster.history();
+    var commits_formatted = [];
 
-      // Listen for commit events from the history.
-      history.on("commit", function(commit) {
+    // Listen for commit events from the history.
+    history.on("commit", function(commit) {
 
-        var commit_formatted = {};
+      var commit_formatted = {};
+    
+      // Commit Author
+      var author = commit.author();
+      commit_formatted.author = author.name();
+    
+      // Commit Date
+      commit_formatted.date = commit.date();
+
+      // Commit Comment
+      commit_formatted.message = commit.message();
       
-        // Commit Author
-        var author = commit.author();
-        commit_formatted.author = author.name();
-      
-        // Commit Date
-        commit_formatted.date = commit.date();
-
-        // Commit Comment
-        commit_formatted.message = commit.message();
-        
-        commits_formatted.push(commit_formatted);
-      });
-      
-      history.on("end", function(commits) {
-        return res.json(commits_formatted);
-      });
-
-      // Start emitting events.
-      history.start();
+      commits_formatted.push(commit_formatted);
     });
+    
+    history.on("end", function(commits) {
+      return res.json(commits_formatted);
+    });
+
+    // Start emitting events.
+    history.start();
+  });
 }
 
 exports.open = function(req, res, next){
@@ -165,135 +165,134 @@ exports.open = function(req, res, next){
     var repo;
 
     git.Repository.open(__dirname + '/../projects/' + req.params.id)
-        .then(function(repo) {
-            return repo.getMasterCommit();
-        })
-        .then(function(firstCommitOnMaster) {
-          return firstCommitOnMaster.getTree();
-        })
-        .then(function(tree) {
-            // `walk()` returns an event.
-            var walker = tree.walk(false);
-            walker.on('entry', function(entry) {
-                file = {};
-                file.path = entry.path();
-                file.name = entry.filename();
-                file.sha = entry.sha();
-                file.hasChildren = entry.isTree();
+    .then(function(repo) {
+        return repo.getMasterCommit();
+    })
+    .then(function(firstCommitOnMaster) {
+      return firstCommitOnMaster.getTree();
+    })
+    .then(function(tree) {
+        // `walk()` returns an event.
+        var walker = tree.walk(false);
+        walker.on('entry', function(entry) {
+            file = {};
+            file.path = entry.path();
+            file.name = entry.filename();
+            file.sha = entry.sha();
+            file.hasChildren = entry.isTree();
 
-                files.push(file);
-            });
+            files.push(file);
+        });
 
-            walker.on('end', function(errors, entries) {
-                utilities.logMessage('Opened REPO: ' + __dirname + "/../projects/" + req.params.id);
-                res.json(files);
-            });
-            
-            // Don't forget to call `start()`!
-            walker.start();
-        })
+        walker.on('end', function(errors, entries) {
+            utilities.logMessage('Opened REPO: ' + __dirname + "/../projects/" + req.params.id);
+            res.json(files);
+        });
+        
+        // Don't forget to call `start()`!
+        walker.start();
+    })
     .done();
 }
 
 exports.save = function(req, res, next) {
     
-    var destination = __dirname + "/../projects/" + req.params.id;
-    var commit_message = '';
-    var files = [];
-    var repository;
-    var index;
-    var oid;
+  var destination = __dirname + "/../projects/" + req.params.id;
+  var commit_message = '';
+  var files = [];
+  var repository;
+  var index;
+  var oid;
+  
+  req.busboy.on('file', function (fieldname, file, filename, encoding, mimetype) {
+    console.log('File [' + fieldname + ']: filename: ' + filename + ', encoding: ' + encoding + ', mimetype: ' + mimetype);
     
-    req.busboy.on('file', function (fieldname, file, filename, encoding, mimetype) {
-        console.log('File [' + fieldname + ']: filename: ' + filename + ', encoding: ' + encoding + ', mimetype: ' + mimetype);
+    if (mimetype == 'text/plain') {
         
-        if (mimetype == 'text/plain') {
-            
-            // Text just gets written to disk
-            file.pipe(fs.createWriteStream(path.join(destination, fieldname)));
-            files.push(fieldname);
-            
-        } else {
-            // application/octet-binary means our data is compressed with LZ4
-            
-            // skip file until decode works:
-            file.resume();
-            
-            /*
-            var decoder = lz4.createDecoderStream();
-            
-            var output = fs.createWriteStream(__dirname + "/../projects/" + req.params.id + '/client/resource/' + filename);
-            output.on('close', function () {    
-                console.log("Decode Finished of " + filename);              
-            });
-            
-            file.pipe(decoder).pipe(output);
-            */
-        }
-    });
-    
-    req.busboy.on('field', function(fieldname, val, fieldnameTruncated, valTruncated) {
-        console.log('Field [' + fieldname + ']: value: ' + val);
+      // Text just gets written to disk
+      file.pipe(fs.createWriteStream(path.join(destination, fieldname)));
+      files.push(fieldname);
         
-        if (fieldname == 'message') {
-            commit_message = val;
-        } else if (fieldname == 'resource') {
-			// Uploaded resource pointer string
-			files.push(val);
-		}
+    } else {
+      // application/octet-binary means our data is compressed with LZ4
       
-    });
+      // skip file until decode works:
+      file.resume();
+      
+      /*
+      var decoder = lz4.createDecoderStream();
+      
+      var output = fs.createWriteStream(__dirname + "/../projects/" + req.params.id + '/client/resource/' + filename);
+      output.on('close', function () {    
+          console.log("Decode Finished of " + filename);              
+      });
+      
+      file.pipe(decoder).pipe(output);
+      */
+    }
+  });
+  
+  req.busboy.on('field', function(fieldname, val, fieldnameTruncated, valTruncated) {
+    console.log('Field [' + fieldname + ']: value: ' + val);
+      
+    if (fieldname == 'message') {
+      commit_message = val;
+    } else if (fieldname == 'resource') {
+      // Uploaded resource pointer string
+      files.push(val);
+    }
     
-    req.busboy.on('finish', function() {
-        console.log('Done parsing form, now committing...');
-        
-        git.Repository.open(__dirname + '/../projects/' + req.params.id)
-            .then(function(repo) {
-                repository = repo;
-                return repo.openIndex();
-            })
-            .then(function(idx) {
-                index = idx;
-                return idx.read();
-            })
-            .then(function() {
-                async.forEach(files, function(file, callback) { 
-                    index.addByPath(file);
-                    callback();
-                }, function (error) {
-                    if (error) return next(error);
-                    
-                    return index.write();
-                });
-            })
-            .then(function() {
-              return index.writeTree();
-            })
-            .then(function(oidResult) {
-              oid = oidResult;
-              return git.Reference.nameToId(repository, "HEAD");
-            })
-            .then(function(head) {
-                return repository.getCommit(head);
-            })
-            .then(function(parent) {
-              var userid    = "user_" + req.user_id;
-              var author    = git.Signature.now(userid, userid + "@assembledrealms.com");
-              var committer = git.Signature.now(userid, userid + "@assembledrealms.com");
-
-              return repository.createCommit("HEAD", author, committer, commit_message, oid, [parent]);
-            })
-        .done(function(commitId) {
-            console.log("New Commit: ", commitId);
-            var formatted = {};
-            formatted.commit = commitId;
-            formatted.message = "OK";
-
-            res.json(formatted);
-        });
-    });
+  });
+  
+  req.busboy.on('finish', function() {
+    console.log('Done parsing form, now committing...');
     
-    req.pipe(req.busboy);
+    git.Repository.open(__dirname + '/../projects/' + req.params.id)
+    .then(function(repo) {
+      repository = repo;
+      return repo.openIndex();
+    })
+    .then(function(idx) {
+      index = idx;
+      return idx.read();
+    })
+    .then(function() {
+      async.forEach(files, function(file, callback) { 
+        index.addByPath(file);
+        callback();
+      }, function (error) {
+        if (error) return next(error);
+        return index.write();
+      });
+    })
+    .then(function() {
+      return index.writeTree();
+    })
+    .then(function(oidResult) {
+      oid = oidResult;
+      return git.Reference.nameToId(repository, "HEAD");
+    })
+    .then(function(head) {
+      return repository.getCommit(head);
+    })
+    .then(function(parent) {
+      var userid    = "user_" + req.user_id;
+      var author    = git.Signature.now(userid, userid + "@assembledrealms.com");
+      var committer = git.Signature.now(userid, userid + "@assembledrealms.com");
+
+      return repository.createCommit("HEAD", author, committer, commit_message, oid, [parent]);
+    })
+    .done(function(commitId) {
+      console.log("New Commit: ", commitId);
+      var formatted = {};
+      formatted.commit = commitId;
+      formatted.message = "OK";
+
+      res.json(formatted);
+    });
+  });
+  
+  req.pipe(req.busboy);
 }
 
 exports.destroy = function(req, res, next){

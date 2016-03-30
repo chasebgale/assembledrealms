@@ -71,6 +71,10 @@ div#play-now {
     margin: 0 auto;
 }
 
+div#tabsContainer {
+  padding-bottom: 20px;
+}
+
 .vertical-spacer {
     width: 1px;
     height: 100%;

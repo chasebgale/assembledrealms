@@ -76,24 +76,24 @@ if ($method == 'POST') {
     }
     
     if ($directive == 'online') {
-        $server_type = $_POST['server'];
+      $server_type = $_POST['server'];
+      
+      if ($loggedInUser->authGatekeeper($realm_id)) {
+      
+        // TODO: THIS SHOULD SEND A MESSAGE TO GATEWAY TO LAUNCH, EVEN WITH A 
+        // SHARED REALM, ASYNC, THAT WAY GATEWAY CAN FIND THE LEAST USED SERVER BY
+        // CHECKING THE STATS FROM THE JOB THAT RUNS EVERY ~10 MIN
+        $success = $loggedInUser->onlineRealm($realm_id, $server_type);
         
-        if ($loggedInUser->authGatekeeper($realm_id)) {
-        
-          // TODO: THIS SHOULD SEND A MESSAGE TO GATEWAY TO LAUNCH, EVEN WITH A 
-          // SHARED REALM, ASYNC, THAT WAY GATEWAY CAN FIND THE LEAST USED SERVER BY
-          // CHECKING THE STATS FROM THE JOB THAT RUNS EVERY ~10 MIN
-          $success = $loggedInUser->onlineRealm($realm_id, $server_type);
-          
-          if ($success === true) {
-            echo json_encode( (object) ['message' => 'OK'] );
-          } else {
-            echo json_encode( (object) ['message' => 'FAILURE'] );
-          }
-          die();
+        if ($success === true) {
+          echo json_encode( (object) ['message' => 'OK'] );
         } else {
           echo json_encode( (object) ['message' => 'FAILURE'] );
         }
+        die();
+      } else {
+        echo json_encode( (object) ['message' => 'FAILURE'] );
+      }
     }
     
     if ($directive == 'destroy') {
@@ -649,7 +649,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     var __realmID = <?php echo $_SERVER['QUERY_STRING'] ?>;
     var __realmFunds = parseFloat("<?php echo $realm["funds"] ?>");
     var __realmOnline = parseInt(<?php echo $realm["status"] ?>);
-	var __realmLevel = parseInt(<?php echo $realm["level"] ?>);
+    var __realmLevel = parseInt(<?php echo $realm["level"] ?>);
     var __existingState = {
 	description: "<?php echo htmlspecialchars($realm['description'], ENT_QUOTES, 'UTF-8'); ?>",
 	show_funding: <?php echo $realm["show_funding"] ?>

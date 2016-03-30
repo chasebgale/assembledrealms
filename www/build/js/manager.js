@@ -7,49 +7,42 @@ var __memory_series   		= undefined;
 var __cpu_series      		= undefined;
 
 var __memory_span			= undefined;
-var __cpu_span				= undefined;
+var __cpu_span = undefined;
 
 $(document).ready(function () {
    
-  $.ajaxSetup({
-    crossDomain: true,
-    xhrFields: {
-      withCredentials: true
-    }
+  $('.monitored').on('input', function (e) {
+    var prop = $(this).attr('data-id');
+    __currentState[prop] = $(this).val();
+    checkForChanges();
   });
    
-    $('.monitored').on('input', function (e) {
-        var prop = $(this).attr('data-id');
-        __currentState[prop] = $(this).val();
-        checkForChanges();
-    });
-   
-    $("#destroyRealmConfirm").on("click", function (e) {
+  $("#destroyRealmConfirm").on("click", function (e) {
 
-        e.preventDefault();
-        var id = $(this).attr('data-id');
+    e.preventDefault();
+    var id = $(this).attr('data-id');
 
-        $.ajax({
-            url: '//source-01.assembledrealms.com/api/project/' + id + '/destroy',
-            type: 'GET',
-            dataType: 'json',
-            success: function (data) {
-            
-                var parameters = {};
-                parameters.directive = "destroy";
-                parameters.realm_id = id;
+    $.ajax({
+      url: '//source-01.assembledrealms.com/api/project/' + id + '/destroy',
+      type: 'GET',
+      dataType: 'json',
+      success: function (data) {
+      
+        var parameters = {};
+        parameters.directive = "destroy";
+        parameters.realm_id = id;
 
-                $.post("/build/manager.php", parameters, function (data) {
-                    data = JSON.parse(data);
-                    if (data.message == "OK") {
-                        window.location = "//www.assembledrealms.com/build";
-                    }
-                });
-
-            }
+        $.post("/build/manager.php", parameters, function (data) {
+          data = JSON.parse(data);
+          if (data.message == "OK") {
+            window.location = "//www.assembledrealms.com/build";
+          }
         });
-        
+
+      }
     });
+      
+  });
    
   $("#takeRealmOffline").on('click', function (e) {
     var button = $("#onlineOfflineBtn");
@@ -124,6 +117,8 @@ $(document).ready(function () {
     })
     .done(function (data) {
       
+      __realmLevel = server_type;
+      
       $.ajax({
         url: '//gatekeeper.assembledrealms.com/launch/play/shared/' + __realmID,
         type: 'post',
@@ -166,219 +161,228 @@ $(document).ready(function () {
     button.html('<i class="fa fa-cog fa-spin"></i> Publishing...');
     
     $.ajax({
-      url: '//gatekeeper.assembledrealms.com/launch/play/shared/' + __realmID,
+      url: 'manager.php',
       type: 'post',
       dataType: 'json',
-      data: {}
-    })  
+      data: {
+        directive: 'online',
+        realm_id: __realmID,
+        server: __realmLevel
+      }
+    })
     .done(function (data) {
       
-      if (data.message == "OK") {
-        button.attr('disabled', false);
-        button.html('Publish Latest Code');
- 
-        $("#publish-date").html(moment().format("MMMM Do YYYY, h:mm:ss a"));
-      }
-    
-    })
-    .fail(function(data) {
-      console.log(data);
-      button.attr('disabled', false);
-      button.html('Publish Latest Code');
-    });
-    
-    button.html('Publish Latest Code');
-    
-  });
-   
-    $("#savebutton").on('click', function (e) {
-        var button = $(this);
-      
-        button.attr('disabled', true);
-        button.html('<i class="fa fa-cog fa-spin"></i> Save Changes!');
-
-        $.ajax({
-            url: 'manager.php',
-            type: 'post',
-            dataType: 'json',
-            data: {
-                directive: 'save',
-                realm_id: __realmID,
-                description: $("#details-description").val(),
-                funding: $("#chkFunding").is(":checked")
-            }
-        })
-        .done(function (data) {
-            __removedScreenshots = [];
-            button.attr('disabled', false);
-            button.html('Save Changes!');
-        })
-        .fail(function(data) {
-            console.log(data);
-            $('#newFileCreateAlert').text('Network Error: ' + data.statusText);
-            $('#newFileCreateAlert').fadeIn();
-            // Update DOM to reflect we messed up:
-            //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
-        });
-    });
-   
-    $("#screenshotsCol").on('click', '.removeScreenshot', function (e) {
-      e.preventDefault();
-      
-      var removeLink = $(this);
-      var filename   = removeLink.attr('data-id');
-      
-      removeLink.html('<i class="fa fa-trash-o fa-spin"></i> Remove</a>');
-      $("#screenshotsCol .removeScreenshot").attr('disabled', true);
-      
       $.ajax({
-        url: 'manager.php',
+        url: '//gatekeeper.assembledrealms.com/launch/play/shared/' + __realmID,
         type: 'post',
         dataType: 'json',
         data: {
-          directive: 'remove_screenshot',
-          realm_id: __realmID,
-          filename: filename
         }
       })
       .done(function (data) {
-        removeLink.parent().parent().fadeOut(function () {
-          $(this).remove();
-          $("#screenshotsCol .removeScreenshot").removeAttr('disabled');
-
-          if ($('.screenShotHolder').length < 6) {
-            $('#addNewShot').fadeIn();
-          }
-        });
+        
+        button.attr('disabled', false);
+        button.html('Publish Latest Code');
+        
+        if (data.message == "OK") {
+          $("#publish-date").html(moment().format("MMMM Do YYYY, h:mm:ss a"));
+        }
+      
       })
       .fail(function(data) {
         console.log(data);
-        $('#newFileCreateAlert').text('Network Error: ' + data.statusText);
-        $('#newFileCreateAlert').fadeIn();
-        // Update DOM to reflect we messed up:
-        //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
+        button.attr('disabled', false);
+        button.html('Publish Latest Code');
       });
       
     });
+    
+  });
    
-    $("#upfile").on('change', function (e) {
-       
-        $("#upfile").attr('disabled', true);
-        $("#uploadProgress").fadeIn();
-        
-        var formData = new FormData();
-        formData.append('upfile', e.target.files[0]);
-        formData.append("directive", "upload");
-        formData.append("realm_id", __realmID);
-       
-        $.ajax({
-            url: "manager.php",
-            type: "POST",
-            data: formData,
-            dataType: 'json',
-            processData: false, // tell jQuery not to process the data
-            contentType: false, // tell jQuery not to set contentType
-            xhr: function () {
-                var xhr = new window.XMLHttpRequest();
-                // Upload progress
-                xhr.upload.addEventListener("progress", function (evt) {
-                    var percentComplete = Math.round((evt.loaded / evt.total) * 100);
-                    $("#uploadProgressbar").attr('aria-valuenow', percentComplete).width(percentComplete + '%');
-                }, false);
-                return xhr;
-            },
-            success: function(data, textStatus, jqXHR) {
-                if(data.message === 'OK') {
-                    var newContent = '<div class="thumbnail screenshotHolder" data-id="' + data.filename + '" style="display: inline-block; margin: 8px;">';
-                    newContent += '<a href="/play/img/' + data.filename + '.jpg" data-toggle="lightbox" data-title="NEW Screenshot" data-parent=".wrapper-parent" data-gallery="gallery-' + __realmID + '">';
-                    newContent += '<img src="/play/img/' + data.filename + '-thumb.jpg"></a>';
-                    newContent += '<div class="caption"><a href="#" class="btn removeScreenshot" data-id="' + data.filename + '"><i class="fa fa-trash-o"></i> Remove</a></div></div>';
-                    
-                    $('#screenshotsCol').append(newContent);
-                    
-                    if ($('.screenshotHolder').length >= 6) {
-                        $('#addNewShot').hide();
-                    }
-                    
-                    $("#uploadScreenshotForm").get(0).reset();
-                    $("#upfile").attr('disabled', false);
-                    $("#uploadProgressbar").attr('aria-valuenow', 0).width('0%');
-                    
-                }
-                else
-                {
-                    // Handle errors here
-                    console.log('ERRORS: ' + data.error);
-                }
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                // Handle errors here
-                console.log('ERRORS: ' + textStatus);
-            }
-        });
+  $("#savebutton").on('click', function (e) {
+    var button = $(this);
+  
+    button.attr('disabled', true);
+    button.html('<i class="fa fa-cog fa-spin"></i> Save Changes!');
+
+    $.ajax({
+      url: 'manager.php',
+      type: 'post',
+      dataType: 'json',
+      data: {
+        directive: 'save',
+        realm_id: __realmID,
+        description: $("#details-description").val(),
+        funding: $("#chkFunding").is(":checked")
+      }
+    })
+    .done(function (data) {
+      __removedScreenshots = [];
+      button.attr('disabled', false);
+      button.html('Save Changes!');
+    })
+    .fail(function(data) {
+      console.log(data);
+      $('#newFileCreateAlert').text('Network Error: ' + data.statusText);
+      $('#newFileCreateAlert').fadeIn();
+    });
+  });
+ 
+  $("#screenshotsCol").on('click', '.removeScreenshot', function (e) {
+    e.preventDefault();
+    
+    var removeLink = $(this);
+    var filename   = removeLink.attr('data-id');
+    
+    removeLink.html('<i class="fa fa-trash-o fa-spin"></i> Remove</a>');
+    $("#screenshotsCol .removeScreenshot").attr('disabled', true);
+    
+    $.ajax({
+      url: 'manager.php',
+      type: 'post',
+      dataType: 'json',
+      data: {
+        directive: 'remove_screenshot',
+        realm_id: __realmID,
+        filename: filename
+      }
+    })
+    .done(function (data) {
+      removeLink.parent().parent().fadeOut(function () {
+        $(this).remove();
+        $("#screenshotsCol .removeScreenshot").removeAttr('disabled');
+
+        if ($('.screenShotHolder').length < 6) {
+          $('#addNewShot').fadeIn();
+        }
+      });
+    })
+    .fail(function(data) {
+      console.log(data);
+      $('#newFileCreateAlert').text('Network Error: ' + data.statusText);
+      $('#newFileCreateAlert').fadeIn();
+      // Update DOM to reflect we messed up:
+      //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
     });
     
-    $("#depositAmountSlider").on('input', function () {
-        var floatDeposit = parseFloat($(this).val());
-        var totalDeposit = __realmFunds + (floatDeposit * 100);
-        
-        $("#depositAmount").val(floatDeposit);
-        $("#realmFundsAfter").text(accounting.formatMoney(totalDeposit / 100));
-        $("#realmLifespan").text(totalDeposit + " hours, or about " + moment.duration(totalDeposit, 'hours').humanize() );
-    });
+  });
+ 
+  $("#upfile").on('change', function (e) {
+     
+    $("#upfile").attr('disabled', true);
+    $("#uploadProgress").fadeIn();
     
-    $("#depositAmount").on('input', function () {
-        var floatDeposit = parseFloat($(this).val());
-        var totalDeposit = __realmFunds + (floatDeposit * 100);
-        
-        $("#depositAmountSlider").val(floatDeposit);
-        $("#realmFundsAfter").text(accounting.formatMoney(totalDeposit / 100));
-        $("#realmLifespan").text(totalDeposit + " hours, or about " + moment.duration(totalDeposit, 'hours').humanize() );
-    });
-    
-    $("#depositButton").on('click', function () {
-        
-        var button = $(this);
-        
-        button.attr('disabled', true);
-        button.html('<i class="fa fa-cog fa-spin"></i> Approve Deposit');
-        
-        var depositAmount = (parseFloat($("#depositAmountSlider").val()) * 100);
-        
-        $.ajax({
-            url: 'manager.php',
-            type: 'post',
-            dataType: 'json',
-            data: {
-                directive: 'deposit',
-                realm_id: __realmID,
-                amount: depositAmount
-            }
-        })
-        .done(function (data) {
-            button.attr('disabled', false);
-            button.html('Approve Deposit');
+    var formData = new FormData();
+    formData.append('upfile', e.target.files[0]);
+    formData.append("directive", "upload");
+    formData.append("realm_id", __realmID);
+   
+    $.ajax({
+      url: "manager.php",
+      type: "POST",
+      data: formData,
+      dataType: 'json',
+      processData: false, // tell jQuery not to process the data
+      contentType: false, // tell jQuery not to set contentType
+      xhr: function () {
+        var xhr = new window.XMLHttpRequest();
+        // Upload progress
+        xhr.upload.addEventListener("progress", function (evt) {
+          var percentComplete = Math.round((evt.loaded / evt.total) * 100);
+          $("#uploadProgressbar").attr('aria-valuenow', percentComplete).width(percentComplete + '%');
+        }, false);
+        return xhr;
+      },
+      success: function(data, textStatus, jqXHR) {
+        if(data.message === 'OK') {
+          var newContent = '<div class="thumbnail screenshotHolder" data-id="' + data.filename + '" style="display: inline-block; margin: 8px;">';
+          newContent += '<a href="/play/img/' + data.filename + '.jpg" data-toggle="lightbox" data-title="NEW Screenshot" data-parent=".wrapper-parent" data-gallery="gallery-' + __realmID + '">';
+          newContent += '<img src="/play/img/' + data.filename + '-thumb.jpg"></a>';
+          newContent += '<div class="caption"><a href="#" class="btn removeScreenshot" data-id="' + data.filename + '"><i class="fa fa-trash-o"></i> Remove</a></div></div>';
             
-            if (data.message == "OK") {
-                $("#modalDeposit").modal('hide');
-                __realmFunds += depositAmount;
-                $("#realmFunds").text(accounting.formatMoney(__realmFunds / 100));
-                
-                var userFunds = (parseFloat($("#userFunds").text()) * 100) - depositAmount;
-                $("#userFunds").text(accounting.formatMoney(userFunds / 100, {format: "%v"}));
-            } else {
-                $("#depositAlert").text('Deposit Failed!').show();
-            }
-        })
-        .fail(function(data) {
-            button.attr('disabled', false);
-            button.html('Approve Deposit');
+          $('#screenshotsCol').append(newContent);
+          
+          if ($('.screenshotHolder').length >= 6) {
+            $('#addNewShot').hide();
+          }
+          
+          $("#uploadScreenshotForm").get(0).reset();
+          $("#upfile").attr('disabled', false);
+          $("#uploadProgressbar").attr('aria-valuenow', 0).width('0%');
             
-            // Update DOM to reflect we messed up:
-            $("#depositAlert").text('Deposit Failed!').show();
-        });
-        
+        } else {
+          // Handle errors here
+          console.log('ERRORS: ' + data.error);
+        }
+      },
+      error: function(jqXHR, textStatus, errorThrown) {
+        // Handle errors here
+        console.log('ERRORS: ' + textStatus);
+      }
     });
+  });
+  
+  $("#depositAmountSlider").on('input', function () {
+    var floatDeposit = parseFloat($(this).val());
+    var totalDeposit = __realmFunds + (floatDeposit * 100);
+    
+    $("#depositAmount").val(floatDeposit);
+    $("#realmFundsAfter").text(accounting.formatMoney(totalDeposit / 100));
+    $("#realmLifespan").text(totalDeposit + " hours, or about " + moment.duration(totalDeposit, 'hours').humanize() );
+  });
+  
+  $("#depositAmount").on('input', function () {
+    var floatDeposit = parseFloat($(this).val());
+    var totalDeposit = __realmFunds + (floatDeposit * 100);
+    
+    $("#depositAmountSlider").val(floatDeposit);
+    $("#realmFundsAfter").text(accounting.formatMoney(totalDeposit / 100));
+    $("#realmLifespan").text(totalDeposit + " hours, or about " + moment.duration(totalDeposit, 'hours').humanize() );
+  });
+  
+  $("#depositButton").on('click', function () {
+      
+    var button = $(this);
+    
+    button.attr('disabled', true);
+    button.html('<i class="fa fa-cog fa-spin"></i> Approve Deposit');
+    
+    var depositAmount = (parseFloat($("#depositAmountSlider").val()) * 100);
+    
+    $.ajax({
+      url: 'manager.php',
+      type: 'post',
+      dataType: 'json',
+      data: {
+        directive: 'deposit',
+        realm_id: __realmID,
+        amount: depositAmount
+      }
+    })
+    .done(function (data) {
+      button.attr('disabled', false);
+      button.html('Approve Deposit');
+      
+      if (data.message == "OK") {
+        $("#modalDeposit").modal('hide');
+        __realmFunds += depositAmount;
+        $("#realmFunds").text(accounting.formatMoney(__realmFunds / 100));
+        
+        var userFunds = (parseFloat($("#userFunds").text()) * 100) - depositAmount;
+        $("#userFunds").text(accounting.formatMoney(userFunds / 100, {format: "%v"}));
+      } else {
+        $("#depositAlert").text('Deposit Failed!').show();
+      }
+    })
+    .fail(function(data) {
+      button.attr('disabled', false);
+      button.html('Approve Deposit');
+      
+      // Update DOM to reflect we messed up:
+      $("#depositAlert").text('Deposit Failed!').show();
+    });
+      
+  });
    
   var depositToHours = Math.floor(__realmFunds / 0.9);
   $("#realmLifespan").text(depositToHours + " hours, or about " + moment.duration(depositToHours, 'hours').humanize() );

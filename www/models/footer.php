@@ -15,20 +15,22 @@
     </script>
     
     <script>
-        $(function() {
-            console.log('Document ready!');
-            setTimeout(
-              function() 
-              { 
-                console.log('1 second later and...');
-                if ($('#footer_ad').is(':hidden')) {
-                    $('#footer_msg').fadeIn().css("display","inline-block");
-                    console.log('...ad was blocked, appended message!');
-                } else {
-                    console.log('...ad does not appear blocked!');
-                }
-            }, 1000);
+      $(function() {
+        
+        $.ajaxSetup({
+          crossDomain: true,
+          xhrFields: {
+            withCredentials: true
+          }
         });
+        
+        setTimeout(function() { 
+          console.log('1 second later and...');
+          if ($('#footer_ad').is(':hidden')) {
+            $('#footer_msg').fadeIn().css("display","inline-block");
+          }
+        }, 1000);
+      });
     </script>
     
     <div id="footer_msg" style="display: none; width: 970px; height: 90px;">
