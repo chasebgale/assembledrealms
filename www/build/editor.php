@@ -208,7 +208,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
         </a>
       </li>
       <li class="folderOption fileOption">
-        <a href="#" data-target="#modalDeleteFile">
+        <a href="#" data-target="#modalDeleteConfirm">
           Delete...
         </a>
       </li>
@@ -412,6 +412,27 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
           <button id="debugClose" type="button" data-dismiss="modal" class="btn btn-default" disabled="disabled">Close</button>
         </div>
       </div>      
+    </div>
+  </div>
+    
+  <div class="modal fade" id="modalDeleteConfirm" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title"></h4>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <h5></h5>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <div id="alertDelete" class="alert alert-danger" style="display: none;"></div>
+          <button id="btnDelete" class="btn btn-default">Delete</button>
+          <button type="button" data-dismiss="modal" class="btn btn-default">Cancel</button>
+        </div>
+      </div>
     </div>
   </div>
     

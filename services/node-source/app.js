@@ -142,6 +142,7 @@ app.get('/api/project/:id/file/open/:path', file.open);
 
 app.post('/api/project/:id/file/create', file.create);
 app.post('/api/project/:id/file/upload', file.upload);
+app.post('/api/project/:id/file/remove', file.remove);
 
 app.use(function(err, req, res, next){
     console.error(err.message);

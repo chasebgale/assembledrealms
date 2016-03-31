@@ -165,6 +165,92 @@ exports.create = function(req, res, next) {
   });
 }
 
+exports.remove = function(req, res, next) {
+  
+  var path = req.body.path;
+  var type = req.body.type;
+  
+  var repository;
+  var index;
+  var oid;
+  var sha;
+  
+  console.log("Received request to delete: " + path);
+  
+  git.Repository.open(__dirname + '/../projects/' + req.params.id)
+  .then(function(repo) {
+    repository = repo;
+    return repo.openIndex();
+  })
+  .then(function(idx) {
+    index = idx;
+    return idx.read();
+  })
+  .then(function() {
+    // Delete file/folder from physical disk
+    var fullPath = __dirname + "/../projects/" + req.params.id + "/" + path;
+    if (type == "folder") {
+      // TODO: Only works on empty directories
+      fs.rmdir(fullPath, function (err) {
+        if (err) {
+          console.error(err);
+        }
+        return true;
+      });
+    } else {
+      fs.unlink(fullPath, function (err) {
+        if (err) {
+          console.error(err);
+        }
+        return true;
+      });
+    }
+  })
+  .then(function() {
+    var result;
+    
+    if (type == "folder") {
+      var stage = index.entryStage(path);
+      result = index.removeDirectory(path, stage);
+    } else {
+      result = index.removeByPath(path);
+    }
+    
+    index.write();
+    return index.writeTree();
+  })
+  .then(function(oidResult) {
+    oid = oidResult;
+    return git.Reference.nameToId(repository, "HEAD");
+  })
+  .then(function(head) {
+    return repository.getCommit(head);
+  })
+  .then(function(parent) {
+    var userid          = "user_" + req.user_id;
+    var author          = git.Signature.now(userid, userid + "@assembledrealms.com");
+    var committer       = git.Signature.now(userid, userid + "@assembledrealms.com");
+    var commit_message  = 'Deleted: ' + path;
+
+    return repository.createCommit("HEAD", author, committer, commit_message, oid, [parent]);
+  })
+  .then(function(commitId) {
+    return repository.getCommit(commitId);
+  })
+  .then(function(latest) {
+    return latest.sha();
+  })
+  .done(function(sha) {
+    utilities.logMessage('Deleted: ' + path);
+                
+    var formatted     = {};
+    formatted.commit  = sha;
+    formatted.message = "OK";
+    
+    return res.json(formatted);
+  });
+}
+
 exports.upload = function(req, res, next) {
 
   var repository;

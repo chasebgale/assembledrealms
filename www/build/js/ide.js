@@ -15,6 +15,7 @@ var __commitFiles        = [];
 var __editSessions       = {};
 var __mapDisplayed       = false;
 var __commitOnDebug      = false;
+
 var __modalSimpleOptions = {
   newFolder: {
     title: "Enter the new folder's name...",
@@ -24,14 +25,6 @@ var __modalSimpleOptions = {
     title: "Enter the new file's name...",
     placeholder: "New File.js"
   }
-};
-
-function quickDelegate(evt, target) {
-  var eventCopy = document.createEvent("MouseEvents");
-  
-  eventCopy.initMouseEvent(evt.type, evt.bubbles, evt.cancelable, evt.view, evt.detail, evt.pageX || evt.layerX, evt.pageY || evt.layerY, evt.clientX, evt.clientY, evt.ctrlKey, evt.altKey, evt.shiftKey, evt.metaKey, evt.button, evt.relatedTarget);
-  
-  target.dispatchEvent(eventCopy);
 };
 
 function resize() {
@@ -225,9 +218,89 @@ function initialize(projectID, projectDomain) {
         // Update the hidden field on the upload form to match our path
         $("#inputFilePath").attr('value', path);
         break;
+        
+      case "#modalDeleteConfirm":
+        var deleteTargetType  = '';
+        var deleteTarget      = '';
+        
+        // File or folder?
+        if (__treeDropDownTarget.hasClass('file')) {
+          path = __treeDropDownTarget.attr('data-path');
+          deleteTargetType = 'file';
+          $('#btnDelete').attr('data-id', __treeDropDownTarget.attr('data-id'));
+        } else {
+          path = __treeDropDownTarget.parent().attr('data-path');
+          deleteTargetType = 'folder';
+        }
+        
+        $('#btnDelete').attr('data-target', path);
+        $('#btnDelete').attr('data-type', deleteTargetType);
+        
+        modal.find('.modal-title').text('Delete ' + deleteTargetType + '...?');
+        modal.find('h5').html('Are you sure you want to delete:<br /><strong>' + path + '</strong>');
+        break;
     }
     
     modal.modal('show');
+  });
+  
+  $('#btnDelete').on("click", function (e) {
+    e.preventDefault();
+    
+    var target  = $(this).attr('data-target');
+    var type    = $(this).attr('data-type');
+    var button  = $(this);
+      
+    button.attr('disabled', true);
+    button.html('<i class="fa fa-cog fa-spin"></i> Delete');
+    button.next().attr('disabled', true);
+    
+    var post = {
+      path: target,
+      type: type
+    };
+    
+    $.ajax({
+      url:        __projectURL + '/file/remove',
+      type:       'post',
+      dataType:   'json',
+      data:       post
+    })
+    .done(function (data) {
+      console.log(data);
+      if (data.message === "OK") {
+        
+        // TODO:  Remove file/folder from #explorer TREE
+        //        Remove file from tracking via sha (data-id on file tree entry)
+        
+        if (type === "file") {
+          var sha         = $(this).attr('data-id');
+          var tracking_id = __projectId + '-' + sha;
+          
+          sessionStorage.removeItem(tracking_id);
+        }
+        
+        
+        
+        $('#modalDeleteConfirm').modal('hide');
+        $('#alertDelete').hide();
+      } else {
+        $('#alertDelete').text('Delete Error: ' + data.message);
+        $('#alertDelete').fadeIn();
+      }
+        
+    })
+    .fail(function(data) {
+      console.log(data);
+      $('#alertDelete').text('Network Error: ' + data.statusText);
+      $('#alertDelete').fadeIn();
+    })
+    .always(function () {
+      button.attr('disabled', false);
+      button.html('Delete');
+      button.next().attr('disabled', false);
+    });
+    
   });
   
   $('#ulEditorFontSize a').on("click", function (e) {
@@ -382,7 +455,7 @@ function initialize(projectID, projectDomain) {
             button.attr('disabled', false);
             
             $("#explorer .file").removeClass('activefile');
-            addToExplorer('client/resource', upload.name, '');
+            addToExplorer(__treeDropDownTarget.parent().attr('data-path'), upload.name, '');
             
             alert.addClass('alert-success');
             alert.html("<strong>" + upload.name + "</strong> was successfully added to your resource folder!");
@@ -524,6 +597,22 @@ function resetToolBar() {
     if ($("#addBrush").is(':visible')) {
         $("#addBrush").fadeOut();
     }
+}
+
+function removeFromExplorer(sha) {
+  var removeTarget = $("#tree").find('[data-id="' + sha + '"]');
+  
+  if (removeTarget) {
+    var parentUL = removeTarget.closest('ul');
+    removeTarget.parent().remove();
+    
+    // If we only have one item left, fix the hierchy display lines
+    if (parentUL.children().length === 1) {
+      parentUL.children().first().addClass('last');
+    }
+    
+  }
+  
 }
 
 function addToExplorer(path, name, sha) {
