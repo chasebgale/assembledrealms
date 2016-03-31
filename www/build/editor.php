@@ -145,13 +145,14 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
   <link rel='shortcut icon' href='/img/favicon.png')'>
 
-  <link rel='stylesheet' href="/css/jquery.treeview.css" />
   <link rel='stylesheet' href='/css/root.css' />
   <link rel='stylesheet' href='/build/css/style.css' />
 
   <link rel='stylesheet' href='//netdna.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.css' />
   <link rel='stylesheet' href='//netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css'>
   <link rel='stylesheet' href='/css/bootstrap-theme.css' />
+  
+  <link rel='stylesheet' href="/css/jquery.treeview.css" />
 
   <script src='/models/funcs.js' type='text/javascript'></script>
   <script src='/js/lodash.min.js'></script>
@@ -179,6 +180,40 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     </div>
     <p style="text-align: center;">Your realm is loading, please wait...</p>
   </div>
+  
+  <div id="treeActionsDropDown" class="dropdown" style="display: none; position: absolute; z-index: 999;">
+    <a id="treeActionsDropDownButtonHidden" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="display: none;"><i class="fa fa-ellipsis-v fa-fw"></i></a>
+    <ul class="dropdown-menu" aria-labelledby="treeActionsDropDownButtonHidden">
+      <li class="folderOption">
+        <a href="#" data-target="#modalFilename" data-action="newFile">
+          <i class="fa fa-file-text-o fa-fw"></i> New File...
+        </a>
+      </li>
+      <li class="folderOption">
+        <a href="#" data-target="#modalFilename" data-action="newFolder">
+          <i class="fa fa-folder-o fa-fw"></i> New Folder...
+        </a>
+      </li>
+      <li class="folderOption">
+        <a href="#" data-target="#modalUploadResource">
+          <i class="fa fa-upload fa-fw"></i> Upload File...
+        </a>
+      </li>
+      
+      <li class="folderOption divider" role="separator"></li>
+      
+      <li class="folderOption fileOption">
+        <a href="#" data-target="#modalFilename" data-action="rename">
+          Rename...
+        </a>
+      </li>
+      <li class="folderOption fileOption">
+        <a href="#" data-target="#modalDeleteFile">
+          Delete...
+        </a>
+      </li>
+    </ul>
+  </div>
     
   <section id="workspace" style="display: none;">
     
@@ -190,7 +225,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
         
         <div class="spacer"></div>
         
-        <button type="button" id="btnHistory" class="btn btn-default btn-xs"><i class="fa fa-history fa-fw"></i></i> History</button>
+        <button type="button" id="btnHistory" class="btn btn-default btn-xs"><i class="fa fa-history fa-fw"></i> History</button>
         <button type="button" id="btnCommit" class="btn btn-default btn-xs"><i class="fa fa-cloud-upload fa-fw"></i> Commit</button>
         <button type="button" id="btnDebug" class="btn btn-default btn-xs"><i class="fa fa-caret-square-o-right fa-fw"></i> Debug</button>
         
@@ -261,7 +296,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
       </div>
       
       <a href="http://www.assembledrealms.com" style="float: right;">
-        <img src="/build/img/logo.png"></img>
+        <img src="/build/img/logo.png" />
       </a>
     
     </div>
@@ -270,7 +305,8 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
       <span id="commandBarStatusText">TESTING...</span>
     </div>
     
-    <div id="tree">
+    <div id="tree" class="clearfix noselect">
+      <a id="treeActionsDropDownButton" class="pull-right" role="button" style="display: none;"><i class="fa fa-ellipsis-v fa-fw"></i></a>
       <ul id="explorer" class="filetree treeview"></ul>
     </div>
     
@@ -294,30 +330,23 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
   </section>
     
-  <div class="modal fade" id="modalNewFile" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+  <div class="modal fade" id="modalFilename" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
       <div class="modal-content">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-          <h4 class="modal-title">Create New File...</h4>
+          <h4 class="modal-title"></h4>
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label for="newfileName">Filename:</label>
-            <input type="text" class="form-control" id="newfileName" placeholder="Filename, i.e. 'types.js'">
-          </div>
-          <div class="form-group">
-            <label for="newfileLocation">Location:</label>
-            <div class="list-group" id="newfileLocation">
-              <a href="#" class="list-group-item active" data-path="">
-                <i class="fa fa-folder-o"></i> /
-              </a>
-            </div>
+            <label for="inputFilename" id="inputFilenameLabel"></label>
+            <input type="text" class="form-control" id="inputFilename" placeholder="Filename, i.e. 'types.js'">
           </div>
         </div>
         <div class="modal-footer">
-          <div id="newFileCreateAlert" class="alert alert-danger" style="display: none;"></div>
-          <button id="btnNewFileCreate" class="btn btn-default">Create</button>
+          <div id="alertFilename" class="alert alert-danger" style="display: none;"></div>
+          <button id="buttonFilename" class="btn btn-default">OK</button>
+          <button type="button" data-dismiss="modal" class="btn btn-default">Cancel</button>
         </div>
       </div>
     </div>
@@ -386,38 +415,35 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     </div>
   </div>
     
-    <div class="modal fade" id="modalUploadResource" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title">Add Media</h4>
-                </div>
-                <div class="modal-body">
-        <div id="uploadAlert" class="alert" role="alert" style="display: none;">
+  <div class="modal fade" id="modalUploadResource" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Add Media</h4>
         </div>
-        <form id="uploadForm" method="post" action="upload" enctype="multipart/form-data">
-      <input type="file" id="inputFile">
-        </form>
-                </div>
-    <div class="modal-footer">
-        <p class="text-justify">
-      <strong>Please support the hard work of others.</strong>
-      By clicking the "Upload!" button below you are certifying that the media you are
-      adding is either your own work, the work of another that is under a license which
-      allows distribution or belongs to the public domain. 
-        </p>
-        <div class="clear-fix">
-      <div id="uploadProgressbar" class="progress progress-striped"
-           style="width: 85%; float: left; margin-top: 6px;">
-          <div id="uploadProgressbarFill" class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 0%;"></div>
-      </div>
-      <button id="uploadStart" type="button" class="btn btn-default">Upload!</button>
+        <div class="modal-body">
+          <div id="uploadAlert" class="alert" role="alert" style="display: none;"></div>
+          <form id="uploadForm" method="post" action="upload" enctype="multipart/form-data">
+            <input type="file" id="inputFile">
+            <input type="hidden" id="inputFilePath" value=""> 
+          </form>
         </div>
-    </div>
+        <div class="modal-footer">
+          <p class="text-justify">
+            <strong>Please support the hard work of others.</strong>
+            By clicking the "Upload!" button below you are certifying that the media you are adding is either your own work, the work of another that is under a license which allows distribution or belongs to the public domain. 
+          </p>
+          <div class="clear-fix">
+            <div id="uploadProgressbar" class="progress progress-striped" style="width: 85%; float: left; margin-top: 6px;">
+              <div id="uploadProgressbarFill" class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 0%;"></div>
             </div>
+            <button id="uploadStart" type="button" class="btn btn-default">Upload!</button>
+          </div>
         </div>
+      </div>
     </div>
+  </div>
     
   <script id="root_files_template" type="text/template">
       <% _.each( _.filter(model, function (obj) {return (obj.path.indexOf('/') === - 1) }), function(child) { %>

@@ -19,9 +19,9 @@ After (optionally) adding a description to the changes you have made, clicking t
 
 > [![Commit Window](/img/welcome/git_logo.png)](https://git-scm.com/)
 >
-> Assembled Realms uses GIT as it's source control system - [check 'em out](https://git-scm.com/). 
+> Assembled Realms uses GIT as it's source control system - [check it out](https://git-scm.com/). 
 
-Now that the server is synced with your local work, you can click the "Debug" button on the command bar - once it is finished deploying your realm to a free server, you'll be given a link to view your game.
+Now that the server is synced with your local work, you can click the "Debug" button on the command bar - once it is finished deploying your realm to the least congested debug server, you'll be given a link to view your game.
 
 ## Inform Your Players
 
@@ -30,14 +30,14 @@ by the game, but rather by the page containing your game.
 
 | | |
 | ------------- | ------------- |
-| CREDITS.md    | Contains attribution to other authors/creators/developers who have been nice enough to liscense their work for use in the public domain. If you use someone's work, give them the credit they deserve. |
+| CREDITS.md    | Contains attribution to other authors/creators/developers who have been nice enough to license their work for use in the public domain. If you use someone's work, give them the credit they deserve. |
 | FUNDING.md    | If you decide to accept donations from people who play your game, this file lays out the benefits you award, if any at all. |
 | README.md     | Simplified instructions for playing your game - this is the first file a player will see under the game itself and a quick skim should allow someone to play your game! |
 
 ## Build Your Vision
 
 Above the markdown files we've already discussed, you'll see two folders: client and server. The source code, media and json data files contained within the "client" folder are what create the player's experience in the browser window. 
-The source code within the "server" folder is what runs, big surprise, on the server and whose main goal is to keep all the clients synced. Explore both of these folders and figure out how everything works, as a hint, the "engine.js" 
+The source code within the "server" folder is what runs *on the server* and whose main goal is to keep all the clients synced. Explore both of these folders and figure out how everything works, as a hint, the "engine.js" 
 file is the main starting point for both the client and server, respectively.
 
 ## Experiment!

@@ -4,7 +4,7 @@ var cookieParser 	  = require('cookie-parser');
 var fs 			        = require('fs');
 var project         = require('./routes/project')
 var file            = require('./routes/file')
-var busboy          = require('connect-busboy')
+//var busboy          = require('connect-busboy')
 var util            = require('util');
 var https           = require('https');
 var http            = require('http');
@@ -24,12 +24,14 @@ app.use(function(req, res, next) {
     next();
 });
 
+/*
 app.use(busboy({
   highWaterMark: 2 * 1024 * 1024,
   limits: {
     fileSize: 10 * 1024 * 1024
   }
 }));
+*/
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({

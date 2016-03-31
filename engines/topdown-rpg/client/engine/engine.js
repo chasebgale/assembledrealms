@@ -166,7 +166,7 @@ Engine.prototype.load = function (map) {
     }
   }
   
-  loader.add('UO Classic (rough)', ROOT + 'client/resource/uo.xml');
+  loader.add('UO Classic (rough)', ROOT + 'client/resource/uo.fnt');
   loader.add(ROOT + 'client/resource/actors/slash/WEAPON_dagger.png');
       
   loader.on('progress', function (e) {
@@ -193,7 +193,7 @@ Engine.prototype.load = function (map) {
       self.layerText = new PIXI.Container();
       self.textInput = new PIXI.extras.BitmapText('', { font: '16px UO Classic (rough)', align: 'left' });
       self.textInput.position.x = 0;
-      self.textInput.position.y = CANVAS_HEIGHT - 16;
+      self.textInput.position.y = CANVAS_HEIGHT - 19;
       self.layerText.addChild(self.textInput);
       self.stage.addChild(self.layerText);
   

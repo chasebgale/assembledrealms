@@ -6,12 +6,33 @@ var __projectURL;
 var __checkInMsg;
 var __trackedStorageId;
 var __map;
-var __processingFiles   = [];
-var __trackedFiles      = [];
-var __commitFiles       = [];
-var __editSessions      = {};
-var __mapDisplayed      = false;
-var __commitOnDebug     = false;
+var __treeDropDown;
+var __treeDropDownTarget;
+var __treeDropDownButton;
+var __processingFiles    = [];
+var __trackedFiles       = [];
+var __commitFiles        = [];
+var __editSessions       = {};
+var __mapDisplayed       = false;
+var __commitOnDebug      = false;
+var __modalSimpleOptions = {
+  newFolder: {
+    title: "Enter the new folder's name...",
+    placeholder: "New Folder"
+  },
+  newFile: {
+    title: "Enter the new file's name...",
+    placeholder: "New File.js"
+  }
+};
+
+function quickDelegate(evt, target) {
+  var eventCopy = document.createEvent("MouseEvents");
+  
+  eventCopy.initMouseEvent(evt.type, evt.bubbles, evt.cancelable, evt.view, evt.detail, evt.pageX || evt.layerX, evt.pageY || evt.layerY, evt.clientX, evt.clientY, evt.ctrlKey, evt.altKey, evt.shiftKey, evt.metaKey, evt.button, evt.relatedTarget);
+  
+  target.dispatchEvent(eventCopy);
+};
 
 function resize() {
   var h = $("#tree").height();
@@ -25,6 +46,8 @@ function resize() {
 
 function initialize(projectID, projectDomain) {
     
+  // Do this explicitly - this is included with the default footer but the IDE uses
+  // it's own layout
   $.ajaxSetup({
     crossDomain: true,
     xhrFields: {
@@ -62,28 +85,149 @@ function initialize(projectID, projectDomain) {
   });
 
   if (sessionStorage[__trackedStorageId]) {
-      __trackedFiles = JSON.parse(sessionStorage[__trackedStorageId]);
+    __trackedFiles = JSON.parse(sessionStorage[__trackedStorageId]);
   }
   
   $( window ).resize(function() {
-      resize();
+    resize();
   });
   
   $("#explorer").on("click", ".file", function () {
 
-      var root = $(this);
+    var root = $(this);
 
-      __editor.off("change", editor_onChange);
+    __editor.off("change", editor_onChange);
 
-      $("#explorer .file").removeClass('activefile');
-      root.addClass('activefile');
+    $("#explorer .file").removeClass('activefile');
+    root.addClass('activefile');
 
-      var id      = root.attr('data-id');
-      var path    = root.attr('data-path');
-      var name = root.text().trim();
+    var id      = root.attr('data-id');
+    var path    = root.attr('data-path');
+    var name = root.text().trim();
 
-      loadRealmFile(id, path, name);
+    loadRealmFile(id, path, name);
 
+  });
+  
+  __treeDropDown       = $("#treeActionsDropDown");
+  __treeDropDownButton = $("#treeActionsDropDownButton");
+  
+  __treeDropDown.dropdown();
+  
+  __treeDropDownButton.on("click", function (e) {
+    
+    var targetClass = "folderOption";
+    if (__treeDropDownTarget.hasClass('file')) {
+      targetClass = "fileOption";
+    }
+    
+    // Setup dropdown menu for the correct target
+    $("#treeActionsDropDown li").each(function() {
+      if ($(this).hasClass(targetClass)) {
+        $(this).show();
+      } else {
+        $(this).hide();
+      }
+    });
+    
+    $("#treeActionsDropDownButtonHidden").dropdown('toggle');
+    e.stopImmediatePropagation();
+    return false;
+  });
+  
+  $("#explorer").on("mouseenter", ".folder, .file", function () {
+    if (!__treeDropDown.hasClass("open")) {
+      
+      __treeDropDownTarget = $(this);
+      
+      __treeDropDownButton.appendTo(__treeDropDownTarget);
+      __treeDropDownButton.show();
+      
+      var offset = __treeDropDownButton.offset();
+      
+      __treeDropDown.css('top', (offset.top + 16) + 'px');
+      __treeDropDown.css('left', offset.left + 'px');
+      __treeDropDown.show();
+    }
+  });
+  
+  $("#explorer").on("mouseleave", ".folder, .file", function () {
+    if (!__treeDropDown.hasClass("open")) {
+      __treeDropDown.hide();
+    }
+  });
+  
+  $("#explorer").on("click", ".folder, .file", function () {
+    if (__treeDropDown.hasClass("open")) {
+      __treeDropDownTarget = $(this);
+      
+      __treeDropDownButton.appendTo(__treeDropDownTarget);
+      __treeDropDownButton.show();
+      
+      var offset = __treeDropDownButton.offset();
+      
+      __treeDropDown.css('top', (offset.top + 16) + 'px');
+      __treeDropDown.css('left', offset.left + 'px');
+      __treeDropDown.show();
+    }
+  });
+  
+  $("#treeActionsDropDown a").on("click", function () {
+    var self   = $(this);
+    var target = self.attr('data-target');
+    var modal  = $(target);
+    var path   = "/" + __treeDropDownTarget.parent().attr('data-path') + "/";
+    
+    switch (target) {
+      
+      case "#modalFilename":
+        var action  = self.attr('data-action');
+        var options = __modalSimpleOptions[action];
+        var input   = modal.find('.form-control');
+        
+        modal.find('.modal-title').text(options.title);
+        input.attr('placeholder', options.placeholder);
+        input.val('');
+        
+        $("#inputFilenameLabel").text(path);
+        
+        // What task to perform per action type
+        $("#buttonFilename").click(function() {
+          
+          // Validate (no slashes allowed):
+          if (input.val().match(/[\/\\]/g).length > 0) {
+            $("#alertFilename").text("Slashes are not valid characters...");
+            $("#alertFilename").show();
+            return;
+          }
+
+          switch (action) {
+            case 'newFolder':
+              
+              break;
+          }
+        });
+        
+        // Update the label with the new path
+        $("#inputFilename").on('input', function () {
+          var newPath = path + $(this).val();
+          
+          if (action === "newFolder") {
+            newPath += "/";
+          }
+          
+          $("#inputFilenameLabel").text(newPath);
+        });
+        
+        break;
+      
+      case "#modalUploadResource":
+        // Update the hidden field on the upload form to match our path
+        $("#inputFilePath").attr('value', path);
+        break;
+    }
+    
+    modal.modal('show');
   });
   
   $('#ulEditorFontSize a').on("click", function (e) {
@@ -101,8 +245,9 @@ function initialize(projectID, projectDomain) {
   });
 
   $('#ulView a').on("click", function (e) {
-      e.preventDefault();
-      // Hide all tabs
+    e.preventDefault();
+    
+    // Hide all tabs
     $("#tabs .tab-pane").hide();
   
     if ($(this).attr('href') == "#markdown") {
@@ -126,10 +271,9 @@ function initialize(projectID, projectDomain) {
   $("#categorySelection").on('change', function () {
      var category = '#' + $(this).find(":selected").attr('data-id');
      
-      $('#modalTerrain .tileContainer').fadeOut(function () {
-          $(category).fadeIn();
-      });
-     
+    $('#modalTerrain .tileContainer').fadeOut(function () {
+      $(category).fadeIn();
+    });
   });
 
   $("#btnHistory").on("click", function () {
@@ -142,15 +286,6 @@ function initialize(projectID, projectDomain) {
       dataType: 'json'
     })
     .done(function (data) {
-      /*
-      var html = "";
-      
-      for (var i = 0; i < data.length; i++) {
-        html += "<li>" + data[i].author + ", " + data[i].date + ", " + data[i].message + "</li>";
-      }
-      
-      $('#historyList').html(html);
-      */
       var templateFnHistory = _.template($('#history_template').html());
       
       for (var i = 0; i < data.length; i++) {
@@ -171,125 +306,40 @@ function initialize(projectID, projectDomain) {
   });
   
   $("#btnCommit").on("click", function () {
-      //$('#commitProgressbar').addClass('active');
-      
-      listCommitFiles();
-      $('#modalCommit').modal('show');
-      
+    listCommitFiles();
+    $('#modalCommit').modal('show');
   });
   
   $("#btnDebug").on("click", function (e) {
-    
     e.preventDefault(); 
-    
     debug();
-    
-    /*
-    if ($('#debugProgressbar').hasClass('active') == false) {
-        $('#debugProgressbar').addClass('active');
-    }
-    
-    $('#debugProgressList').empty();
-    
-    $('#modalDebug').modal('show');
-
-    $('#debugProgressList').append('<li>Selecting least congested server...</li>');
-  
-    $.ajax({
-      url: 'editor.php',
-      type: 'post',
-      dataType: 'json',
-      data: {directive: 'debug', realm_id: __projectId}
-    })
-    .done(function (data) {
-    
-      var address 	= data.address;
-      var debug_url 	= 'https://www.assembledrealms.com/debug/realm/' + __projectId;
-      
-      $('#debugProgressList').append('<li>Compressing latest commit and delivering it to ' + address + '</li>');
-
-      $.ajax({
-        url: __projectURL + '/publish',
-        type: 'post',
-        dataType: 'text',
-        data: {address: address, shared: true}
-      })
-      .done(function (data) {
-        if (data === "OK") {
-         
-          $('#debugProgressList').append('<li>Published to debug server successfully!</li>');
-          $('#debugProgressList').append('<li>Launching realm on ' + address + '</li>');
-          
-          $.ajax({
-            url: 'https://' + address + '/launch/' + __projectId,
-            type: 'get',
-            dataType: 'text'
-          })
-          .done(function (data) {
-            $('#debugProgressList').append('<li><strong>Success!</strong> Your debug URL: <a target="_blank" href="' + debug_url + '"><i class="fa fa-external-link"></i> ' + debug_url + '</a></li>');
-          })
-          .fail(function(data) {
-            $('#debugProgressList').append('<li class="text-danger"><strong><i class="fa fa-exclamation-triangle"></i> Fatal Error:' + data.responseText + '</strong> Please try again in a few minutes, monkeys are furiously typing away to fix this problem.</li>');
-          })
-          .always(function() {
-            $('#debugClose').attr('disabled', false);
-            $('#debugProgressbar').removeClass('active');
-          });
-
-        }
-      })
-      .fail(function(d, textStatus, error) {
-        console.log(textStatus);
-        $('#debugAlert').html('<li class="text-danger"><strong><i class="fa fa-exclamation-triangle"></i> Error: </strong> ' + textStatus);
-        $('#debugAlert').fadeIn();
-        $('#debugClose').attr('disabled', false);
-          // Update DOM to reflect we messed up:
-          //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
-      });
-    })
-    .fail(function(d, textStatus, error) {
-      console.log(textStatus);
-      $('#debugAlert').html('<li class="text-danger"><strong><i class="fa fa-exclamation-triangle"></i> Error: </strong> ' + textStatus);
-      $('#debugAlert').fadeIn();
-      $('#debugClose').attr('disabled', false);
-              // Update DOM to reflect we messed up:
-              //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
-    });
-    
-    */
   });
   
   $('#commitStart').on('click', function () {
-      $(this).attr('disabled', true);
-      $(this).html('<i class="fa fa-cog fa-spin"></i> Commit');
-      $("#commitProgressMessage").text('Initiating commit to branch.');
-      commit();
+    $(this).attr('disabled', true);
+    $(this).html('<i class="fa fa-cog fa-spin"></i> Commit');
+    $("#commitProgressMessage").text('Initiating commit to branch.');
+    commit();
   });
-  
-  $("#btnNewFile").on("click", function () {
-      $('#modalNewFile').modal('show');
-  });
-  
+
   $("#btnUploadResource").on("click", function () {
-      
-      var bar =       $('#uploadProgressbarFill');
-      var alert =     $('#uploadAlert');
-      
-      bar.width("0%");
-      bar.text("");
-      alert.hide();
-      alert.removeClass('alert-success alert-danger');
-      alert.text("");
-      
-      $('#modalUploadResource').modal('show');
+    var bar   = $('#uploadProgressbarFill');
+    var alert = $('#uploadAlert');
+    
+    bar.width("0%");
+    bar.text("");
+    alert.hide();
+    alert.removeClass('alert-success alert-danger');
+    alert.text("");
+    
+    $('#modalUploadResource').modal('show');
   });
   
   $("#newfileLocation").on("click", "a", function (e) {
-      e.preventDefault();
-      
-      $("#newfileLocation a").removeClass("active");
-      $(this).addClass("active");
-      
+    e.preventDefault();
+    
+    $("#newfileLocation a").removeClass("active");
+    $(this).addClass("active");
   });
   
   $("#uploadStart").on("click", function (e) {
@@ -307,10 +357,10 @@ function initialize(projectID, projectDomain) {
     
     button.attr('disabled', true);
     
-    var upload = document.getElementById('inputFile').files[0];
-    var uri = __projectURL + "/file/upload";
-    var xhr = new XMLHttpRequest();
-    var fd = new FormData();
+    var upload  = document.getElementById('inputFile').files[0];
+    var uri     = __projectURL + "/file/upload";
+    var xhr     = new XMLHttpRequest();
+    var fd      = new FormData();
     
     xhr.withCredentials = true;
     
@@ -347,6 +397,7 @@ function initialize(projectID, projectDomain) {
       }
     };
     fd.append('file', upload);
+    fd.append('field', $("#inputFilePath").attr('value'));
     xhr.send(fd);
     
   });
@@ -823,6 +874,34 @@ function loadRealmRoot() {
     $("#explorer").treeview({
       animated: "fast"
     });
+    
+    /*
+    $("#explorer .folder").popover({
+      container:  'body',
+      html:       true,
+      placement:  function (popover, triggerElement) {
+        console.log('placement 1: ' + $(popover).css("left"));
+        $(popover).css("left", (parseInt($(popover).css("left").slice(0, -2)) - 40) + 'px');
+        console.log('placement 2: ' + $(popover).css("left"));
+      },
+      trigger:    'hover',
+      content:    '<button type="button" class="btn btn-default btn-xs"><i class="fa fa-folder-o fa-fw"></i></button><button type="button" class="btn btn-default btn-xs"><i class="fa fa-folder-o fa-fw"></i></button>'
+    })
+    .on('shown.bs.popover', function (e) {
+      console.log('shown.bs.popover: ' + $(this).css("left"));
+
+      var currentTop = parseInt($(this).css('top'));
+      var currentLeft = parseInt($(this).css('left'));
+
+      $(this).css({
+          top: currentTop + 'px',
+          left: (currentLeft + 100) + 'px'
+      });
+    });
+    .on('inserted.bs.popover', function (e) {
+      console.log('woah');
+    });
+    */
     
     var folderList = $('#newfileLocation');
     

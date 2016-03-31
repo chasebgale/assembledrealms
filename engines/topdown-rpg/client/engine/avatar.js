@@ -25,18 +25,18 @@ Avatar.prototype.create = function (avatar) {
 
   this.text = new PIXI.extras.BitmapText('Hello, World!', {
     font: '16px UO Classic (rough)', 
-    align: 'center' 
+    align: 'left' 
   });
   this.text.position.x    = 0;
-  this.text.position.y    = -60;
+  this.text.position.y    = -64;
   this.text.alpha         = 0;
   
   this.textEXP = new PIXI.extras.BitmapText('Hello, World!', {
     font: '16px UO Classic (rough)', 
-    align: 'center' 
+    align: 'left' 
   });
   this.textEXP.position.x    = 0;
-  this.textEXP.position.y    = -60;
+  this.textEXP.position.y    = -64;
   this.textEXP.alpha         = 0;
   this.textEXP.tint          = 16776960;
 
@@ -337,7 +337,7 @@ Avatar.prototype.keydown = function (e) {
       var exp = engine.avatar.experience + " exp";
       engine.avatar.textEXP.text = exp;
       engine.avatar.textEXP.position.x = exp.length * -3;
-      engine.avatar.textEXP.position.y = -60;
+      engine.avatar.textEXP.position.y = -64;
       engine.avatar.textEXP.alpha = 1.0;
     } else {
       // Process in the key in the game loop
@@ -382,7 +382,7 @@ Avatar.prototype.tick = function () {
     self.textEXP.alpha -= 0.025;
     self.textEXP.y = self.textEXP.y - 1;
   } else {
-   self.textEXP.y = -60; 
+   self.textEXP.y = -64; 
   }
   
   if (self.statsBar.alpha > 0) {

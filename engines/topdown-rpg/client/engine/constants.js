@@ -38,13 +38,6 @@ var MODE_PAINT = 0;
 var MODE_MOVE = 1;
 var MODE_DELETE = 2;
 
-var EMOTES_NPC_CREATED = [
-    "Holy moly it's dark down here...",
-    "I've made a huge mistake.",
-    "I smell the stench of the undead...",
-    "/me shivers a little bit"
-];
-
 var KEY_CODES = {
   0 : "Windows Menu (Windows-oriented keyboard used on Mac)",
   3 : "break",

@@ -3,8 +3,9 @@ var Promise   = require("nodegit-promise");
 var path      = require('path');
 var utilities = require('../utilities');
 var fs        = require('fs');
-var busboy    = require('connect-busboy');
+var Busboy    = require('busboy');
 var EOL       = require('os').EOL;
+var inspect   = require('util').inspect;
 
 exports.raw = function(req, res, next){
   
@@ -165,25 +166,56 @@ exports.create = function(req, res, next) {
 }
 
 exports.upload = function(req, res, next) {
-  var fstream;
+
   var repository;
   var index;
   var oid;
   var sha;
-  req.pipe(req.busboy);
-  req.busboy.on('file', function (fieldname, file, filename) {
-    console.log("Uploading: " + filename);
+  
+  var uploadFilename;
+  var uploadFilepath;
+  
+  var busboy = new Busboy({ headers: req.headers });
+  
+  busboy.on('field', function(fieldname, val) {
+    uploadFilepath = val;
+    console.log('Field [' + fieldname + ']: value: ' + uploadFilepath);
+  });
+  
+  busboy.on('file', function (fieldname, file, filename) {
+    console.log("Uploading: " + filename + " to: " + __dirname + "/../uploads/" + req.params.id + '/' + filename);
+    
+    file.on('end', function() {
+      console.log("Upload Finished of " + filename);  
+      uploadFilename = filename;
+    });
 
     //Path where image will be uploaded
-    fstream = fs.createWriteStream(__dirname + "/../projects/" + req.params.id + '/client/resource/' + filename);
-    file.pipe(fstream);
+    var fstream = fs.createWriteStream(__dirname + "/../uploads/" + req.params.id + '-' + filename);
     
-    fstream.on('close', function () {    
-      console.log("Upload Finished of " + filename);  
-      var fullPath = 'client/resource/' + filename;
+    file.pipe(fstream);
+  });
+
+  busboy.on('finish', function(err) {
+    
+    if (err) {
+      console.error(err);
+    }
+    
+    var fullPath = uploadFilepath.substr(1) + uploadFilename;
+    
+    var oldPath = __dirname + "/../uploads/" + req.params.id + '-' + uploadFilename;
+    var newPath = __dirname + "/../projects/" + req.params.id + '/' + fullPath;
+    
+    console.log('finished with form parsing, no moving "' + oldPath + '" to "' + newPath + '"');
+    
+    fs.rename(oldPath, newPath, function (error) {
+      
+      if (error) {
+        console.error(error);
+      }
       
       git.Repository.open(__dirname + '/../projects/' + req.params.id)
-      // Open the master branch.
       .then(function(repo) {
         repository = repo;
         return repo.openIndex();
@@ -227,9 +259,11 @@ exports.upload = function(req, res, next) {
         formatted.sha = entry.sha();
         formatted.message = "OK";
         
-        res.json(formatted);
+        return res.json(formatted);
       });
       
     });
   });
+  
+  req.pipe(busboy);
 }

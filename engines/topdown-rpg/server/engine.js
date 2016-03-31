@@ -16,14 +16,23 @@ var DIRECTION_SW  = 7;
 var TILE_WIDTH  = 32;
 var TILE_HEIGHT = 32;
 
-var TAUNTS = [
+var EMOTES_NECROMANCER = [
   "I have given you life... now honor me with DEATH!",
   "Destroy these fleshy fools!",
   "Purge these foolish humans from my lair!!",
   "/me scowls",
   "ATTACK! Attack the humans!",
   "Hmmmm... It's so bright in here... Why no dynamic lighting?",
-  "All you can do is punch? Pathetic coding..."
+  "All you can do is punch? Pathetic coding...",
+  "Wait, no blood? Only one death animation? Boooring...",
+  "These human invaders... seem so... simplistic in nature..."
+];
+
+var EMOTES_HUMAN = [
+  "Holy moly it's dark down here... or at least, it should be...",
+  "I think I've made a huge mistake...",
+  "I smell the stench of the undead... Out with thee!!",
+  "/me shivers, looks around nervously..."
 ];
 
 var npcs            = {};
@@ -123,8 +132,23 @@ Engine.prototype.tick = function () {
     // Every minute fire and reset
     tickCount = 0;
     
-    // If we have less npc's than players, spawn a new one:
-    if (npcKeys.length < playerKeys.length + 2) {
+    var toughness = 0;
+    
+    for (i = 0; i < playerKeys.length; i++) {
+      // Factor the players experience with an additional +1 for being alive
+      toughness += (players[playerKeys[i]].experience === undefined ? 0 : players[playerKeys[i]].experience) + 1;
+    }
+    
+    // For every 6 baddies you've killed, you can handle an additional spawn
+    toughness /= 6;
+    
+    // Even if we have no players, we need +1 for the necromancer and +1 for one spawn
+    toughness += 2;
+    
+    toughness = Math.round(toughness);
+    
+    // If we have less npcs than players' combined stength, spawn new ones:
+    while (npcKeys.length < toughness) {
       this.spawn();
     }
   }
@@ -167,6 +191,10 @@ Engine.prototype.tick = function () {
       if (distance < 300) {
         npc.attacking     = true;
         npc.target        = playerKeys[i];
+        
+        // Clear out any existing walkpaths
+        npc.steps         = [];
+        npc.step          = 0;
         
         player.attackers[npcKeys[j]] = npc;
         
@@ -286,35 +314,45 @@ Engine.prototype.tick = function () {
   
         var originalX = npc.position.x;
         var originalY = npc.position.y;
+        var originalDirection = npc.direction;
   
         // Vertical movement
         if (Math.abs(distance_y) > difference) {
-          if (npc.position.y < player.position.y) {
-            npc.position.y += difference;
-            npc.direction   = DIRECTION_S;
+          if (originalY < player.position.y) {
+            originalY         += difference;
+            originalDirection  = DIRECTION_S;
           } else {
-            npc.position.y -= difference; 
-            npc.direction   = DIRECTION_N;
+            originalY         -= difference; 
+            originalDirection  = DIRECTION_N;
           }
+        }
+        
+        // Test if the proposed vertical movement is valid:
+        col = Math.floor( originalX / TILE_WIDTH );
+        row = Math.floor( originalY / TILE_HEIGHT );
+        
+        if (this.walkable( map, row, col )) {
+          npc.position.y = originalY;
+          npc.direction  = originalDirection;
         }
         
         // Horizontal movement
         if (Math.abs(distance_x) > difference) {
-          if (npc.position.x < player.position.x) {
-            npc.position.x += difference;
-            npc.direction   = DIRECTION_E;
+          if (originalX < player.position.x) {
+            originalX         += difference;
+            originalDirection  = DIRECTION_E;
           } else {
-            npc.position.x -= difference; 
-            npc.direction   = DIRECTION_W;
+            originalX         -= difference; 
+            originalDirection  = DIRECTION_W;
           }
         }
         
-        col = Math.floor( npc.position.x / TILE_WIDTH );
-        row = Math.floor( npc.position.y / TILE_HEIGHT );
+        col = Math.floor( originalX / TILE_WIDTH );
+        row = Math.floor( originalY / TILE_HEIGHT );
         
-        if (!this.walkable( map, row, col )) {
-          npc.position.y = originalY;
+        if (this.walkable( map, row, col )) {
           npc.position.x = originalX;
+          npc.direction  = originalDirection;
         }
       }
       
@@ -341,12 +379,14 @@ Engine.prototype.tick = function () {
       npc.steps.length  = 0;
       npc.step      = 0;
       
-      // ~25% chance of resuming a walk
-      if (Math.random() < 0.26) {
+      // ~75% chance of starting a walk
+      if (Math.random() < 0.76) {
         
         var options     = [];
         var randomizer  = 0;
         var walkRandom  = 0;
+        
+        direction = npc.direction;
         
         // What row/col are we in?
         col = Math.floor( npc.position.x / TILE_WIDTH );
@@ -355,8 +395,8 @@ Engine.prototype.tick = function () {
         // NPC can move maximum five tiles away
         for (j = 0; j < 5; j++) {
           
-          randomizer    = Math.floor(Math.random() * 100);
-          options.length  = 0;
+          randomizer     = Math.floor(Math.random() * 100);
+          options.length = 0;
           
           // Add either our first or an additional tile step (having diminishing odds)
           if (randomizer > (16 + (12 * j))) {
@@ -365,7 +405,9 @@ Engine.prototype.tick = function () {
             if ((this.walkable( map, row - 1, col )) && ( direction !== DIRECTION_S )) {
               options.push(DIRECTION_N);
               if (direction == DIRECTION_N) {
-                // If the last time we moved it was this way, double the odds to keep going
+                // If the last time we moved it was this way, increase the odds to keep going
+                options.push(DIRECTION_N);
+                options.push(DIRECTION_N);
                 options.push(DIRECTION_N);
               }
             }
@@ -374,7 +416,9 @@ Engine.prototype.tick = function () {
             if ((this.walkable( map, row, col + 1 )) && ( direction !== DIRECTION_W )) {
               options.push(DIRECTION_E);
               if (direction == DIRECTION_E) {
-                // If the last time we moved it was this way, double the odds to keep going
+                // If the last time we moved it was this way, increase the odds to keep going
+                options.push(DIRECTION_E);
+                options.push(DIRECTION_E);
                 options.push(DIRECTION_E);
               }
             }
@@ -383,7 +427,9 @@ Engine.prototype.tick = function () {
             if ((this.walkable( map, row + 1, col )) && ( direction !== DIRECTION_N )) {
               options.push(DIRECTION_S);
               if (direction == DIRECTION_S) {
-                // If the last time we moved it was this way, double the odds to keep going
+                // If the last time we moved it was this way, increase the odds to keep going
+                options.push(DIRECTION_S);
+                options.push(DIRECTION_S);
                 options.push(DIRECTION_S);
               }
             }
@@ -392,7 +438,9 @@ Engine.prototype.tick = function () {
             if ((this.walkable( map, row, col - 1 )) && ( direction !== DIRECTION_E )) {
               options.push(DIRECTION_W);
               if (direction == DIRECTION_W) {
-                // If the last time we moved it was this way, double the odds to keep going
+                // If the last time we moved it was this way, increase the odds to keep going
+                options.push(DIRECTION_W);
+                options.push(DIRECTION_W);
                 options.push(DIRECTION_W);
               }
             }
@@ -474,25 +522,32 @@ Engine.prototype.tick = function () {
         direction: npc.direction
       };
     }
-  }
-  
-  // Special primary NPC action
-  npc = npcs[0];
-  npc.taunt--;
-  if (npc.taunt === 0) {
-    var taunt = TAUNTS[getRandomInt(0, TAUNTS.length - 1)];
     
-    this.emit('debug', 'NPC[0] is taunting: ' + taunt);
-    
-    if (broadcast.npcs[0]) {
-      broadcast.npcs[0].blurb = taunt;
-    } else {
-      broadcast.npcs[0] = {
-        blurb: taunt
-      };
+    npc.taunt--;
+    if (npc.taunt === 0) {
+      // ~25% chance of emoting every 10-30 seconds
+      if (Math.random() < 0.26) {
+        
+        // Kind of a goofy way of handling a special NPC
+        var emote_target = EMOTES_HUMAN;
+        if (npc.id === 0) {
+          emote_target = EMOTES_NECROMANCER;
+        }
+        
+        var emote = emote_target[getRandomInt(0, emote_target.length - 1)];
+      
+        this.emit('debug', 'NPC[' + npc.id + '] is emoting: ' + emote);
+        
+        if (broadcast.npcs[npc.id]) {
+          broadcast.npcs[npc.id].blurb = emote;
+        } else {
+          broadcast.npcs[npc.id] = {
+            blurb: emote
+          };
+        }
+      }
+      npc.taunt = 30 * getRandomInt(10, 30);
     }
-    
-    npc.taunt = 30 * getRandomInt(15, 30);
   }
     
 };
@@ -665,6 +720,7 @@ Engine.prototype.spawn = function() {
     counter:    0,    // Generic counter used for a variety of functions
     attacking:  false,
     cooldown:   0,
+    taunt:      30 * 10, // 30 ticks per second times 10 = 300 ticks or 10 second delay
     target:     -1,
     map:        0,    // Index of map in map array this npc is on
     position:   {
@@ -708,6 +764,21 @@ Engine.prototype.spawn = function() {
     },
     players: {}
   });
+  
+  // ~19% chance of emoting on spawn
+  if (Math.random() < 0.2) {
+    var emote = EMOTES_HUMAN[getRandomInt(0, EMOTES_HUMAN.length - 1)];
+  
+    this.emit('debug', 'NPC[' + npcSpawnCount + '] is emoting: ' + emote);
+    
+    if (broadcast.npcs[npcSpawnCount]) {
+      broadcast.npcs[npcSpawnCount].blurb = emote;
+    } else {
+      broadcast.npcs[npcSpawnCount] = {
+        blurb: emote
+      };
+    }
+  }
   
   npcSpawnCount++;
   

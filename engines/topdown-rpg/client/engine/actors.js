@@ -85,7 +85,7 @@ Actors.prototype.text = function (actors) {
 
 Actors.prototype.tick = function () {
     
-  //  tick() is the client side animation loop.
+  // tick() is the client side animation loop.
   // This function updates non-gameplay elements, e.g. text fading out, effects, etc 
   
   var keys = Object.keys(this.players);
@@ -120,7 +120,7 @@ var Player = function (data) {
   
   this.text             = new PIXI.extras.BitmapText('This is just a test', { font: '16px UO Classic (rough)', align: 'center' });
   this.text.position.x  = 0;
-  this.text.position.y  = -60;
+  this.text.position.y  = -64;
   this.text.alpha       = 0;
   
   this.nametag              = new PIXI.extras.BitmapText(data.name, { font: '16px UO Classic (rough)', align: 'center' });
@@ -277,7 +277,7 @@ Player.prototype.remove = function() {
 var NPC = function (npc, renderer) {
   
   // Public properties
-  this.sprite         = new PIXI.Container();
+  this.sprite           = new PIXI.Container();
   this.sprite.position  = npc.position;
   
   this.text  = new PIXI.extras.BitmapText('', {
@@ -286,7 +286,7 @@ var NPC = function (npc, renderer) {
   });
   
   this.text.position.x  = -1 * Math.round(this.text.textWidth / 2);
-  this.text.position.y  = -60;
+  this.text.position.y  = -64;
   this.text.alpha       = 1;
   this.direction        = DIRECTION_S;
   this.attacking        = false;
@@ -403,13 +403,22 @@ var NPC = function (npc, renderer) {
   process_layer("slash");
   process_layer("hurt");
   
+  // Rigid/corny way to implement a special NPC
+  // TODO: Add a tint property and check for it during processing, that
+  // way individual items can be tinted as well...
+  if (npc.id === 0) {
+    // Dark Necromancer blanket tint job
+    for (i = 0; i < 8; i++) {
+      // Tint all moving/fighting clips a shade of grey
+      self.sprite.children[i].tint = 0x282828;
+    }
+  }
+  
   self.sprite.children[self.direction].visible = true;
   self.sprite.children[self.direction].gotoAndStop(0);
   
   self.sprite.addChild(self.text);
   self.sprite.addChild(self.health_bar);
-  
-  self.emote(EMOTES_NPC_CREATED[getRandomInt(0, EMOTES_NPC_CREATED.length-1)]);
 };
 
 NPC.prototype.update = function(npc) {

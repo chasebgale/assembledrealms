@@ -1,16 +1,15 @@
 A massive **thank you** to everyone who has contributed directly or indirectly to this project! If you contributed to any entry below and  
 don't see your name listed or want an attribution updated, please contact me directly: [chase@assembledrealms.com](mailto:chase@assembledrealms.com) [@chasebgale](https://twitter.com/chasebgale)  
 
-Actor Sprites
---------
-http://opengameart.org/content/lpc-medieval-fantasy-character-sprites  
+## Actor Sprites  
+#### http://opengameart.org/content/lpc-medieval-fantasy-character-sprites  
 
 Johannes Sjölund  
+http://opengameart.org/users/wulax  
 j.sjolund@gmail.com  
 
-Terrain Sprites
---------
-http://opengameart.org/content/lpc-tile-atlas
+## Terrain Sprites  
+#### http://opengameart.org/content/lpc-tile-atlas  
 
 Lanea Zimmerman  
 http://opengameart.org/users/sharm  
@@ -27,14 +26,13 @@ johannc@poufpoufproduction.fr
 
 Skyler Robert Colladay   
 
-Font Sprites
---------
-Ultima Online Inspired Font
-zym@zymdragon.com 
+## Font Sprites  
 
-NodeJS Libraries
---------
-https://nodejs.org  
+Ultima Online Inspired Font  
+zym@zymdragon.com  
+
+## NodeJS Libraries  
+#### https://nodejs.org 
 
 socket.io  
 http://socket.io  
@@ -51,8 +49,8 @@ https://github.com/NodeRedis/node_redis
 moment  
 http://momentjs.com  
 
-Browser Libraries
---------
+## Browser Libraries  
+
 pixi.js - super fast HTML5 2D rendering  
 http://www.pixijs.com/  
 
@@ -72,10 +70,16 @@ https://jquery.com/
 lodash  
 https://lodash.com/  
 
-Redis
---------
-http://redis.io/
+## Infrastructure
 
-Fedora Linux
---------
+Redis  
+http://redis.io/  
+
+PostgreSQL  
+http://www.postgresql.org/  
+
+MariaDB
+https://mariadb.org/  
+
+Fedora Linux  
 https://getfedora.org/
