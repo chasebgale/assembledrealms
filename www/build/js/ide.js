@@ -754,7 +754,7 @@ function debug(force) {
   }
   
   $.ajax({
-    url: 'editor.php',
+    url: '/build/editor.php',
     type: 'post',
     dataType: 'json',
     data: {directive: 'debug', realm_id: __projectId}

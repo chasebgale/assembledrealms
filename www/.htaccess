@@ -1,34 +1,46 @@
 Options +FollowSymLinks -MultiViews
-# Turn mod_rewrite on
+
 RewriteEngine On
 RewriteBase /
 
-RewriteCond %{HTTP_HOST} ^assembledrealms.com$
-RewriteRule (.*) http://www.assembledrealms.com/$1 [R=301,L] 
+## Bail out if we are a POST
+RewriteCond %{REQUEST_METHOD} POST
+RewriteRule ^ - [L,NC]
 
-## don't touch a few specific URIs
+## RewriteCond %{HTTP_HOST} ^assembledrealms.com$
+## RewriteRule (.*) https://www.assembledrealms.com/$1 [R=301,L] 
+
+## Don't touch a few specific URIs
 RewriteRule ^js/ - [L,NC]
 RewriteRule ^jobs/ - [L,NC]
 
-## hide .php extension snippet
-
 # To externally redirect /play/realm.php?123 to /play/realm/123
-RewriteCond %{THE_REQUEST} ^GET\s([^.]+)\.php\?([^&\s]+) [NC]
-RewriteRule ^ %1/%2? [R,L]
+#RewriteCond %{QUERY_STRING} .
+#RewriteCond %{THE_REQUEST} ^\s([^.]+)\.php\?([^&\s]+) [NC]
+#RewriteRule ^ %1/%2? [R,L]
 
 # To internally forward /dir/foo/12 to /dir/foo.php?12
+#RewriteCond %{REQUEST_FILENAME} !-d
+#RewriteCond %{REQUEST_FILENAME}.php -f
+#RewriteRule ^(.+?)/([^/]+)/?$ $1.php?$2 [L,QSA]
+
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME}.php -f
-RewriteRule ^(.+?)/([^/]+)/?$ $1.php?$2 [L,QSA]
-
-# To externally redirect /dir/foo.php to /dir/foo
-RewriteCond %{THE_REQUEST} ^GET\s([^.]+)\.php\s [NC]
-RewriteRule ^ %1 [R,L]
+RewriteRule ^(.*)/([0-9]+) $1.php?$2 [L,QSA]
 
 # To internally forward /dir/foo to /dir/foo.php
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME}.php -f
 RewriteCond %{QUERY_STRING} ^$
 RewriteRule ^(.*?)/?$ $1.php [L]
+
+## hide .php extension snippet
+# To externally redirect /dir/foo.php to /dir/foo
+#RewriteCond %{REQUEST_FILENAME} !-d      # is not directory
+#RewriteCond %{REQUEST_FILENAME} -f       # is a real file
+#RewriteCond %{THE_REQUEST} ^\s([^.]+)\.php [NC]
+#RewriteRule ^ %1 [R,L,NC]
+
+
 
 ErrorDocument 404 /404

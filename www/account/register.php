@@ -172,100 +172,81 @@ if(!empty($_POST)) {
 }
 
 require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
-echo "<div class='container'>";
-
-$wrapper = '<div id="alertPanel" class="panel panel-warning" style="width: 75%; margin: 30px auto; display: none;">
-                <div class="panel-body">
-                    <h2 id="alertMessage" style="text-align: center; margin-top: 0;"><small>
-                        %message% Please take a moment to register or login.
-                    </small></h2>
-                </div>
-           </div>';
-	   
-$wrapper = str_replace("%target%", $_SERVER['QUERY_STRING'], $wrapper);
-
-switch (substr($_SERVER['QUERY_STRING'], 0, 1)) {
-    case '0':
-        echo str_replace("%message%", "You must be logged in to access our build tools.", $wrapper);
-        break;
-    case '1':
-        echo str_replace("%message%", "You must be logged in to enter a realm.", $wrapper);
-        break;
-    case '2':
-        echo str_replace("%message%", "You must be logged in to access your account information.", $wrapper);
-        break;
-}
 
 ?>
 
-<div class="well" style="margin: 40px auto;">
-  <h3 class="text-center" style="margin-top: 10px;"><strong>ASSEMBLEDREALMS IS IN BETA!</strong></h3>
-  <p class="text-justify"><strong>Please don't take things too seriously until the platform is stable. If you encounter a bug or if something is not working as you'd expect, please feel free to contact me directly: <a href="mailto:chase@assembledrealms.com">chase@assembledrealms.com</a> or <a href="https://twitter.com/chasebgale">@chasebgale</a>. Have fun!</strong></p>
-</div>
+<div class='container'>
 
-<div class="row">
-	<div class="col-md-5">
-		<form id="form-signin" role="form" action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
-      <h2 class="form-signin-heading">Please sign in...</h2>
-			<p style="color: #CCC;">
-        <i class="fa fa-arrow-up"></i>
-        <i class="fa fa-arrow-up"></i>
-        <i class="fa fa-arrow-down"></i>
-        <i class="fa fa-arrow-down"></i>
-        <i class="fa fa-arrow-left"></i>
-        <i class="fa fa-arrow-right"></i>
-        <i class="fa fa-arrow-left"></i>
-        <i class="fa fa-arrow-right"></i>
-        <span class="key-border">B</span>
-        <span class="key-border">A</span>
-        <span class="key-border">Start</span>
-      </p>
-      
-      <div class="input-group">
-        <span class="input-group-addon"><i class="fa fa-envelope-o fa-fw"></i></span>
-        <input name="email" id="loginEmail" type="email" class="form-control" placeholder="Email address" required="true" autofocus="">
-      </div>
-      <div class="input-group">
-        <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
-        <input name="password" id="loginPassword" type="password" class="form-control" placeholder="Password" required="true">
-      </div>
-			
-			<button id="loginSubmit" class="btn btn-lg btn-default btn-block" type="submit">Sign in</button>
-		</form>
-	</div>
-	
-	<div class="col-md-2">
-    <div class="tall_spacer"></div>
-	</div>
-	
-	<div class="col-md-5">
-		<form id="form-register" role="form">
-      <h2 class="form-signin-heading">Join the adventure!</h2>
-      <p style="color: #CCC;">We need a little information to get you going</p>
-		
-      <div class="input-group">
-        <span class="input-group-addon"><i class="fa fa-envelope-o fa-fw"></i></span>
-        <input name="email" id="registerEmail" type="email" class="form-control" placeholder="Email address" required="true" autofocus="">
-      </div>
+  <div class="well" style="margin: 40px auto;">
+    <h3 class="text-center" style="margin-top: 10px;"><strong>ASSEMBLEDREALMS IS IN BETA!</strong></h3>
+    <p class="text-justify"><strong>Please don't take things too seriously until the platform is stable. If you encounter a bug or if something is not working as you'd expect, please feel free to contact me directly: <a href="mailto:chase@assembledrealms.com">chase@assembledrealms.com</a> or <a href="https://twitter.com/chasebgale">@chasebgale</a>. Have fun!</strong></p>
+  </div>
+
+  <div class="row">
+    <div class="col-md-5">
+      <form id="form-signin" role="form" action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
+        <h2 class="form-signin-heading">Please sign in...</h2>
+        <p style="color: #CCC;">
+          <i class="fa fa-arrow-up"></i>
+          <i class="fa fa-arrow-up"></i>
+          <i class="fa fa-arrow-down"></i>
+          <i class="fa fa-arrow-down"></i>
+          <i class="fa fa-arrow-left"></i>
+          <i class="fa fa-arrow-right"></i>
+          <i class="fa fa-arrow-left"></i>
+          <i class="fa fa-arrow-right"></i>
+          <span class="key-border">B</span>
+          <span class="key-border">A</span>
+          <span class="key-border">Start</span>
+        </p>
+        
+        <div class="input-group">
+          <span class="input-group-addon"><i class="fa fa-envelope-o fa-fw"></i></span>
+          <input name="email" id="loginEmail" type="email" class="form-control" placeholder="Email address" required="true" autofocus="">
+        </div>
+        <div class="input-group">
+          <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
+          <input name="password" id="loginPassword" type="password" class="form-control" placeholder="Password" required="true">
+        </div>
+        
+        <button id="loginSubmit" class="btn btn-lg btn-default btn-block" type="submit">Sign in</button>
+        
+        <div class="alert alert-danger" role="alert" style="margin-top:20px; display: none;"></div>
+      </form>
+    </div>
     
-      <div class="input-group" style="margin-bottom: 0;">
-        <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
-        <input name="password" id="registerPassword" type="password" class="form-control" placeholder="Password" required="true">
-      </div>
-      <div class="input-group">
-        <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
-        <input name="passwordc" type="password" class="form-control" placeholder="Re-type Password" required="true">
-      </div>
+    <div class="col-md-2">
+      <div class="tall_spacer"></div>
+    </div>
+    
+    <div class="col-md-5">
+      <form id="form-register" role="form">
+        <h2 class="form-signin-heading">Join the adventure!</h2>
+        <p style="color: #CCC;">We need a little information to get you going</p>
       
-      <div class="input-group">
-        <span class="input-group-addon"><i class="fa fa-user fa-fw"></i></span>
-        <input name="displayname" id="registerDisplayname" type="text" class="form-control" placeholder="Display Name" required="true">
-      </div>
-		
-      <button id="registerSubmit" class="btn btn-lg btn-default btn-block" type="submit">Register!</button>
-		</form>
-	</div>
-</div>
+        <div class="input-group">
+          <span class="input-group-addon"><i class="fa fa-envelope-o fa-fw"></i></span>
+          <input name="email" id="registerEmail" type="email" class="form-control" placeholder="Email address" required="true" autofocus="">
+        </div>
+      
+        <div class="input-group" style="margin-bottom: 0;">
+          <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
+          <input name="password" id="registerPassword" type="password" class="form-control" placeholder="Password" required="true">
+        </div>
+        <div class="input-group">
+          <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
+          <input name="passwordc" type="password" class="form-control" placeholder="Re-type Password" required="true">
+        </div>
+        
+        <div class="input-group">
+          <span class="input-group-addon"><i class="fa fa-user fa-fw"></i></span>
+          <input name="displayname" id="registerDisplayname" type="text" class="form-control" placeholder="Display Name" required="true">
+        </div>
+      
+        <button id="registerSubmit" class="btn btn-lg btn-default btn-block" type="submit">Register!</button>
+      </form>
+    </div>
+  </div>
 
 </div>
 
@@ -278,7 +259,7 @@ switch (substr($_SERVER['QUERY_STRING'], 0, 1)) {
 	
     var post = 'directive=register&' + $("#form-register").serialize();
 
-    $.post("<?php echo $_SERVER['PHP_SELF']; ?>", post, function (data) {
+    $.post("register.php", post, function (data) {
       if (data == "OK") {
 
         switch (window.location.search.substr(1, 1)) {
@@ -307,11 +288,11 @@ switch (substr($_SERVER['QUERY_STRING'], 0, 1)) {
         $("#form-register .form-control-feedback").remove();
 
         // Add current error displays:
-        _.each(parsed, function (value, key) {
+        _.each(parsed, function (err, key) {
 
             input = $("#form-register input[name='" + key + "']");
             input.parent().addClass("has-error");
-            input.before('<div class="alert alert-danger">' + value + '</div>')
+            input.before('<div class="alert alert-danger">' + err + '</div>')
 
         });
       }
@@ -321,42 +302,50 @@ switch (substr($_SERVER['QUERY_STRING'], 0, 1)) {
   $("#loginSubmit").on("click", function (e) {
     e.preventDefault();
     
+    var invalid = false;
     var button  = $(this);
+    var icon    = '<i class="fa fa-thumbs-o-down fa-fw fa-flip-horizontal" style="font-size: 1.2em;"></i> ';
+    
     button.attr('disabled', 'disabled');
     button.html('<i class="fa fa-cog fa-spin"></i> Sign in');
     
-    if (button.next().hasClass('alert')) {
-      button.next().remove();
+    if (button.next().is(':visible')) {
+      button.next().hide();
+    }
+    
+    $("#form-signin input").each(function() { 
+      if ($(this).val() === "") {
+        invalid = true;
+        return false;
+      }      
+    });
+    
+    if (invalid) {
+      button.next().html(icon + 'All fields are required!');
+      button.next().fadeIn();
+      
+      button.removeAttr('disabled');
+      button.html('Sign in');
+      return;
     }
     
     var post    = 'directive=login&' + $("#form-signin").serialize();
 
-    $.post("<?php echo $_SERVER['PHP_SELF']; ?>", post, function (data) {
+    $.post("register.php", post, function (data) {
       if (data == "OK") {
-        <?php 
-            switch (substr($_SERVER['QUERY_STRING'], 0, 1)) {
-                case '0':
-                    echo 'window.location = "/build";';
-                    break;
-                case '1':
-                    echo 'window.location = "/play/realm.php?' . substr($_SERVER['QUERY_STRING'], 1) . '";';
-                    break;
-                case '2':
-                    echo 'window.location = "/account";';
-                    break;
-                default:
-                    echo 'window.location = "/account";';
-                    break;
-            }
-        ?>
+<?php 
+        if ($_SESSION["redirect"]) {
+          echo 'window.location = "' . $_SESSION["redirect"] . '";';
+        } else {
+          echo 'window.location = "/build";';
+        }
+?>
       } else {
+        button.next().html(icon + data);
+        button.next().fadeIn();
         
-        button.after('<div class="alert alert-danger" role="alert">' + data + '</div>');
         button.removeAttr('disabled');
         button.html('Sign in');
-        
-        // $("#alertPanel").removeClass("panel-warning").addClass("panel-danger");
-        // $("#alertMessage").html("<small>" + data + "</small>");
       }
     });
   });

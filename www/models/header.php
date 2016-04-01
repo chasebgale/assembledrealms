@@ -9,11 +9,9 @@
 
 <title>Assembled Realms - Build and Play Awesome MMOs in Your Browser!</title>
 
-<link rel='shortcut icon' href='/img/favicon.png')'>
+<link rel='shortcut icon' href='/img/favicon.png' />
 
-<link rel='stylesheet' href="/css/jquery.treeview.css" />
 <link rel='stylesheet' href='/css/root.css' />
-
 <link rel='stylesheet' href='//netdna.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.css' />
 <link rel='stylesheet' href='//netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css'>
 <link rel='stylesheet' href='/css/bootstrap-theme.css' />

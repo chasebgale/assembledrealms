@@ -24,8 +24,7 @@
           }
         });
         
-        setTimeout(function() { 
-          console.log('1 second later and...');
+        setTimeout(function() {
           if ($('#footer_ad').is(':hidden')) {
             $('#footer_msg').fadeIn().css("display","inline-block");
           }
