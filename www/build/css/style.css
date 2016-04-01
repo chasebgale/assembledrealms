@@ -1,6 +1,6 @@
 #newfileLocation {
-    height: 200px;
-    overflow-y: auto;
+  height: 200px;
+  overflow-y: auto;
 }
 
 div#commandBarStatus {
@@ -17,33 +17,34 @@ div#commandBarStatus {
 }
 
 div#tree {
-    overflow-y: scroll;
-    position: absolute;
-    top: 26px;
-    bottom: 0;
-    width: 200px;
-    margin: 0;
-    left: 10px;
+  overflow-y: scroll;
+  position: absolute;
+  top: 26px;
+  bottom: 0;
+  width: 200px;
+  margin: 0;
+  left: 10px;
+  color: #777
 }
 
 div#leftBar {
-    float: left;
-    margin-right: 10px;
-    width: 220px;
+  float: left;
+  margin-right: 10px;
+  width: 220px;
 }
 
 div#tabs {
-    position: absolute;
-    top: 26px;
-    left: 209px;
-    right: 0;
-    bottom: 0;
-    overflow-y: auto;
+  position: absolute;
+  top: 26px;
+  left: 209px;
+  right: 0;
+  bottom: 0;
+  overflow-y: auto;
 }
 
 div#editor {
-    height: 600px;
-    width: 100%;
+  height: 600px;
+  width: 100%;
 }
 
 div#map {
@@ -51,39 +52,39 @@ div#map {
 }
 
 div#markdown {
-    overflow: auto;
-    padding: 10px;
+  overflow: auto;
+  padding: 10px;
 }
 
 div#mapContainer canvas {
-    cursor: none !important;
+  cursor: none !important;
 }
 
 #mapToolbar .spacer {
-    display: inline-block;
-    width: 2px;
-    height: 32px;
-    background-color: #ccc;
-    border-left: 1px solid #EDEDED;
-    margin-left: 4px;
-    margin-right: 4px;
-    vertical-align: middle;
+  display: inline-block;
+  width: 2px;
+  height: 32px;
+  background-color: #ccc;
+  border-left: 1px solid #EDEDED;
+  margin-left: 4px;
+  margin-right: 4px;
+  vertical-align: middle;
 }
 
 #mapToolbar .btn-map-tool {
-    margin-left: 1px;
-    margin-right: 1px;
+  margin-left: 1px;
+  margin-right: 1px;
 }
 
 #mapToolbar .btn-map-tool:focus {
-    outline: none !important;
+  outline: none !important;
 }
 
 #tileModalButton {
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 5px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 5px !important;
 }
 
 .hover-identifier-border-top {
@@ -102,8 +103,95 @@ div#mapContainer canvas {
   background: url(/build/img/border-anim-v.gif) repeat-y right top;
 }
 
+#treeActionsDropDownButton:hover {
+  color: #black;
+}
+
+#treeActionsDropDownButton:active {
+  color: #black;
+}
+
 /*
 #mapTabs li.active a {
     background-color: #E0E0E0 !important;
 }
 */
+
+/* MERGED TREE VIEW STYLES */
+.treeview, .treeview ul {
+	padding: 0;
+	margin: 0;
+	list-style: none;
+}
+
+.treeview ul {
+	background-color: white;
+	margin-top: 4px;
+}
+
+.treeview .hitarea {
+	background: url(../img/treeview-default.gif) -64px -25px no-repeat;
+	height: 16px;
+	width: 16px;
+	margin-left: -16px;
+	float: left;
+	cursor: pointer;
+}
+/* fix for IE6 */
+* html .hitarea {
+	display: inline;
+	float:none;
+}
+
+.treeview li {
+	margin: 0;
+	padding: 3px 0pt 3px 16px;
+}
+
+.treeview a.selected {
+	background-color: #eee;
+}
+
+#treecontrol { margin: 1em 0; display: none; }
+
+.treeview .hover { color: black; cursor: pointer; }
+
+.treeview li { background: url(../img/treeview-default-line.gif) 0 0 no-repeat; }
+.treeview li.collapsable, .treeview li.expandable { background-position: 0 -176px; }
+
+.treeview .expandable-hitarea { background-position: -80px -3px; }
+
+.treeview li.last { background-position: 0 -1766px }
+.treeview li.lastCollapsable, .treeview li.lastExpandable { background-image: url(../img/treeview-default.gif); }
+.treeview li.lastCollapsable { background-position: 0 -111px }
+.treeview li.lastExpandable { background-position: -32px -67px }
+
+.treeview div.lastCollapsable-hitarea, .treeview div.lastExpandable-hitarea { background-position: 0; }
+
+.treeview-red li { background-image: url(../img/treeview-red-line.gif); }
+.treeview-red .hitarea, .treeview-red li.lastCollapsable, .treeview-red li.lastExpandable { background-image: url(../img/treeview-red.gif); }
+
+.treeview-black li { background-image: url(img/treeview-black-line.gif); }
+.treeview-black .hitarea, .treeview-black li.lastCollapsable, .treeview-black li.lastExpandable { background-image: url(../img/treeview-black.gif); }
+
+.treeview-gray li { background-image: url(../img/treeview-gray-line.gif); }
+.treeview-gray .hitarea, .treeview-gray li.lastCollapsable, .treeview-gray li.lastExpandable { background-image: url(../img/treeview-gray.gif); }
+
+.treeview-famfamfam li { background-image: url(../img/treeview-famfamfam-line.gif); }
+.treeview-famfamfam .hitarea, .treeview-famfamfam li.lastCollapsable, .treeview-famfamfam li.lastExpandable { background-image: url(../img/treeview-famfamfam.gif); }
+
+.treeview .placeholder {
+	background: url(../img/ajax-loader.gif) 0 0 no-repeat;
+	height: 16px;
+	width: 16px;
+	display: block;
+}
+
+.filetree li { padding: 3px 0 2px 16px; }
+.filetree span.folder, .filetree span.file { padding: 1px 0 1px 16px; display: block; }
+.filetree span.folder { background: url(../img/folder.gif) 0 0 no-repeat; }
+.filetree li.expandable span.folder { background: url(../img/folder-closed.gif) 0 0 no-repeat; }
+.filetree span.file { background: url(../img/file.gif) 0 0 no-repeat; }
+.filetree span.file:hover { color: black; cursor: pointer; }
+
+.activefile { font-weight: bold; }

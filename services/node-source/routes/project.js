@@ -9,7 +9,7 @@ var dir 		    = require('node-dir');
 var rimraf 		  = require('rimraf');
 var ssh2 		    = require("ssh2");
 var lz4         = require('lz4');
-var busboy      = require('connect-busboy');
+var Busboy      = require('busboy');
 var archiver 	  = require('archiver');
 var compressor  = require('node-minify');
 
@@ -204,7 +204,9 @@ exports.save = function(req, res, next) {
   var index;
   var oid;
   
-  req.busboy.on('file', function (fieldname, file, filename, encoding, mimetype) {
+  var busboy = new Busboy({ headers: req.headers });
+  
+  busboy.on('file', function (fieldname, file, filename, encoding, mimetype) {
     console.log('File [' + fieldname + ']: filename: ' + filename + ', encoding: ' + encoding + ', mimetype: ' + mimetype);
     
     if (mimetype == 'text/plain') {
@@ -232,7 +234,7 @@ exports.save = function(req, res, next) {
     }
   });
   
-  req.busboy.on('field', function(fieldname, val, fieldnameTruncated, valTruncated) {
+  busboy.on('field', function(fieldname, val, fieldnameTruncated, valTruncated) {
     console.log('Field [' + fieldname + ']: value: ' + val);
       
     if (fieldname == 'message') {
@@ -244,7 +246,7 @@ exports.save = function(req, res, next) {
     
   });
   
-  req.busboy.on('finish', function() {
+  busboy.on('finish', function() {
     console.log('Done parsing form, now committing...');
     
     git.Repository.open(__dirname + '/../projects/' + req.params.id)
@@ -292,7 +294,7 @@ exports.save = function(req, res, next) {
     });
   });
   
-  req.pipe(req.busboy);
+  req.pipe(busboy);
 }
 
 exports.destroy = function(req, res, next){

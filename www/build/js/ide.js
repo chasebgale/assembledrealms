@@ -93,6 +93,8 @@ function initialize(projectID, projectDomain) {
 
     $("#explorer .file").removeClass('activefile');
     root.addClass('activefile');
+    
+    $("#treeLoadingFileIndicator").prependTo(root.parent());
 
     var id      = root.attr('data-id');
     var path    = root.attr('data-path');
@@ -133,7 +135,7 @@ function initialize(projectID, projectDomain) {
       
       __treeDropDownTarget = $(this);
       
-      __treeDropDownButton.appendTo(__treeDropDownTarget);
+      __treeDropDownButton.prependTo(__treeDropDownTarget);
       __treeDropDownButton.show();
       
       var offset = __treeDropDownButton.offset();
@@ -603,7 +605,8 @@ function removeFromExplorer(sha) {
   var removeTarget = $("#tree").find('[data-id="' + sha + '"]');
   
   if (removeTarget) {
-    var parentUL = removeTarget.closest('ul');
+   
+   var parentUL = removeTarget.closest('ul');
     removeTarget.parent().remove();
     
     // If we only have one item left, fix the hierchy display lines
@@ -612,7 +615,6 @@ function removeFromExplorer(sha) {
     }
     
   }
-  
 }
 
 function addToExplorer(path, name, sha) {
@@ -844,61 +846,62 @@ function commitRequired() {
 
 function commit() {
     
-    __checkInMsg = $('#commitMessage').val();
+  __checkInMsg = $('#commitMessage').val();
     
-    if (__processingFiles.length === 0) {
-        //$('#commitProgressbar').removeClass('active');
-        $('#commitStart').removeAttr('disabled');
-        $("#commitProgressMessage").text('No commit, realm branch is up to date.');
-    } else {
-        $("#commitProgressMessage").text('Uploading source files to git.');
+  if (__processingFiles.length === 0) {
+    //$('#commitProgressbar').removeClass('active');
+    $('#commitStart').removeAttr('disabled');
+    $("#commitProgressMessage").text('No commit, realm branch is up to date.');
+  } else {
+    $("#commitProgressMessage").text('Uploading source files to git.');
         
-        var formData = new FormData();
+    var formData = new FormData();
         
-        _.each(__commitFiles, function (file) {
+    _.each(__commitFiles, function (file) {
 			if (file.resource) {
 				formData.append("resource", file.name);
 			} else {
 				formData.append(file.path, new Blob([file.content], {type: 'text/plain'}));
 			}
-        });
+    });
         
-        formData.append("message", __checkInMsg);
-        
-        $.ajax({
-            url: __projectURL + '/save',
-            type: "POST",
-            data: formData,
-            processData: false,  // tell jQuery not to process the data
-            contentType: false,   // tell jQuery not to set contentType
-            success: function (response) {
-                
-                _.each(__commitFiles, function (file) {
-                    // Update sessionStorage with new MD5
-					if (!file.resource) {
-						sessionStorage[file.sha + '-commit-md5'] = md5(sessionStorage[file.sha]);
-					}
-                });
-                
-                // Update DOM to reflect we completed ok:
-                //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-up"></i> Success!');
+    formData.append("message", __checkInMsg);
     
-                //$('#commitProgressbar').removeClass('active');
-                $('#commitStart').removeAttr('disabled');
-                $('#commitStart').html('Commit');
-                $("#commitProgressMessage").text('');
-                
-                __commitOnDebug = false;
-                
-                $('#modalCommit').modal('hide');
-            },
-            error: function (response) {
-                
-                // Update DOM to reflect we messed up:
-                $('#commitProgressMessage').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseText);
-                
-            }
+    $.ajax({
+      url: __projectURL + '/save',
+      type: "POST",
+      data: formData,
+      processData: false,  // tell jQuery not to process the data
+      contentType: false,   // tell jQuery not to set contentType
+      success: function (response) {
+            
+        _.each(__commitFiles, function (file) {
+                // Update sessionStorage with new MD5
+          if (!file.resource) {
+            sessionStorage[file.sha + '-commit-md5'] = md5(sessionStorage[file.sha]);
+          }
         });
+            
+        // Update DOM to reflect we completed ok:
+        //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-up"></i> Success!');
+
+        //$('#commitProgressbar').removeClass('active');
+        $('#commitStart').removeAttr('disabled');
+        $('#commitStart').html('Commit');
+        $("#commitProgressMessage").text('');
+        
+        __commitOnDebug = false;
+        
+        $('#modalCommit').modal('hide');
+      },
+      error: function (response) {
+          
+        // Update DOM to reflect we messed up:
+        $('#commitProgressMessage').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseText);
+        $('#commitStart').removeAttr('disabled');
+          
+      }
+    });
         
         
         
@@ -964,6 +967,10 @@ function loadRealmRoot() {
       animated: "fast"
     });
     
+    $("#tree").scroll(function() {
+      __treeDropDownButton.css('right', ($(this).scrollLeft() * -1) + 'px');
+    });
+    
     /*
     $("#explorer .folder").popover({
       container:  'body',
@@ -1024,53 +1031,64 @@ function loadRealmRoot() {
 
 function loadRealmFile(id, path, name, rendered) {
 
-    var tracking_id = __projectId + '-' + path;
+  var tracking_id = __projectId + '-' + path;
 
-    // Resource already loaded? If so, skip straight to displaying it
-    if (sessionStorage[tracking_id + '-name']) {
-        loadEditor(tracking_id, sessionStorage[tracking_id], rendered);
-        __fileId = tracking_id;
-        return;
-    } 
+  // Resource already loaded? If so, skip straight to displaying it
+  if (sessionStorage[tracking_id + '-name']) {
+    loadEditor(tracking_id, sessionStorage[tracking_id], rendered);
+    __fileId = tracking_id;
+    return;
+  } 
+  
+  $("#treeLoadingFileIndicator").show();
 
-    // Binary formats (like images and audio) only have 'viewers' right now, no editors
-    if (isImageFile(name)) {
-                
-        $('#image').children('img').each(function(i) { 
-            $(this).hide();
-        });
-        
-        $("#image").append("<img src='" + __projectURL + '/file/raw/' + encodeURIComponent(path) + "' id='" + id + "' style='background-image: url(/build/img/transparent_display.gif);' />");
-        
-        displayImage();
-        return;
-    }
-    
-    // If we're this far, we need to load up some ascii
-    $.ajax({
-        url: __projectURL + '/file/raw/' + encodeURIComponent(path),
-        type: 'get',
-        dataType: 'text'
-    })
-    .done(function (data) {
-        
-        sessionStorage[tracking_id] = data;
-        sessionStorage[tracking_id + '-name'] = name;
-        sessionStorage[tracking_id + '-path'] = path;
-        sessionStorage[tracking_id + '-commit-md5'] = md5(data);
-
-        __trackedFiles.push(tracking_id);
-        sessionStorage[__trackedStorageId] = JSON.stringify(__trackedFiles);
-
-        loadEditor(tracking_id, data, rendered); // (name,
-        __fileId = tracking_id;
-        
-    })
-    .fail(function(data, param1, param2) {
-        console.log(data);
-            // Update DOM to reflect we messed up:
-            //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
+  // Binary formats (like images and audio) only have 'viewers' right now, no editors
+  if (isImageFile(name)) {
+    /*     
+    $('#image').children('img').each(function(i) { 
+        $(this).hide();
     });
+    
+    $("#image").html("<img src='" + __projectURL + '/file/raw/' + encodeURIComponent(path) + "' id='" + id + "' style='background-image: url(/build/img/transparent_display.gif);' />");
+    */
+    
+    var imageSource = __projectURL + '/file/raw/' + encodeURIComponent(path);
+    var image = $("<img src='" + imageSource + "' id='" + id + "' style='background-image: url(/build/img/transparent_display.gif);' />").on('load', function() {
+      $("#image").empty();
+      $("#image").append(image);
+      displayImage();
+      $("#treeLoadingFileIndicator").fadeOut();
+    });
+    return;
+  }
+  
+  // If we're this far, we need to load up some ascii
+  
+  $.ajax({
+    url: __projectURL + '/file/raw/' + encodeURIComponent(path),
+    type: 'get',
+    dataType: 'text'
+  })
+  .done(function (data) {
+      
+    sessionStorage[tracking_id] = data;
+    sessionStorage[tracking_id + '-name'] = name;
+    sessionStorage[tracking_id + '-path'] = path;
+    sessionStorage[tracking_id + '-commit-md5'] = md5(data);
+
+    __trackedFiles.push(tracking_id);
+    sessionStorage[__trackedStorageId] = JSON.stringify(__trackedFiles);
+
+    loadEditor(tracking_id, data, rendered); // (name,
+    __fileId = tracking_id;
+    $("#treeLoadingFileIndicator").fadeOut();
+      
+  })
+  .fail(function(data, param1, param2) {
+    console.log(data);
+    // Update DOM to reflect we messed up:
+    //$('#' + id + ' span:last').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseJSON.message);
+  });
         
 }
 

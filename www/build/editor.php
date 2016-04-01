@@ -143,7 +143,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
   <title>Assembled Realms IDE</title>
 
-  <link rel='shortcut icon' href='/img/favicon.png')'>
+  <link rel='shortcut icon' href='/img/favicon.png' />
 
   <link rel='stylesheet' href='/css/root.css' />
   <link rel='stylesheet' href='/build/css/style.css' />
@@ -151,8 +151,6 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
   <link rel='stylesheet' href='//netdna.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.css' />
   <link rel='stylesheet' href='//netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css'>
   <link rel='stylesheet' href='/css/bootstrap-theme.css' />
-  
-  <link rel='stylesheet' href="/css/jquery.treeview.css" />
 
   <script src='/models/funcs.js' type='text/javascript'></script>
   <script src='/js/lodash.min.js'></script>
@@ -179,6 +177,10 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
       </div>
     </div>
     <p style="text-align: center;">Your realm is loading, please wait...</p>
+  </div>
+  
+  <div id="treeLoadingFileIndicator" style="background-color: white; margin: 0; padding: 0; position: absolute; display: none;">
+  	<i class="fa fa-spinner fa-spin"></i>
   </div>
   
   <div id="treeActionsDropDown" class="dropdown" style="display: none; position: absolute; z-index: 999;">
@@ -219,11 +221,13 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     
     <div id="commandBar">
       <div id="commandBarButtons">
+        <!--
         <button type="button" id="btnNewFile" class="btn btn-default btn-xs"><i class="fa fa-file-text-o fa-fw"></i> New File</button>
         <button type="button" id="btnNewFolder" class="btn btn-default btn-xs"><i class="fa fa-folder-o fa-fw"></i> New Folder</button>
         <button type="button" id="btnUploadResource" class="btn btn-default btn-xs"><i class="fa fa-upload fa-fw"></i> Upload File</button>
         
         <div class="spacer"></div>
+        -->
         
         <button type="button" id="btnHistory" class="btn btn-default btn-xs"><i class="fa fa-history fa-fw"></i> History</button>
         <button type="button" id="btnCommit" class="btn btn-default btn-xs"><i class="fa fa-cloud-upload fa-fw"></i> Commit</button>
@@ -245,6 +249,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
         </div>
         
         <div id="editorOptions" style="display: none;">
+          <div class="spacer"></div>
           <div class="btn-group">
             <button type="button" id="btnEditorFontSize" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               12px <span class="caret"></span>
@@ -306,7 +311,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     </div>
     
     <div id="tree" class="clearfix noselect">
-      <a id="treeActionsDropDownButton" class="pull-right" role="button" style="display: none;"><i class="fa fa-ellipsis-v fa-fw"></i></a>
+      <a id="treeActionsDropDownButton" class="pull-right" role="button" style="display: none; position: absolute; right: 0; background-color: white;"><i class="fa fa-ellipsis-v fa-fw"></i></a>
       <ul id="explorer" class="filetree treeview"></ul>
     </div>
     
