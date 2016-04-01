@@ -249,9 +249,11 @@ function initialize(projectID, projectDomain) {
   $('#btnDelete').on("click", function (e) {
     e.preventDefault();
     
-    var target  = $(this).attr('data-target');
-    var type    = $(this).attr('data-type');
     var button  = $(this);
+    var target  = button.attr('data-target');
+    var type    = button.attr('data-type');
+    var sha     = button.attr('data-id');
+    
       
     button.attr('disabled', true);
     button.html('<i class="fa fa-cog fa-spin"></i> Delete');
@@ -272,14 +274,16 @@ function initialize(projectID, projectDomain) {
       console.log(data);
       if (data.message === "OK") {
         
-        // TODO:  Remove file/folder from #explorer TREE
-        //        Remove file from tracking via sha (data-id on file tree entry)
-        
         if (type === "file") {
-          var sha         = $(this).attr('data-id');
           var tracking_id = __projectId + '-' + sha;
-          
           sessionStorage.removeItem(tracking_id);
+          
+          // Move the indicator off this DOM ele as it's about to have it's parent trashed
+          $("#treeLoadingFileIndicator").appendTo($('body'));
+          $("#tree [data-id='" + sha + "']").parent().remove();
+          // TODO: LOAD Welcome.md INTO EDITOR IF VIEWING FILE WE ARE DELETING
+        } else {
+           // TODO: REMOVE FOLDER
         }
         
         
