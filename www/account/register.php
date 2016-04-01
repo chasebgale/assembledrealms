@@ -206,50 +206,63 @@ switch (substr($_SERVER['QUERY_STRING'], 0, 1)) {
 <div class="row">
 	<div class="col-md-5">
 		<form id="form-signin" role="form" action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
-		    <h2 class="form-signin-heading">Please sign in...</h2>
-			<p>&nbsp;</p>
-			
-			<div class="form-group">
-			<label for="loginEmail">Email address</label>
-		    <input name="email" id="loginEmail" type="email" class="form-control" placeholder="contact@domain.com" required="true" autofocus="">
-		    </div>
-			
-			<div class="form-group">
-			<label for="loginPassword">Password</label>
-			<input name="password" id="loginPassword" type="password" class="form-control" placeholder="Password" required="true">
-		    </div>
+      <h2 class="form-signin-heading">Please sign in...</h2>
+			<p style="color: #CCC;">
+        <i class="fa fa-arrow-up"></i>
+        <i class="fa fa-arrow-up"></i>
+        <i class="fa fa-arrow-down"></i>
+        <i class="fa fa-arrow-down"></i>
+        <i class="fa fa-arrow-left"></i>
+        <i class="fa fa-arrow-right"></i>
+        <i class="fa fa-arrow-left"></i>
+        <i class="fa fa-arrow-right"></i>
+        <span class="key-border">B</span>
+        <span class="key-border">A</span>
+        <span class="key-border">Start</span>
+      </p>
+      
+      <div class="input-group">
+        <span class="input-group-addon"><i class="fa fa-envelope-o fa-fw"></i></span>
+        <input name="email" id="loginEmail" type="email" class="form-control" placeholder="Email address" required="true" autofocus="">
+      </div>
+      <div class="input-group">
+        <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
+        <input name="password" id="loginPassword" type="password" class="form-control" placeholder="Password" required="true">
+      </div>
 			
 			<button id="loginSubmit" class="btn btn-lg btn-default btn-block" type="submit">Sign in</button>
 		</form>
 	</div>
 	
 	<div class="col-md-2">
-        <div class="tall_spacer"></div>
-		<!--<h1 style="margin: 50px 0; text-align: center; font-weight: bold;" class="text-muted">or</h1>-->
+    <div class="tall_spacer"></div>
 	</div>
 	
 	<div class="col-md-5">
 		<form id="form-register" role="form">
-		    <h2 class="form-signin-heading">Join the adventure!</h2>
-		    <p>We need a little information to get you going:</p>
+      <h2 class="form-signin-heading">Join the adventure!</h2>
+      <p style="color: #CCC;">We need a little information to get you going</p>
 		
-		    <div class="form-group">
-			<label for="registerEmail">Email address</label>
-			<input name="email" id="registerEmail" type="email" class="form-control" placeholder="user@domain.com" required="true" autofocus="">
-		    </div>
+      <div class="input-group">
+        <span class="input-group-addon"><i class="fa fa-envelope-o fa-fw"></i></span>
+        <input name="email" id="registerEmail" type="email" class="form-control" placeholder="Email address" required="true" autofocus="">
+      </div>
+    
+      <div class="input-group" style="margin-bottom: 0;">
+        <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
+        <input name="password" id="registerPassword" type="password" class="form-control" placeholder="Password" required="true">
+      </div>
+      <div class="input-group">
+        <span class="input-group-addon"><i class="fa fa-key fa-fw"></i></span>
+        <input name="passwordc" type="password" class="form-control" placeholder="Re-type Password" required="true">
+      </div>
+      
+      <div class="input-group">
+        <span class="input-group-addon"><i class="fa fa-user fa-fw"></i></span>
+        <input name="displayname" id="registerDisplayname" type="text" class="form-control" placeholder="Display Name" required="true">
+      </div>
 		
-		    <div class="form-group">
-			<label for="registerPassword">Password</label>
-			<input name="password" id="registerPassword" type="password" class="form-control" placeholder="Password" required="true">
-			<input name="passwordc" type="password" class="form-control" placeholder="Re-type Password" required="true">
-		    </div>
-		    
-		    <div class="form-group">
-			<label for="registerDisplayname">Display name (How other users will see you)</label>
-			<input name="displayname" id="registerDisplayname" type="text" class="form-control" placeholder="Display Name" required="true">
-		    </div>
-		    
-		    <button id="registerSubmit" class="btn btn-lg btn-default btn-block" type="submit">Register!</button>
+      <button id="registerSubmit" class="btn btn-lg btn-default btn-block" type="submit">Register!</button>
 		</form>
 	</div>
 </div>

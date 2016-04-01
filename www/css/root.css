@@ -61,6 +61,17 @@ div#play-now {
 
 #form-signin {
     margin: 0 auto;
+    max-width: 360px;
+}
+
+.key-border {
+  border: 1px solid #CCC;
+  padding: 0 3px;
+  border-radius: 8px;
+}
+
+#form-signin .input-group {
+  margin-bottom: 10px;
 }
 
 #savebar {
@@ -69,6 +80,11 @@ div#play-now {
 
 #form-register {
     margin: 0 auto;
+    max-width: 360px;
+}
+
+#form-register .input-group {
+  margin-bottom: 10px;
 }
 
 div#tabsContainer {
