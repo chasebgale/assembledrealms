@@ -53,7 +53,7 @@ $(document).ready(function () {
     $("#modalTakeRealmOffline").modal('hide');
     
     $.ajax({
-      url: 'manager.php',
+      url: '/build/manager.php',
       type: 'post',
       dataType: 'json',
       data: {
@@ -106,7 +106,7 @@ $(document).ready(function () {
     $("#modalTakeRealmOnline").modal('hide');
     
     $.ajax({
-      url: 'manager.php',
+      url: '/build/manager.php',
       type: 'post',
       dataType: 'json',
       data: {
@@ -161,7 +161,7 @@ $(document).ready(function () {
     button.html('<i class="fa fa-cog fa-spin"></i> Publishing...');
     
     $.ajax({
-      url: 'manager.php',
+      url: '/build/manager.php',
       type: 'post',
       dataType: 'json',
       data: {
@@ -206,7 +206,7 @@ $(document).ready(function () {
     button.html('<i class="fa fa-cog fa-spin"></i> Save Changes!');
 
     $.ajax({
-      url: 'manager.php',
+      url: '/build/manager.php',
       type: 'post',
       dataType: 'json',
       data: {
@@ -238,7 +238,7 @@ $(document).ready(function () {
     $("#screenshotsCol .removeScreenshot").attr('disabled', true);
     
     $.ajax({
-      url: 'manager.php',
+      url: '/build/manager.php',
       type: 'post',
       dataType: 'json',
       data: {
@@ -350,7 +350,7 @@ $(document).ready(function () {
     var depositAmount = (parseFloat($("#depositAmountSlider").val()) * 100);
     
     $.ajax({
-      url: 'manager.php',
+      url: '/build/manager.php',
       type: 'post',
       dataType: 'json',
       data: {

@@ -23,7 +23,7 @@
         <li><a href="../../help" class="header-link"><i class='fa fa-life-ring'></i> Help</a></li>
 <?php if (isUserLoggedIn()) { ?>
         <li>
-          <a href='/account/logout/now' class='header-link'>
+          <a href='/account/logout' class='header-link'>
             <i class='fa fa-sign-out'></i> Logout
           </a>
         </li>

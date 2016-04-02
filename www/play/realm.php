@@ -3,15 +3,10 @@
 require_once($_SERVER['DOCUMENT_ROOT'] . "models/config.php");
 if (!securePage($_SERVER['PHP_SELF'])){die();}
 
-if(!isUserLoggedIn()) {
-    
-    if (is_numeric($_SERVER['QUERY_STRING'])) {
-        $realmID = $_SERVER['QUERY_STRING'];
-    } else {
-        $realmID = '';
-    }
-    header("Location: /account/register.php?1" . $realmID);
-    die();
+if(!isUserLoggedIn()) { 
+  $_SESSION["redirect"] = $_SERVER['REQUEST_URI'];
+  header("Location: /account/register");
+  die();
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -155,7 +150,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
       
       <div class="col-md-6">
         <div class="media pull-right">
-          <a class="pull-right" href="#">
+          <a class="pull-right" href="/user/id/<?=$realm['user_id']?>">
           <?php if ($creator['has_image'] == 1) { ?>
             <img width="50" height="50" class="media-object" src="/img/profiles/<?=$realm['user_id'] . ".jpg?" . time() ?>" />
           <?php } else { ?>
@@ -164,7 +159,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
           </a>
           <div class="media-body">
             <h4 class="media-heading text-right" style="line-height: 1.25em;">
-              <small>created by</small> <span><?=$realm['display_name']?><br></span>
+              <small>created by</small> <a href="/user/id/<?=$realm['user_id']?>"><?=$realm['display_name']?><br></a>
               <span style="display: none;">
                 <small>published on <span id="publish-date"><?=$publish?></span></small>
               </span>
@@ -278,13 +273,13 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
       
     <% if (!comment.parent_id) { %>
     <li class="media">
-      <a class="pull-left" href="/user/?<%-comment.user_id%>">
+      <a class="pull-left" href="/user/id/<%-comment.user_id%>">
         <img width="50" height="50" class="media-object" src="/img/profiles/<%- comment.user_id + ".jpg" %>">
       </a>
       <div class="media-body" data-id="<%- comment.id %>">
         <h4 class="media-heading">
           <small><i>
-          <%= '<a href="/user/?' + comment.user_id + '">' + comment.display_name + '</a> commented ' + moment(comment.timestamp + '+00:00').fromNow() %>
+          <%= '<a href="/user/id/' + comment.user_id + '">' + comment.display_name + '</a> commented ' + moment(comment.timestamp + '+00:00').fromNow() %>
           <button class="btn btn-default btn-xs reply"><i class="fa fa-reply"></i></button>
           </i></small>
         </h4>
@@ -300,13 +295,13 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 <script id="comment_reply_template" type="text/template">
     
   <div class="media">
-    <a class="pull-left" href="/user/?<%-comment.user_id%>">
+    <a class="pull-left" href="/user/id/<%-comment.user_id%>">
       <img width="50" height="50" class="media-object" src="/img/profiles/<%- comment.user_id + ".jpg" %>">
     </a>
     <div class="media-body" data-id="<%- comment.id %>">
       <h4 class="media-heading">
         <small><i>
-        <%= '<a href="/user/?' + comment.user_id + '">' + comment.display_name + '</a> commented ' + moment(comment.timestamp + '+00:00').fromNow() %>
+        <%= '<a href="/user/id/' + comment.user_id + '">' + comment.display_name + '</a> commented ' + moment(comment.timestamp + '+00:00').fromNow() %>
         <button class="btn btn-default btn-xs reply"><i class="fa fa-reply"></i></button>
         </i></small>
       </h4>
@@ -369,7 +364,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     
     async.parallel([
       function(callback){
-        $.post(window.location, { directive: "comment", realmID: REALM_ID })
+        $.post("/play/realm.php", { directive: "comment", realmID: REALM_ID })
           .done(function( data ) {
             if (data !== "null") {
               data = JSON.parse( data );
@@ -414,7 +409,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
       self.html('<i class="fa fa-spinner fa-spin fa-fw"></i> Loving...');
       self.attr('disabled', true);
      
-      $.post(window.location, {realmID: <?=$realmID?>, directive: 'love'}, function(data) {
+      $.post("/play/realm.php", {realmID: <?=$realmID?>, directive: 'love'}, function(data) {
         // Love
         if (parseInt(data) > 1) {
           self.html('<i class="fa fa-fw fa-heart" style="color: pink;"></i> ' + data + '  Loves');
@@ -444,8 +439,13 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
       engine.watch(false);
     });
     
-    $("#realm").on("click", function () {    
+    $("#realm").on("click", function (e) {
+      $(":focus").blur();
       engine.watch(true);
+      
+      $("html, body").animate({
+        scrollTop: ($("#realm-container").offset().top - 34)
+      }, 750);
     });
     
     $('#btnComment').on('click', function (e) {

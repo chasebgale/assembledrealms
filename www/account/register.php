@@ -222,7 +222,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
     <div class="col-md-5">
       <form id="form-register" role="form">
         <h2 class="form-signin-heading">Join the adventure!</h2>
-        <p style="color: #CCC;">We need a little information to get you going</p>
+        <p style="color: #CCC;">Your information is <strong>never</strong> shared or sold</p>
       
         <div class="input-group">
           <span class="input-group-addon"><i class="fa fa-envelope-o fa-fw"></i></span>
@@ -244,6 +244,8 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
         </div>
       
         <button id="registerSubmit" class="btn btn-lg btn-default btn-block" type="submit">Register!</button>
+        
+        <div class="alert alert-danger" role="alert" style="margin-top:20px; display: none;"></div>
       </form>
     </div>
   </div>
@@ -256,29 +258,46 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 
   $("#registerSubmit").on("click", function (e) {
     e.preventDefault();
-	
-    var post = 'directive=register&' + $("#form-register").serialize();
+    var invalid = false;
+    var button  = $(this);
+    var icon    = '<i class="fa fa-thumbs-o-down fa-fw fa-flip-horizontal" style="font-size: 1.2em;"></i> ';
+    
+    button.attr('disabled', 'disabled');
+    button.html('<i class="fa fa-cog fa-spin"></i> Register!');
+    
+    if (button.next().is(':visible')) {
+      button.next().hide();
+    }
+    
+    $("#form-register input").each(function() { 
+      $(this).parent().removeClass("has-error");
+      if ($(this).val() === "") {
+        invalid = true;
+        return false;
+      }      
+    });
+    
+    if (invalid) {
+      button.next().html(icon + 'All fields are required!');
+      button.next().fadeIn();
+      
+      button.removeAttr('disabled');
+      button.html('Register!');
+      return;
+    }
+    
+    
+    var post    = 'directive=register&' + $("#form-register").serialize();
 
     $.post("register.php", post, function (data) {
       if (data == "OK") {
-
-        switch (window.location.search.substr(1, 1)) {
-          case '0':
-            window.location = "/build";
-            break;
-          case '1':
-            window.location = "/play/realm.php?" + window.location.search.substr(2);
-            break;
-          case '2':
-            window.location = "/account";
-            break;
-          default:
-            window.location = "/build";
-            break;
+        <?php 
+        if ($_SESSION["redirect"]) {
+          echo 'window.location = "' . $_SESSION["redirect"] . '";';
+        } else {
+          echo 'window.location = "/build";';
         }
-
-        //window.location = "account.php";
-
+        ?>
       } else {
         var parsed = JSON.parse(data);
         var input;
@@ -287,14 +306,23 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
         $("#form-register .form-group").removeClass("has-error");
         $("#form-register .form-control-feedback").remove();
 
+        var errorMessage = '<ul>';
+        
         // Add current error displays:
         _.each(parsed, function (err, key) {
-
             input = $("#form-register input[name='" + key + "']");
             input.parent().addClass("has-error");
-            input.before('<div class="alert alert-danger">' + err + '</div>')
-
+            
+            errorMessage += '<li>' + err + '</li>';
         });
+        
+        errorMessage += '</ul>';
+        
+        button.next().html(errorMessage);
+        button.next().fadeIn();
+        
+        button.removeAttr('disabled');
+        button.html('Register!');
       }
     });
   });

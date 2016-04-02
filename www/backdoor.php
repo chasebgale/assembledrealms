@@ -58,8 +58,6 @@ if ($method == 'POST') {
   }
 }
 
-require_once($_SERVER['DOCUMENT_ROOT'] . "models/config.php");
-if (!securePage($_SERVER['PHP_SELF'])){die();}
 require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 ?>
 
@@ -67,7 +65,27 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
   <h1 class="text-center hide-for-play" style="padding-top: 100px;"><strong>BUILD AN AWESOME MMO IN YOUR BROWSER</strong></h1>
   <h3 class="text-center hide-for-play">QUICK-START FROM AN EXISTING GAME &#9642; DEVELOPER/COMMUNITY TOOLS</h3> <h3 class="text-center hide-for-play"><strong>CLIENT/SERVER CODE IN ONE LANGUAGE: JAVASCRIPT</strong></h3>
   <div id="play-now" class="hide-for-play" style="text-align: center;">
-    <div id="commandBarButtons" style="display: inline-block; float: none;">
+    <div id="previewEditor">
+      <div>
+        <a href="/img/ide_preview/js_editor.png"
+           data-toggle="lightbox"
+           data-title="IDE - JS Editor"
+           data-parent=".wrapper-parent"
+           data-gallery="previews" class="thumbnail">
+            <img src="/img/ide_preview/js_editor-thumb.png">
+        </a>
+      </div>
+      <div>
+        <a href="/img/ide_preview/map_editor.png"
+           data-toggle="lightbox"
+           data-title="IDE - Map JSON Editor"
+           data-parent=".wrapper-parent"
+           data-gallery="previews" class="thumbnail">
+            <img src="/img/ide_preview/map_editor-thumb.png">
+        </a>
+      </div>
+    </div>
+    <div id="previewGame" style="display: inline-block; float: none;">
       <button id="play-now-link" class="btn btn-default">
         <i class="fa fa-expand fa-fw"></i> <strong>Play the demo game now!</strong> No registration needed.
       </button>
@@ -94,26 +112,25 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
   </div>
 </div>
 
-<script src="/js/pixi.min.js"></script>
-<script src="/js/async.js"></script>
-<script src="/demo/demo.js"></script>
-
 <?php
 require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php");
 ?>
 
+<script src="/play/js/ekko-lightbox.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="/js/pixi.min.js"></script>
+<script src="/js/async.js"></script>
+<script src="/demo/demo.js"></script>
+
 <script>
 
   $(function() {
-    
-    $.ajaxSetup({
-        crossDomain: true,
-        xhrFields: {
-            withCredentials: true
-        }
-    });
-    
+        
     $('[data-toggle="tooltip"]').tooltip();
+    
+    $(document).delegate('*[data-toggle="lightbox"]', 'click', function(event) {
+      event.preventDefault();
+      $(this).ekkoLightbox();
+    });
     
     $("#btn-fullscreen").click( function() {
       if (BigScreen.enabled) {
@@ -127,7 +144,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php");
     });
     
     $("#btn-demo-play").click( function() {
-      window.location.href = '/account/register/0';
+      window.location.href = '/play';
     });
     
     $("#btn-demo-build").click( function() {
@@ -139,7 +156,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php");
       $(this).attr('disabled', true);
       $(this).html('<i class="fa fa-spinner fa-spin"></i> Loading...');
       
-      $.post("/index_new.php", {}, function (data) {
+      $.post("/backdoor.php", {}, function (data) {
         
         // TODO: Jquery ajax should be doing this automagically?
         data = JSON.parse(data);

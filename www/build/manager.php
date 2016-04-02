@@ -377,7 +377,11 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
           <ul>
             <li><strong>Code</strong></li>
             <li><span id="publish-date"><?=$published?></span></li>
+            <?php if ($realm["status"] > -1) { ?>
             <li><button class="btn btn-default" id="publish-latest-code">Publish Latest Code</button></li>
+            <?php } else { ?>
+            <li><button class="btn btn-default" id="publish-latest-code" disabled="true">Publish Latest Code</button></li>
+            <?php } ?>
             <li><button class="btn btn-default" disabled><i class="fa fa-reply"></i> Restore to Version</button></li>
           </ul>
         </div>

@@ -418,6 +418,47 @@ function fetchUserDetails($email=NULL,$token=NULL, $id=NULL)
 	return ($row);
 }
 
+function fetchUserRealms($user_id) {
+  global $mysqli,$db_table_prefix;
+  $stmt = $mysqli->prepare("SELECT
+    id,
+    title,
+    description,
+    level,
+    status,
+    players_online,
+    screenshots,
+    loves
+    FROM realms
+    WHERE user_id = ? AND status > -10");
+  $stmt->bind_param("i", $user_id);
+  $stmt->execute();
+      
+  $stmt->bind_result( $id,
+    $title,
+    $description,
+    $level,
+    $status,
+    $players,
+    $screenshots,
+    $loves
+  );
+      
+  while ($stmt->fetch()) {
+    $row[] = array('id' => $id,
+      'title' => $title,
+      'description' => $description,
+      'level' => $level,
+      'status' => $status,
+      'players' => $players,
+      'screenshots' => $screenshots,
+      'loves' => $loves
+    );
+  }
+  $stmt->close();
+  return ($row);
+}
+
 function fetchUserBlurb($id) {
   global $mysqli,$db_table_prefix;
 		
