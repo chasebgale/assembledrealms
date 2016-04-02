@@ -38,7 +38,7 @@
         </li>
 <?php } else { ?>
         <li>
-          <a href='/account/register/0' class='header-link'><i class='fa fa-sign-in'></i> Login / Join</a>
+          <a href='/account/register' class='header-link'><i class='fa fa-sign-in'></i> Login / Join</a>
         </li>
 <?php } ?>
       </ul>

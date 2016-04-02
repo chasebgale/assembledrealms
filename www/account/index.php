@@ -101,7 +101,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
   <section id="sectionAvatar">
     <div class="panel panel-default">
       <div class="panel-heading">
-          <h3 class="realm-panel-title">Your Avatar</h3>
+          <h3 class="realm-panel-title">Your Public Image</h3>
       </div>
       <div class="panel-body">
         <div class="row">
