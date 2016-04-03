@@ -160,8 +160,8 @@ var startRealm = function (realmID, startRealmCallback) {
   var now            = Date.now();
   var realmProcess   = "realm-" + realmID;
 	var realmApp       = '/var/www/realms/realm-server.js';
-  var realmErr       = '/var/www/logs/' + realmID + '-err.log';
-  var realmOut       = '/var/www/logs/' + realmID + '-out.log';
+  var realmErr       = '/var/www/logs/' + realmID + '.log';
+  var realmOut       = '/var/www/logs/' + realmID + '.log';
   var running        = false;
   
   var launchRealm = function (restart, launchRealmCallback) {
@@ -194,7 +194,7 @@ var startRealm = function (realmID, startRealmCallback) {
               output:     realmOut,
               scriptArgs: [realmID, 'true'],
               force:      true,
-              merge_logs: true
+              mergeLogs:  true
             };
             
             console.log("Starting realm with the following options: " + JSON.stringify(options));
@@ -691,6 +691,15 @@ app.get('/realms/:id', function httpGetRealm(req, res, next) {
   });
   
 	
+});
+
+app.get('/realms/:id/log', function httpGetRealmLog(req, res, next) {
+  fs.readFile('logs/' + req.params.id + '.log', function (err, data) {
+    if (err) {
+      return res.status(500).send(err.message);
+    }
+    return res.send(data);
+  });
 });
 
 /////////////////////////////////

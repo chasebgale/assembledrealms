@@ -96,18 +96,15 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 <div id="realm-container" style="padding-top: 20px;">
   <div id="container">
     <div style="margin: 20px auto; width: 896px; padding: 0; background-color: black;">
-<?php if ($owner) { ?>
+      
+      <?php if ($owner) { ?>
       <div id="commandBar">
         <div id="commandBarButtons">
           <button type="button" id="btnReboot" class="btn btn-default btn-xs">
-            <i class="fa fa-refresh fa-fw"></i> Reboot
+            <i class="fa fa-refresh fa-fw"></i> Reboot and Flush DB
           </button>
-          <button type="button" id="btnCommand" class="btn btn-default btn-xs">
-            <i class="fa fa-keyboard-o fa-fw"></i> Message -> Server
-          </button>
-          <div class="spacer"></div>
-          <button type="button" id="btnScreenshot" class="btn btn-default btn-xs">
-            <i class="fa fa-camera-retro fa-fw"></i> Take Screenshot
+          <button type="button" id="btnServerLog" class="btn btn-default btn-xs">
+            <i class="fa fa-book fa-fw"></i> Get Server Log
           </button>
           <div class="spacer"></div>
           <button type="button" id="btnFPS" class="btn btn-default btn-xs active">
@@ -118,10 +115,12 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
           </button>
         </div>
       </div>
-<?php } ?>
+      <?php } ?>
+      
       <div id="realm" style="margin: 0; width: 896px; height: 504px; padding: 0; display: none;"></div>
       <div id="queue" style="margin: 0; width: 896px; height: 504px; padding: 0;"></div>
-<?php if ($owner) { ?>
+      
+      <?php if ($owner) { ?>
       <div id="statsBar" class="clearfix">
         <div class="statsBarItem">
           <div style="font-size: 0.75em; vertical-align: top;">
@@ -146,7 +145,25 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
         <div id="statsClient" class="statsBarItem">
         </div>
       </div>
-<?php } ?>
+    <?php } ?>
+    
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalLog" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">Server Log</h4>
+      </div>
+      <div class="modal-body">
+        <p></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" data-dismiss="modal" class="btn btn-default">Close</button>
+      </div>
     </div>
   </div>
 </div>
@@ -173,6 +190,14 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
   $(document).ready(function () {
     $.get("<?php echo $url_from_auth; ?>", function (data) {
       $("#realm-container").append(data);
+      
+      $("#btnServerLog").on("click", function (e) {
+        $.get("<?php echo $url_from_auth; ?>log", function (data) {
+          var formatted = data.replace('\n', '<br />');
+          $("#modalLog .modal-body").children().first().text(formatted);
+          $("#modalLog").modal('show');
+        });
+      });
       
       $("#btnFPS").on("click", function (e) {
         var self = $(this);

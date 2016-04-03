@@ -100,9 +100,10 @@ exports.create = function(req, res, next){
             var userid    = "user_" + req.user_id;
             var author    = git.Signature.now(userid, userid + "@assembledrealms.com");
             var committer = git.Signature.now(userid, userid + "@assembledrealms.com");
+            var msg       = "[AUTO] Creating initial commit...";
             // Since we're creating an inital commit, it has no parents. Note that unlike
             // normal we don't get the head either, because there isn't one yet.
-            return repository.createCommit("HEAD", author, committer, "message", oid, []);
+            return repository.createCommit("HEAD", author, committer, msg, oid, []);
           })
           .done(function(commitId) {
             utilities.logMessage('Created REPO: ' + __dirname + "/../projects/" + req.params.id + " with commit id: " + commitId);

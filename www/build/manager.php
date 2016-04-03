@@ -638,10 +638,10 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
 <script type="text/javascript">
 
-    $(document).delegate('*[data-toggle="lightbox"]', 'click', function(event) {
-        event.preventDefault();
-        $(this).ekkoLightbox();
-    });
+  $(document).delegate('*[data-toggle="lightbox"]', 'click', function(e) {
+    e.preventDefault();
+    $(this).ekkoLightbox();
+  });
     
 <?php if ($published) { ?>
     $("#publish-date").text(
@@ -649,19 +649,20 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     );
 <? } ?>
 
-    var __markdownCreateNewDB = true;
-    var __realmID = <?php echo $_SERVER['QUERY_STRING'] ?>;
-    var __realmFunds = parseFloat("<?php echo $realm["funds"] ?>");
-    var __realmOnline = parseInt(<?php echo $realm["status"] ?>);
-    var __realmLevel = parseInt(<?php echo $realm["level"] ?>);
-    var __existingState = {
-	description: "<?php echo htmlspecialchars($realm['description'], ENT_QUOTES, 'UTF-8'); ?>",
-	show_funding: <?php echo $realm["show_funding"] ?>
-    };
+  var __markdownCreateNewDB = true;
+  var __realmID = <?php echo $_SERVER['QUERY_STRING'] ?>;
+  var __realmFunds = parseFloat("<?php echo $realm["funds"] ?>");
+  var __realmOnline = parseInt(<?php echo $realm["status"] ?>);
+  var __realmLevel = parseInt(<?php echo $realm["level"] ?>);
+  var __realmSource = "<?php echo $realm["source"] ?>";
+  var __existingState = {
+    description: "<?php echo htmlspecialchars($realm['description'], ENT_QUOTES, 'UTF-8'); ?>",
+    show_funding: <?php echo $realm["show_funding"] ?>
+  };
     
-    var __currentState = _.clone(__existingState, true);
+  var __currentState = _.clone(__existingState, true);
     
-    $('.row').css('margin-bottom', '12px');
+  $('.row').css('margin-bottom', '12px');
 </script>
 
 <script src="/build/js/manager.js" type="text/javascript" charset="utf-8"></script>

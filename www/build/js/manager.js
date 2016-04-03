@@ -20,10 +20,15 @@ $(document).ready(function () {
   $("#destroyRealmConfirm").on("click", function (e) {
 
     e.preventDefault();
-    var id = $(this).attr('data-id');
+    
+    var button  = $(this);
+    var id      = button.attr('data-id');
+  
+    button.attr('disabled', true);
+    button.html('<i class="fa fa-cog fa-spin"></i> Delete this sucker!');
 
     $.ajax({
-      url: '//source-01.assembledrealms.com/api/project/' + id + '/destroy',
+      url: '//source-' + __realmSource + '.assembledrealms.com/api/project/' + id + '/destroy',
       type: 'GET',
       dataType: 'json',
       success: function (data) {
@@ -34,6 +39,9 @@ $(document).ready(function () {
 
         $.post("/build/manager.php", parameters, function (data) {
           data = JSON.parse(data);
+          button.attr('disabled', false);
+          button.html('Delete this sucker!');
+          
           if (data.message == "OK") {
             window.location = "//www.assembledrealms.com/build";
           }
