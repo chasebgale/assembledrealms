@@ -27,6 +27,14 @@ var __modalSimpleOptions = {
   }
 };
 
+var __requiredFiles = [
+  'engine.js',
+  'CREDITS.md',
+  'FUNDING.md',
+  'README.md',
+  'WELCOME.md'
+];
+
 function resize() {
   var h = $("#tree").height();
   $("#editor").height(h);
@@ -116,9 +124,20 @@ function initialize(projectID, projectDomain) {
       targetClass = "fileOption";
     }
     
+    
+    var readonly = false;
+    if (__requiredFiles.indexOf(__treeDropDownTarget.text()) > -1) {
+      readonly = true;
+    }
+    
     // Setup dropdown menu for the correct target
     $("#treeActionsDropDown li").each(function() {
       if ($(this).hasClass(targetClass)) {
+        if (readonly) {
+          $(this).addClass('disabled');
+        } else {
+          $(this).removeClass('disabled');
+        }
         $(this).show();
       } else {
         $(this).hide();
@@ -172,6 +191,10 @@ function initialize(projectID, projectDomain) {
     var target = self.attr('data-target');
     var modal  = $(target);
     var path   = "/" + __treeDropDownTarget.parent().attr('data-path') + "/";
+    
+    if (self.parent().hasClass('disabled')) {
+      return false;
+    }
     
     switch (target) {
       

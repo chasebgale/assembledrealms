@@ -201,7 +201,8 @@ app.get('/stats', function (req, res, next) {
             serverData.processes[p].users = "N/A";
           } else {
             var realmID = serverData.processes[p].name.split('-')[1];
-            serverData.processes[p].users = serverData.realms[realmID];
+            var realmUsers = serverData.realms[realmID];
+            serverData.processes[p].users = (realmUsers ? realmUsers.length : "0");
           }
         }
         
@@ -220,7 +221,9 @@ app.get('/stats', function (req, res, next) {
       console.error(err);
       return res.status(500).send(err.message);
     }
-    console.log("Rendering: %s", JSON.stringify(data));
+    
+    data.servers.sort(function(a,b) {return (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0);} );
+    //console.log("Rendering: %s", JSON.stringify(data));
     res.render('stats', data);
   });
 });
@@ -289,7 +292,8 @@ app.post('/launch/play/shared/:id', function (req, res, next) {
   var time        = new Date().getTime();
   var realm_id    = req.params.id;
   // TODO: Pick least congested
-  var realm_host  = 'play-' + '01' + '.assembledrealms.com';
+  var realm_host_num  = '01'; 
+  var realm_host      = 'play-' + realm_host_num + '.assembledrealms.com';
   var realm;
   
   // Does this user have permission to modify this realm?
@@ -365,7 +369,8 @@ app.post('/launch/play/shared/:id', function (req, res, next) {
                 formData: {
                   directive: 'update_realm_status',
                   realm_id: realm.id,
-                  realm_status: 1
+                  realm_status: 1,
+                  realm_host: realm_host_num
                 }
               };
               

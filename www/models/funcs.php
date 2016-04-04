@@ -430,7 +430,7 @@ function fetchUserRealms($user_id) {
     screenshots,
     loves
     FROM realms
-    WHERE user_id = ? AND status > -10");
+    WHERE user_id = ? AND status > -1");
   $stmt->bind_param("i", $user_id);
   $stmt->execute();
       

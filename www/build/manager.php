@@ -11,228 +11,174 @@ if(!isUserLoggedIn()) {
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method == 'POST') {
-    $directive = $_POST['directive'];
-    $realm_id  = $_POST['realm_id'];
+  $directive = $_POST['directive'];
+  $realm_id  = $_POST['realm_id'];
+  
+  if ($loggedInUser->isRealmOwner($realm_id) === false) {
+      echo json_encode( (object) ['message' => 'Not Authorized.'] );
+      die();
+  }
+  
+  if ($directive == 'deposit') {
+      if (isset($_POST['amount'])) {
+          if ($loggedInUser->depositToRealm($realm_id, $_POST['amount'])) {
+              echo json_encode( (object) ['message' => 'OK'] );
+              die();
+          } else {
+              echo json_encode( (object) ['message' => 'FAILURE'] );
+              die();
+          }
+      }
+  }
+  
+  if ($directive == 'save') {
+
+    global $mysqli;
     
-    if ($loggedInUser->isRealmOwner($realm_id) === false) {
-        echo json_encode( (object) ['message' => 'Not Authorized.'] );
+    if (isset($_POST['funding']) && isset($_POST['description'])) {
+      $stmt = $mysqli->prepare("UPDATE realms 
+                                SET description = ?, show_funding = ?
+                                WHERE id = ?");
+                              
+      if ($stmt == false) {
+        echo json_encode( (object) ['message' => htmlspecialchars($mysqli->error)] );
         die();
-    }
-    
-    if ($directive == 'deposit') {
-        if (isset($_POST['amount'])) {
-            if ($loggedInUser->depositToRealm($realm_id, $_POST['amount'])) {
-                echo json_encode( (object) ['message' => 'OK'] );
-                die();
-            } else {
-                echo json_encode( (object) ['message' => 'FAILURE'] );
-                die();
-            }
-        }
-    }
-    
-    if ($directive == 'save') {
-	
-      global $mysqli;
-      
-      if (isset($_POST['funding']) && isset($_POST['description'])) {
-        $stmt = $mysqli->prepare("UPDATE realms 
-                                  SET description = ?, show_funding = ?
-                                  WHERE id = ?");
-                                
-        if ($stmt == false) {
-          echo json_encode( (object) ['message' => htmlspecialchars($mysqli->error)] );
-          die();
-        }
-        
-        $funding = (int)($_POST['funding'] == 'true');
-        
-        $stmt->bind_param("sii", $_POST['description'], $funding, $realm_id);
-        $rc = $stmt->execute();
-        
-        if ( false===$rc ) {
-          echo json_encode( (object) ['message' => 'Realm update failed: ' . htmlspecialchars($stmt->error)] );
-          die();
-        }
-        
-        $stmt->close();
-          
       }
       
-      echo json_encode( (object) ['message' => 'OK'] );
-      die();
-	
-    }
-    
-    if ($directive == 'offline') {
+      $funding = (int)($_POST['funding'] == 'true');
       
-        $success = $loggedInUser->authGatekeeper($realm_id);
-        if ($success !== false) {
-            echo json_encode( (object) ['message' => 'OK'] );
-        } else {
-            echo json_encode( (object) ['message' => 'FAILURE'] );
-        }
+      $stmt->bind_param("sii", $_POST['description'], $funding, $realm_id);
+      $rc = $stmt->execute();
+      
+      if ( false===$rc ) {
+        echo json_encode( (object) ['message' => 'Realm update failed: ' . htmlspecialchars($stmt->error)] );
         die();
-    }
-    
-    if ($directive == 'online') {
-      $server_type = $_POST['server'];
+      }
       
-      if ($loggedInUser->authGatekeeper($realm_id)) {
-      
-        // TODO: THIS SHOULD SEND A MESSAGE TO GATEWAY TO LAUNCH, EVEN WITH A 
-        // SHARED REALM, ASYNC, THAT WAY GATEWAY CAN FIND THE LEAST USED SERVER BY
-        // CHECKING THE STATS FROM THE JOB THAT RUNS EVERY ~10 MIN
-        $success = $loggedInUser->onlineRealm($realm_id, $server_type);
+      $stmt->close();
         
-        if ($success === true) {
+    }
+    
+    echo json_encode( (object) ['message' => 'OK'] );
+    die();
+
+  }
+  
+  if ($directive == 'offline') {
+    
+      $success = $loggedInUser->authGatekeeper($realm_id);
+      if ($success !== false) {
           echo json_encode( (object) ['message' => 'OK'] );
-        } else {
+      } else {
           echo json_encode( (object) ['message' => 'FAILURE'] );
-        }
-        die();
+      }
+      die();
+  }
+  
+  if ($directive == 'online') {
+    $server_type = $_POST['server'];
+    
+    if ($loggedInUser->authGatekeeper($realm_id)) {
+    
+      // TODO: THIS SHOULD SEND A MESSAGE TO GATEWAY TO LAUNCH, EVEN WITH A 
+      // SHARED REALM, ASYNC, THAT WAY GATEWAY CAN FIND THE LEAST USED SERVER BY
+      // CHECKING THE STATS FROM THE JOB THAT RUNS EVERY ~10 MIN
+      $success = $loggedInUser->onlineRealm($realm_id, $server_type);
+      
+      if ($success === true) {
+        echo json_encode( (object) ['message' => 'OK'] );
       } else {
         echo json_encode( (object) ['message' => 'FAILURE'] );
       }
+      die();
+    } else {
+      echo json_encode( (object) ['message' => 'FAILURE'] );
     }
-    
-    if ($directive == 'destroy') {
-        $loggedInUser->destroyRealm($realm_id);
-        echo json_encode( (object) ['message' => 'OK'] );
-        die();
-    }
-    
-    if ($directive == 'upload') {
-      try {
-          
-        // Undefined | Multiple Files | $_FILES Corruption Attack
-        // If this request falls under any of them, treat it invalid.
-        if (!isset($_FILES['upfile']['error']) || is_array($_FILES['upfile']['error'])) {
-          throw new RuntimeException('Invalid parameters. ' . print_r($_FILES['upfile']));
-        }
-    
-        // Check $_FILES['upfile']['error'] value.
-        switch ($_FILES['upfile']['error']) {
-          case UPLOAD_ERR_OK:
-            break;
-          case UPLOAD_ERR_NO_FILE:
-            throw new RuntimeException('No file sent.');
-          case UPLOAD_ERR_INI_SIZE:
-          case UPLOAD_ERR_FORM_SIZE:
-            throw new RuntimeException('Exceeded filesize limit.');
-          default:
-            throw new RuntimeException('Unknown errors.');
-        }
+  }
+  
+  if ($directive == 'destroy') {
+      $loggedInUser->destroyRealm($realm_id);
+      echo json_encode( (object) ['message' => 'OK'] );
+      die();
+  }
+  
+  if ($directive == 'upload') {
+    try {
         
-        // Check filesize. 
-        if ($_FILES['upfile']['size'] > 2000000) {
-          throw new RuntimeException('Exceeded filesize limit.');
-        }
-
-        $filename   = generateRandomString();
-        $img        = $_FILES['upfile']['tmp_name'];
-        $dst        = '/home/public/play/img/' . $filename . '.jpg';
-        $dst_thumb  = '/home/public/play/img/' . $filename . '-thumb.jpg';
-        
-        if (($img_info = getimagesize($img)) === FALSE) {
-          throw new RuntimeException('Invalid file format.');
-        }
-        
-        $width = $img_info[0];
-        $height = $img_info[1];
-        
-        switch ($img_info[2]) {
-          case IMAGETYPE_GIF  : $src = imagecreatefromgif($img);  break;
-          case IMAGETYPE_JPEG : $src = imagecreatefromjpeg($img); break;
-          case IMAGETYPE_PNG  : $src = imagecreatefrompng($img);  break;
-          default : throw new RuntimeException("Unknown filetype");
-        }
-        
-        //calculate resized image picture dimensions 
-        $thumb_size = 150;
-        $original_ratio = $width/$height;
-        $targetWidth = $targetHeight = min($thumb_size, max($width, $height));
-
-        if ($ratio < 1) {
-          $targetWidth = $targetHeight * $original_ratio;
-        } else {
-          $targetHeight = $targetWidth / $original_ratio;
-        }
-        
-        //calculate picture position 'in center' of new image.
-        $int_width = ($thumb_size - $targetWidth)/2;
-        $int_height = ($thumb_size - $targetHeight)/2;        
-    
-        $tmp = imagecreatetruecolor($width, $height);
-        $tmp_thumb = imagecreatetruecolor($thumb_size, $thumb_size);
-    
-        // Full Size JPEG:
-        imagecopyresampled($tmp, $src, 0, 0, 0, 0, $width, $height, $width, $height);
-        
-        // Thumb:
-        imagecopyresampled($tmp_thumb, $src, $int_width, $int_height, 0, 0, $targetWidth, $targetHeight, $width, $height);
-        
-        imagejpeg($tmp, $dst, 90);
-        imagedestroy($tmp);
-        
-        imagejpeg($tmp_thumb, $dst_thumb);
-        imagedestroy($tmp_thumb);
-        
-        // Add new shot to DB, first select existing shots:
-        $stmt = $mysqli->prepare("SELECT screenshots FROM realms WHERE id = ?");
-                                
-        if ($stmt == false) {
-            echo json_encode( (object) ['message' => htmlspecialchars($mysqli->error)] );
-            die();
-        }
-        
-        $stmt->bind_param("i", $realm_id);
-        $rc = $stmt->execute();
-        $stmt->bind_result($json_screenshots);
-        $stmt->fetch();
-        
-        if ( false===$rc ) {
-            echo json_encode( (object) ['message' => 'Realm update failed: ' . htmlspecialchars($stmt->error)] );
-            die();
-        }
-        $stmt->close();
-        
-        $screenshots = json_decode($json_screenshots);
-        
-        // Now add new shot to array and push back to DB:
-        $screenshots[] = $filename;
-        $stmt = $mysqli->prepare("UPDATE realms 
-                                  SET screenshots = ?
-                                  WHERE id = ?");
-                                
-        if ($stmt == false) {
-            echo json_encode( (object) ['message' => htmlspecialchars($mysqli->error)] );
-            die();
-        }
-        
-        $stmt->bind_param("si", json_encode($screenshots), $realm_id);
-        $rc = $stmt->execute();
-        
-        if ( false===$rc ) {
-            echo json_encode( (object) ['message' => 'Realm update failed: ' . htmlspecialchars($stmt->error)] );
-            die();
-        }
-        
-        $stmt->close();
-        
-        echo json_encode( (object) ['message' => 'OK', "filename" => $filename] );
-        die();
-      
-      } catch (RuntimeException $e) {
-        echo $e->getMessage();
-        die();
+      // Undefined | Multiple Files | $_FILES Corruption Attack
+      // If this request falls under any of them, treat it invalid.
+      if (!isset($_FILES['upfile']['error']) || is_array($_FILES['upfile']['error'])) {
+        throw new RuntimeException('Invalid parameters. ' . print_r($_FILES['upfile']));
       }
-    }
-    
-    if ($directive == 'remove_screenshot') {
-      $filename  = $_POST['filename'];
+  
+      // Check $_FILES['upfile']['error'] value.
+      switch ($_FILES['upfile']['error']) {
+        case UPLOAD_ERR_OK:
+          break;
+        case UPLOAD_ERR_NO_FILE:
+          throw new RuntimeException('No file sent.');
+        case UPLOAD_ERR_INI_SIZE:
+        case UPLOAD_ERR_FORM_SIZE:
+          throw new RuntimeException('Exceeded filesize limit.');
+        default:
+          throw new RuntimeException('Unknown errors.');
+      }
       
-      // First select existing shots:
+      // Check filesize. 
+      if ($_FILES['upfile']['size'] > 2000000) {
+        throw new RuntimeException('Exceeded filesize limit.');
+      }
+
+      $filename   = generateRandomString();
+      $img        = $_FILES['upfile']['tmp_name'];
+      $dst        = '/home/public/play/img/' . $filename . '.jpg';
+      $dst_thumb  = '/home/public/play/img/' . $filename . '-thumb.jpg';
+      
+      if (($img_info = getimagesize($img)) === FALSE) {
+        throw new RuntimeException('Invalid file format.');
+      }
+      
+      $width = $img_info[0];
+      $height = $img_info[1];
+      
+      switch ($img_info[2]) {
+        case IMAGETYPE_GIF  : $src = imagecreatefromgif($img);  break;
+        case IMAGETYPE_JPEG : $src = imagecreatefromjpeg($img); break;
+        case IMAGETYPE_PNG  : $src = imagecreatefrompng($img);  break;
+        default : throw new RuntimeException("Unknown filetype");
+      }
+      
+      //calculate resized image picture dimensions 
+      $thumb_size = 150;
+      $original_ratio = $width/$height;
+      $targetWidth = $targetHeight = min($thumb_size, max($width, $height));
+
+      if ($ratio < 1) {
+        $targetWidth = $targetHeight * $original_ratio;
+      } else {
+        $targetHeight = $targetWidth / $original_ratio;
+      }
+      
+      //calculate picture position 'in center' of new image.
+      $int_width = ($thumb_size - $targetWidth)/2;
+      $int_height = ($thumb_size - $targetHeight)/2;        
+  
+      $tmp = imagecreatetruecolor($width, $height);
+      $tmp_thumb = imagecreatetruecolor($thumb_size, $thumb_size);
+  
+      // Full Size JPEG:
+      imagecopyresampled($tmp, $src, 0, 0, 0, 0, $width, $height, $width, $height);
+      
+      // Thumb:
+      imagecopyresampled($tmp_thumb, $src, $int_width, $int_height, 0, 0, $targetWidth, $targetHeight, $width, $height);
+      
+      imagejpeg($tmp, $dst, 90);
+      imagedestroy($tmp);
+      
+      imagejpeg($tmp_thumb, $dst_thumb);
+      imagedestroy($tmp_thumb);
+      
+      // Add new shot to DB, first select existing shots:
       $stmt = $mysqli->prepare("SELECT screenshots FROM realms WHERE id = ?");
                               
       if ($stmt == false) {
@@ -253,12 +199,8 @@ if ($method == 'POST') {
       
       $screenshots = json_decode($json_screenshots);
       
-      // Now remove screenshot from array and push back to DB:
-      $index = array_search($filename, $screenshots);
-      if ($index !== false) {
-        unset($screenshots[$index]);
-      }
-
+      // Now add new shot to array and push back to DB:
+      $screenshots[] = $filename;
       $stmt = $mysqli->prepare("UPDATE realms 
                                 SET screenshots = ?
                                 WHERE id = ?");
@@ -268,7 +210,7 @@ if ($method == 'POST') {
           die();
       }
       
-      $stmt->bind_param("si", json_encode(array_values($screenshots)), $realm_id);
+      $stmt->bind_param("si", json_encode($screenshots), $realm_id);
       $rc = $stmt->execute();
       
       if ( false===$rc ) {
@@ -278,13 +220,71 @@ if ($method == 'POST') {
       
       $stmt->close();
       
-      // If we are this far, the DB is clear of the file reference, let's remove the actual file
-      unlink('/home/public/play/img/' . $filename . '.jpg');
-      unlink('/home/public/play/img/' . $filename . '-thumb.jpg');
-      
-      echo json_encode( (object) ['message' => 'OK'] );
+      echo json_encode( (object) ['message' => 'OK', "filename" => $filename] );
+      die();
+    
+    } catch (RuntimeException $e) {
+      echo $e->getMessage();
       die();
     }
+  }
+  
+  if ($directive == 'remove_screenshot') {
+    $filename  = $_POST['filename'];
+    
+    // First select existing shots:
+    $stmt = $mysqli->prepare("SELECT screenshots FROM realms WHERE id = ?");
+                            
+    if ($stmt == false) {
+        echo json_encode( (object) ['message' => htmlspecialchars($mysqli->error)] );
+        die();
+    }
+    
+    $stmt->bind_param("i", $realm_id);
+    $rc = $stmt->execute();
+    $stmt->bind_result($json_screenshots);
+    $stmt->fetch();
+    
+    if ( false===$rc ) {
+        echo json_encode( (object) ['message' => 'Realm update failed: ' . htmlspecialchars($stmt->error)] );
+        die();
+    }
+    $stmt->close();
+    
+    $screenshots = json_decode($json_screenshots);
+    
+    // Now remove screenshot from array and push back to DB:
+    $index = array_search($filename, $screenshots);
+    if ($index !== false) {
+      unset($screenshots[$index]);
+    }
+
+    $stmt = $mysqli->prepare("UPDATE realms 
+                              SET screenshots = ?
+                              WHERE id = ?");
+                            
+    if ($stmt == false) {
+        echo json_encode( (object) ['message' => htmlspecialchars($mysqli->error)] );
+        die();
+    }
+    
+    $stmt->bind_param("si", json_encode(array_values($screenshots)), $realm_id);
+    $rc = $stmt->execute();
+    
+    if ( false===$rc ) {
+        echo json_encode( (object) ['message' => 'Realm update failed: ' . htmlspecialchars($stmt->error)] );
+        die();
+    }
+    
+    $stmt->close();
+    
+    // If we are this far, the DB is clear of the file reference, let's remove the actual file
+    unlink('/home/public/play/img/' . $filename . '.jpg');
+    unlink('/home/public/play/img/' . $filename . '-thumb.jpg');
+    
+    echo json_encode( (object) ['message' => 'OK'] );
+    die();
+  }
 }
 
 require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
@@ -317,8 +317,6 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
     </small>
   </h1>
   
-  
-    
 	<div id="realmActionItems">
 		<div class="row">
 			<div class="col-md-4">

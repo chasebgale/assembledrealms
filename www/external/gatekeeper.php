@@ -67,12 +67,13 @@
       
         $realm_id     = $_POST['realm_id'];
         $realm_status = $_POST['realm_status'];
+        $realm_host   = $_POST['realm_host'];
 
         $stmt = $mysqli->prepare("UPDATE realms
-          SET status = ?
+          SET status = ?, address = ?
           WHERE
           id = ?");
-        $stmt->bind_param("ii", $realm_status, $realm_id);
+        $stmt->bind_param("isi", $realm_status, $realm_host, $realm_id);
         $stmt->execute();
         $stmt->close();
         

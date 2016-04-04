@@ -55,7 +55,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
   <div id="results">
     <% _.each( realms, function( realm ){ %>
     <div class="playListRealm">
-      <a href="realm/<%- realm.id %>" style="color: inherit;">
+      <a href="/play/realm/<%- realm.id %>" style="color: inherit;">
       <div class="row">
         <div class="col-md-11">
           <!-- Title -->

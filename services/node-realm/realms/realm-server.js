@@ -117,12 +117,10 @@ io.on('connection', function socketConnected(socket) {
   var session    = socket.request.session.id;
   var player;
   
-  console.log("io.on(CONNECTION) {");
-  console.log("  io.on(CONNECTION) userID: %s, playerKey: %s, playerName: %s, session: %s",
+  console.log("[SOCKET]: Connected {userID: %s, playerKey: %s, playerName: %s}",
     userID,
     playerKey,
-    playerName,
-    session
+    playerName
   );
   
   var enterGame = function () {
@@ -130,32 +128,19 @@ io.on('connection', function socketConnected(socket) {
     db.get(playerKey, function redisGetPlayer(error, player) {
       
       if (error) {
-        console.log(error.message);
         console.error(error);
       }
       
       if (player === null) {
-        
-        //player = engine.createPlayer();
         player = { 
           id:   userID,
           name: playerName
         };
+        console.log("[PLAYER %s]: Created from {}", player.id);
         
-        /*
-        console.log("CREATED player: " + JSON.stringify(player));
-        
-        db.set(playerKey, JSON.stringify(player), function redisSetPlayer(error) {
-        
-          if (error) {
-            console.error(error);
-          }
-          
-        });
-        */
       } else {
         player = JSON.parse(player);
-        console.log("RESUMED player: " + JSON.stringify(player));
+        console.log("[PLAYER %s]: Created from DB", player.id);
       }
       
       engine.addPlayer(player);
@@ -241,6 +226,8 @@ io.on('connection', function socketConnected(socket) {
         
         db.publish('realm_notifications', JSON.stringify(action));
         
+        console.log("[SOCKET]: Disconnected {userID: %s}", player.id);
+        
         // Remove attackers as player is leaving realm
         player.attackers = {};
         
@@ -251,6 +238,7 @@ io.on('connection', function socketConnected(socket) {
           }
           
           engine.removePlayer(player);
+          console.log("[PLAYER %s]: Stored in DB after exit", player.id);
           
         });
       });

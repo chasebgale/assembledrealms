@@ -71,7 +71,7 @@ if(!empty($_POST)) {
 			$loggedInUser->hash_pw = $userdetails["password"];
 			$loggedInUser->title = $userdetails["title"];
 			$loggedInUser->displayname = $userdetails["display_name"];
-            $loggedInUser->user_image = '/img/anonymous.png';
+      $loggedInUser->user_image = '/img/anonymous.png';
 			
 			//Update last sign in
 			$loggedInUser->updateLastSignIn();
@@ -144,11 +144,11 @@ if(!empty($_POST)) {
 						$loggedInUser->title = $userdetails["title"];
 						$loggedInUser->displayname = $userdetails["display_name"];
                         
-                        if ($userdetails["has_image"]==0) {
-                            $loggedInUser->user_image = '/img/anonymous.png';
-                        } else {
-                            $loggedInUser->user_image = '/img/profiles/' . $userdetails["id"] . '.jpg';
-                        }
+            if ($userdetails["has_image"]==0) {
+                $loggedInUser->user_image = '/img/anonymous.png';
+            } else {
+                $loggedInUser->user_image = '/img/profiles/' . $userdetails["id"] . '.jpg';
+            }
 						
 						//Update last sign in
 						$loggedInUser->updateLastSignIn();

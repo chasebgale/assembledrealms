@@ -28,11 +28,10 @@ if ($method == 'POST') {
     
     $tempSQL = "screenshots <> '[]'";
     if (isset($_POST['screenshots'])) {
-      if ($_POST['screenshots'] == 'false') {
-        $tempSQL = "screenshots = '[]'";
+      if ($_POST['screenshots'] == 'true') {
+        array_push($where, $tempSQL);
       }
     }
-    array_push($where, $tempSQL);
     
     $tempSQL = "status > 0";
     if (isset($_POST['online'])) {
@@ -137,13 +136,12 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
             <strong>Required:</strong>
             <div class="checkbox" style="display: inline; margin-left: 10px;"><label><input id="chkOnline" type="checkbox" value="" checked> Online</label></div>
             <div class="checkbox" style="display: inline; margin-left: 10px;"><label><input id="chkScreenshots" type="checkbox" value="" checked> Screenshots</label></div>
-            <div class="checkbox" style="display: inline; margin-left: 10px;"><label><input type="checkbox"> No Wait</label></div>
             <strong style=" margin-left: 16px;">Sort:</strong>
             <select id="selectSort" style="display: inline-block;">
                 <option value="0">Loves</option>
                 <option value="1">Users, Highest to Lowest</option>
                 <option value="2">Users, Lowest to Highest</option>
-                <option value="3">Reviews</option>
+                <option value="3" selected>Default, Alphabetical</option>
             </select>
         </div>
            

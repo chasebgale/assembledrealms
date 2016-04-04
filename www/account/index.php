@@ -4,92 +4,99 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/config.php");
 if (!securePage($_SERVER['PHP_SELF'])){die();}
 
 if(!isUserLoggedIn()) {
-    header("Location: /account/register.php?2");
+    header("Location: /account/register");
     die();
 }
 
-if(!empty($_POST)) {
-    try {
-    
-        // Undefined | Multiple Files | $_FILES Corruption Attack
-        // If this request falls under any of them, treat it invalid.
-        if (
-            !isset($_FILES['upfile']['error']) ||
-            is_array($_FILES['upfile']['error'])
-        ) {
-            if (isset($_POST['description'])) {
-                
-                $loggedInUser->updateBlurb( $_POST['description'] );
-                
-            } else {
-                throw new RuntimeException('Invalid parameters.');
-            }
-        } else {
-    
-            // Check $_FILES['upfile']['error'] value.
-            switch ($_FILES['upfile']['error']) {
-                case UPLOAD_ERR_OK:
-                    break;
-                case UPLOAD_ERR_NO_FILE:
-                    throw new RuntimeException('No file sent.');
-                case UPLOAD_ERR_INI_SIZE:
-                case UPLOAD_ERR_FORM_SIZE:
-                    throw new RuntimeException('Exceeded filesize limit.');
-                default:
-                    throw new RuntimeException('Unknown errors.');
-            }
-            
-            $img = $_FILES['upfile']['tmp_name'];
-            $dst = '/home/public/img/profiles/' . $loggedInUser->user_id . '.jpg';
-            $size = 150;
-        
-            // You should also check filesize here. 
-            if ($_FILES['upfile']['size'] > 2000000) {
-                throw new RuntimeException('Exceeded filesize limit.');
-            }
-        
-            if (($img_info = getimagesize($img)) === FALSE)
-                throw new RuntimeException('Invalid file format.');
-            
-            $width = $img_info[0];
-            $height = $img_info[1];
-            
-            switch ($img_info[2]) {
-                case IMAGETYPE_GIF  : $src = imagecreatefromgif($img);  break;
-                case IMAGETYPE_JPEG : $src = imagecreatefromjpeg($img); break;
-                case IMAGETYPE_PNG  : $src = imagecreatefrompng($img);  break;
-                default : throw new RuntimeException("Unknown filetype");
-            }
-            
-            $tmp = imagecreatetruecolor($size, $size);
-            
-            //calculate resized image picture dimensions 
-            $original_ratio = $width/$height;
-            $targetWidth = $targetHeight = min($size, max($width, $height));
-        
-            if ($ratio < 1) {
-                $targetWidth = $targetHeight * $original_ratio;
-            } else {
-                $targetHeight = $targetWidth / $original_ratio;
-            }
-        
-            //calculate picture position 'in center' of new image.
-            $int_width = ($size - $targetWidth)/2;
-            $int_height = ($size - $targetHeight)/2;        
-        
-            imagecopyresampled($tmp, $src, $int_width, $int_height, 0, 0, $targetWidth, $targetHeight, $width, $height);
-            imagejpeg($tmp, $dst);
-            
-            imagedestroy($tmp);
-        }
-    
-    } catch (RuntimeException $e) {
-        echo $e->getMessage();
+$method = $_SERVER['REQUEST_METHOD'];
+
+if ($method == 'POST') {
+  try {
+    // Undefined | Multiple Files | $_FILES Corruption Attack
+    // If this request falls under any of them, treat it invalid.
+    if (
+      !isset($_FILES['upfile']['error']) ||
+      is_array($_FILES['upfile']['error'])
+    ) {
+      if (isset($_POST['description'])) {
+        $loggedInUser->updateBlurb( $_POST['description'] );
+      } else {
+        throw new RuntimeException('Invalid parameters.');
+      }
+    } else {
+
+      // Check $_FILES['upfile']['error'] value.
+      switch ($_FILES['upfile']['error']) {
+        case UPLOAD_ERR_OK:
+          break;
+        case UPLOAD_ERR_NO_FILE:
+          throw new RuntimeException('No file sent.');
+        case UPLOAD_ERR_INI_SIZE:
+        case UPLOAD_ERR_FORM_SIZE:
+          throw new RuntimeException('Exceeded filesize limit.');
+        default:
+          throw new RuntimeException('Unknown errors.');
+      }
+      
+      $img = $_FILES['upfile']['tmp_name'];
+      $dst = '/home/public/img/profiles/' . $loggedInUser->user_id . '.jpg';
+      $size = 150;
+  
+      // You should also check filesize here. 
+      if ($_FILES['upfile']['size'] > 2000000) {
+        throw new RuntimeException('Exceeded filesize limit.');
+      }
+  
+      if (($img_info = getimagesize($img)) === FALSE)
+        throw new RuntimeException('Invalid file format.');
+      
+      $width = $img_info[0];
+      $height = $img_info[1];
+      
+      switch ($img_info[2]) {
+        case IMAGETYPE_GIF  : $src = imagecreatefromgif($img);  break;
+        case IMAGETYPE_JPEG : $src = imagecreatefromjpeg($img); break;
+        case IMAGETYPE_PNG  : $src = imagecreatefrompng($img);  break;
+        default : throw new RuntimeException("Unknown filetype");
+      }
+      
+      $tmp = imagecreatetruecolor($size, $size);
+      
+      //calculate resized image picture dimensions 
+      $original_ratio = $width/$height;
+      $targetWidth = $targetHeight = $size; //min($size, max($width, $height));
+  
+      if ($original_ratio < 1) {
+        // Height > Width
+        $targetHeight = $size * ($height/$width);
+      } else {
+        $targetWidth = $size * $original_ratio;
+      }
+  
+      //calculate picture position 'in center' of new image.
+      $int_width = ($size - $targetWidth)/2;
+      $int_height = ($size - $targetHeight)/2;        
+  
+      imagecopyresampled($tmp, $src, $int_width, $int_height, 0, 0, $targetWidth, $targetHeight, $width, $height);
+      imagejpeg($tmp, $dst);
+      
+      imagedestroy($tmp);
+      
+      $loggedInUser->hasScreenshot();
+      $loggedInUser->user_image = '/img/profiles/' . $loggedInUser->user_id . '.jpg';
+      
+      echo json_encode( (object) ['message' => 'OK'] );
+      die();
     }
+  
+  } catch (RuntimeException $e) {
+    echo json_encode( (object) ['message' => $e->getMessage()] );
+    die();
+  }
 }
 
 if ($loggedInUser->unreadMessages() > 0) {
-    $loggedInUser->clearMessages();
+  $loggedInUser->clearMessages();
 }
 
 require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
@@ -107,9 +114,9 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
         <div class="row">
           <div class="col-md-3">
             <div>
-              <img src="<?=$loggedInUser->user_image?>" />
+              <img id="mugshot" src="<?=$loggedInUser->user_image?>" />
             </div>
-            <form id="mugshotForm" enctype="multipart/form-data" action="" method="POST" role="form">
+            <form id="mugshotForm" enctype="multipart/form-data" method="POST" role="form">
               <div class="form-group">
                 <label for="upfile">New mugshot:</label>
                 <!-- MAX_FILE_SIZE must precede the file input field -->
@@ -119,6 +126,10 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
                 <!--<button type="submit" class="btn btn-default">Upload</button>-->
               </div>
             </form>
+            <div id="uploadProgress" class="progress" style="width: 200px; display: none;">
+              <div id="uploadProgressbar" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+              </div>
+            </div>
           </div>
           <div class="col-md-9">
             <div id="editor" style="height: 300px;"><?=$loggedInUser->fetchBlurb();?></div>
@@ -202,35 +213,83 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 
 <script type="text/javascript">
 
-    var __editor;
+  var __editor;
 
-    $(document).ready(function () {
-        var width = $("#editor").parent().width();
-        $("#editor").width(width);
-        
-        __editor = ace.edit("editor");
-        __editor.getSession().setMode("ace/mode/markdown");
-        
-        __editor.on("change", function () {
-           // TODO: update preview 
-        });
-    });
+  $(document).ready(function () {
+    var width = $("#editor").parent().width();
+    $("#editor").width(width);
     
-    $('#upfile').on('change', function (e) {
-        $('#mugshotForm').submit();
-    });
+    __editor = ace.edit("editor");
+    __editor.getSession().setMode("ace/mode/markdown");
     
-    $('#saveChanges').on('click', function () {
-        $.post("index.php", {description: __editor.getValue()});
+    __editor.on("change", function () {
+       // TODO: update preview 
     });
+  });
+  
+  /*
+  $('#upfile').on('change', function (e) {
+    $('#mugshotForm').submit();
+  });
+  */
+  
+  $("#upfile").on('change', function (e) {
+   
+    $("#upfile").attr('disabled', true);
+    $("#uploadProgress").fadeIn();
     
-    $('#os0').on('change', function (e) {
-        var optionSelected = $("option:selected", this);
-        // data-fee="- $0.61" data-amt="$20.91"
-        $('#calculator_start').text(optionSelected.attr('data-amt'));
-        $('#calculator_fee').text(optionSelected.attr('data-fee'));
-        $('#calculator_finish').text(optionSelected.attr('value').split(' ')[0] + '.00');
+    var formData = new FormData();
+    formData.append('upfile', e.target.files[0]);
+    formData.append('userid', <?= $loggedInUser->user_id ?>);
+   
+    $.ajax({
+      url: "/account/index.php",
+      type: "POST",
+      data: formData,
+      dataType: 'json',
+      processData: false, // tell jQuery not to process the data
+      contentType: false, // tell jQuery not to set contentType
+      xhr: function () {
+        var xhr = new window.XMLHttpRequest();
+        // Upload progress
+        xhr.upload.addEventListener("progress", function (evt) {
+          var percentComplete = Math.round((evt.loaded / evt.total) * 100);
+          $("#uploadProgressbar").attr('aria-valuenow', percentComplete).width(percentComplete + '%');
+        }, false);
+        return xhr;
+      },
+      success: function(data, textStatus, jqXHR) {
+        if(data.message === 'OK') {
+          
+          $("#mugshot").attr('src', '/img/profiles/<?= $loggedInUser->user_id ?>.jpg?' + Date.now());
+          
+          $("#mugshotForm").get(0).reset();
+          $("#upfile").attr('disabled', false);
+          $("#uploadProgressbar").attr('aria-valuenow', 0).width('0%');
+            
+        } else {
+          // Handle errors here
+          console.log('ERRORS: ' + data.error);
+        }
+      },
+      error: function(jqXHR, textStatus, errorThrown) {
+        // Handle errors here
+        console.log('ERRORS: ' + textStatus);
+      }
     });
+  });
+  
+  $('#saveChanges').on('click', function () {
+    $.post("index.php", {description: __editor.getValue()});
+  });
+  
+  $('#os0').on('change', function (e) {
+    var optionSelected = $("option:selected", this);
+    // data-fee="- $0.61" data-amt="$20.91"
+    $('#calculator_start').text(optionSelected.attr('data-amt'));
+    $('#calculator_fee').text(optionSelected.attr('data-fee'));
+    $('#calculator_finish').text(optionSelected.attr('value').split(' ')[0] + '.00');
+  });
 
     
 </script>

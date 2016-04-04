@@ -15,15 +15,14 @@
     </script>
     
     <script>
+      $.ajaxSetup({
+        crossDomain: true,
+        xhrFields: {
+          withCredentials: true
+        }
+      });
+      
       $(function() {
-        
-        $.ajaxSetup({
-          crossDomain: true,
-          xhrFields: {
-            withCredentials: true
-          }
-        });
-        
         setTimeout(function() {
           if ($('#footer_ad').is(':hidden')) {
             $('#footer_msg').fadeIn().css("display","inline-block");

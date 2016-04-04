@@ -759,6 +759,23 @@ class loggedInUser {
 				);
 	}
 	
+  public function hasScreenshot()
+	{
+		global $mysqli,$db_table_prefix;
+		
+		$sucess = 1;
+		
+		$stmt = $mysqli->prepare("UPDATE uc_users
+                              SET has_image = ?
+                              WHERE
+                              id = ?");
+		$stmt->bind_param("ii", $sucess, $this->user_id);
+		$stmt->execute();
+		$stmt->close();
+		
+		return true;
+	}
+  
     public function fetchBlurb() {
         global $mysqli,$db_table_prefix;
 		

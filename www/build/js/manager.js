@@ -286,7 +286,7 @@ $(document).ready(function () {
     formData.append("realm_id", __realmID);
    
     $.ajax({
-      url: "manager.php",
+      url: "/build/manager.php",
       type: "POST",
       data: formData,
       dataType: 'json',

@@ -118,7 +118,11 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
       <?php } ?>
       
       <div id="realm" style="margin: 0; width: 896px; height: 504px; padding: 0; display: none;"></div>
-      <div id="queue" style="margin: 0; width: 896px; height: 504px; padding: 0;"></div>
+      <div id="queue" style="margin: 0; width: 896px; height: 504px; padding: 0;">
+        <div style="padding-top: 216px; text-align: center; color: white;">
+          <h3><i class="fa fa-spinner fa-spin fa-fw"></i> Connecting...</h3>
+        </div>
+      </div>
       
       <?php if ($owner) { ?>
       <div id="statsBar" class="clearfix">
@@ -179,22 +183,32 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 <?php require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php"); ?>
 
 <script type="text/javascript">
-   
-  $.ajaxSetup({
-      crossDomain: true,
-      xhrFields: {
-          withCredentials: true
-      }
-  });
+    
+  var renderer;
+  var timeoutID;
+  var timeoutInterval = 1;
+  var AUTH_URL        = "<?= $url_from_auth ?>";
+  
+  var retryConnection = function() {
+    $.get(AUTH_URL, function (data) {
+      $("#realm-container").append(data);
+    });
+  };
     
   $(document).ready(function () {
-    $.get("<?php echo $url_from_auth; ?>", function (data) {
+    $.get(AUTH_URL, function (data) {
       $("#realm-container").append(data);
       
       $("#btnServerLog").on("click", function (e) {
-        $.get("<?php echo $url_from_auth; ?>log", function (data) {
-          var formatted = data.replace('\n', '<br />');
-          $("#modalLog .modal-body").children().first().text(formatted);
+        $.get(AUTH_URL + "log", function (data) {
+          var formatted = '';
+          var lines = data.split('\n');
+          
+          for (var i = 0; i < lines.length; i++) {
+            formatted += lines[i] + '<br>';
+          }
+          
+          $("#modalLog .modal-body").children().first().html(formatted);
           $("#modalLog").modal('show');
         });
       });

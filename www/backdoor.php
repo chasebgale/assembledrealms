@@ -84,6 +84,15 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
             <img src="/img/ide_preview/map_editor-thumb.png">
         </a>
       </div>
+      <div>
+        <a href="/img/ide_preview/game.png"
+           data-toggle="lightbox"
+           data-title="<i class='fa fa-quote-left'></i> Gameplay <i class='fa fa-quote-right'></i>"
+           data-parent=".wrapper-parent"
+           data-gallery="previews" class="thumbnail">
+            <img src="/img/ide_preview/game-thumb.png">
+        </a>
+      </div>
     </div>
     <div id="previewGame" style="display: inline-block; float: none;">
       <button id="play-now-link" class="btn btn-default">

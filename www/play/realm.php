@@ -63,7 +63,7 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
   
   $creator = fetchUserDetails(NULL, NULL, $realm['user_id']);
   
-  if ($realm['status'] == 0) {
+  if ($realm['status'] < 1) {
     // TODO: Alert realm owner someone tried to play when offline
     $alert = "<h3 style='font-size: 52px; color: white; font-weight: bold;'><i class='fa fa-power-off'></i> OFFLINE</h3>";
   } else {
@@ -194,7 +194,11 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
       <div id="realm" style="margin: 0; width: 896px; height: 504px; padding: 0; display: none;"></div>
       <div id="queue" style="margin: 0; width: 896px; height: 504px; padding: 0;">
         <div style="padding-top: 216px; text-align: center; color: white;">
+          <?php if ($alert === '') { ?>
           <h3><i class="fa fa-spinner fa-spin fa-fw"></i> Connecting...</h3>
+          <?php } else { ?>
+          <h3>Realm Offline<br><small>Comments Online</small></h3>
+          <?php } ?>
         </div>
       </div>
     </div>
@@ -203,18 +207,28 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
   <div id="tabsContainer" style="display: none;">
     <div style="margin: 0 auto; width: 896px; padding: 0;">
       <ul id="tabs" class="nav nav-tabs" role="tablist">
+        <?php if ($realm['status'] > 0) { ?>
         <li class="active"><a href="#tab_readme" role="tab" data-toggle="tab">Readme</a></li>
+        <li><a href="#tab_credits" role="tab" data-toggle="tab">Credits</a></li>
+        <?php } ?>
         <?php if ($realm['show_funding']) { ?>
         <li><a href="#tab_funding" role="tab" data-toggle="tab">Funding</a></li>
         <?php } ?>
-        <li><a href="#tab_comments" role="tab" data-toggle="tab">Comments</a></li>
-        <li><a href="#tab_credits" role="tab" data-toggle="tab">Credits</a></li>
+        <?php if ($realm['status'] > 0) { ?>
+        <li>
+        <?php } else { ?>
+        <li class="active">
+        <?php } ?>
+          <a href="#tab_comments" role="tab" data-toggle="tab">Comments</a>
+        </li>
       </ul>
     
       <!-- Tab panes -->
       <div class="tab-content" style="min-height: 400px; margin-top: 20px;">
       
+        <?php if ($realm['status'] > 0) { ?>
         <div id="tab_readme" class="tab-pane active"></div>
+        <?php } ?>
       
         <?php if ($realm['show_funding']) { ?>
         <div id="tab_funding" class="tab-pane clearfix">
@@ -248,7 +262,11 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
         </div>
         <?php } ?>
       
+        <?php if ($realm['status'] > 0) { ?>
         <div id="tab_comments" class="tab-pane">
+        <?php } else { ?>
+        <div id="tab_comments" class="tab-pane active">
+        <?php } ?>
           <div id="comment" style="margin-top: 0px;" class="clearfix">
             <textarea class="form-control" rows="5" cols="100" id="commentContent" placeholder="Add your voice to the conversation..."></textarea>
             <button id="btnAddComment" style="margin-top: 10px;" class="btn btn-default pull-right">Add Comment</button>
@@ -320,226 +338,14 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
 
 <?php require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php"); ?>
 
+<script src="/play/js/realm.js"></script>
+
 <script type="text/javascript">
    
-  var REALM_ID  = "<?=$realmID?>";
-  var REALM_URL = "<?php echo "https://play-" . $realm['address'] . ".assembledrealms.com/realms/" . $realmID . "/" ?>";
-  var renderer;
-  var timeoutID;
-  var timeoutInterval = 1;
-   
-  $.ajaxSetup({
-    crossDomain: true,
-    xhrFields: {
-      withCredentials: true
-    }
-  });
-  
-  var retryConnection = function() {
-    $.get("<?php echo $url_from_auth; ?>", function (data) {
-      $("#realm-container").append(data);
-    });
-  };
-    
-  $(document).ready(function () {
-    
-    $("#publish-date").text(
-      moment($("#publish-date").text()+ " +0000").format("MMMM Do YYYY, h:mm:ss a")
-    );
-    
-    $("#publish-date").parent().parent().fadeIn();
-    
-    renderer = new marked.Renderer();
-    renderer.table = function(header, body) {
-      return '<table class="table table-striped"><thead>' + header + '</thead><tbody>' + body + '</tbody></table>';
-    }
-
-    marked.setOptions({
-      sanitize: true,
-      renderer: renderer
-    });
-    
-    var templateFn = _.template($('#comments_template').html());
-    var templateReplyFn = _.template($('#comment_reply_template').html());
-    
-    async.parallel([
-      function(callback){
-        $.post("/play/realm.php", { directive: "comment", realmID: REALM_ID })
-          .done(function( data ) {
-            if (data !== "null") {
-              data = JSON.parse( data );
-              $("#comments").html(templateFn({ 'comments': data }));
-              
-              for (var i =0; i < data.length; i++) {
-                if (data[i].parent_id) {
-                  var target = $('#comments').find('[data-id="' + data[i].parent_id + '"]');
-                  target.append(templateReplyFn({'comment': data[i]}));
-                }
-              }
-            } 
-            callback(null, true);
-          });
-      },
-      function(callback){
-        $.get(REALM_URL + "README.md", function (data) {
-          $("#tab_readme").html(marked(data));
-          callback(null, true);
-        });
-      },
-      function(callback){
-        $.get(REALM_URL + "CREDITS.md", function (data) {
-          $("#tab_credits").html(marked(data));
-          callback(null, true);
-        });
-      }
-    ],
-    function(err, results){
-      $('#tabsContainer').fadeIn();
-      $('#actionButtons').fadeIn();
-    });
-        
-    $.get("<?php echo $url_from_auth; ?>", function (data) {
-      $("#realm-container").append(data);
-    });
-    
-    $("#btnLove").on("click", function (e) {
-      e.preventDefault();
-      
-      var self = $(this);
-      self.html('<i class="fa fa-spinner fa-spin fa-fw"></i> Loving...');
-      self.attr('disabled', true);
-     
-      $.post("/play/realm.php", {realmID: <?=$realmID?>, directive: 'love'}, function(data) {
-        // Love
-        if (parseInt(data) > 1) {
-          self.html('<i class="fa fa-fw fa-heart" style="color: pink;"></i> ' + data + '  Loves');
-        } else {
-          self.html('<i class="fa fa-fw fa-heart" style="color: pink;"></i> ' + data + '  Love');
-        }
-      });
-    });
-    
-    $("#btnFullscreen").click( function(e) {
-      e.preventDefault();
-      if (BigScreen.enabled) {
-        var realm = document.getElementById('realm');
-        BigScreen.request($('#realm').children()[0]);
-        // You could also use .toggle(element, onEnter, onExit, onError)
-      }
-      else {
-        // fallback for browsers that don't support full screen
-      }
-    });
-    
-    $("#replyToCommentContent").on("focus", function () {    
-      engine.watch(false);
-    });
-    
-    $("#commentContent").on("focus", function () {    
-      engine.watch(false);
-    });
-    
-    $("#realm").on("click", function (e) {
-      $(":focus").blur();
-      engine.watch(true);
-      
-      $("html, body").animate({
-        scrollTop: ($("#realm-container").offset().top - 34)
-      }, 750);
-    });
-    
-    $('#btnComment').on('click', function (e) {
-      e.preventDefault();
-      
-      $('#tabs a[href="#tab_comments"]').tab('show');
-      
-      $('html, body').animate({
-          scrollTop: $("#comment").offset().top - 100
-      }, 400);
-            
-    });
-       
-    $('#btnAddComment').on('click', function (e) {
-        
-      var button = $(this);
-      button.attr('disabled', true);
-      button.html('<i class="fa fa-cog fa-spin"></i> Adding Comment');
-      
-      $.post( "realm.php", { directive: "comment", realmID: "<?=$realmID?>", comment: $('#commentContent').val() })
-        .done(function( data ) {
-          if (data !== "null") {
-              
-            data = JSON.parse( data );
-            
-            $("#comments").append(templateFn({ 'comments': [data] }));
-            button.removeAttr('disabled');
-            button.html('Add Comment');
-            $('#commentContent').val('');
-            
-            // Update comment count:
-            var commentCountSpan = $("#commentCount");
-            var commentCount = parseInt(commentCountSpan.text()) + 1;
-            commentCountSpan.text(commentCount);
-            
-            // Scroll page to new comment:
-            $('html, body').animate({
-                scrollTop: $('#comments').find('[data-id="' + data.id + '"]').offset().top
-            }, 1000);
-
-          }
-        });
-            
-    });
-       
-    $('#comments').on('click', '.reply', function (e) {
-      var button = $(this);
-      var contentBlock = button.closest('div [data-id]');
-      var commentID = contentBlock.attr('data-id');
-      
-      var existingReplyToBlock = $('#replyTo');
-      
-      if (existingReplyToBlock.length > 0) {
-        existingReplyToBlock.remove();
-      }
-      
-      contentBlock.append('<div id="replyTo" style="display: none;" class="well clearfix">' +
-                          '<textarea class="form-control" rows="5" cols="100" id="replyToCommentContent" placeholder="Add your voice to the conversation..."></textarea>' +
-                          '<button id="replyToComment" data-id="' + commentID + '" style="margin-top: 10px;" class="btn btn-default pull-right">Add Comment</button>' +
-                          '</div>'
-                          );
-      
-      $('#replyTo').fadeIn();
-    });
-       
-    $('#comments').on('click', '#replyToComment', function (e) {
-      var button = $(this);
-      
-      button.attr('disabled', true);
-      button.html('<i class="fa fa-cog fa-spin"></i> Add Comment');
-      
-      var commentID = button.attr('data-id');
-      
-      $.post( "realm.php", { directive: "comment", realmID: "<?=$realmID?>", comment: $("#replyToCommentContent").val(), parentID: commentID })
-        .done(function( data ) {
-          if (data !== "null") {
-              
-            data = JSON.parse( data );
-            
-            var target = $('#comments').find('[data-id="' + commentID + '"]');
-            target.append(templateReplyFn({'comment': data}));
-            
-            $('#replyTo').remove();
-            
-            // Scroll page to new comment:
-            $('html, body').animate({
-                scrollTop: $('#comments').find('[data-id="' + data.id + '"]').offset().top
-            }, 1000);
-
-          }
-      });
-    });
-    
-  });
+  var REALM_ID      = "<?= $realmID ?>";
+  var REALM_URL     = "<?= "https://play-" . $realm['address'] . ".assembledrealms.com/realms/" . $realmID . "/" ?>";
+  var REALM_STATUS  = <?= $realm['status'] ?>;
+  var AUTH_URL = "<?= $url_from_auth ?>";
     
 </script>
 
