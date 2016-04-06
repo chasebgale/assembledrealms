@@ -9,6 +9,7 @@ var __map;
 var __treeDropDown;
 var __treeDropDownTarget;
 var __treeDropDownButton;
+var __tree;
 var __processingFiles    = [];
 var __trackedFiles       = [];
 var __commitFiles        = [];
@@ -24,15 +25,23 @@ var __modalSimpleOptions = {
   newFile: {
     title: "Enter the new file's name...",
     placeholder: "New File.js"
+  },
+  rename: {
+    title: "Enter the new name..."
   }
 };
 
-var __requiredFiles = [
+// TODO: This mechanism feels lame
+var REQUIRED = [
   'engine.js',
+  'editor.js',
   'CREDITS.md',
   'FUNDING.md',
   'README.md',
-  'WELCOME.md'
+  'WELCOME.md',
+  'client',
+  'server',
+  'engine'
 ];
 
 function resize() {
@@ -124,23 +133,30 @@ function initialize(projectID, projectDomain) {
       targetClass = "fileOption";
     }
     
+    var targetText = __treeDropDownTarget.text();
+    
+    __modalSimpleOptions.rename.placeholder = targetText;
+    __modalSimpleOptions.rename.val         = targetText;
     
     var readonly = false;
-    if (__requiredFiles.indexOf(__treeDropDownTarget.text()) > -1) {
+    if (REQUIRED.indexOf(targetText) > -1) {
       readonly = true;
     }
     
     // Setup dropdown menu for the correct target
     $("#treeActionsDropDown li").each(function() {
-      if ($(this).hasClass(targetClass)) {
-        if (readonly) {
-          $(this).addClass('disabled');
+      
+      var item = $(this);
+      
+      if (item.hasClass(targetClass)) {
+        if (readonly && item.hasClass('fileOption')) {
+          item.addClass('disabled');
         } else {
-          $(this).removeClass('disabled');
+          item.removeClass('disabled');
         }
-        $(this).show();
+        item.show();
       } else {
-        $(this).hide();
+        item.hide();
       }
     });
     
@@ -151,6 +167,14 @@ function initialize(projectID, projectDomain) {
   
   $("#explorer").on("mouseenter", ".folder, .file", function () {
     if (!__treeDropDown.hasClass("open")) {
+      
+      var item = $(this);
+      if (REQUIRED.indexOf(item.text()) > -1) {
+        if (item.hasClass('file')) {
+          __treeDropDownButton.hide();
+          return true;
+        }
+      }
       
       __treeDropDownTarget = $(this);
       
@@ -190,7 +214,12 @@ function initialize(projectID, projectDomain) {
     var self   = $(this);
     var target = self.attr('data-target');
     var modal  = $(target);
-    var path   = "/" + __treeDropDownTarget.parent().attr('data-path') + "/";
+    
+    if (__treeDropDownTarget.attr('data-path')) {
+      var path = "/" + __treeDropDownTarget.attr('data-path');
+    } else {
+      var path = "/" + __treeDropDownTarget.parent().attr('data-path') + "/";
+    }
     
     if (self.parent().hasClass('disabled')) {
       return false;
@@ -205,25 +234,67 @@ function initialize(projectID, projectDomain) {
         
         modal.find('.modal-title').text(options.title);
         input.attr('placeholder', options.placeholder);
-        input.val('');
+        if (options.val) {
+          input.val(options.val);
+        } else {
+          input.val('');
+        }
         
         $("#inputFilenameLabel").text(path);
         
         // What task to perform per action type
         $("#buttonFilename").click(function() {
+          var inputValue = input.val();
           
           // Validate (no slashes allowed):
-          if (input.val().match(/[\/\\]/g).length > 0) {
+          if (inputValue.match(/[\/\\]/g)) {
             $("#alertFilename").text("Slashes are not valid characters...");
             $("#alertFilename").show();
             return;
           }
+          
+          var button = $(this);
+          button.attr('disabled', true);
+          button.html('<i class="fa fa-cog fa-spin"></i> OK');
 
           switch (action) {
             case 'newFolder':
-              
+              var targetUrl = '/folder/create';
+              var post      = {
+                fullpath: path + inputValue
+              };
               break;
           }
+          
+          $.ajax({
+            url:        __projectURL + targetUrl,
+            type:       'post',
+            dataType:   'json',
+            data:       post
+          })
+          .done(function (data) {
+            console.log(data);
+            if (data.message === "OK") {
+              
+              addFolderToExplorer(__treeDropDownTarget.parent().attr('data-path'), inputValue);
+              modal.modal('hide');
+              
+            } else {
+              $('#alertFilename').text('Delete Error: ' + data.message);
+              $('#alertFilename').fadeIn();
+            }
+              
+          })
+          .fail(function(data) {
+            console.log(data);
+            $('#alertFilename').text('Network Error: ' + data.statusText);
+            $('#alertFilename').fadeIn();
+          })
+          .always(function () {
+            button.attr('disabled', false);
+            button.html('OK');
+          });
+          
         });
         
         // Update the label with the new path
@@ -276,19 +347,24 @@ function initialize(projectID, projectDomain) {
     var target  = button.attr('data-target');
     var type    = button.attr('data-type');
     var sha     = button.attr('data-id');
-    
       
     button.attr('disabled', true);
     button.html('<i class="fa fa-cog fa-spin"></i> Delete');
     button.next().attr('disabled', true);
     
+    if (type === "file") {
+      var url = '/file/remove';
+    } else if (type === "folder") {
+      var url = '/folder/remove';
+    }
+    
     var post = {
-      path: target,
+      fullpath: target,
       type: type
     };
     
     $.ajax({
-      url:        __projectURL + '/file/remove',
+      url:        __projectURL + url,
       type:       'post',
       dataType:   'json',
       data:       post
@@ -298,18 +374,40 @@ function initialize(projectID, projectDomain) {
       if (data.message === "OK") {
         
         if (type === "file") {
-          var tracking_id = __projectId + '-' + sha;
+          var tracking_id = __projectId + '-' + target;
+          sessionStorage.removeItem(tracking_id + '-commit-md5');
+          sessionStorage.removeItem(tracking_id + '-name');
+          sessionStorage.removeItem(tracking_id + '-path');
           sessionStorage.removeItem(tracking_id);
+          
+          var tracking  = JSON.parse(sessionStorage[__projectId + '-tracking']);
+          var index     = tracking.indexOf(tracking_id);
+          
+          if (index !== -1) {
+            tracking.splice(index, 1);
+            sessionStorage[__projectId + '-tracking'] = JSON.stringify(tracking);
+          }
           
           // Move the indicator off this DOM ele as it's about to have it's parent trashed
           $("#treeLoadingFileIndicator").appendTo($('body'));
+          __treeDropDownButton.appendTo($('body'));
           $("#tree [data-id='" + sha + "']").parent().remove();
-          // TODO: LOAD Welcome.md INTO EDITOR IF VIEWING FILE WE ARE DELETING
+          
+          // Show welcome file after delete, if user was viewing deleted file
+          if (__fileId === tracking_id) {
+            var welcomeDOM = $('#explorer [data-path="WELCOME.md"]');
+            if (welcomeDOM) {
+              welcomeDOM.addClass('activefile');
+
+              loadRealmFile(welcomeDOM.attr('data-id'), 'WELCOME.md', 'WELCOME.md', true);
+            }
+          }
         } else {
-           // TODO: REMOVE FOLDER
+          // REMOVE FOLDER
+          $("#tree [data-path='" + target + "']").remove();
+          // Reapply styles and event handlers
+          __tree.applyClasses({}, __tree.data('toggler'));
         }
-        
-        
         
         $('#modalDeleteConfirm').modal('hide');
         $('#alertDelete').hide();
@@ -484,7 +582,7 @@ function initialize(projectID, projectDomain) {
             button.attr('disabled', false);
             
             $("#explorer .file").removeClass('activefile');
-            addToExplorer(__treeDropDownTarget.parent().attr('data-path'), upload.name, '');
+            addToExplorer(__treeDropDownTarget.parent().attr('data-path'), upload.name, json.sha);
             
             alert.addClass('alert-success');
             alert.html("<strong>" + upload.name + "</strong> was successfully added to your resource folder!");
@@ -672,6 +770,48 @@ function addToExplorer(path, name, sha) {
     } else {
 		loadRealmFile(sha, path + "/" + name, name);
 	}
+}
+
+// TODO - REPLACE THIS TREEVIEW WITH YOUR OWN, GETTING CRAZY
+// path = client/engine
+// name = new_folder
+function addFolderToExplorer(path, name) {
+  
+  var inserted = false;
+  var fullpath = path + "/" + name;
+  
+  var root  = $("#explorer [data-path='" + path + "']").children("ul");
+  // Select subset of only folders:
+  var items = root.children(".closed");
+  
+  var markup = '<li class="hasChildren closed expandable" data-path="' + fullpath + '"><div class="hitarea hasChildren-hitarea closed-hitarea expandable-hitarea"></div><span class="folder">' + name + '</span><ul style="display: none;"></ul></li>';
+  
+  items.each(function () {
+    if ($(this).attr('data-path') > fullpath) {
+      inserted = true;
+      var dom = $(this).before(markup);
+      return false;
+    }
+  });
+  
+  if (!inserted) {
+    if (root.children('.closed').length > 0) {
+      var lastFolder = root.children('.closed').last();
+      lastFolder.removeClass('lastExpandable');
+      lastFolder.children().first().removeClass('lastExpandable-hitarea');
+      
+      markup = '<li class="hasChildren closed expandable lastExpandable" data-path="' + fullpath + '"><div class="hitarea hasChildren-hitarea closed-hitarea expandable-hitarea lastExpandable-hitarea"></div><span class="folder">' + name + '</span><ul style="display: none;"></ul></li>';
+      
+      var dom = lastFolder.after(markup);
+    } else {
+      var dom = root.prepend(markup);
+    }
+  }
+  
+  //root.find("[data-path='" + path + "/" + name + "']").children('span').hoverClass();
+  
+  // Reapply styles and event handlers
+  __tree.applyClasses({}, __tree.data('toggler'));
 }
 
 function listCommitFiles() {
@@ -990,41 +1130,13 @@ function loadRealmRoot() {
     
     $("#explorer").html(templateFnFiles({ 'model': json, 'templateChildFnFiles': templateChildFnFiles }));
 
-    $("#explorer").treeview({
+    __tree = $("#explorer").treeview({
       animated: "fast"
     });
     
     $("#tree").scroll(function() {
       __treeDropDownButton.css('right', ($(this).scrollLeft() * -1) + 'px');
     });
-    
-    /*
-    $("#explorer .folder").popover({
-      container:  'body',
-      html:       true,
-      placement:  function (popover, triggerElement) {
-        console.log('placement 1: ' + $(popover).css("left"));
-        $(popover).css("left", (parseInt($(popover).css("left").slice(0, -2)) - 40) + 'px');
-        console.log('placement 2: ' + $(popover).css("left"));
-      },
-      trigger:    'hover',
-      content:    '<button type="button" class="btn btn-default btn-xs"><i class="fa fa-folder-o fa-fw"></i></button><button type="button" class="btn btn-default btn-xs"><i class="fa fa-folder-o fa-fw"></i></button>'
-    })
-    .on('shown.bs.popover', function (e) {
-      console.log('shown.bs.popover: ' + $(this).css("left"));
-
-      var currentTop = parseInt($(this).css('top'));
-      var currentLeft = parseInt($(this).css('left'));
-
-      $(this).css({
-          top: currentTop + 'px',
-          left: (currentLeft + 100) + 'px'
-      });
-    });
-    .on('inserted.bs.popover', function (e) {
-      console.log('woah');
-    });
-    */
     
     var folderList = $('#newfileLocation');
     
@@ -1071,26 +1183,18 @@ function loadRealmFile(id, path, name, rendered) {
 
   // Binary formats (like images and audio) only have 'viewers' right now, no editors
   if (isImageFile(name)) {
-    /*     
-    $('#image').children('img').each(function(i) { 
-        $(this).hide();
-    });
-    
-    $("#image").html("<img src='" + __projectURL + '/file/raw/' + encodeURIComponent(path) + "' id='" + id + "' style='background-image: url(/build/img/transparent_display.gif);' />");
-    */
-    
     var imageSource = __projectURL + '/file/raw/' + encodeURIComponent(path);
     var image = $("<img src='" + imageSource + "' id='" + id + "' style='background-image: url(/build/img/transparent_display.gif);' />").on('load', function() {
       $("#image").empty();
       $("#image").append(image);
       displayImage();
+      __fileId = tracking_id;
       $("#treeLoadingFileIndicator").fadeOut();
     });
     return;
   }
   
   // If we're this far, we need to load up some ascii
-  
   $.ajax({
     url: __projectURL + '/file/raw/' + encodeURIComponent(path),
     type: 'get',
@@ -1128,12 +1232,13 @@ function realmResourceURL(path) {
 }
 
 function displayImage() {
-    $("#ulView li").css('display', 'none');
-    $("#tabs .tab-pane").hide();
-    $("#btnView").html('<i class="fa fa-eye"></i> Raw Image <span class="caret"></span>');
-    
-    $("#tab-nav-image").css('display', 'block');
-    $('#image').show();
+  $('#editorOptions').hide();
+  $("#ulView li").css('display', 'none');
+  $("#tabs .tab-pane").hide();
+  $("#btnView").html('<i class="fa fa-eye"></i> Raw Image <span class="caret"></span>');
+  
+  $("#tab-nav-image").css('display', 'block');
+  $('#image').show();
 }
 
 function isImageFile(name) {

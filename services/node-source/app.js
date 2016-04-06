@@ -5,6 +5,7 @@ var fs 			        = require('fs');
 var project         = require('./routes/project')
 var file            = require('./routes/file')
 //var busboy          = require('connect-busboy')
+var rimraf 		      = require('rimraf');
 var util            = require('util');
 var https           = require('https');
 var http            = require('http');
@@ -144,10 +145,13 @@ app.post('/api/project/:id/file/create', file.create);
 app.post('/api/project/:id/file/upload', file.upload);
 app.post('/api/project/:id/file/remove', file.remove);
 
+app.post('/api/project/:id/folder/create', file.createFolder);
+app.post('/api/project/:id/folder/remove', file.removeFolder);
+
 app.use(function(err, req, res, next){
-    console.error(err.message);
+  console.error(err.message);
 	console.error(err.stack);
-    res.send(500, err.message);
+  res.send(500, err.message);
 });
 
 var minute      = 60000;
@@ -173,21 +177,14 @@ https.createServer(options, app).listen(8000, function () {
   console.log("HTTPS started on port 8000");
 }); //443
 
-/*
-app.listen(3000, function(){
-    console.log("Express server listening on port 3000, request to port 80 are redirected to 3000 by Fedora.");
-*/  
-    // Run once a minute and check the sessions for inactivity
-    var sessionLoop = setInterval(function () {
-        var keys = Object.keys(sessions);
-        var now  = Date.now();
-        for (var i = 0; i < keys.length; i++) {
-            // If the session has been inactive for 6 hours, kill it
-            if ((now - sessions[keys[i]].activity) > sixhours) {
-                delete sessions[keys[i]];
-            }
+// Run once a minute and check the sessions for inactivity
+var sessionLoop = setInterval(function () {
+    var keys = Object.keys(sessions);
+    var now  = Date.now();
+    for (var i = 0; i < keys.length; i++) {
+        // If the session has been inactive for 6 hours, kill it
+        if ((now - sessions[keys[i]].activity) > sixhours) {
+            delete sessions[keys[i]];
         }
-    }, minute);
-/*
-});
-*/
+    }
+}, minute);

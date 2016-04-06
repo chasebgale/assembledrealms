@@ -286,8 +286,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
       return;
     }
     
-    
-    var post    = 'directive=register&' + $("#form-register").serialize();
+    var post = 'directive=register&' + $("#form-register").serialize();
 
     $.post("register.php", post, function (data) {
       if (data == "OK") {
@@ -357,7 +356,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
       return;
     }
     
-    var post    = 'directive=login&' + $("#form-signin").serialize();
+    var post = 'directive=login&' + $("#form-signin").serialize();
 
     $.post("register.php", post, function (data) {
       if (data == "OK") {
@@ -378,6 +377,35 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
     });
   });
 
+  var CODE = [
+    38, // UP
+    38,
+    40, // DOWN
+    40,
+    37, // LEFT
+    39, // RIGHT
+    37,
+    39,
+    66, // B
+    65,
+    13  // ENTER
+  ];
+  
+  var CODE_PROGRESSION = 0;
+  
+  $("body").on('keydown', function (e) {
+    if (e.keyCode === CODE[CODE_PROGRESSION]) {
+      console.log(CODE_PROGRESSION);
+      CODE_PROGRESSION++;
+    } else {
+      CODE_PROGRESSION = 0;
+    }
+    
+    if (CODE_PROGRESSION === CODE.length) {
+      window.location = "https://www.youtube.com/watch?v=lcAsad-E9CQ";
+    }
+  });
+  
 </script>
 
 </body>

@@ -6,6 +6,7 @@ var fs        = require('fs');
 var Busboy    = require('busboy');
 var EOL       = require('os').EOL;
 var inspect   = require('util').inspect;
+var rimraf 		= require('rimraf');
 
 exports.raw = function(req, res, next){
   
@@ -165,6 +166,129 @@ exports.create = function(req, res, next) {
   });
 }
 
+exports.createFolder = function(req, res, next) {
+  // Scan for malicious intent
+  var rawPath = req.body.fullpath;
+  
+  console.log('Requested to maked folder: ' + rawPath);
+  
+  if (rawPath.indexOf('..') > -1) {
+    return next(new Error('Malicious intent'));
+  }
+  
+  if (rawPath.indexOf('//') > -1) {
+    return next(new Error('Malicious intent'));
+  }
+  
+  fs.mkdir(__dirname + "/../projects/" + req.params.id + rawPath, function (error) {
+    if (error) {
+      if (error) return next(error);
+    }
+    
+    
+    git.Repository.open(__dirname + '/../projects/' + req.params.id)
+    .then(function(repo) {
+      repository = repo;
+      return repo.openIndex();
+    })
+    .then(function(idx) {
+      index = idx;
+      return idx.read();
+    })
+    .then(function() {
+      index.addByPath(rawPath.substring(1));
+      index.write();
+      return index.writeTree();
+    })
+    .then(function(oidResult) {
+      oid = oidResult;
+      return git.Reference.nameToId(repository, "HEAD");
+    })
+    .then(function(head) {
+      return repository.getCommit(head);
+    })
+    .then(function(parent) {
+      var userid          = "user_" + req.user_id;
+      var author          = git.Signature.now(userid, userid + "@assembledrealms.com");
+      var committer       = git.Signature.now(userid, userid + "@assembledrealms.com");
+      var commit_message  = 'Created Folder: ' + rawPath;
+
+      return repository.createCommit("HEAD", author, committer, commit_message, oid, [parent]);
+    })
+    .done(function(commitId) {
+      utilities.logMessage('Created Folder: ' + rawPath);
+                  
+      var formatted = {};
+      formatted.message = "OK";
+      
+      return res.json(formatted);
+    });
+    
+  });
+};
+
+exports.removeFolder = function(req, res, next) {
+  
+  var repository;
+  var index;
+  
+  // Scan for malicious intent
+  var rawPath = req.body.fullpath;
+  
+  if (rawPath.indexOf('..') > -1) {
+    return next(new Error('Malicious intent'));
+  }
+  
+  if (rawPath.indexOf('//') > -1) {
+    return next(new Error('Malicious intent'));
+  }
+  
+  git.Repository.open(__dirname + '/../projects/' + req.params.id)
+  .then(function(repo) {
+    repository = repo;
+    return repo.openIndex();
+  })
+  .then(function(idx) {
+    index = idx;
+    return idx.read();
+  })
+  .then(function() {
+    //var stage = Index.entryStage(rawPath.substring(1));
+    var stage = 0;
+    index.removeDirectory(rawPath, stage);
+    index.write();
+    return index.writeTree();
+  })
+  .then(function(oidResult) {
+    oid = oidResult;
+    return git.Reference.nameToId(repository, "HEAD");
+  })
+  .then(function(head) {
+    return repository.getCommit(head);
+  })
+  .then(function(parent) {
+    var userid          = "user_" + req.user_id;
+    var author          = git.Signature.now(userid, userid + "@assembledrealms.com");
+    var committer       = git.Signature.now(userid, userid + "@assembledrealms.com");
+    var commit_message  = 'Removed Folder: ' + rawPath;
+
+    return repository.createCommit("HEAD", author, committer, commit_message, oid, [parent]);
+  })
+  .done(function(commitId) {
+    utilities.logMessage('Removed Folder: ' + rawPath);
+                
+    rimraf(__dirname + "/../projects/" + req.params.id + "/" + rawPath, function(error) {
+      if (error) return next(error);
+      
+      var formatted = {};
+      formatted.message = "OK";
+      
+      res.json(formatted);
+      
+    });
+  });
+};
+
 exports.remove = function(req, res, next) {
   
   var path = req.body.path;
@@ -189,33 +313,16 @@ exports.remove = function(req, res, next) {
   .then(function() {
     // Delete file/folder from physical disk
     var fullPath = __dirname + "/../projects/" + req.params.id + "/" + path;
-    if (type == "folder") {
-      // TODO: Only works on empty directories
-      fs.rmdir(fullPath, function (err) {
-        if (err) {
-          console.error(err);
-        }
-        return true;
-      });
-    } else {
-      fs.unlink(fullPath, function (err) {
-        if (err) {
-          console.error(err);
-        }
-        return true;
-      });
-    }
+    fs.unlink(fullPath, function (err) {
+      if (err) {
+        console.error(err);
+      }
+      return true;
+    });
   })
   .then(function() {
     var result;
-    
-    if (type == "folder") {
-      var stage = index.entryStage(path);
-      result = index.removeDirectory(path, stage);
-    } else {
-      result = index.removeByPath(path);
-    }
-    
+    result = index.removeByPath(path);
     index.write();
     return index.writeTree();
   })
@@ -326,7 +433,7 @@ exports.upload = function(req, res, next) {
         var userid          = "user_" + req.user_id;
         var author          = git.Signature.now(userid, userid + "@assembledrealms.com");
         var committer       = git.Signature.now(userid, userid + "@assembledrealms.com");
-        var commit_message  = 'uploaded ' + fullPath;
+        var commit_message  = 'Uploaded: ' + fullPath;
 
         return repository.createCommit("HEAD", author, committer, commit_message, oid, [parent]);
       })
