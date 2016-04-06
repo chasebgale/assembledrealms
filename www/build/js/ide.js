@@ -195,6 +195,12 @@ function initialize(projectID, projectDomain) {
     }
   });
   
+  $("#explorer").on("mouseleave", function () {
+    if (!__treeDropDown.hasClass("open")) {
+      __treeDropDownButton.hide();
+    }
+  });
+  
   $("#explorer").on("click", ".folder, .file", function () {
     if (__treeDropDown.hasClass("open")) {
       __treeDropDownTarget = $(this);

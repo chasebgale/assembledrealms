@@ -42,6 +42,15 @@ engine.on('debug', function engineDebug(message) {
   io.to('debug').emit('debug', message);
 });
 
+engine.readFile = function (file, callback) {
+  if (file.indexOf('..') > -1) {
+    return callback(new Error('Illegal request'));
+  }
+
+  file = __dirname + '/../' + file;
+  fs.readFile(file, callback);
+};
+
 app.use(function(req, res, next) {
   res.header('Access-Control-Allow-Origin', 'https://www.assembledrealms.com');
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
