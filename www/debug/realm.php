@@ -213,6 +213,14 @@ if (is_numeric($_SERVER['QUERY_STRING'])) {
         });
       });
       
+      $("#btnReboot").on("click", function (e) {
+        $.get(AUTH_URL + "reboot", function (data) {
+          if (data.message === "OK") {
+            window.location.reload(true);
+          }
+        });
+      });
+      
       $("#btnFPS").on("click", function (e) {
         var self = $(this);
 

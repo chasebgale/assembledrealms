@@ -702,6 +702,50 @@ app.get('/realms/:id/log', function httpGetRealmLog(req, res, next) {
   });
 });
 
+if (MODE_DEBUG) {
+  app.get('/realms/:id/reboot', function httpGetRealmReboot(req, res, next) {
+    
+    var user_id         = req.user_id;
+    var realm_id        = req.params.id;
+    var realm_access_db = "realm_" + realm_id + "_access";
+    
+    db.zscore([realm_access_db, user_id], function (error, reply) {
+      if (error) {
+        return res.status(500).send(error.message);
+      }
+      
+      if (reply.toString() === "1") {
+        
+        db.keys("realm_" + realm_id + "*", function (error, keys) {
+          if (error) {
+            return res.status(500).send(error.message);
+          }
+          
+          async.each(keys, function (key, callback) {
+            db.del(key, callback);
+          }, function (error) {
+            if (error) {
+              return res.status(500).send(error.message);
+            }
+            
+            startRealm(req.params.id, function (error) {
+              if (error) {
+                return res.status(500).send(error.message);
+              }
+              
+              return res.json({message: 'OK'});
+            });
+          });
+        });
+        
+      } else {
+        console.log("Non-owner reboot attempt, user: %s, db response: %s", user_id, reply.toString());
+        return res.status(401).send("Sensitive area! Please don't tinker!");
+      }
+    });
+  });
+}
+
 /////////////////////////////////
 // USER SOCKET ROUTES
 io.use(function(socket, next) {

@@ -34,6 +34,7 @@ var ACTIVE_SESSIONS    = "sessions_active";
 
 var engine  = new Engine();
 
+/*
 engine.on('create', function engineCreate(actors) {
   io.emit('create', actors);
 });
@@ -41,15 +42,22 @@ engine.on('create', function engineCreate(actors) {
 engine.on('debug', function engineDebug(message) {
   io.to('debug').emit('debug', message);
 });
+*/
 
 engine.readFile = function (file, callback) {
   if (file.indexOf('..') > -1) {
     return callback(new Error('Illegal request'));
   }
 
-  file = __dirname + '/../' + file;
+  file = __dirname + '/' + realm_id + '/' + file;
   fs.readFile(file, callback);
 };
+
+engine.emit = function (type, message) {
+  io.emit(type, message);
+}
+
+
 
 app.use(function(req, res, next) {
   res.header('Access-Control-Allow-Origin', 'https://www.assembledrealms.com');
@@ -126,9 +134,8 @@ io.on('connection', function socketConnected(socket) {
   var session    = socket.request.session.id;
   var player;
   
-  console.log("[SOCKET]: Connected {userID: %s, playerKey: %s, playerName: %s}",
+  console.log("[SOCKET]: Player %s '%s' has connected",
     userID,
-    playerKey,
     playerName
   );
   
@@ -166,8 +173,8 @@ io.on('connection', function socketConnected(socket) {
         // Send initial data with all npc/pc locations, stats, etc
         var data        = {};
         data.player     = player;
-        data.players    = engine.players();
-        data.npcs       = engine.npcs();
+        data.players    = engine.players;
+        data.npcs       = engine.npcs;
         
         socket.emit('sync', data);
         
@@ -299,7 +306,7 @@ engine.initialize(function(error) {
     
     engine.tick();
     
-    var broadcast = engine.broadcast();
+    var broadcast = engine.broadcast;
     
     if ((Object.getOwnPropertyNames(broadcast.npcs).length > 0) ||
       (Object.getOwnPropertyNames(broadcast.players).length > 0)) {
@@ -330,7 +337,8 @@ engine.initialize(function(error) {
       // Listen on random port because lots (hopefully) of other nodes are running too!
       serverSecure.listen(0, function(){
         // Log the port to the console
-        console.log("port: " + serverSecure.address().port);
+        console.log("[SOCKET]: Port secured and listening");
+        //console.log("port: " + serverSecure.address().port);
 
         if (debug) {
           // In debug mode, trash any DB entries on (re)start so we don't get into trouble
@@ -355,7 +363,7 @@ engine.initialize(function(error) {
           if (err) {
             console.log(err);
           }
-          console.log(reply);
+          console.log("[SOCKET]: Registered with backend");
         });
           
       });
