@@ -505,8 +505,10 @@ app.get('/shutdown/play/shared/:id', function (req, res, next) {
 app.post('/launch/debug/shared/:id', function (req, res, next) {
   var time        = new Date().getTime();
   var realm_id    = req.params.id;
+  
   // TODO: Pick least congested
-  var realm_host  = 'debug-' + '01' + '.assembledrealms.com';
+  var realm_host_num  = '01'; 
+  var realm_host      = 'debug-' + realm_host_num + '.assembledrealms.com';
   var realm;
   
   // Does this user have permission to modify this realm?
@@ -564,7 +566,35 @@ app.post('/launch/debug/shared/:id', function (req, res, next) {
           request.get(options, function(err, response, body) {
             if ((response.statusCode > 199) && (response.statusCode < 300)) {
               // SUCCESSFULLY LAUNCHED ON DEBUG-XX  
-              return res.json({message: 'OK'});
+              
+              // UPDATE REALMS TABLE ON assembledrealms.com
+              var options = {
+                url: 'https://www.assembledrealms.com/external/gatekeeper.php',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': HOME_TOKEN,
+                  'Accept': '*/*'
+                },
+                formData: {
+                  directive: 'update_realm_debug',
+                  realm_id: realm.id,
+                  realm_host: realm_host_num
+                }
+              };
+              
+              request.post(options, function(err, response, body) {
+        
+                if (err) {
+                  console.error(err);
+                  return res.status(500).send(err.message);
+                }
+                
+                if ((response.statusCode > 199) && (response.statusCode < 300)) {
+                  return res.json({message: 'OK'});
+                } else {
+                  return res.status(500).send('Response fauilure: ' + response.statusCode);
+                }
+              });
               
             } else {
               console.log('Failure http code from launch request...');

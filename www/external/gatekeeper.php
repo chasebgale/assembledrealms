@@ -88,6 +88,22 @@
         echo json_encode( (object) ['message' => 'OK'] );
       }
       
+      if ($directive === 'update_realm_debug') {
+      
+        $realm_id     = $_POST['realm_id'];
+        $realm_host   = $_POST['realm_host'];
+
+        $stmt = $mysqli->prepare("UPDATE realms
+          SET address_debug = ?
+          WHERE
+          id = ?");
+        $stmt->bind_param("si", $realm_host, $realm_id);
+        $stmt->execute();
+        $stmt->close();
+        
+        echo json_encode( (object) ['message' => 'OK'] );
+      }
+      
       mysqli_close($mysqli);
       
     }

@@ -4,7 +4,6 @@ var cookieParser 	  = require('cookie-parser');
 var fs 			        = require('fs');
 var project         = require('./routes/project')
 var file            = require('./routes/file')
-//var busboy          = require('connect-busboy')
 var rimraf 		      = require('rimraf');
 var util            = require('util');
 var https           = require('https');
