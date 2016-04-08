@@ -93,84 +93,82 @@ exports.open = function(req, res, next){
 }
 
 exports.create = function(req, res, next) {
-  git.Repo.open(__dirname + "/../projects/" + req.params.id, function(error, repo) {
+  
+  var fileName = req.body.fullpath;
+  var fileContent = "// Auto generated: " + new Date().getTime();
+  
+  if (fileName.indexOf('..') > -1) {
+    return next(new Error('Malicious intent'));
+  }
+  
+  if (fileName.indexOf('//') > -1) {
+    return next(new Error('Malicious intent'));
+  }
+  
+  fs.writeFile(path.join(__dirname + '/../projects/' + req.params.id, fileName), fileContent, function (error) {
+    
     if (error) return next(error);
     
-    var fileName = req.body.fullpath;
-    var fileContent = "// Auto generated: " + new Date().getTime();
-    
-    //create the file in the repo's workdir
-    fs.writeFile(path.join(repo.workdir(), fileName), fileContent, function(error) {
-      if (error) return next(error);
-  
-      //add the file to the index...
-      repo.openIndex(function(error, index) {
-        if (error) return next(error);
-  
-        index.read(function(error) {
-          if (error) return next(error);
-  
-          index.addByPath(fileName, function(error) {
-            if (error) return next(error);
-  
-            index.write(function(error) {
-              if (error) return next(error);
-  
-              index.writeTree(function(error, oid) {
-                if (error) return next(error);
-  
-                //get HEAD
-                git.Reference.oidForName(repo, 'HEAD', function(error, head) {
-                  if (error) return next(error);
-  
-                  //get latest commit (will be the parent commit)
-                  repo.getCommit(head, function(error, parent) {
-                    if (error) return next(error);
-                    var userid    = "user_" + req.user_id;
-                    var author    = git.Signature.now(userid, userid + "@assembledrealms.com");
-                    var committer = git.Signature.now(userid, userid + "@assembledrealms.com");
-  
-                    //commit
-                    repo.createCommit('HEAD', author, committer, 'message', oid, [parent], function(error, commitId) {
-                      if (error) return next(error);
-                      
-                      repo.getCommit(commitId, function(error, latest) {
-                        if (error) return next(error);
-                        
-                        latest.getEntry(fileName, function(error, entry) {
-                          if (error) return next(error);
-                          
-                          utilities.logMessage('Created FILE: ' + entry.oid().sha() + ' (' + fileName + ')');
-                          
-                          var formatted = {};
-                          formatted.commit = commitId.sha();
-                          formatted.sha = entry.oid().sha();
-                          formatted.message = "OK";
-                          formatted.content = fileContent;
-                          
-                          res.json(formatted);
-                          
-                        });
-                        
-                      });
-                    });
-                  });
-                });
-              });
-            });
-          });
-        });
-      });
+    git.Repository.open(__dirname + '/../projects/' + req.params.id)
+    .then(function(repo) {
+      repository = repo;
+      return repo.openIndex();
+    })
+    .then(function(idx) {
+      index = idx;
+      return idx.read();
+    })
+    .then(function() {
+      index.addByPath(fileName.substring(1));
+      index.write();
+      return index.writeTree();
+    })
+    .then(function(oidResult) {
+      oid = oidResult;
+      return git.Reference.nameToId(repository, "HEAD");
+    })
+    .then(function(head) {
+      return repository.getCommit(head);
+    })
+    .then(function(parent) {
+      var userid          = "user_" + req.user_id;
+      var author          = git.Signature.now(userid, userid + "@assembledrealms.com");
+      var committer       = git.Signature.now(userid, userid + "@assembledrealms.com");
+      var commit_message  = 'Created ' + fileName;
+
+      return repository.createCommit("HEAD", author, committer, commit_message, oid, [parent]);
+    })
+    .then(function(commitId) {
+      return repository.getCommit(commitId);
+    })
+    .then(function(latest) {
+      sha = latest.sha();
+      return latest.getEntry(fileName.substring(1));
+    })
+    .catch(function(error) {
+      if (error) {
+        console.error(error);
+      }
+    })
+    .done(function(entry) {
+      utilities.logMessage('Created ' + fileName);
+                  
+      var formatted = {};
+      formatted.sha = entry.sha();
+      formatted.message = "OK";
+      
+      return res.json(formatted);
     });
     
   });
+  
 }
 
 exports.createFolder = function(req, res, next) {
   // Scan for malicious intent
   var rawPath = req.body.fullpath;
   
-  console.log('Requested to maked folder: ' + rawPath);
+  console.log('Requested to make folder: ' + rawPath);
   
   if (rawPath.indexOf('..') > -1) {
     return next(new Error('Malicious intent'));
@@ -291,13 +289,21 @@ exports.removeFolder = function(req, res, next) {
 
 exports.remove = function(req, res, next) {
   
-  var path = req.body.path;
+  var path = req.body.fullpath;
   var type = req.body.type;
   
   var repository;
   var index;
   var oid;
   var sha;
+  
+  if (path.indexOf('..') > -1) {
+    return next(new Error('Malicious intent'));
+  }
+  
+  if (path.indexOf('//') > -1) {
+    return next(new Error('Malicious intent'));
+  }
   
   console.log("Received request to delete: " + path);
   
@@ -356,7 +362,118 @@ exports.remove = function(req, res, next) {
     
     return res.json(formatted);
   });
-}
+};
+
+exports.rename = function(req, res, next) {
+  var newPath   = req.body.newPath;
+  var oldPath   = req.body.oldPath;
+  var fullpath  = __dirname + "/../projects/" + req.params.id + '/';
+  
+  var repository;
+  var index;
+  
+  if (newPath.indexOf('..') > -1) {
+    return next(new Error('Malicious intent'));
+  }
+  
+  if (newPath.indexOf('//') > -1) {
+    return next(new Error('Malicious intent'));
+  }
+  
+  if (oldPath.indexOf('..') > -1) {
+    return next(new Error('Malicious intent'));
+  }
+  
+  if (oldPath.indexOf('//') > -1) {
+    return next(new Error('Malicious intent'));
+  }
+  
+  if ((oldPath[0] == '/') || (newPath[0] == '/')) {
+    return next(new Error('Malformed rename'));
+  }
+  
+  // Input parameters should not start with '/'
+  fs.rename(fullpath + oldPath, fullpath + newPath, function (error) {
+      
+    if (error) {
+      console.error(error);
+    }
+    
+    git.Repository.open(__dirname + '/../projects/' + req.params.id)
+    .then(function(repo) {
+      repository = repo;
+      return repo.index();
+    })
+    .then(function(idx) {
+      index = idx;
+      return idx.read();
+    })
+    .then(function() {
+      fs.stat(fullpath + newPath, function (error, stats) {
+        if (error) {
+          console.log('stats error');
+          console.error(error);
+        }
+        
+        return stats.isFile();
+      });
+    })
+    .then(function(isFile) {
+      console.log('Is rename target a file? ' + isFile);
+      
+      if (isFile) {
+        var idxRemove = index.removeByPath(oldPath);
+        console.log('index.removeByPath("%s") = %s', oldPath, idxRemove);
+      } else {
+        var idxRemove = index.removeDirectory(oldPath, 0);
+        console.log('index.removeDirectory("%s", 0) = %s', oldPath, idxRemove);
+      }
+      
+      return repo.index();
+      
+      var idxAdd = index.addByPath(newPath);
+      console.log('index.addByPath("%s") = %s', newPath, idxAdd);
+      
+      var idxWrite = index.write();
+      console.log('index.write() = %s', idxWrite);
+      
+      return index.writeTree();
+    })
+    .then(function(oidResult) {
+      oid = oidResult;
+      return git.Reference.nameToId(repository, "HEAD");
+    })
+    .then(function(head) {
+      return repository.getCommit(head);
+    })
+    .then(function(parent) {
+      var userid          = "user_" + req.user_id;
+      var author          = git.Signature.now(userid, userid + "@assembledrealms.com");
+      var committer       = git.Signature.now(userid, userid + "@assembledrealms.com");
+      var commit_message  = 'Renamed ' + oldPath + ' to ' + newPath;
+
+      return repository.createCommit("HEAD", author, committer, commit_message, oid, [parent]);
+    })
+    .then(function(commitId) {
+      return repository.getCommit(commitId);
+    })
+    .then(function(latest) {
+      sha = latest.sha();
+      return latest.getEntry(newPath);
+    })
+    .done(function(entry) {
+      utilities.logMessage('Renamed ' + oldPath + ' to ' + newPath);
+                  
+      var formatted = {};
+      formatted.sha = entry.sha();
+      formatted.message = "OK";
+      
+      return res.json(formatted);
+    });
+    
+  });
+  
+};
 
 exports.upload = function(req, res, next) {
 

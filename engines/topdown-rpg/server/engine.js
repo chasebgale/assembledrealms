@@ -1,6 +1,21 @@
-var EventEmitter  = require('events').EventEmitter;
-var util          = require('util');
-var fs            = require('fs');
+/*
+Due to security concerns, require() and eval() statements will prevent 
+the server from compiling. Access to protected functionality is exposed
+via the following functions:
+  
+Engine.readFile(file, function (error, data) {});
+  Restricted to reading files from your realm's directory, urls should not start 
+  with '/' and should not contain '..' - attempts to read outside of your directory
+  are blocked
+  
+Engine.emit(type, message);
+  Broadcast a message of 'type' to all connected clients, out of the normal broadcast loop.
+  'message' can be an object or string
+  
+If you find yourself needing additional functionality, contact me
+  @chasebgale
+  chase@assembledrealms.com
+*/
 
 var DIRECTION_N   = 0;
 var DIRECTION_W   = 1;
@@ -35,54 +50,47 @@ var EMOTES_HUMAN = [
   "/me shivers, looks around nervously..."
 ];
 
-var npcs            = {};
-var npcKeys         = [];
-var players         = {};
-var npcSpawnCount   = 1;
-var tickCount       = 0;
-var playerKeys      = [];
-var maps            = [];
-
-var actors = {
-  players: players, 
-  npcs: npcs
-};
-
-var broadcast = {
-  players: {},
-  npcs: {}
-};
-
-var settings = {
-  events: ["move"]
-};
-
 function Engine () {
-  EventEmitter.call(this);
-}
 
-util.inherits(Engine, EventEmitter);
-module.exports = Engine;
+  this.npcs            = {};
+  this.npcKeys         = [];
+  
+  this.players         = {};
+  this.playerKeys      = [];
+  
+  this.npcSpawnCount   = 1;
+  this.tickCount       = 0;
+  
+  this.maps            = [];
+  
+  this.actors = {
+    players: this.players, 
+    npcs: this.npcs
+  };
+  
+  this.broadcast = {
+    players: {},
+    npcs: {}
+  };
+  
+  this.settings = {
+    events: ["move"]
+  };
+
+}
 
 Engine.prototype.initialize = function (callback) {
   
   var self = this;
   
-  // TODO: Implement a 'readJSON' function outside of here so the user doesn't have access to 'fs' to read any file they want,
-  // 'readJSON' would be restricted to thier directory and would only read .json and return the parsed object
-  
-  // Perhaps first scan the engine file and remove any occurance of 'fs.' then append the engine.js file with 
-  //   var fs = require('fs');
-  //   function readJSON { fs. etc etc
-  
-  fs.readFile(__dirname + '/../client/maps/town.json', function (error, data) {
+  self.readFile('client/maps/town.json', function (error, data) {
     if (error) {
       return callback(error);
     }
-    maps.push(JSON.parse(data));
+    self.maps.push(JSON.parse(data));
     
-    // Create the dark necromancer 'Chase'
-    npcs[0] = {
+    // Create the dark necromancer 'Chase' - too spooky
+    self.npcs[0] = {
       id:         0,
       direction:  0,
       health:     1000,
@@ -95,14 +103,11 @@ Engine.prototype.initialize = function (callback) {
       attacking:  false,
       cooldown:   0,
       target:     -1,
-      map:        0,    // Index of map in map array this npc is on
-      position:   {
-        x: 14 * 32,
-        y: 2 * 32
-      }
+      map:        0,      // Index of map in map array this npc is on
+      position:   { x: 14 * 32, y: 2 * 32 }
     };
     
-    npcKeys = Object.keys(npcs);
+    self.npcKeys = Object.keys(self.npcs);
     
     self.spawn();
     
@@ -112,6 +117,8 @@ Engine.prototype.initialize = function (callback) {
 };
 
 Engine.prototype.tick = function () {
+    
+  var self           = this;
     
   var i              = 0;
   var j              = 0;
@@ -126,17 +133,17 @@ Engine.prototype.tick = function () {
   var map;
   var npc;
   
-  tickCount++;
+  self.tickCount++;
   
-  if (tickCount > 1800) {
+  if (self.tickCount > 1800) {
     // Every minute fire and reset
-    tickCount = 0;
+    self.tickCount = 0;
     
     var toughness = 0;
     
-    for (i = 0; i < playerKeys.length; i++) {
+    for (i = 0; i < self.playerKeys.length; i++) {
       // Factor the players experience with an additional +1 for being alive
-      toughness += (players[playerKeys[i]].experience === undefined ? 0 : players[playerKeys[i]].experience) + 1;
+      toughness += (self.players[self.playerKeys[i]].experience === undefined ? 0 : self.players[self.playerKeys[i]].experience) + 1;
     }
     
     // For every 6 baddies you've killed, you can handle an additional spawn
@@ -148,18 +155,20 @@ Engine.prototype.tick = function () {
     toughness = Math.round(toughness);
     
     // If we have less npcs than players' combined stength, spawn new ones:
-    while (npcKeys.length < toughness) {
-      this.spawn();
+    while (self.npcKeys.length < toughness) {
+      self.spawn();
     }
   }
   
-  for (i = 0; i < playerKeys.length; i++) {
-    player    = players[playerKeys[i]];
-    map       = maps[player.map];
+  // Loop through connected players
+  for (i = 0; i < self.playerKeys.length; i++) {
+    player    = self.players[self.playerKeys[i]];
+    map       = self.maps[player.map];
     modified  = false;
     
     player.counter++;
     
+    // Ded?
     if (player.death) {
       if (player.counter > 220) {
         player.position   = {x: 448, y: 192};
@@ -171,14 +180,14 @@ Engine.prototype.tick = function () {
         player.counter    = 0;
         player.attackers  = {};
         
-        broadcast.players[player.id] = player;
+        self.broadcast.players[player.id] = player;
       }
       continue;
     }
     
-    // Is this player triggering an unfortunate NPC?
-    for (j = 1; j < npcKeys.length; j++) {
-      npc = npcs[npcKeys[j]];
+    // Is this player triggering an unfortunate NPC? 
+    for (j = 1; j < self.npcKeys.length; j++) {
+      npc = self.npcs[self.npcKeys[j]];
       
       // If this npc is attacking a player, move on to the next npc
       if (npc.attacking) {
@@ -190,20 +199,21 @@ Engine.prototype.tick = function () {
       
       if (distance < 300) {
         npc.attacking     = true;
-        npc.target        = playerKeys[i];
+        npc.target        = self.playerKeys[i];
         
         // Clear out any existing walkpaths
         npc.steps         = [];
         npc.step          = 0;
         
-        player.attackers[npcKeys[j]] = npc;
+        player.attackers[self.npcKeys[j]] = npc;
         
-        this.emit('debug', 'NPC[' + npcKeys[j] + '] spotted a player...');
+        console.log('NPC[%s] spotted a player...', self.npcKeys[j]);
         
         break;
       }
     }
     
+    // Pulse health/stamina updates every ~2/5ths of a second (every 384ms)
     if (player.counter > 12) {
       if (player.stamina < 100) {
         player.stamina++;
@@ -217,31 +227,32 @@ Engine.prototype.tick = function () {
       player.counter = 0;
       
       if (modified) {
-        if (broadcast.players[player.id]) {
-          broadcast.players[player.id].stamina = player.stamina;
-          broadcast.players[player.id].health = player.health;   
+        if (self.broadcast.players[player.id]) {
+          self.broadcast.players[player.id].stamina = player.stamina;
+          self.broadcast.players[player.id].health = player.health;   
         } else {
-          broadcast.players[player.id] = {stamina: player.stamina, health: player.health};
+          self.broadcast.players[player.id] = {stamina: player.stamina, health: player.health};
         }
       }
     }
     
   }
   
-  for (i = 0; i < npcKeys.length; i++) {
+  // Loop through npcs
+  for (i = 0; i < self.npcKeys.length; i++) {
     
     direction = -1;
-    npc = npcs[npcKeys[i]];
-    map = maps[npc.map];
+    npc = self.npcs[self.npcKeys[i]];
+    map = self.maps[npc.map];
     
     // Is this npc in attack mode?
     if (npc.attacking) {
       
-      player = players[npc.target];
+      player = self.players[npc.target];
       
       if (player.death) {
         npc.attacking = false;
-        this.emit('debug', 'NPC[' + npcKeys[i] + '] skipped as player is dead...');
+        console.log('NPC[%s] skipped as player is dead...', self.npcKeys[i]);
         continue;
       }
       
@@ -267,19 +278,19 @@ Engine.prototype.tick = function () {
           
           npc.cooldown = 1;
           
-          if (broadcast.npcs[npcKeys[i]]) {
-            broadcast.npcs[npcKeys[i]].attack = true;
+          if (self.broadcast.npcs[self.npcKeys[i]]) {
+            self.broadcast.npcs[self.npcKeys[i]].attack = true;
           } else {
-            broadcast.npcs[npcKeys[i]] = {attack: true};
+            self.broadcast.npcs[self.npcKeys[i]] = {attack: true};
           }
           
           player.health -= 10;
           
           if (player.health > 0) {
-            if (broadcast.players[player.id]) {
-              broadcast.players[player.id].health = player.health;   
+            if (self.broadcast.players[player.id]) {
+              self.broadcast.players[player.id].health = player.health;   
             } else {
-              broadcast.players[player.id] = {health: player.health};
+              self.broadcast.players[player.id] = {health: player.health};
             }
           } else {
             // Player dies, oh no
@@ -290,7 +301,7 @@ Engine.prototype.tick = function () {
             npc.target = -1;
             npc.attacking = false;
             
-            broadcast.players[player.id] = player;
+            self.broadcast.players[player.id] = player;
           }
           
           continue;
@@ -304,7 +315,7 @@ Engine.prototype.tick = function () {
         if (distance > 300) {
           npc.attacking = false;  
           npc.target = -1;
-          delete player.attackers[npcKeys[i]];
+          delete player.attackers[self.npcKeys[i]];
           continue;
         }
       }
@@ -356,11 +367,11 @@ Engine.prototype.tick = function () {
         }
       }
       
-      if (broadcast.npcs[npcKeys[i]]) {
-        broadcast.npcs[npcKeys[i]].position = npc.position;
-        broadcast.npcs[npcKeys[i]].direction = npc.direction;
+      if (self.broadcast.npcs[self.npcKeys[i]]) {
+        self.broadcast.npcs[self.npcKeys[i]].position = npc.position;
+        self.broadcast.npcs[self.npcKeys[i]].direction = npc.direction;
       } else {
-        broadcast.npcs[npcKeys[i]] = {position: npc.position,
+        self.broadcast.npcs[self.npcKeys[i]] = {position: npc.position,
                         direction: npc.direction};
       }
       continue;
@@ -482,7 +493,7 @@ Engine.prototype.tick = function () {
       } else {
         // If we aren't resuming our walk, sleep for a second or two
         npc.counter   = Math.floor( Math.random() * 100 );
-        broadcast.npcs[npcKeys[i]] = {
+        self.broadcast.npcs[self.npcKeys[i]] = {
           position: npc.position,
           direction: npc.direction
         };
@@ -517,7 +528,7 @@ Engine.prototype.tick = function () {
       }
       
       npc.direction = direction;
-      broadcast.npcs[npcKeys[i]] = {
+      self.broadcast.npcs[self.npcKeys[i]] = {
         position: npc.position,
         direction: npc.direction
       };
@@ -536,12 +547,12 @@ Engine.prototype.tick = function () {
         
         var emote = emote_target[getRandomInt(0, emote_target.length - 1)];
       
-        this.emit('debug', 'NPC[' + npc.id + '] is emoting: ' + emote);
+        console.log('NPC[%s] is emoting: %s', npc.id, emote);
         
-        if (broadcast.npcs[npc.id]) {
-          broadcast.npcs[npc.id].blurb = emote;
+        if (self.broadcast.npcs[npc.id]) {
+          self.broadcast.npcs[npc.id].blurb = emote;
         } else {
-          broadcast.npcs[npc.id] = {
+          self.broadcast.npcs[npc.id] = {
             blurb: emote
           };
         }
@@ -568,6 +579,9 @@ Engine.prototype.walkable = function (map, row, col) {
 };
 
 Engine.prototype.attack = function (player) {
+  
+  var self = this;
+  
   if (player.stamina < 10) {
     return;   
   }
@@ -589,45 +603,44 @@ Engine.prototype.attack = function (player) {
   player.stamina -= 10;
   
   // TODO: Different hitboxes based up direction the npc is looking
-  //if (player.direction == DIRECTION_N) {
+
   tw = 64;
   th = 64;
   tx = player.position.x - 32;
-  ty = player.position.y - 32; // }
+  ty = player.position.y - 32;
   
-  this.emit('debug', 'Player ' + player.id + ' is attacking: ' + tx + ', ' + ty);
+  // tmi
+  // console.log('Player %s is at {x: %d, y: %d} and has attacked!', player.id, tx, ty);
   
   var attackers = Object.keys(player.attackers);
   
-  console.log('player.attackers: ' + JSON.stringify(player.attackers));
-  console.log('attackers: ' + JSON.stringify(attackers));
+  // tmi
+  // console.log('[PLAYER %s]: Attacks at %s', player.id, JSON.stringify(attackers));
   
   for (var i = 0; i < attackers.length; i++) {
-    npc = npcs[attackers[i]];
-    
-    // this.emit('debug', 'testing attack against ' + JSON.stringify(npc.position));
+    npc = self.npcs[attackers[i]];
     
     if ((npc.position.x > tx) && (npc.position.x < (tx + tw))) {
       if ((npc.position.y > ty) && (npc.position.y < (ty + th))) {
         npc.health -= (10 + player.experience);
-        if (broadcast.npcs[attackers[i]]) {
-          broadcast.npcs[attackers[i]].health = npc.health;
+        if (self.broadcast.npcs[attackers[i]]) {
+          self.broadcast.npcs[attackers[i]].health = npc.health;
         } else {
-          broadcast.npcs[attackers[i]] = {
+          self.broadcast.npcs[attackers[i]] = {
             health: npc.health
           };
         }
         
         if (npc.health < 1) {
-          delete npcs[attackers[i]];
+          delete self.npcs[attackers[i]];
           delete player.attackers[attackers[i]];
-          npcKeys = Object.keys(npcs);
+          self.npcKeys = Object.keys(self.npcs);
           player.experience++;
           
-          if (broadcast.players[player.id]) {
-            broadcast.players[player.id].experience = player.experience;
+          if (self.broadcast.players[player.id]) {
+            self.broadcast.players[player.id].experience = player.experience;
           } else {
-            broadcast.players[player.id] = {
+            self.broadcast.players[player.id] = {
               experience: player.experience
             };
           }
@@ -638,10 +651,10 @@ Engine.prototype.attack = function (player) {
     }
   }
   
-  if (broadcast.players[player.id]) {
-    broadcast.players[player.id].stamina = player.stamina;
+  if (self.broadcast.players[player.id]) {
+    self.broadcast.players[player.id].stamina = player.stamina;
   } else {
-    broadcast.players[player.id] = {
+    self.broadcast.players[player.id] = {
       stamina: player.stamina
     };
   }
@@ -649,37 +662,39 @@ Engine.prototype.attack = function (player) {
 };
 
 Engine.prototype.addBroadcast = function (player) {
-  broadcast.players[player.id] = {
+  this.broadcast.players[player.id] = {
     position: player.position,
     direction: player.direction
   };
 };
 
 Engine.prototype.broadcastComplete = function () {
-  broadcast = {
+  this.broadcast = {
     players: {},
     npcs:    {}
   };
 };
   
 Engine.prototype.broadcast = function () {
-  return broadcast;
+  return this.broadcast;
 };
   
 Engine.prototype.actors = function () {
-  return actors;
+  return this.actors;
 };
   
 Engine.prototype.npcs = function () {
-  return npcs;
+  return this.npcs;
 };
   
 Engine.prototype.players = function () {
-  return players;
+  return this.players;
 };
 
 // Add player from the DB definition, player has joined before
 Engine.prototype.addPlayer = function (player) {
+  
+  var self= this;
   
   // If we are missing the experience attribute the database has no record of this player so 
   // we set the default values, a player's structure is saved to the database when they disconnect
@@ -697,20 +712,24 @@ Engine.prototype.addPlayer = function (player) {
     };
   }
   
-  players[player.id] = player;
-  playerKeys = Object.keys(players);
+  self.players[player.id] = player;
+  self.playerKeys = Object.keys(self.players);
 };
 
 Engine.prototype.removePlayer = function (player) {
-  broadcast.players[player.id] = {remove: true};
-  delete players[player.id];
-  playerKeys = Object.keys(players);
+  var self = this;
+  
+  self.broadcast.players[player.id] = {remove: true};
+  delete self.players[player.id];
+  self.playerKeys = Object.keys(self.players);
 };
 
 Engine.prototype.spawn = function() {
   
-  npcs[npcSpawnCount] = {
-    id:         npcSpawnCount,
+  var self = this;
+  
+  self.npcs[self.npcSpawnCount] = {
+    id:         self.npcSpawnCount,
     direction:  0,
     health:     100,
     experience: 0,
@@ -733,56 +752,60 @@ Engine.prototype.spawn = function() {
   // as the array, so the 'bottom' piece is the one with the lowest index
   
   // Head: 5-10
-  npcs[npcSpawnCount].layers.push(getRandomInt(5, 10));
+  self.npcs[self.npcSpawnCount].layers.push(getRandomInt(5, 10));
   
   // Torso: 14-19
-  npcs[npcSpawnCount].layers.push(getRandomInt(14, 19));
+  self.npcs[self.npcSpawnCount].layers.push(getRandomInt(14, 19));
   
   // Torso detail: 20-22
-  npcs[npcSpawnCount].layers.push(getRandomInt(20, 22));
+  self.npcs[self.npcSpawnCount].layers.push(getRandomInt(20, 22));
   
   // Belt: 0-1
-  npcs[npcSpawnCount].layers.push(getRandomInt(0, 1));
+  self.npcs[self.npcSpawnCount].layers.push(getRandomInt(0, 1));
   
   // Legs: 11-13
-  npcs[npcSpawnCount].layers.push(getRandomInt(11, 13));
+  self.npcs[self.npcSpawnCount].layers.push(getRandomInt(11, 13));
   
   // Feet: 2-3
-  npcs[npcSpawnCount].layers.push(getRandomInt(2, 3));
+  self.npcs[self.npcSpawnCount].layers.push(getRandomInt(2, 3));
   
   // Hands: 4
   rand = Math.random();
   if (rand <= 0.5) {
-    npcs[npcSpawnCount].layers.push(4);
+    self.npcs[self.npcSpawnCount].layers.push(4);
   }
   
-  npcKeys = Object.keys(npcs);
+  self.npcKeys = Object.keys(self.npcs);
   
-  this.emit('create', { 
+  // Using this opportunity to demonstrate out-of-loop broadcasts... adding players and npcs
+  // could easily be incorporated into the main broadcast loop
+  self.emit('create', { 
     npcs: {
-      npcSpawnCount: npcs[npcSpawnCount]
+      npcSpawnCount: self.npcs[self.npcSpawnCount]
     },
     players: {}
   });
   
-  // ~19% chance of emoting on spawn
+  // ~19% chance of emoting on spawn 
   if (Math.random() < 0.2) {
     var emote = EMOTES_HUMAN[getRandomInt(0, EMOTES_HUMAN.length - 1)];
   
-    this.emit('debug', 'NPC[' + npcSpawnCount + '] is emoting: ' + emote);
+    console.log('NPC[%d] is emoting: %s', self.npcSpawnCount, emote);
     
-    if (broadcast.npcs[npcSpawnCount]) {
-      broadcast.npcs[npcSpawnCount].blurb = emote;
+    if (self.broadcast.npcs[self.npcSpawnCount]) {
+      self.broadcast.npcs[self.npcSpawnCount].blurb = emote;
     } else {
-      broadcast.npcs[npcSpawnCount] = {
+      self.broadcast.npcs[self.npcSpawnCount] = {
         blurb: emote
       };
     }
   }
   
-  npcSpawnCount++;
+  self.npcSpawnCount++;
   
 };
+
+module.exports = Engine;
 
 function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;

@@ -66,7 +66,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
         <div class="panel-heading">
           <h3 class="realm-panel-title">New Realm</h3>
         </div>
-        <div class="panel-body">
+        <div class="panel-body text-center">
 
           <div id="realm-engine-carousel" class="carousel slide new-realm-area" data-ride="carousel" data-interval="false">
               <!-- Indicators -->
@@ -107,7 +107,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
               -->
           </div>
 
-          <div class="new-realm-area" id="new-realm-form">
+          <div class="new-realm-area text-left" id="new-realm-form">
             <form role="form" class="clearfix">
               <div class="form-group">
                 <label class="control-label" for="realmName">Realm Name:</label>

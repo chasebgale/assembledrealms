@@ -484,6 +484,8 @@ Map.prototype.render = function () {
 Map.prototype.appendDOM = function () {
   var self = this;
   
+  // TODO: This is really cringey... In the future add a template file, like 'editor.ejs' that will be parsed
+  // in the user's browser at run time... so so cringey. 
   var html = [
     // TOOLBAR:
     '<button type="button" class="btn btn-default navbar-btn btn-map-tool active" id="moveButton" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Navigate the map">',

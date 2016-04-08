@@ -126,11 +126,10 @@ div#mapContainer canvas {
 
 .treeview ul {
 	background-color: white;
-	margin-top: 4px;
 }
 
 .treeview .hitarea {
-	background: url(../img/treeview-default.gif) -64px -25px no-repeat;
+	background: url(../img/treeview-default.gif) -64px -23px no-repeat;
 	height: 16px;
 	width: 16px;
 	margin-left: -16px;
@@ -154,12 +153,12 @@ div#mapContainer canvas {
 
 #treecontrol { margin: 1em 0; display: none; }
 
-.treeview .hover { color: black; cursor: pointer; }
+.treeview:hover { cursor: pointer; }
 
 .treeview li { background: url(../img/treeview-default-line.gif) 0 0 no-repeat; }
 .treeview li.collapsable, .treeview li.expandable { background-position: 0 -176px; }
 
-.treeview .expandable-hitarea { background-position: -80px -3px; }
+.treeview .expandable-hitarea { background-position: -80px -1px; }
 
 .treeview li.last { background-position: 0 -1766px }
 .treeview li.lastCollapsable, .treeview li.lastExpandable { background-image: url(../img/treeview-default.gif); }
@@ -188,10 +187,10 @@ div#mapContainer canvas {
 }
 
 .filetree li { padding: 3px 0 2px 16px; }
-.filetree span.folder, .filetree span.file { padding: 1px 0 1px 16px; display: block; }
-.filetree span.folder { background: url(../img/folder.gif) 0 0 no-repeat; }
-.filetree li.expandable span.folder { background: url(../img/folder-closed.gif) 0 0 no-repeat; }
-.filetree span.file { background: url(../img/file.gif) 0 0 no-repeat; }
-.filetree span.file:hover { color: black; cursor: pointer; }
+.filetree span.folder, .filetree span.file { padding: 1px 0 1px 18px; display: block; }
+.filetree span.folder { background: url(../img/folder.gif) 0 3px no-repeat; }
+.filetree li.expandable span.folder { background: url(../img/folder-closed.gif) 0 3px no-repeat; }
+.filetree span.file { background: url(../img/file.gif) 0 3px no-repeat; }
+.filetree span.file:hover { color: black; }
 
 .activefile { font-weight: bold; }

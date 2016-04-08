@@ -76,6 +76,10 @@ Engine.prototype.initialize = function (container, host, port, cwd) {
     self.actors.text(data);
   });
   
+  self.socket.on('disconnect', function () {
+    self.stage.alpha = 0.1;
+  });
+  
   self.matrix = new PIXI.Matrix();
   self.matrix.translate(0, 0);
   

@@ -111,7 +111,7 @@ function initialize(projectID, projectDomain) {
     $("#explorer .file").removeClass('activefile');
     root.addClass('activefile');
     
-    $("#treeLoadingFileIndicator").prependTo(root.parent());
+    $("#treeLoadingFileIndicator").prependTo(root.parent()).show();
 
     var id      = root.attr('data-id');
     var path    = root.attr('data-path');
@@ -127,13 +127,9 @@ function initialize(projectID, projectDomain) {
   __treeDropDown.dropdown();
   
   __treeDropDownButton.on("click", function (e) {
-    
-    var targetClass = "folderOption";
-    if (__treeDropDownTarget.hasClass('file')) {
-      targetClass = "fileOption";
-    }
-    
-    var targetText = __treeDropDownTarget.text();
+    var isFile      = __treeDropDownTarget.hasClass('file');
+    var targetClass = isFile ? "fileOption" : "folderOption";
+    var targetText  = __treeDropDownTarget.text();
     
     __modalSimpleOptions.rename.placeholder = targetText;
     __modalSimpleOptions.rename.val         = targetText;
@@ -159,6 +155,11 @@ function initialize(projectID, projectDomain) {
         item.hide();
       }
     });
+    
+    // TODO: FIX FOLDER RENAMING
+    if (!isFile) {
+      $("#treeActionsDropDown a[data-action='rename']").parent().addClass('disabled');
+    }
     
     $("#treeActionsDropDownButtonHidden").dropdown('toggle');
     e.stopImmediatePropagation();
@@ -219,12 +220,17 @@ function initialize(projectID, projectDomain) {
   $("#treeActionsDropDown a").on("click", function () {
     var self   = $(this);
     var target = self.attr('data-target');
+    var action = self.attr('data-action');
     var modal  = $(target);
     
     if (__treeDropDownTarget.attr('data-path')) {
-      var path = "/" + __treeDropDownTarget.attr('data-path');
+      // File
+      var barePath  = __treeDropDownTarget.attr('data-path');
+      var path      = "/" + barePath;
     } else {
-      var path = "/" + __treeDropDownTarget.parent().attr('data-path') + "/";
+      // Folder
+      var barePath  = __treeDropDownTarget.parent().attr('data-path');
+      var path = "/" + barePath + "/";
     }
     
     if (self.parent().hasClass('disabled')) {
@@ -234,7 +240,6 @@ function initialize(projectID, projectDomain) {
     switch (target) {
       
       case "#modalFilename":
-        var action  = self.attr('data-action');
         var options = __modalSimpleOptions[action];
         var input   = modal.find('.form-control');
         
@@ -248,15 +253,23 @@ function initialize(projectID, projectDomain) {
         
         $("#inputFilenameLabel").text(path);
         
+        $("#buttonFilename").attr('data-action', action);
+        
         // What task to perform per action type
-        $("#buttonFilename").click(function() {
+        $("#buttonFilename").unbind('click').click(function() {
           var inputValue = input.val();
+          var action     = $(this).attr('data-action');
           
           // Validate (no slashes allowed):
           if (inputValue.match(/[\/\\]/g)) {
             $("#alertFilename").text("Slashes are not valid characters...");
             $("#alertFilename").show();
             return;
+          }
+          
+          if (inputValue.indexOf('..') > -1) {
+            $("#alertFilename").text("Please don't recurse...");
+            $("#alertFilename").show();
           }
           
           var button = $(this);
@@ -268,6 +281,19 @@ function initialize(projectID, projectDomain) {
               var targetUrl = '/folder/create';
               var post      = {
                 fullpath: path + inputValue
+              };
+              break;
+            case 'newFile':
+              var targetUrl = '/file/create';
+              var post      = {
+                fullpath: path + inputValue
+              };
+              break;
+            case 'rename':
+              var targetUrl = '/file/rename';
+              var post      = {
+                oldPath: barePath,
+                newPath: barePath.substr(0, barePath.lastIndexOf('/') + 1) + inputValue
               };
               break;
           }
@@ -282,7 +308,18 @@ function initialize(projectID, projectDomain) {
             console.log(data);
             if (data.message === "OK") {
               
-              addFolderToExplorer(__treeDropDownTarget.parent().attr('data-path'), inputValue);
+              switch (action) {
+                case 'newFolder':
+                  addFolderToExplorer(barePath, inputValue);
+                  break;
+                case 'newFile':
+                  addToExplorer(barePath, inputValue, data.sha);
+                  break;
+                case 'rename':
+                  renameExplorerItem(barePath, inputValue, data.sha);
+                  break;
+              }
+
               modal.modal('hide');
               
             } else {
@@ -304,11 +341,14 @@ function initialize(projectID, projectDomain) {
         });
         
         // Update the label with the new path
-        $("#inputFilename").on('input', function () {
+        $("#inputFilename").unbind('input').on('input', function () {
           var newPath = path + $(this).val();
           
           if (action === "newFolder") {
             newPath += "/";
+          } else if (action === "rename") {
+            var pathTrimmed = path.substr(0, path.length - 1);
+            newPath = pathTrimmed.substr(0, pathTrimmed.lastIndexOf('/') + 1) + $(this).val();
           }
           
           $("#inputFilenameLabel").text(newPath);
@@ -379,6 +419,10 @@ function initialize(projectID, projectDomain) {
       console.log(data);
       if (data.message === "OK") {
         
+        // Move the indicator off this DOM ele as it's about to have it's parent trashed
+        $("#treeLoadingFileIndicator").appendTo($('body')).hide();
+        __treeDropDownButton.appendTo($('body')).hide();
+        
         if (type === "file") {
           var tracking_id = __projectId + '-' + target;
           sessionStorage.removeItem(tracking_id + '-commit-md5');
@@ -394,9 +438,6 @@ function initialize(projectID, projectDomain) {
             sessionStorage[__projectId + '-tracking'] = JSON.stringify(tracking);
           }
           
-          // Move the indicator off this DOM ele as it's about to have it's parent trashed
-          $("#treeLoadingFileIndicator").appendTo($('body'));
-          __treeDropDownButton.appendTo($('body'));
           $("#tree [data-id='" + sha + "']").parent().remove();
           
           // Show welcome file after delete, if user was viewing deleted file
@@ -409,6 +450,17 @@ function initialize(projectID, projectDomain) {
             }
           }
         } else {
+          
+          // If actively viewed file is a child of the folder
+          // we are removing, show welcome file
+          if ($("#tree [data-path='" + target + "']").find('.activefile').length > 0) {
+            var welcomeDOM = $('#explorer [data-path="WELCOME.md"]');
+            if (welcomeDOM) {
+              welcomeDOM.addClass('activefile');
+
+              loadRealmFile(welcomeDOM.attr('data-id'), 'WELCOME.md', 'WELCOME.md', true);
+            }
+          }
           // REMOVE FOLDER
           $("#tree [data-path='" + target + "']").remove();
           // Reapply styles and event handlers
@@ -745,6 +797,23 @@ function removeFromExplorer(sha) {
       parentUL.children().first().addClass('last');
     }
     
+  }
+}
+
+function renameExplorerItem(oldPath, newName, sha) {
+  var target = $('#explorer [data-path="' + oldPath + '"]');
+  
+  // Move the indicator off this DOM ele as it might be replaced
+  $("#treeLoadingFileIndicator").appendTo($('body')).hide();
+  __treeDropDownButton.appendTo($('body')).hide();
+  
+  if (target.is('li')) {
+    // Folder
+    target.children('span').text(newName);
+  } else {
+    // File
+    target.text(newName);
+    target.attr('data-id', sha);
   }
 }
 

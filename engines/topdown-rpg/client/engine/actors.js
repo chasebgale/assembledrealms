@@ -250,11 +250,11 @@ Player.prototype.emote = function(data) {
 
 Player.prototype.tick = function(data) {
   if (this.text.alpha > 0) {
-    this.text.alpha -= 0.007;
+    this.text.alpha -= 0.005;
   }
   
   if (this.nametag.alpha > 0) {
-    this.nametag.alpha -= 0.007;
+    this.nametag.alpha -= 0.005;
   }
   
   if (this.dying) {
@@ -511,6 +511,6 @@ NPC.prototype.emote = function(data) {
 
 NPC.prototype.tick = function(data) {
   if (this.text.alpha > 0) {
-    this.text.alpha -= 0.007;
+    this.text.alpha -= 0.005;
   }
 };

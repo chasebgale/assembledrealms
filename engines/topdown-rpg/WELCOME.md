@@ -38,9 +38,9 @@ by the game, but rather by the page containing your game.
 
 Above the markdown files we've already discussed, you'll see two folders: client and server. The source code, media and json data files contained within the "client" folder are what create the player's experience in the browser window. 
 The source code within the "server" folder is what runs *on the server* and whose main goal is to keep all the clients synced. Explore both of these folders and figure out how everything works, as a hint, the "engine.js" 
-file is the main starting point for both the client and server, respectively.
+file is the main starting point for both the client and server, respectively. (TODO: Linked or inline overview of the engine)
 
 ## Experiment!
 
-Once you've made a code change and want to see the effect, click 'commit' on the toolbar above. This will update the source code on our GIT server and create a waypoint that you can return to in the future. Next, click the "debug" 
-button right next to commit. This will copy the latest committed source code from our GIT server to a live debug server where you can test your changes. Have fun!
+Once you've made a code change and want to see the effect, click 'commit' on the toolbar above. This will update the source code on your GIT server and create a waypoint that you can return to in the future. Next, click the "debug" 
+button right next to commit. This will copy the latest committed source code from your GIT server to a live debug server where you can test your changes. Have fun!

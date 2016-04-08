@@ -144,6 +144,7 @@ app.get('/api/project/:id/file/open/:path', file.open);
 app.post('/api/project/:id/file/create', file.create);
 app.post('/api/project/:id/file/upload', file.upload);
 app.post('/api/project/:id/file/remove', file.remove);
+app.post('/api/project/:id/file/rename', file.rename);
 
 app.post('/api/project/:id/folder/create', file.createFolder);
 app.post('/api/project/:id/folder/remove', file.removeFolder);

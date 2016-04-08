@@ -1,4 +1,4 @@
-Variables Available:
+Variables Available:  
 ---------------------
 
 * Funding: {funds}

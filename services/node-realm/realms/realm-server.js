@@ -34,16 +34,6 @@ var ACTIVE_SESSIONS    = "sessions_active";
 
 var engine  = new Engine();
 
-/*
-engine.on('create', function engineCreate(actors) {
-  io.emit('create', actors);
-});
-
-engine.on('debug', function engineDebug(message) {
-  io.to('debug').emit('debug', message);
-});
-*/
-
 engine.readFile = function (file, callback) {
   if (file.indexOf('..') > -1) {
     return callback(new Error('Illegal request'));
@@ -55,9 +45,7 @@ engine.readFile = function (file, callback) {
 
 engine.emit = function (type, message) {
   io.emit(type, message);
-}
-
-
+};
 
 app.use(function(req, res, next) {
   res.header('Access-Control-Allow-Origin', 'https://www.assembledrealms.com');
@@ -73,7 +61,7 @@ app.use(cookieParse());
 
 // Catch redis errors
 db.on("error", function redisError(err) {
-    console.log("Error " + err);
+  console.log("DB Error: " + err);
 });
 
 // Sesh wall
@@ -124,7 +112,6 @@ io.use(function(socket, next) {
   next(new Error('not authorized'));
   
 });
-
 
 io.on('connection', function socketConnected(socket) {
   
@@ -335,7 +322,7 @@ engine.initialize(function(error) {
       console.log(err.message);
     } else {
       // Listen on random port because lots (hopefully) of other nodes are running too!
-      serverSecure.listen(0, function(){
+      serverSecure.listen(0, function() {
         // Log the port to the console
         console.log("[SOCKET]: Port secured and listening");
         //console.log("port: " + serverSecure.address().port);
