@@ -250,6 +250,10 @@ Engine.prototype.tick = function () {
       
       player = self.players[npc.target];
       
+      if (!player) {
+       continue; 
+      }
+      
       if (player.death) {
         npc.attacking = false;
         console.log('NPC[%s] skipped as player is dead...', self.npcKeys[i]);

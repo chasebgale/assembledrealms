@@ -304,7 +304,7 @@ app.post('/api/auth/:id', function httpPostAuth(req, res, next) {
   
   if (MODE_DEMO) {
     // THIS IS FOR "DEMO" MODE, NO USER REGISTRATION REQ
-    if (user_id === 0) {
+    if (user_id == 0) {
       // Demo user w/o an account or not logged in, assign a negative user_id...
       // Using negatives here for a reason, if a logged in user with a positive id
       // lis logged in at the same time that id is given, collisions occur (lol)
