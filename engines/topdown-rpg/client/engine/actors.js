@@ -136,6 +136,7 @@ var Player = function (data) {
   this.attacking  = false;
   this.dying      = false;
   this.id         = data.id;
+  this.active     = undefined;
   
   this.blurFilter = new PIXI.filters.BlurFilter();
   
@@ -184,9 +185,11 @@ var Player = function (data) {
 
     self.sprite.addChild(clip);
   }
+   
+  self.active = self.sprite.children[self.direction];
         
-  self.sprite.children[self.direction].visible = true;
-  self.sprite.children[self.direction].gotoAndStop(0);
+  self.active.visible = true;
+  self.active.gotoAndStop(0);
   
   self.sprite.addChild(this.text);
   self.sprite.addChild(this.nametag);
@@ -209,29 +212,84 @@ Player.prototype.update = function(player) {
     }
   }
   
+  if (self.attacking) {
+   return; 
+  }
+  
+  if (player.attack) {
+    self.active.stop();
+    self.active.visible = false;
+    
+    var drawDirection = -1;
+    
+    // (NE and SE both display as E)
+    if ((self.direction == 4) || (self.direction == 6)) {
+      drawDirection = DIRECTION_E;
+    } else if ((self.direction == 5) || (self.direction == 7)) {
+      drawDirection = DIRECTION_W;
+    } else {
+      drawDirection = self.direction;
+    }
+    
+    var attackClip = self.sprite.children[drawDirection + 4];
+    
+    attackClip.onComplete = function () {
+      self.attacking = false;
+      attackClip.visible = false;
+      attackClip.gotoAndStop(0);
+      self.active.visible = true;
+      
+      if (self.moving) {
+        self.active.play();   
+      }
+    };
+    
+    attackClip.loop = false;
+    attackClip.visible = true;
+    attackClip.gotoAndPlay(0);
+    
+    self.attacking = true;
+    return; 
+  }
+  
   if (player.position !== undefined) {
-    if (!self.moving) {
-      self.sprite.children[self.direction].play();
-    }
     
-    if (self.direction !== player.direction) {
-      self.sprite.children[self.direction].visible = false;
-      self.sprite.children[self.direction].stop();
-
-      self.sprite.children[player.direction].visible = true;
-      self.sprite.children[player.direction].play();
-    }
+    var drawDirection = player.direction;
+    var wasMoving     = self.moving;
     
-    self.direction = player.direction;
+    // (NE and SE both display as E) 
+    if ((drawDirection == 4) || (drawDirection == 6)) {
+      drawDirection = DIRECTION_E;
+    } else if ((drawDirection == 5) || (drawDirection == 7)) {
+      drawDirection = DIRECTION_W;
+    }
     
     if ((self.sprite.position.x == player.position.x) &&
       (self.sprite.position.y == player.position.y)) {
       self.moving = false;
-      self.sprite.children[self.direction].gotoAndStop(0);
-    } else {
-      self.moving = true;
-      self.sprite.position = player.position;
+      self.active.gotoAndStop(0);
+      return;
     }
+    
+    self.moving = true;
+    
+    if (drawDirection !== self.direction) {
+      self.active.visible = false;
+      self.active.stop();
+      
+      self.active = self.sprite.children[drawDirection];
+      
+      self.active.visible = true;
+      self.active.play();
+    } else {
+      if (!wasMoving && self.moving) {
+        self.active.play();
+      }
+    }
+    
+    self.direction = player.direction;
+    self.sprite.position = player.position;
+    
   }
 };
 

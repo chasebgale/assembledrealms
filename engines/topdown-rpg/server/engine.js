@@ -72,13 +72,10 @@ function Engine () {
     players: {},
     npcs: {}
   };
-  
-  this.settings = {
-    events: ["move"]
-  };
 
 }
 
+// Called when first loading your realm
 Engine.prototype.initialize = function (callback) {
   
   var self = this;
@@ -116,6 +113,8 @@ Engine.prototype.initialize = function (callback) {
 
 };
 
+// Called every 32ms, 30 fps - update the broadcast object and the server 
+// broadcasts it for you
 Engine.prototype.tick = function () {
     
   var self           = this;
@@ -191,7 +190,7 @@ Engine.prototype.tick = function () {
       
       // If this npc is attacking a player, move on to the next npc
       if (npc.attacking) {
-        continue;   
+        // continue;   
       }
       
       // Distance between two points using pythagorean theorem
@@ -567,21 +566,7 @@ Engine.prototype.tick = function () {
     
 };
 
-Engine.prototype.walkable = function (map, row, col) {
-  if (map.terrain.index[row] !== undefined) {
-    if (map.terrain.index[row][col] !== undefined) {
-      if ((map.terrain.index[row][col][2] !== undefined) &&
-        (map.terrain.index[row][col][2] !== null)) {
-        return false;
-      } else {
-        return true;
-      }
-    }
-  }
-  
-  return false;
-};
-
+// Register to handle the event when a player emits an attack
 Engine.prototype.attack = function (player) {
   
   var self = this;
@@ -657,43 +642,65 @@ Engine.prototype.attack = function (player) {
   
   if (self.broadcast.players[player.id]) {
     self.broadcast.players[player.id].stamina = player.stamina;
+    self.broadcast.players[player.id].attack  = true;
   } else {
     self.broadcast.players[player.id] = {
-      stamina: player.stamina
+      stamina: player.stamina,
+      attack:  true
     };
   }
   
 };
 
-Engine.prototype.addBroadcast = function (player) {
-  this.broadcast.players[player.id] = {
-    position: player.position,
-    direction: player.direction
-  };
+Engine.prototype.move = function (player, data) {
+  var self = this;
+  
+  player.position.x = data.position.x;
+  player.position.y = data.position.y;
+  
+  player.direction = data.direction;
+  
+  if (self.broadcast === undefined) {
+    self.broadcast = {};
+    self.broadcast.players = {};
+  }
+  
+  if (self.broadcast.players === undefined) {
+    self.broadcast.players = {};
+  }
+  
+  if (self.broadcast.players[player.id]) {
+    self.broadcast.players[player.id].position = player.position;
+    self.broadcast.players[player.id].direction = player.direction;
+  } else {
+    self.broadcast.players[player.id] = {
+      position: player.position,
+      direction: player.direction
+    };
+  }
 };
 
-Engine.prototype.broadcastComplete = function () {
-  this.broadcast = {
-    players: {},
-    npcs:    {}
-  };
+Engine.prototype.text = function (player, data) {
+  this.emit("text", {player: {id: player.id, blurb: data}});
 };
+
+
+Engine.prototype.walkable = function (map, row, col) {
+  if (map.terrain.index[row] !== undefined) {
+    if (map.terrain.index[row][col] !== undefined) {
+      if ((map.terrain.index[row][col][2] !== undefined) &&
+        (map.terrain.index[row][col][2] !== null)) {
+        return false;
+      } else {
+        return true;
+      }
+    }
+  }
   
-Engine.prototype.broadcast = function () {
-  return this.broadcast;
+  return false;
 };
-  
-Engine.prototype.actors = function () {
-  return this.actors;
-};
-  
-Engine.prototype.npcs = function () {
-  return this.npcs;
-};
-  
-Engine.prototype.players = function () {
-  return this.players;
-};
+
+
 
 // Add player from the DB definition, player has joined before
 Engine.prototype.addPlayer = function (player) {

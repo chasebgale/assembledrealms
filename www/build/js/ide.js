@@ -1141,6 +1141,7 @@ function commit() {
         // Update DOM to reflect we messed up:
         $('#commitProgressMessage').html('<i class="fa fa-thumbs-down" style="color: red;"></i> ' + response.responseText);
         $('#commitStart').removeAttr('disabled');
+        $('#commitStart').html('Commit');
           
       }
     });
@@ -1251,6 +1252,7 @@ function loadRealmFile(id, path, name, rendered) {
   if (sessionStorage[tracking_id + '-name']) {
     loadEditor(tracking_id, sessionStorage[tracking_id], rendered);
     __fileId = tracking_id;
+    $("#treeLoadingFileIndicator").fadeOut();
     return;
   } 
   

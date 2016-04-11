@@ -121,10 +121,72 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
   </div>
 </div>
 
+<div id="tabsContainer" style="background-color: white; display: none;">
+  <div style="margin: 0 auto; width: 896px; padding: 0;">
+    <ul id="tabs" class="nav nav-tabs" role="tablist">
+      <li class="active"><a href="#tab_readme" role="tab" data-toggle="tab">Readme</a></li>
+      <li class=""><a href="#tab_credits" role="tab" data-toggle="tab">Credits</a></li>
+      <!--<li class=""><a href="#tab_comments" role="tab" data-toggle="tab">Comments</a></li>-->
+    </ul>
+    
+    <!-- Tab panes -->
+    <div class="tab-content" style="min-height: 400px; margin-top: 20px;">
+      <div id="tab_readme" class="tab-pane active"></div>
+      <div id="tab_credits" class="tab-pane"></div>
+      <div id="tab_comments" class="tab-pane"></div>
+    </div>
+  </div>
+</div>
+
+<script id="comments_template" type="text/template">
+    
+  <% _.each( comments, function( comment ) { %>
+      
+    <% if (!comment.parent_id) { %>
+    <li class="media">
+      <a class="pull-left" href="/user/id/<%-comment.user_id%>">
+        <img width="50" height="50" class="media-object" src="/img/profiles/<%- comment.user_id + ".jpg" %>">
+      </a>
+      <div class="media-body" data-id="<%- comment.id %>">
+        <h4 class="media-heading">
+          <small><i>
+          <%= '<a href="/user/id/' + comment.user_id + '">' + comment.display_name + '</a> commented ' + moment(comment.timestamp + '+00:00').fromNow() %>
+          <button class="btn btn-default btn-xs reply"><i class="fa fa-reply"></i></button>
+          </i></small>
+        </h4>
+        <p><%- comment.content %></p>
+      </div>
+    </li>
+    <% } %>
+          
+  <% }); %>
+
+</script>
+
+<script id="comment_reply_template" type="text/template">
+    
+  <div class="media">
+    <a class="pull-left" href="/user/id/<%-comment.user_id%>">
+      <img width="50" height="50" class="media-object" src="/img/profiles/<%- comment.user_id + ".jpg" %>">
+    </a>
+    <div class="media-body" data-id="<%- comment.id %>">
+      <h4 class="media-heading">
+        <small><i>
+        <%= '<a href="/user/id/' + comment.user_id + '">' + comment.display_name + '</a> commented ' + moment(comment.timestamp + '+00:00').fromNow() %>
+        <button class="btn btn-default btn-xs reply"><i class="fa fa-reply"></i></button>
+        </i></small>
+      </h4>
+      <p><%- comment.content %></p>
+    </div>
+  </div>
+
+</script>
+
 <?php
 require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php");
 ?>
 
+<script src="/play/js/marked.js"></script>
 <script src="/play/js/ekko-lightbox.min.js" type="text/javascript" charset="utf-8"></script>
 <script src="/js/pixi.min.js"></script>
 <script src="/js/async.js"></script>
@@ -132,13 +194,70 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php");
 
 <script>
 
+  var REALM_ID  = 1;
+  var REALM_URL = "https://demo-01.assembledrealms.com/realms/1/";
+
   $(function() {
         
-    $('[data-toggle="tooltip"]').tooltip();
+    $("[data-toggle='tooltip']").tooltip();
     
-    $(document).delegate('*[data-toggle="lightbox"]', 'click', function(event) {
+    $(document).delegate("*[data-toggle='lightbox']", "click", function (event) {
       event.preventDefault();
       $(this).ekkoLightbox();
+    });
+    
+    renderer = new marked.Renderer();
+    renderer.table = function(header, body) {
+      return "<table class='table table-striped'><thead>" + header + "</thead><tbody>" + body + "</tbody></table>";
+    }
+
+    marked.setOptions({
+      sanitize: true,
+      renderer: renderer
+    });
+    
+    var templateFn = _.template($("#comments_template").html());
+    var templateReplyFn = _.template($("#comment_reply_template").html());
+    
+    async.parallel([
+      function(callback){
+        callback(null, true);
+        /*
+        $.post("/play/realm.php", { directive: "comment", realmID: REALM_ID })
+        .done(function( data ) {
+          if (data !== "null") {
+            data = JSON.parse( data );
+            $("#comments").html(templateFn({ "comments": data }));
+            
+            for (var i =0; i < data.length; i++) {
+              if (data[i].parent_id) {
+                var target = $("#comments").find("[data-id='" + data[i].parent_id + "']");
+                target.append(templateReplyFn({"comment": data[i]}));
+              }
+            }
+          } 
+          callback(null, true);
+        });
+        */
+      },
+      function(callback){
+        $.get(REALM_URL + "README.md", function (data) {
+          $("#tab_readme").html(marked(data));
+          callback(null, true);
+        });
+      },
+      function(callback){
+        $.get(REALM_URL + "CREDITS.md", function (data) {
+          $("#tab_credits").html(marked(data));
+          callback(null, true);
+        });
+      }
+    ],
+    function(err, results){
+      //$("#intro").animate({height: "600px"}, 1000);
+      //$("#tabsContainer").fadeIn();
+      
+      // $("#actionButtons").fadeIn();
     });
     
     $("#btn-fullscreen").click( function() {
@@ -186,6 +305,8 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/footer.php");
           
           $("#intro .hide-for-play").fadeOut( function () {
             $("#realm-container").fadeIn();
+            $("#intro").animate({height: "600px"}, 1000);
+            $("#tabsContainer").fadeIn();
           });
         });
       });      

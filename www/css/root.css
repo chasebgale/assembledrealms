@@ -133,6 +133,10 @@ div#tabsContainer {
   text-align: right !important;
 }
 
+.header-link {
+  text-align: left;
+}
+
 @media (min-width: 992px) {
 	.header-link {
 		font-size: 1.12em;
@@ -142,16 +146,32 @@ div#tabsContainer {
 
 @media (max-width: 991px) {
 	.header-link {
-		font-size: 1.1em;
+		font-size: 1em;
     text-align: center;
 	}
+}
+
+@media (max-width: 1199px) {
+  #new-realm-form {
+    margin-left: 0;
+    margin-top: 20px;
+  }
 }
 
 @media (max-width: 767px) {
 	.header-link {
 		font-size: 2em;
-    text-align: left;
+    text-align: justify;
+    max-width: 220px;
+    margin-bottom: 20px;
+    margin-left: auto;
+    margin-right: auto;
 	}
+  
+  .navbar-brand {
+    margin-top: 8px;
+    margin-left: 12px;
+  }
 }
 
 #realm-engine-carousel {

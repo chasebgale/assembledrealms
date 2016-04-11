@@ -213,8 +213,31 @@ exports.save = function(req, res, next) {
     if (mimetype == 'text/plain') {
         
       // Text just gets written to disk
-      file.pipe(fs.createWriteStream(path.join(destination, fieldname)));
-      files.push(fieldname);
+      //file.pipe(fs.createWriteStream(path.join(destination, fieldname)));
+      
+      // Scan for restricted text first:
+      var fileContents = '';
+      
+      file.on('data', function(data) {
+        fileContents += data;
+      });
+      file.on('end', function() {
+        // Run actual tests against string
+        var lower = fileContents.toLowerCase();
+        if (lower.indexOf('require(') > -1) {
+          return next(new Error('"require()" statements prevent compile [' + fieldname + ']'));
+        }
+        
+        if (lower.indexOf('eval(') > -1) {
+          return next(new Error('"eval()" statements prevent compile [' + fieldname + ']'));
+        }
+        
+        fs.writeFile(path.join(destination, fieldname), fileContents, function (error) {
+          if (error) return next(error);
+          
+          files.push(fieldname);
+        });
+      });
         
     } else {
       // application/octet-binary means our data is compressed with LZ4

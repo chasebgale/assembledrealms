@@ -290,3 +290,7 @@ Engine.prototype.debug = function (enabled) {
     self.socket.emit('leave_debug');
   }
 };
+
+Engine.prototype.emit = function (type, message) {
+  this.socket.emit('event', {'type': type, 'message': message});
+};

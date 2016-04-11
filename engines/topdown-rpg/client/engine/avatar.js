@@ -206,7 +206,7 @@ Avatar.prototype.keydown = function (e) {
   var name    = KEY_CODES[e.keyCode];
   
   // Spacebar and Enter and Arrow keys mess with the browser, so prevent them from bubbling:
-  if ((name == "spacebar") || (name == "enter") || (name == "up") || (name == "down") || (name == "left") || (name == "right")) {
+  if ((name == "spacebar") || (name == "enter") || (name == "up") || (name == "down") || (name == "left") || (name == "right") || (name == "backspace")) {
     e.preventDefault();
   }
   
@@ -216,7 +216,7 @@ Avatar.prototype.keydown = function (e) {
       engine.avatar.blurb = engine.avatar.blurb.substring(0, engine.avatar.blurb.length - 1);
     } else if (e.keyCode == 13) {
       // Enter
-      engine.socket.emit('text', engine.avatar.blurb);
+      engine.emit('text', engine.avatar.blurb);
       engine.avatar.emote(engine.avatar.blurb);
       engine.avatar.typing = false;
       engine.avatar.blurb    = ""; 
@@ -324,7 +324,7 @@ Avatar.prototype.keydown = function (e) {
         
         // Sending one more 'move' with duplicate coords as the last update will tell all clients this
         // actor has stopped moving
-        engine.socket.emit('move', {position: engine.position, direction: engine.avatar.direction});
+        engine.emit('move', {position: engine.position, direction: engine.avatar.direction});
       }
       
       engine.avatar.typing = true;
@@ -413,7 +413,7 @@ Avatar.prototype.tick = function () {
       
       // Sending one more 'move' with duplicate coords as the last update will tell all clients this
       // actor has stopped moving
-      self.engine.socket.emit('move', {position: self.engine.position, direction: self.direction});
+      self.engine.emit('move', {position: self.engine.position, direction: self.direction});
     };
     
     // Check for illegal step and return if it's illegal
@@ -465,7 +465,7 @@ Avatar.prototype.tick = function () {
     self.engine.position  = newPosition;
     self.sprite.position  = self.engine.position; 
   
-    self.engine.socket.emit('move', {position: self.engine.position, direction: self.direction});
+    self.engine.emit('move', {position: self.engine.position, direction: self.direction});
   };
   
   if (self.keys.spacebar) {
@@ -506,7 +506,7 @@ Avatar.prototype.tick = function () {
       
       self.attacking = true;
       
-      self.engine.socket.emit('attack');
+      self.engine.emit('attack');
       return;
     }
   }
@@ -573,13 +573,12 @@ Avatar.prototype.tick = function () {
   // If we've gotten this far, no movement keys are pressed... so if our movement flag is true, we know
   // the player has stopped moving
   if (self.moving) {
+    self.active.gotoAndStop(0);
     self.moving = false;
-    
-    self.sprite.children[self.direction].gotoAndStop(0);
   
     // Sending one more 'move' with duplicate coords as the last update will tell all clients this
     // actor has stopped moving
-    self.engine.socket.emit('move', {position: self.engine.position, direction: self.direction});
+    self.engine.emit('move', {position: self.engine.position, direction: self.direction});
   }
 
 };

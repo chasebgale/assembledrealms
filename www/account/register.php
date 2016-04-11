@@ -216,7 +216,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
     </div>
     
     <div class="col-md-2">
-      <div class="tall_spacer"></div>
+      <div class="tall_spacer hidden-sm hidden-xs"></div>
     </div>
     
     <div class="col-md-5">
@@ -363,6 +363,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 <?php 
         if ($_SESSION["redirect"]) {
           echo 'window.location = "' . $_SESSION["redirect"] . '";';
+          $_SESSION["redirect"] = null;
         } else {
           echo 'window.location = "/build";';
         }

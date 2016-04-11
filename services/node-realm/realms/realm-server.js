@@ -173,42 +173,16 @@ io.on('connection', function socketConnected(socket) {
         socket.broadcast.emit('create', data);
       });
       
-      // Wire up events:
-      socket.on('move', function (data) {
-        // Update position in memory:
-        player.position.x = data.position.x;
-        player.position.y = data.position.y;
-        
-        player.direction = data.direction;
-        
-        // TODO: Validate player move here
-        
-        // Broadcast change:
-        //socket.broadcast.emit('move', {id: player.id, position: player.position, direction: player.direction});
-        engine.addBroadcast(player);
-        
-        // Store change:
-        // TODO: Do this only when we ping the full player position, so we send updates that look like amount:direction, so small, like 1:3 insted of {x: 12800.22, y: 200.1},
-        // however, every <interval> we should send the full player position in case the client is out of sync, maybe every second or so
-        /*
-        db.set(socket.request.session.key, JSON.stringify(player), function (error) {
-          
-          if (error) {
-            console.error(error);
-          }
-          
+      /*
+      LISTENERS.forEach(function (listener) {
+        socket.on(listener.type, function (data) {
+          listener.func(player, data);
         });
-        */
       });
+      */
       
-      socket.on('attack', function () {
-        
-        engine.attack(player);
-        
-      });
-      
-      socket.on('text', function (data) {
-        io.emit('text', {player: {id: player.id, blurb: data}});
+      socket.on('event', function (data) {
+        engine[data.type](player, data.message);
       });
       
       socket.on('join_debug', function (data) {
@@ -295,12 +269,27 @@ engine.initialize(function(error) {
     
     var broadcast = engine.broadcast;
     
-    if ((Object.getOwnPropertyNames(broadcast.npcs).length > 0) ||
-      (Object.getOwnPropertyNames(broadcast.players).length > 0)) {
-      io.emit('update', broadcast);  
+    if (broadcast) {
+      
+      if (broadcast.npcs === undefined) {
+        broadcast.npcs = {};
+      }
+      
+      if (broadcast.players === undefined) {
+        broadcast.players = {};
+      }
+    
+      if ((Object.getOwnPropertyNames(broadcast.npcs).length > 0) ||
+        (Object.getOwnPropertyNames(broadcast.players).length > 0)) {
+        io.emit('update', broadcast);  
+      }
     }
     
-    engine.broadcastComplete();
+    //engine.broadcastComplete();
+    engine.broadcast = {
+      players: {},
+      npcs:    {}
+    };
     
   }, 32);
   
@@ -319,42 +308,41 @@ engine.initialize(function(error) {
   pm2.connect(function(err) {
   
     if (err) {
-      console.log(err.message);
-    } else {
-      // Listen on random port because lots (hopefully) of other nodes are running too!
-      serverSecure.listen(0, function() {
-        // Log the port to the console
-        console.log("[SOCKET]: Port secured and listening");
-        //console.log("port: " + serverSecure.address().port);
+      return console.log(err.message);
+    } 
+    
+    // Listen on random port because lots (hopefully) of other nodes are running too!
+    serverSecure.listen(0, function() {
+      // Log the port to the console
+      console.log("[SOCKET]: Port secured and listening");
+      //console.log("port: " + serverSecure.address().port);
 
-        if (debug) {
-          // In debug mode, trash any DB entries on (re)start so we don't get into trouble
-          db.keys("realm_" + realm_id + "*", function (err, keys) {
-            if ((err === undefined) && (keys)) {
-              keys.forEach(function (key, pos) {
-                db.del(key, function (err) {
-                  console.log("Deleted key: " + key);
-                });
+      if (debug) {
+        // In debug mode, trash any DB entries on (re)start so we don't get into trouble
+        db.keys("realm_" + realm_id + "*", function (err, keys) {
+          if ((err === undefined) && (keys)) {
+            keys.forEach(function (key, pos) {
+              db.del(key, function (err) {
+                console.log("Deleted key: " + key);
               });
-            }
-          });
-        }
-        
-        var data = {
-          "port":  serverSecure.address().port,
-          "time":  Date.now(),
-          "error": ""
-        };
-        
-        db.hmset("realm_" + realm_id, data, function(err, reply) {
-          if (err) {
-            console.log(err);
+            });
           }
-          console.log("[SOCKET]: Registered with backend");
         });
-          
+      }
+      
+      var data = {
+        "port":  serverSecure.address().port,
+        "time":  Date.now(),
+        "error": ""
+      };
+      
+      db.hmset("realm_" + realm_id, data, function(err, reply) {
+        if (err) {
+          console.log(err);
+        }
+        console.log("[SOCKET]: Registered with backend");
       });
-    }  
+    });
+    
   });
-  
 });
