@@ -225,11 +225,13 @@ exports.save = function(req, res, next) {
         // Run actual tests against string
         var lower = fileContents.toLowerCase();
         if (lower.indexOf('require(') > -1) {
-          return next(new Error('"require()" statements prevent compile [' + fieldname + ']'));
+          return res.status(500).send('"require()" statements prevent compile [' + fieldname + ']');
         }
-        
+        if (lower.indexOf('require.') > -1) {
+          return res.status(500).send('"require." statements prevent compile [' + fieldname + ']');
+        }
         if (lower.indexOf('eval(') > -1) {
-          return next(new Error('"eval()" statements prevent compile [' + fieldname + ']'));
+          return res.status(500).send('"eval()" statements prevent compile [' + fieldname + ']');
         }
         
         fs.writeFile(path.join(destination, fieldname), fileContents, function (error) {
