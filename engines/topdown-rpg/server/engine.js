@@ -1,5 +1,5 @@
 /*
-Due to security concerns, require() and eval() statements will prevent 
+Due to security concerns, require () and eval () statements will prevent 
 the server from compiling. Access to protected functionality is exposed
 via the following functions:
   
@@ -206,7 +206,7 @@ Engine.prototype.tick = function () {
         
         player.attackers[self.npcKeys[j]] = npc;
         
-        console.log('NPC[%s] spotted a player...', self.npcKeys[j]);
+        // console.log('NPC[%s] spotted a player...', self.npcKeys[j]);
         
         break;
       }
@@ -608,6 +608,10 @@ Engine.prototype.attack = function (player) {
   
   for (var i = 0; i < attackers.length; i++) {
     npc = self.npcs[attackers[i]];
+    
+    if (npc === undefined) {
+      continue;
+    }
     
     if ((npc.position.x > tx) && (npc.position.x < (tx + tw))) {
       if ((npc.position.y > ty) && (npc.position.y < (ty + th))) {

@@ -18,12 +18,18 @@ if ($method == 'POST') {
     $user_id = $loggedInUser->user_id;
   }
   
+  if ($user_id === 0) {
+    $display = ' ';
+  } else {
+    $display = $loggedInUser->displayname;
+  }
+  
   $owner      = ($realm['user_id'] == $user_id);
   $post_body  = http_build_query(array(
     'php_sess' => $session_id,
     'user_id' => $user_id,
     'owner' => $owner,
-    'displayname' => ' '
+    'displayname' => $display
   ));
   
   $curl 			= curl_init();
