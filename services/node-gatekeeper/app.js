@@ -540,7 +540,7 @@ app.post('/launch/debug/shared/:id', function (req, res, next) {
         }
       };
       
-      console.log("Posting to source to initiate xfer, options: " + JSON.stringify(options));
+      console.log("Posting to SOURCE to initiate xfer, options: " + JSON.stringify(options));
       
       request.post(options, function(err, response, body) {
         
@@ -561,9 +561,15 @@ app.post('/launch/debug/shared/:id', function (req, res, next) {
             json: true
           };
           
-          console.log("Posting to debug-xx to initiate launch...");
+          console.log("Posting to DEBUG to initiate launch, options: " + JSON.stringify(options));
           
           request.get(options, function(err, response, body) {
+            
+            if (err) {
+              console.error(err);
+              return res.status(500).send(err.message);
+            }
+            
             if ((response.statusCode > 199) && (response.statusCode < 300)) {
               // SUCCESSFULLY LAUNCHED ON DEBUG-XX  
               
