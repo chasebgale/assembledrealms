@@ -31,7 +31,7 @@ var source_token    = "fb25e93db6100b687614730f8f317653bb53374015fc94144bd82c69d
 var HOME_TOKEN      = "b2856c87d4416db5e3d1eaef2fbef317846b06549f1b5f3cce1ea9d639839224";
 var DEMO_TOKEN      = "045603f288bcdb3391ba819eb9fc8346bc81f4276a7911471bfc5a1881ceff37";
 
-var connection      = 'postgres://web:ENBRyvqa91MTzotLBppU@localhost:5432/gatekeeper';
+var connection      = 'postgres://web:f6fa352a6f999cb157271b93d76fbf52@localhost:5432/gatekeeper';
 
 var SESSION_LIST    = "sessions";            // Sessions added via /auth allowing access
 var SESSION_MAP     = "session_to_user_map"; // Sessions mapped to user_id via ZSCORE
@@ -298,6 +298,12 @@ app.post('/launch/play/shared/:id', function (req, res, next) {
   
   // Does this user have permission to modify this realm?
   db.get([USER_REALMS + '-' + req.user_id], function redisGetUserRealms(error, reply) {
+
+    if (error) {
+      console.error(error);
+      return res.status(500).send(err.message);
+    }
+
     var realms = JSON.parse(reply);
     console.log('USER REALMS: ' + reply);
     
@@ -422,6 +428,12 @@ app.get('/shutdown/play/shared/:id', function (req, res, next) {
   
   // Does this user have permission to modify this realm?
   db.get([USER_REALMS + '-' + req.user_id], function redisGetUserRealms(error, reply) {
+
+    if (error) {
+      console.error(error);
+      return res.status(500).send(err.message);
+    }
+
     var realms = JSON.parse(reply);
     console.log('USER REALMS: ' + reply);
     
@@ -513,6 +525,12 @@ app.post('/launch/debug/shared/:id', function (req, res, next) {
   
   // Does this user have permission to modify this realm?
   db.get([USER_REALMS + '-' + req.user_id], function redisGetUserRealms(error, reply) {
+    
+    if (error) {
+      console.error(error);
+      return res.status(500).send(err.message);
+    }
+
     var realms = JSON.parse(reply);
     console.log('USER REALMS: ' + reply);
     
@@ -726,23 +744,8 @@ app.get('/shutdown/play/private/:id', function (req, res, next) {
 
 // Hey!! Listen!
 server.listen(3000, function(){
-  console.log("Express server listening on port 3000, request to port 80 are redirected to 3000 by Fedora.");
+  console.log("Express server listening on port 3000, requests to port 80 are redirected to 3000 by nginx.");
 });
-
-var options = {
-  key:  fs.readFileSync('/etc/pki/tls/certs/www.assembledrealms.com.key').toString(),
-  cert: fs.readFileSync('/etc/pki/tls/certs/STAR_assembledrealms_com.crt').toString(),
-  ca:   [
-    fs.readFileSync('/etc/pki/tls/certs/AddTrustExternalCARoot.crt').toString(),
-    fs.readFileSync('/etc/pki/tls/certs/COMODORSAAddTrustCA.crt').toString(),
-    fs.readFileSync('/etc/pki/tls/certs/COMODORSADomainValidationSecureServerCA.crt').toString()
-  ],
-  passphrase: '8160'
-};
-
-https.createServer(options, app).listen(8000, function () {
-  console.log("HTTPS started on port 8000");
-}); //443
 
 // Acquire stats every minute
 // TODO: Move to stats app and run on second processor?
@@ -910,6 +913,27 @@ setInterval(function(){
 
 
 /*
+var options = {
+  key:  fs.readFileSync('/etc/pki/tls/certs/www.assembledrealms.com.key').toString(),
+  cert: fs.readFileSync('/etc/pki/tls/certs/STAR_assembledrealms_com.crt').toString(),
+  ca:   [
+    fs.readFileSync('/etc/pki/tls/certs/AddTrustExternalCARoot.crt').toString(),
+    fs.readFileSync('/etc/pki/tls/certs/COMODORSAAddTrustCA.crt').toString(),
+    fs.readFileSync('/etc/pki/tls/certs/COMODORSADomainValidationSecureServerCA.crt').toString()
+  ],
+  passphrase: '8160'
+};
+
+https.createServer(options, app).listen(8000, function () {
+  console.log("HTTPS started on port 8000");
+}); //443
+
+
+
+
+
+
+
 var working = false;
 // Run the check loop every ~10 seconds
 setInterval(function(){

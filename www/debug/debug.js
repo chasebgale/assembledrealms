@@ -37,7 +37,9 @@ function setup() {
     queueStage.addChild(loadingBar);
     
     loadingText = new PIXI.Text("Loading realm code...", {
-      font: "bold 10px Arial", 
+      fontFamily: "Arial",
+      fontSize: "10px",
+      fontStyle: "bold",
       fill: "#FFFFFF", 
       align: "left"
     });

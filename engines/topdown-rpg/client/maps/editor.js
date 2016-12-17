@@ -79,7 +79,7 @@ function Map (target, toolbar, map) {
   self.VIEWPORT_WIDTH_TILES_HALF  = Math.ceil(self.VIEWPORT_WIDTH_TILES / 2);
   self.VIEWPORT_HEIGHT_TILES_HALF = Math.ceil(self.VIEWPORT_HEIGHT_TILES / 2);
 
-  self.buffer = new PIXI.ParticleContainer();
+  self.buffer = new PIXI.particles.ParticleContainer();
     
   var index  = 0;
   var row    = 0;
@@ -130,7 +130,7 @@ function Map (target, toolbar, map) {
       
     self.tile_count = index - 1;
     
-    self.texture = new PIXI.RenderTexture(self.renderer, self.renderer.width, self.renderer.height);
+    self.texture = PIXI.RenderTexture.create(self.renderer.width, self.renderer.height);
 
     self.layer_terrain = new PIXI.Sprite(self.texture);
     self.stage.addChild(self.layer_terrain);
@@ -417,7 +417,7 @@ Map.prototype.draw = function (full) {
 
   // Reset some things:
   self.buffer.children = [];
-  self.texture.clear();
+  //self.texture.clear();
 
   var index;
   var sprite;
@@ -450,7 +450,8 @@ Map.prototype.draw = function (full) {
   }
         
   if (full) {
-    self.texture.render(self.buffer); //, matrix);
+    //self.texture.render(self.buffer); //, matrix);
+    self.renderer.render(self.buffer, self.texture);
   }
 };
   

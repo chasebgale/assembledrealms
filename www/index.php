@@ -68,8 +68,8 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "models/header.php");
 ?>
 
 <div id="intro" style="width: 100%; height: 100vh; background-size: cover; background-image:url('/img/front_page_background.png'); color: white;">
-  <h1 class="text-center hide-for-play" style="padding-top: 100px;"><strong>BUILD AN AWESOME MMO IN YOUR BROWSER</strong></h1>
-  <h3 class="text-center hide-for-play">QUICK-START FROM AN EXISTING GAME &#9642; DEVELOPER/COMMUNITY TOOLS</h3> <h3 class="text-center hide-for-play"><strong>CLIENT/SERVER CODE IN ONE LANGUAGE: JAVASCRIPT</strong></h3>
+  <h1 class="text-center hide-for-play" style="padding-top: 100px;"><strong>BUILD AN AWESOME MULTIPLAYER GAME IN YOUR BROWSER</strong></h1>
+  <h3 class="text-center hide-for-play">START FROM AN EXISTING GAME &#9642; DEVELOPER/COMMUNITY TOOLS</h3> <h3 class="text-center hide-for-play"><strong>ALL CODE IN ONE LANGUAGE: JAVASCRIPT</strong></h3>
   <div id="play-now" class="hide-for-play" style="text-align: center;">
     <div id="previewEditor">
       <div>
